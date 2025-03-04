@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap');
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Syne&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+@font-face {
+    font-family: 'inter';
+    src: url(./font/InterVariable.ttf);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-collapse: collapse;
+    text-decoration: none;
+    background: transparent;
+    color: white;
+    font-family: 'Pretendard Variable', 'inter';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -ms-overflow-style: none; /* IE/Edge에서 스크롤바 숨김 */
+    scrollbar-width: none; /* Firefox에서 스크롤바 숨김 */
+}
+
+*::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* 스크롤바가 레이아웃을 밀지 않도록 설정 */
+html {
+    height: 100%;
+    overflow: hidden;
+    overflow-y: overlay;
+}
+
+body {
+    font-family: var(--font-secondary);
+    background-color: var(--main-background);
+    color: white;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    overflow-y: overlay;
+}
+
+/* 스크롤바 완전히 숨기기 (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
+
+/* 스크롤바로 인한 레이아웃 변화 방지 */
+html {
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+    display: none;
+}
+
+:root {
+    --main-background: #000000;
+    --empty-background: #000000;
+    --timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    --font-mono: 'Roboto Mono', 'Nanum Gothic Coding', 'D2Coding', 'Source Code Pro', monospace;
+    --font-primary: 'Syne', sans-serif;
+    --font-secondary: 'Pretendard Variable', sans-serif;
+    --color-primary: rgb(29, 106, 240);
+    --color-primary-hover: rgb(25, 130, 200);
+    --color-primary-light: rgba(29, 155, 240, 0.1);
+    --color-primary-light-hover: rgba(29, 155, 240, 0.15);
+    --color-primary-border: rgba(29, 155, 240, 0.2);
+    --color-primary-border-hover: rgba(29, 155, 240, 0.25);
+    --color-primary-delete: rgb(181, 27, 27);
+    --color-primary-delete-hover: rgb(255, 0, 0);
+    --color-input-background: rgba(255, 255, 255, 0.05);
+    --color-input-background-hover: rgba(255, 255, 255, 0.08);
+    --color-input-background-focus: rgba(255, 255, 255, 0.1);
+    --color-input-border: rgba(255, 255, 255, 0.0);
+    --color-input-border-hover: rgba(255, 255, 255, 0.25);
+    --color-input-placeholder: rgba(255, 255, 255, 0.4);
+    --color-input-placeholder-hover: rgba(255, 255, 255, 0.6);
+    --color-input-border-valid: #0066CC;
+    --color-input-border-invalid: #FF3B30;
+    --color-tooltip-background: rgb(4, 4, 4);
+    --color-tooltip-hover: rgb(30, 30, 30);
+    --color-tooltip-border: rgba(255, 255, 255, 0.1);
+    
+    /* 애니메이션 최적화 변수 */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.35s ease;
+}
+
+:root.light {
+    --main-background: #ffffff;
+    --empty-background: #ffffff;
+}
+
+textarea {
+    resize: none;
+}
+
+/* 성능 최적화를 위한 하드웨어 가속 활성화 */
+.hardware-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+    will-change: transform;
+}
+
+/* D2Coding 폰트 */
+@font-face {
+  font-family: 'D2Coding';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_three@1.0/D2Coding.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 레이아웃 관련 */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}

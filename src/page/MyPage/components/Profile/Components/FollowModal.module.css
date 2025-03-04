@@ -1,0 +1,170 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background-color: #000000;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #171717;
+}
+
+.modalHeader {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.tab {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.5s var(--timing-function);
+    font-weight: 400;
+    font-size: .9rem;
+}
+
+.tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.modalBody {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(80vh - 4rem);
+}
+
+.userContainer {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    opacity: 0;
+    animation: fadeIn 0.2s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.userItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.userItem:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.userContent {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.userAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.username {
+    color: white;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.fullName {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: .8rem;
+}
+
+.followButton {
+    all: unset;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: .85rem;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.4s ease;
+    width: 3rem; /* 기본 너비 설정 */
+}
+
+/* 팔로우 상태에 따른 클래스 */
+.follow {
+    background: white;
+    color: black;
+    width: 3rem;
+}
+
+.following {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 4rem;
+}
+
+.unfollow {
+    background: #ff4444;
+    color: white;
+    width: 3.5rem;
+}
+
+.followButton:hover {
+    transform: scale(1.02);
+} 

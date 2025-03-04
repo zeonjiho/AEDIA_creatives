@@ -1,0 +1,489 @@
+.container {
+    --selected-color: #1E90FF;
+    --grid-color: rgba(255, 255, 255, 0.05);
+    --element-stroke: #FFFFFF;
+    --element-fill: rgba(255, 255, 255, 0.1);
+    --canvas-bg: #1E1E1E;
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--canvas-bg);
+    user-select: none;
+    display: flex;
+}
+
+.content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.toolbar {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: #2D2D2D;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid #3D3D3D;
+    z-index: 100;
+}
+
+.toolGroup {
+    display: flex;
+    gap: 4px;
+    padding: 0 4px;
+    border-right: 1px solid #3D3D3D;
+}
+
+.toolGroup:last-child {
+    border-right: none;
+}
+
+.tool {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #9D9D9D;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.tool:hover {
+    background: #3D3D3D;
+    color: #FFFFFF;
+}
+
+.tool.active {
+    background: #454545;
+    color: #4f9eed;
+}
+
+.colorPicker {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.colorPicker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.colorPicker::-webkit-color-swatch {
+    border: none;
+    border-radius: 6px;
+}
+
+.lineWidth {
+    width: 100px;
+    height: 36px;
+    padding: 0 8px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100000px;
+    height: 100000px;
+    cursor: default;
+    transform-origin: 0 0;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-perspective: 1000;
+}
+
+.canvas[data-tool="select"] {
+    cursor: default;
+}
+
+.canvas[data-tool="rectangle"],
+.canvas[data-tool="ellipse"] {
+    cursor: crosshair;
+}
+
+.canvas[data-tool="text"] {
+    cursor: text;
+}
+
+.canvas[data-tool="pan"] {
+    cursor: grab;
+}
+
+.canvas[data-tool="pan"]:active {
+    cursor: grabbing;
+}
+
+.text {
+    padding: 4px 8px;
+    min-width: 100px;
+    min-height: 24px;
+    background: transparent;
+    border: none;
+    outline: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    color: var(--element-stroke);
+    cursor: text;
+    user-select: text;
+}
+
+.textInput {
+    width: 100%;
+    height: 100%;
+    min-width: 100px;
+    min-height: 24px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    text-align: inherit;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.textInput:focus {
+    outline: none;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* 텍스트 선택 시 스타일 */
+.element.text.selected {
+    outline: 1px solid var(--selected-color);
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .toolbar {
+        width: calc(100% - 32px);
+        overflow-x: auto;
+        justify-content: space-between;
+    }
+
+    .toolGroup {
+        flex-shrink: 0;
+    }
+
+    .container {
+        height: 100vh;
+    }
+}
+
+.workspace {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--canvas-bg);
+    cursor: default;
+    touch-action: none;
+}
+
+.workspace.grid {
+    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: var(--grid-offset-x) var(--grid-offset-y);
+}
+
+.workspace.dots {
+    background-image: radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: var(--grid-offset-x) var(--grid-offset-y);
+}
+
+.element {
+    position: absolute;
+    box-sizing: border-box;
+    user-select: none;
+    will-change: transform, left, top;
+    transform-origin: center center;
+    touch-action: none;
+    transition: none;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-perspective: 1000;
+}
+
+.element.selected {
+    outline: 2px solid var(--selected-color);
+    outline-offset: 2px;
+    z-index: 2;
+}
+
+.selectionBox {
+    position: absolute;
+    border: 1px solid var(--selected-color);
+    background: rgba(30, 144, 255, 0.1);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.rectangle, .ellipse {
+    background: var(--element-fill);
+    border: 1px solid var(--element-stroke);
+}
+
+.ellipse {
+    border-radius: 50%;
+}
+
+/* 리사이즈 핸들 스타일 */
+.element.selected::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--selected-color);
+    border: 1px solid white;
+    border-radius: 50%;
+    bottom: -4px;
+    right: -4px;
+    cursor: se-resize;
+}
+
+/* 트랜스폼 컨트롤 스타일 */
+.transformControl {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.transformHandle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--selected-color);
+    border: 1px solid white;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.transformHandle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.transformHandle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.transformHandle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.transformHandle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+.transformHandle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+.transformHandle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.transformHandle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.transformHandle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+
+.rotateHandle {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: var(--selected-color);
+    border: 1px solid white;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.rotateLine {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 16px;
+    background: var(--selected-color);
+    pointer-events: none;
+}
+
+/* 드래그 중인 요소에 대한 스타일 */
+.element.dragging {
+    opacity: 0.8;
+    cursor: move;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.element.image {
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border: none;
+    overflow: hidden;
+    will-change: transform, left, top;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-perspective: 1000;
+}
+
+.element.image.selected {
+    outline: 2px solid var(--selected-color);
+    outline-offset: 2px;
+}
+
+.element.image.dragging {
+    opacity: 0.8;
+    cursor: move;
+}
+
+/* 이미지 드래그 방지 */
+.element.image img {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* 이미지 리사이즈 핸들 스타일 */
+.element.image .transformHandle {
+    background: var(--selected-color);
+    border: 1px solid white;
+    z-index: 1001;
+}
+
+/* 이미지 로딩 중 스타일 */
+.element.image.loading {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* 이미지 에러 스타일 */
+.element.image.error {
+    background: rgba(255, 0, 0, 0.1);
+}
+
+/* 참여 중인 유저 컴포넌트 스타일 */
+.activeUsers {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    background: #2D2D2D;
+    border-radius: 16px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 280px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    min-width: 250px;
+    max-width: 80vw;
+}
+
+.activeUsersHeader {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.usersList {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.userItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.userItem:hover .userName {
+    display: block;
+    position: fixed;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 9999;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.userAvatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.userName {
+    display: none;
+    font-size: 14px;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.moreUsersButton {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #555;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.moreUsersButton:hover {
+    background-color: #777;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .activeUsers {
+        width: 250px;
+        min-width: 200px;
+    }
+} 

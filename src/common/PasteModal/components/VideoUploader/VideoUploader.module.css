@@ -1,0 +1,389 @@
+.uploadSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: transparent;
+    margin-top: 0.5rem;
+}
+
+.uploadHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    margin-bottom: 0.5rem;
+    background: transparent;
+}
+
+.uploadTitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+}
+
+.uploadArea {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+.urlForm {
+    display: flex;
+    flex: 1;
+    gap: 0.5rem;
+}
+
+.urlInput {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    height: 2.5rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.urlInput:hover,
+.urlInput:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
+.divider {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+
+.fileLabel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    height: 2.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.fileLabel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.fileInput {
+    display: none;
+}
+
+.submitButton {
+    padding: 0.5rem 0.75rem;
+    height: 2.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.submitButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.error {
+    color: #ff4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.videoUploader {
+    width: 100%;
+    background-color: transparent;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 콘텐츠 컨테이너 (썸네일 + 비디오 플레이어) */
+.contentContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* 썸네일 섹션 */
+.previewSection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: transparent;
+    margin-bottom: 1rem;
+}
+
+/* 비디오 플레이어 섹션 */
+.playerSection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.playerHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    background: transparent;
+}
+
+.playerTitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+}
+
+.playerControls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.editorButton {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(58, 134, 255, 0.2);
+    border: 1px solid rgba(58, 134, 255, 0.4);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.editorButton:hover {
+    background: rgba(58, 134, 255, 0.3);
+    border-color: rgba(58, 134, 255, 0.6);
+}
+
+/* 썸네일 관련 스타일 수정 - 타이틀과 버튼 관련 스타일 제거 또는 수정 */
+.thumbnailHeader {
+    display: none; /* 썸네일 헤더 숨김 */
+}
+
+.thumbnailTitle {
+    display: none; /* 썸네일 타이틀 숨김 */
+}
+
+.thumbnailActions {
+    display: none; /* 썸네일 액션 버튼들 숨김 */
+}
+
+.thumbnailButton {
+    display: none; /* 개별 썸네일 버튼 숨김 */
+}
+
+.thumbnailUrlForm {
+    display: none; /* 썸네일 URL 입력 폼 숨김 */
+}
+
+.thumbnailContainer {
+    width: 100%;
+    position: relative;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    max-width: 240px;
+}
+
+.thumbnailPreview {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* 플랫폼 가이드 스타일 - 위치만 수정 */
+.platformGuideWrapper {
+    position: relative;
+}
+
+.platformGuideButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.platformGuideButton:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.platformGuide {
+    position: absolute;
+    top: calc(100% + 0.5rem); /* bottom에서 top으로 변경 */
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    z-index: 1000;
+    min-width: 220px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 방향 변경 */
+    animation: tooltipFadeInDown 0.2s ease; /* 애니메이션 이름 변경 */
+}
+
+/* 새로운 애니메이션 추가 (기존 애니메이션은 유지) */
+@keyframes tooltipFadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 기존 애니메이션 유지 */
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tooltipHeader {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltipContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tooltipRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.platformName {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.platformStatus {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+/* 모바일 최적화를 위한 추가 스타일 */
+@media (max-width: 768px) {
+    .inputWrapper {
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .urlForm {
+        width: 100%;
+    }
+    
+    .divider {
+        display: none;
+    }
+    
+    .fileLabel {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .submitButton {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .urlInput {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .playerControls {
+        gap: 0.5rem;
+    }
+    
+    .platformGuideButton,
+    .editorButton {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .platformGuide {
+        min-width: 180px;
+        right: -20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .inputWrapper {
+        margin-top: 0.5rem;
+    }
+    
+    .urlInput, 
+    .submitButton, 
+    .fileLabel {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+        height: 2.25rem;
+    }
+    
+    .editorButton {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.75rem;
+        height: 2.25rem;
+    }
+}

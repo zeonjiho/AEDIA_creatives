@@ -1,0 +1,746 @@
+/* ----------------------------------------------------------
+   범위 선택 표시 스타일
+---------------------------------------------------------- */
+.rangeInfo {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+}
+
+/* ----------------------------------------------------------
+   플레이어 컨트롤 영역 (좌/우)
+---------------------------------------------------------- */
+.leftControls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.rightControls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.rightControls,
+.leftControls {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.625rem;
+    border-radius: 8px;
+    margin-top: -0.5rem;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    transition: all 0.2s var(--timing-function);
+}
+
+/* 활성화된 버튼 스타일 */
+.controlButton.active {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(58, 134, 255, 0.15);
+}
+
+/* ----------------------------------------------------------
+   비디오 플레이어 전체 레이아웃
+---------------------------------------------------------- */
+.previewContainer {
+    width: 100%;
+    position: relative;
+    background: #000;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-top: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.videoPreview {
+    width: 100%;
+    height: auto;
+    border: none;
+    object-fit: contain;
+    background: #000;
+}
+
+/* ----------------------------------------------------------
+   플레이어 Wrapper 및 컨트롤
+---------------------------------------------------------- */
+.playerWrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+}
+
+.playerControls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+        to top, 
+        rgba(0, 0, 0, 0.6), 
+        rgba(0, 0, 0, 0.1) 60%, 
+        transparent
+    );
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.previewContainer:hover .playerControls {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ----------------------------------------------------------
+   타임라인 (재생 진행도, 범위 선택)
+---------------------------------------------------------- */
+.timelineWrapper {
+    width: 100%;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timeline {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 1rem;
+    touch-action: none;
+}
+
+.timeline:hover {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.timeline:active {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.timelineProgress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    transition: width 0.1s ease;
+}
+
+.timelineHandle {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translateY(-50%) scale(0);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.2);
+    z-index: 2;
+}
+
+.timeline:hover .timelineHandle {
+    transform: translateY(-50%) scale(1);
+}
+
+.timeline:active .timelineHandle {
+    transform: translateY(-50%) scale(1.2);
+    box-shadow: 0 0 0 6px rgba(58, 134, 255, 0.4);
+}
+
+.timeText {
+    color: #fff;
+    font-size: 0.8rem;
+    min-width: 45px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+    letter-spacing: -0.5px;
+}
+
+/* ----------------------------------------------------------
+   플레이어 컨트롤(버튼) 스타일
+---------------------------------------------------------- */
+.controlsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.controlButton {
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 0.5rem;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.controlButton:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.controlButton:active {
+    transform: scale(0.95);
+}
+
+/* ----------------------------------------------------------
+   범위 선택 Overlay
+---------------------------------------------------------- */
+.rangeSelector {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 9;
+}
+
+.rangeSelector.active {
+    opacity: 1;
+}
+
+.rangeHandle {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: ew-resize;
+    z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.2);
+    touch-action: none;
+}
+
+.rangeHandle:hover,
+.rangeHandle:active {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 0 0 6px rgba(58, 134, 255, 0.4);
+}
+
+.rangeArea {
+    position: absolute;
+    height: 100%;
+    background: rgba(58, 134, 255, 0.3);
+    border: 2px solid rgba(58, 134, 255, 0.5);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* ----------------------------------------------------------
+   YouTube/Vimeo Iframe 래퍼
+---------------------------------------------------------- */
+.iframeContainer {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.hiddenIframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    pointer-events: none;
+}
+
+/* ----------------------------------------------------------
+   커스텀 오버레이 (썸네일, 재생 버튼 등)
+---------------------------------------------------------- */
+.customPlayerOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.playButton {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.playButton:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.playButton svg {
+    font-size: 24px;
+    color: #fff;
+}
+
+/* 로딩 인디케이터 (스피너) */
+.loadingIndicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* ----------------------------------------------------------
+   재생 속도 컨트롤 (Speed Options)
+---------------------------------------------------------- */
+.speedControl {
+    position: relative;
+}
+
+.speedText {
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.speedOptionsCentered {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 8px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    animation: fadeInScale 0.2s ease;
+    white-space: nowrap;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.speedOption {
+    padding: 0.4rem 0.6rem;
+    color: #fff;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.speedOption:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.speedOption.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* ----------------------------------------------------------
+   화질 설정 메뉴 (YouTube/Vimeo)
+---------------------------------------------------------- */
+.qualityControl {
+    position: relative;
+    margin-left: 0.5rem;
+    z-index: 1000;
+}
+
+.qualityButtonContent {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+}
+
+.qualityArrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.qualityArrow.up {
+    transform: rotate(180deg);
+}
+
+.qualityMenu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 120px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.2s ease;
+}
+
+.qualityMenuTitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.qualityOption {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    font-family: 'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace;
+}
+
+.qualityOption:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.qualityOption.active {
+    background: rgba(58, 134, 255, 0.25);
+    color: #fff;
+    font-weight: 500;
+}
+
+/* ----------------------------------------------------------
+   볼륨 컨트롤
+---------------------------------------------------------- */
+.volumeControl {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.volumeSlider {
+    width: 80px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.volumeSlider:hover {
+    height: 6px;
+}
+
+.volumeLevel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    transition: width 0.1s ease;
+}
+
+.volumeHandle {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translateY(-50%) scale(0);
+    transition: transform 0.2s ease;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+.volumeSlider:hover .volumeHandle,
+.volumeLevel:active .volumeHandle {
+    transform: translateY(-50%) scale(1);
+}
+
+/* ----------------------------------------------------------
+   버튼(타임라인/볼륨) 드래그 활성화 시 스타일
+---------------------------------------------------------- */
+.timeline:active,
+.volumeSlider:active {
+    cursor: grabbing;
+}
+
+.timeline:hover .timelineProgress {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.volumeSlider:hover .volumeLevel {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.timelineProgress:active .timelineHandle,
+.volumeLevel:active .volumeHandle {
+    transform: translateY(-50%) scale(1.3);
+    box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.4);
+}
+
+/* 썸네일 오버레이 (YouTube/Vimeo) */
+.thumbnailOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+/* ----------------------------------------------------------
+   반응형 디자인 (모바일, 태블릿)
+---------------------------------------------------------- */
+@media (max-width: 768px) {
+    .previewContainer {
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .playerControls {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+    .timelineWrapper {
+        height: 20px;
+        gap: 0.5rem;
+    }
+    .controlButton {
+        width: 32px;
+        height: 32px;
+        padding: 0.35rem;
+    }
+    .timeText {
+        font-size: 0.7rem;
+        min-width: 40px;
+    }
+    .rangeInfo {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.7rem;
+    }
+    .leftControls,
+    .rightControls {
+        padding: 0.35rem;
+    }
+    .playButton {
+        width: 50px;
+        height: 50px;
+    }
+    .playButton svg {
+        font-size: 20px;
+    }
+    .volumeSlider {
+        width: 60px;
+    }
+    .timeline {
+        margin: 0 0.5rem;
+    }
+    .qualityMenu {
+        padding: 0.35rem;
+    }
+    .qualityOption {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .controlsRow {
+        gap: 0.5rem;
+    }
+    .controlButton {
+        width: 28px;
+        height: 28px;
+        padding: 0.25rem;
+    }
+    .timeText {
+        font-size: 0.65rem;
+        min-width: 35px;
+    }
+    .volumeSlider {
+        width: 40px;
+    }
+    .rangeHandle {
+        width: 12px;
+        height: 12px;
+    }
+    .timelineHandle {
+        width: 10px;
+        height: 10px;
+        right: -5px;
+    }
+    /* 모바일 기기에서는 볼륨 슬라이더 숨김 */
+    .volumeSlider {
+        display: none;
+    }
+    .speedText {
+        font-size: 0.75rem;
+    }
+    .playButton {
+        width: 40px;
+        height: 40px;
+    }
+    .speedOptionsCentered {
+        top: -32px;
+        padding: 0.25rem;
+        gap: 0.25rem;
+        max-width: 90%;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .speedOption {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    .qualityMenu {
+        min-width: 80px;
+    }
+    .qualityOption {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* ----------------------------------------------------------
+   가로 모드 모바일 최적화
+---------------------------------------------------------- */
+@media (max-height: 500px) and (orientation: landscape) {
+    .previewContainer {
+        aspect-ratio: auto;
+        height: 70vh;
+    }
+    .playerControls {
+        padding: 0.5rem;
+    }
+    .controlsRow {
+        gap: 0.35rem;
+    }
+}
+
+/* ----------------------------------------------------------
+   새로고침(Refresh) 버튼 효과
+---------------------------------------------------------- */
+.refreshButton {
+    transition: transform 0.3s ease;
+}
+.refreshButton:hover {
+    transform: scale(1.05) rotate(30deg);
+}
+.refreshButton:active {
+    transform: scale(0.95) rotate(60deg);
+}
+
+/* ----------------------------------------------------------
+   드래그 중인 상태(스타일 강조)
+---------------------------------------------------------- */
+.isDragging .timelineHandle,
+.isDragging .volumeHandle,
+.isDragging .rangeHandle {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.2);
+}

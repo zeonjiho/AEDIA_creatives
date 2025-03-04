@@ -1,0 +1,1084 @@
+.codeSection {
+    margin: 0.5rem 0;
+    font-family: var(--font-mono);
+}
+
+.codeHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.codeTitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.codeEditorWrap {
+    display: flex;
+    background: rgba(29, 29, 29, 0.6);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    height: fit-content;
+    max-height: 800px;
+}
+
+.lineNumbers {
+    padding: 12px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    user-select: none;
+    overflow-y: hidden;
+    font-family: var(--font-mono);
+}
+
+.lineNumber {
+    min-width: 2rem;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-family: var(--font-mono);
+}
+
+.editorContainer {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+.codeInput,
+.codeHighlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-y: auto;
+    tab-size: 4;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.codeInput {
+    color: transparent;
+    caret-color: white;
+    border: none;
+    resize: none;
+    z-index: 2;
+    outline: none;
+    padding: 12px;
+    font-family: var(--font-mono);  
+}
+
+.codeHighlight {
+    pointer-events: none;
+    z-index: 1;
+    color: #fff;
+    padding: 12px;
+    font-family: var(--font-mono);  
+}
+
+
+/* 구문 강조 스타일 */
+
+.keyword {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.declaration {
+    color: #569cd6;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.string {
+    color: #ce9178;
+    font-family: var(--font-mono);
+}
+
+.templateLiteral {
+    color: #ce9178;
+    font-family: var(--font-mono);
+    background-color: rgba(206, 145, 120, 0.05);
+}
+
+.templateExpression {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    background-color: rgba(86, 156, 214, 0.1);
+}
+
+.regex {
+    color: #d16969;
+    font-family: var(--font-mono);
+}
+
+.comment {
+    color: #5a8045;
+    font-style: italic;
+    font-family: var(--font-mono);
+    opacity: 0.8;
+}
+
+.lineComment {
+    color: #5a8045;
+    font-style: italic;
+    font-family: var(--font-mono);
+    opacity: 0.8;
+}
+
+.blockComment {
+    color: #4e7940;
+    font-style: italic;
+    font-family: var(--font-mono);
+    background-color: rgba(90, 128, 69, 0.05);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+.commentStart, .commentEnd {
+    color: #3d6230;
+    font-weight: bold;
+    font-style: italic;
+    font-family: var(--font-mono);
+    opacity: 0.9;
+}
+
+.operator {
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+}
+
+.builtin {
+    color: #dcdcaa;
+    font-family: var(--font-mono);
+}
+
+.mathFunc {
+    color: #c586c0;
+    font-family: var(--font-mono);
+}
+
+.type {
+    color: #4ec9b0;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.variable {
+    color: #9cdcfe;
+    font-family: var(--font-mono);
+}
+
+.property {
+    color: #9cdcfe;
+    font-family: var(--font-mono);
+}
+
+.parameter {
+    color: #9cdcfe;
+    font-style: italic;
+    font-family: var(--font-mono);
+}
+
+.number {
+    color: #b5cea8;
+    font-family: var(--font-mono);
+}
+
+.boolean {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.null {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.undefined {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.this {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.special {
+    color: #d7ba7d;
+    font-family: var(--font-mono);
+}
+
+/* 언어별 특수 스타일 */
+
+/* JavaScript 스타일 */
+[data-language="javascript"] .keyword {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+[data-language="javascript"] .declaration {
+    color: #4fc1ff;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+[data-language="javascript"] .builtin {
+    color: #dcdcaa;
+    font-family: var(--font-mono);
+}
+
+[data-language="javascript"] .string {
+    color: #ce9178;
+    font-family: var(--font-mono);
+}
+
+[data-language="javascript"] .number {
+    color: #b5cea8;
+    font-family: var(--font-mono);
+}
+
+[data-language="javascript"] .operator {
+    color: #d4d4d4; 
+    font-family: var(--font-mono);      
+}
+
+[data-language="javascript"] .variable {
+    color: #9cdcfe;     
+    font-family: var(--font-mono);
+}
+
+/* TypeScript 스타일 */
+[data-language="typescript"] .keyword {
+    color: #569cd6;
+    font-weight: 500;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .declaration {
+    color: #4fc1ff;
+    font-weight: 700;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .builtin {
+    color: #dcdcaa;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .string {
+    color: #ce9178;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .number {  
+    color: #b5cea8;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .operator {
+    color: #d4d4d4;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .variable {
+    color: #9cdcfe;
+    font-family: var(--font-mono);  
+}
+
+[data-language="typescript"] .type {
+    color: #4ec9b0;
+    font-weight: 500;
+    font-family: var(--font-mono);  
+}
+
+/* Python 스타일 */
+[data-language="python"] .keyword {
+    color: #ff79c6;
+    font-weight: 500;
+    font-family: var(--font-mono);  
+}
+
+[data-language="python"] .declaration {
+    color: #50fa7b;
+    font-weight: 700;   
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .builtin { 
+    color: #8be9fd;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .string {
+    color: #f1fa8c;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .number {
+    color: #bd93f9;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .operator {
+    color: #ff79c6;
+    font-family: var(--font-mono);  
+}
+
+[data-language="python"] .comment {
+    color: #6272a4;
+    font-style: italic;
+    opacity: 0.8;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .lineComment {
+    color: #6272a4;
+    font-style: italic;
+    opacity: 0.8;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .blockComment {
+    color: #6272a4;
+    font-style: italic;
+    background-color: rgba(98, 114, 164, 0.05);
+    border-radius: 2px; 
+    opacity: 0.8;
+    font-family: var(--font-mono);
+}
+
+[data-language="python"] .commentStart, [data-language="python"] .commentEnd {
+    color: #6272a4;
+    font-weight: bold;
+    font-style: italic;
+    opacity: 0.9;
+    font-family: var(--font-mono);
+}
+
+/* Java 스타일 */
+[data-language="java"] .keyword {
+    color: #cc7832;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+[data-language="java"] .declaration {
+    color: #cc7832;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+[data-language="java"] .builtin {
+    color: #ffc66d;     
+}
+
+[data-language="java"] .string {
+    color: #6a8759;
+}
+
+[data-language="java"] .number {
+    color: #6897bb;
+}
+
+[data-language="java"] .operator {
+    color: #a9b7c6;
+}
+
+[data-language="java"] .type {
+    color: #a9b7c6;
+    font-weight: 500;
+}
+
+/* C++ 스타일 */
+[data-language="cpp"] .keyword {
+    color: #cc7832;
+    font-weight: 500;
+}
+
+[data-language="cpp"] .declaration {
+    color: #cc7832;
+    font-weight: 700;
+}
+
+[data-language="cpp"] .builtin {
+    color: #ffc66d;
+}
+
+[data-language="cpp"] .string {
+    color: #6a8759;
+}
+
+[data-language="cpp"] .number {
+    color: #6897bb;
+}
+
+[data-language="cpp"] .operator {
+    color: #a9b7c6;
+}
+
+[data-language="cpp"] .type {
+    color: #a9b7c6;
+    font-weight: 500;
+}
+
+/* VEX 스타일 */
+[data-language="vex"] .mathFunc {
+    color: #66d9ef;
+}
+
+[data-language="vex"] .type {
+    color: #ff69b4;
+    font-weight: 500;
+}
+
+[data-language="vex"] .builtin {
+    color: #66d9ef;
+}
+
+[data-language="vex"] .variable {
+    color: #e6b450;
+}
+
+[data-language="vex"] .comment {
+    color: #c9be67;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="vex"] .lineComment {
+    color: #c9be67;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="vex"] .blockComment {
+    color: #b8ae5c;
+    font-style: italic;
+    background-color: rgba(201, 190, 103, 0.05);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+[data-language="vex"] .commentStart, [data-language="vex"] .commentEnd {
+    color: #a69c52;
+    font-weight: bold;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+[data-language="vex"] .string {
+    color: #e6db74;
+}
+
+[data-language="vex"] .number {
+    color: #ae81ff;
+}
+
+[data-language="vex"] .keyword {
+    color: #ff69b4;
+}
+
+[data-language="vex"] .operator {
+    color: #f8f8f2;
+}
+
+[data-language="vex"] .declaration {
+    color: #66d9ef;
+}
+
+
+/* 스크롤바 스타일 */
+
+.codeInput::-webkit-scrollbar,
+.codeHighlight::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.codeInput::-webkit-scrollbar-track,
+.codeHighlight::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.codeInput::-webkit-scrollbar-thumb,
+.codeHighlight::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+.codeInput::-webkit-scrollbar-thumb:hover,
+.codeHighlight::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
+
+.codeInput::-webkit-scrollbar-corner,
+.codeHighlight::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.codeInput,
+.codeHighlight {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.languageSelect {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 1.5rem;
+    /* 화살표 아이콘을 위한 여백 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+}
+
+.languageSelect:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.languageSelect:focus {
+    outline: none;
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.languageSelect option {
+    background: rgb(23, 23, 23);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem;
+}
+
+.codeEditor:focus {
+    outline: none;
+}
+
+.codeEditor::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.copyButton {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.editorContainer:hover .copyButton {
+    opacity: 1;
+}
+
+.copyButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.copyButton:active {
+    transform: scale(0.95);
+}
+
+.copyAlert {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-60%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    animation: fadeInOut 2s ease;
+    z-index: 10;
+    font-family: var(--font-mono);
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-65%, 4px);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-65%, 0);
+    }
+    85% {
+        opacity: 1;
+        transform: translate(-65%, 0);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-65%, -4px);
+    }
+}
+
+
+/* 접근성을 위해 포커스 스타일을 커스텀하고 싶다면 */
+
+.codeInput:focus {
+    outline: none;
+    /* 원하는 경우 커스텀 포커스 스타일 추가 */
+    /* box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); */
+}
+
+.stringQuote {
+    color: #e6db74;
+    /* 따옴표 색상 */
+}
+
+.stringContent {
+    color: #a6e22e;
+    /* 문자열 내용 색상 */
+}
+
+/* Ruby 스타일 */
+[data-language="ruby"] .keyword {
+    color: #f92672;
+    font-weight: 500;
+}
+
+[data-language="ruby"] .declaration {
+    color: #66d9ef;
+    font-weight: 700;
+}
+
+[data-language="ruby"] .builtin {
+    color: #a6e22e;
+}
+
+[data-language="ruby"] .string {
+    color: #e6db74;
+}
+
+[data-language="ruby"] .number {
+    color: #ae81ff;
+}
+
+[data-language="ruby"] .operator {
+    color: #f92672;
+}
+
+[data-language="ruby"] .comment {
+    color: #75715e;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="ruby"] .lineComment {
+    color: #75715e;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="ruby"] .blockComment {
+    color: #75715e;
+    font-style: italic;
+    background-color: rgba(117, 113, 94, 0.05);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+[data-language="ruby"] .commentStart, [data-language="ruby"] .commentEnd {
+    color: #75715e;
+    font-weight: bold;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* Go 스타일 */
+[data-language="go"] .keyword {
+    color: #f92672;
+    font-weight: 500;
+}
+
+[data-language="go"] .declaration {
+    color: #66d9ef;
+    font-weight: 700;
+}
+
+[data-language="go"] .builtin {
+    color: #a6e22e;
+}
+
+[data-language="go"] .string {
+    color: #e6db74;
+}
+
+[data-language="go"] .number {
+    color: #ae81ff;
+}
+
+[data-language="go"] .operator {
+    color: #f92672;
+}
+
+/* Rust 스타일 */
+[data-language="rust"] .keyword {
+    color: #ff6188;
+    font-weight: 500;
+}
+
+[data-language="rust"] .declaration {
+    color: #78dce8;
+    font-weight: 700;
+}
+
+[data-language="rust"] .builtin {
+    color: #a9dc76;
+}
+
+[data-language="rust"] .string {
+    color: #ffd866;
+}
+
+[data-language="rust"] .number {
+    color: #ab9df2;
+}
+
+[data-language="rust"] .operator {
+    color: #ff6188;
+}
+
+/* SQL 스타일 */
+[data-language="sql"] .keyword {
+    color: #00b0ff;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+[data-language="sql"] .declaration {
+    color: #00b0ff;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+[data-language="sql"] .builtin {
+    color: #ffab40;
+}
+
+[data-language="sql"] .string {
+    color: #7cb342;
+}
+
+[data-language="sql"] .number {
+    color: #ff5252;
+}
+
+[data-language="sql"] .operator {
+    color: #e0e0e0;
+}
+
+[data-language="sql"] .comment {
+    color: #9e9e9e;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="sql"] .lineComment {
+    color: #9e9e9e;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+[data-language="sql"] .blockComment {
+    color: #9e9e9e;
+    font-style: italic;
+    background-color: rgba(158, 158, 158, 0.05);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+[data-language="sql"] .commentStart, [data-language="sql"] .commentEnd {
+    color: #9e9e9e;
+    font-weight: bold;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* C# 스타일 */
+[data-language="csharp"] .keyword {
+    color: #569cd6;
+    font-weight: 500;
+}
+
+[data-language="csharp"] .declaration {
+    color: #569cd6;
+    font-weight: 700;
+}
+
+[data-language="csharp"] .builtin {
+    color: #4ec9b0;
+}
+
+[data-language="csharp"] .string {
+    color: #d69d85;
+}
+
+[data-language="csharp"] .number {
+    color: #b5cea8;
+}
+
+[data-language="csharp"] .operator {
+    color: #d4d4d4;
+}
+
+[data-language="csharp"] .type {
+    color: #4ec9b0;
+    font-weight: 500;
+}
+
+/* PHP 스타일 */
+[data-language="php"] .keyword {
+    color: #ff79c6;
+    font-weight: 500;
+}
+
+[data-language="php"] .declaration {
+    color: #ff79c6;
+    font-weight: 700;
+}
+
+[data-language="php"] .builtin {
+    color: #8be9fd;
+}
+
+[data-language="php"] .string {
+    color: #f1fa8c;
+}
+
+[data-language="php"] .number {
+    color: #bd93f9;
+}
+
+[data-language="php"] .operator {
+    color: #ff79c6;
+}
+
+[data-language="php"] .variable {
+    color: #f8f8f2;
+}
+
+/* Swift 스타일 */
+[data-language="swift"] .keyword {
+    color: #ff5d4f;
+    font-weight: 500;
+}
+
+[data-language="swift"] .declaration {
+    color: #ff5d4f;
+    font-weight: 700;
+}
+
+[data-language="swift"] .builtin {
+    color: #70d7ff;
+}
+
+[data-language="swift"] .string {
+    color: #d9c97c;
+}
+
+[data-language="swift"] .number {
+    color: #9686f5;
+}
+
+[data-language="swift"] .operator {
+    color: #ffffff;
+}
+
+[data-language="swift"] .type {
+    color: #70d7ff;
+    font-weight: 500;
+}
+
+.selector {
+    color: #d7ba7d;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+.unit {
+    color: #b5cea8;
+    font-family: var(--font-mono);
+}
+
+.color {
+    color: #ce9178;
+    font-family: var(--font-mono);
+}
+
+.bracket {
+    color: #d4d4d4;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+/* CSS 스타일 */
+[data-language="css"] .selector {
+    color: #d7ba7d;
+    font-weight: 500;
+}
+
+[data-language="css"] .property {
+    color: #9cdcfe;
+}
+
+[data-language="css"] .value {
+    color: #ce9178;
+}
+
+[data-language="css"] .unit {
+    color: #b5cea8;
+}
+
+[data-language="css"] .color {
+    color: #ce9178;
+}
+
+[data-language="css"] .number {
+    color: #b5cea8;
+}
+
+[data-language="css"] .operator {
+    color: #d4d4d4;
+}
+
+[data-language="css"] .bracket {
+    color: #ffd700;
+    font-weight: 500;
+}
+
+[data-language="css"] .declaration {
+    color: #c586c0;
+    font-weight: 700;
+}
+
+[data-language="css"] .comment {
+    color: #75715e;
+    font-style: italic;
+}
+
+[data-language="css"] .lineComment {
+    color: #75715e;
+    font-style: italic;
+}
+
+[data-language="css"] .blockComment {
+    color: #75715e;
+    font-style: italic;
+}
+
+[data-language="css"] .commentStart, [data-language="css"] .commentEnd {
+    color: #75715e;
+    font-weight: bold;
+    font-style: italic;
+}
+
+[data-language="css"] .important {
+    color: #f92672;
+    font-weight: bold;
+}
+
+/* CSS 선택자 관련 스타일 */
+.selectorName {
+  color: #e5c07b;;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.attrSelector {
+  color: #d19a66;
+  font-weight: 500;
+  font-family: var(--font-mono);    
+}
+
+.attrName {
+  color: #e5c07b;
+  font-family: var(--font-mono);
+}
+
+.pseudoClass {
+  color: #c678dd;
+  font-style: italic;
+  font-family: var(--font-mono);
+}
+
+.pseudoElement {
+  color: #56b6c2;
+  font-style: italic;   
+  font-family: var(--font-mono);
+}
+
+.combinator {
+  color: #61afef;
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+
+.function {
+  color: #66d9ef;
+}
+
+.functionName {
+  color: #a6e22e;
+  font-weight: 500;
+}
+
+.value {
+  color: #ae81ff;
+}
+
+/* 미디어 쿼리와 애니메이션 키워드 스타일 */
+.mediaQueryKeyword {
+  color: #fd971f;
+  font-weight: 500;
+}
+
+.animationKeyword {
+  color: #fd971f;
+  font-weight: 500;
+}

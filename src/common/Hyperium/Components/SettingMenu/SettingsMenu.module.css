@@ -1,0 +1,55 @@
+.settingsMenu {
+  position: fixed;
+  background: var(--color-tooltip-background);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-tooltip-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  min-width: 150px;
+  z-index: 9999;
+  opacity: 0;
+  transform: none;
+  transition: opacity 0.2s var(--timing-function);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.settingsMenu.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.settingsMenuItem {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s var(--timing-function);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settingsMenuItem:hover {
+  background: var(--color-tooltip-hover);
+}
+
+.ownerOptions {
+  border-top: 1px solid var(--color-tooltip-border);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.deleteButton {
+  color: #ff4444;
+}
+
+.deleteButton:hover {
+  background: var(--color-tooltip-hover);
+} 

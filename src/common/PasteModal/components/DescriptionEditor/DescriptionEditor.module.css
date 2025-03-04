@@ -1,0 +1,460 @@
+/* 기본 레이아웃 */
+
+.descriptionSection {
+    margin: 0.5rem 0;
+    background: transparent;
+    position: relative;
+}
+
+.descriptionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    background: transparent;
+}
+
+.titleGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+}
+
+.descriptionTitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+    position: relative;
+}
+
+.descriptionControls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    background: none;
+}
+
+
+/* 버튼 스타일 */
+
+.addDescriptionButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.addDescriptionButton:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.previewButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.previewButton.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.previewButton:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+    color: rgba(255, 0, 0, 0.8);
+    background: rgba(255, 0, 0, 0.1);
+}
+
+
+/* 텍스트 에디터 */
+
+.descriptionWrapper {
+    position: relative;
+    width: 100%;
+    min-height: 2.5rem;
+    background: transparent;
+}
+
+.descriptionInput {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: none;
+    min-height: 5rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.descriptionInput:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.descriptionInput:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
+.descriptionInput::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.descriptionInput::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* 마크다운 가이드 툴팁 */
+
+.markdownGuide {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    z-index: 1000;
+    min-width: 200px;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+/* 드래그 선택 툴팁 */
+
+.markdownTooltip {
+    position: fixed;
+    background: rgba(20, 20, 20, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    padding: 0.375rem;
+    z-index: 1000;
+    display: flex;
+    gap: 0.375rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    transform-origin: top left;
+    animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.markdownButton {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.markdownButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 1);
+    transform: translateY(-1px);
+}
+
+.markdownButton:active {
+    transform: translateY(0);
+}
+
+.markdownGuideButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.tooltipHeader {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltipContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tooltipRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.tooltipRow code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+
+/* 프리뷰 모달 */
+
+.previewModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.previewModalContent {
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.previewModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.previewModalHeader h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #fff;
+}
+
+.previewModalClose {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.previewModalClose:hover {
+    color: #fff;
+}
+
+.previewModalBody {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
+
+
+/* 마크다운 프리뷰 스타일 */
+
+.previewContent {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #fff;
+    line-height: 1.5;
+    overflow-y: auto;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.paragraph {
+    margin: 0.5em 0;
+    white-space: pre-line;
+}
+
+
+/* 리스트 스타일 개선 */
+
+.list {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+    list-style-position: outside;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* 불릿 포인트 리스트 (*) */
+
+ul.list {
+    list-style-type: disc !important;
+}
+
+
+/* 대시 리스트 (-) */
+
+ul.list[data-dash="true"] {
+    list-style-type: none !important;
+}
+
+ul.list[data-dash="true"]>li {
+    position: relative;
+}
+
+ul.list[data-dash="true"]>li::before {
+    content: "–";
+    position: absolute;
+    left: -1em;
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
+
+.listItem {
+    margin: 0.25em 0;
+    color: #fff;
+    line-height: 1.5;
+    display: list-item !important;
+}
+
+
+/* 중첩된 리스트 스타일 */
+
+.list .list {
+    margin-left: 1em;
+}
+
+
+/* 순서 있는 리스트 스타일 */
+
+ol.list {
+    list-style-type: decimal !important;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* 기존 마크다운 스타일 유지 */
+
+.previewContent h1,
+.previewContent h2,
+.previewContent h3 {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.previewContent code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-family: var(--mono-font);
+}
+
+.previewContent a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.previewContent a:hover {
+    text-decoration: underline;
+}
+
+.previewContent :global(strong) {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.previewContent :global(em) {
+    color: rgba(255, 255, 255, 0.8);
+    font-style: italic;
+}
+
+.previewContent :global(blockquote) {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* 스크롤바 스타일 */
+
+.previewModalBody::-webkit-scrollbar {
+    width: 8px;
+}
+
+.previewModalBody::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.previewModalBody::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.previewModalBody::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}

@@ -1,0 +1,237 @@
+.workspace {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--canvas-bg, #1E1E1E);
+  cursor: default;
+  touch-action: none;
+}
+
+.workspace.grid {
+  background-image: linear-gradient(var(--grid-color, rgba(255, 255, 255, 0.05)) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--grid-color, rgba(255, 255, 255, 0.05)) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: var(--grid-offset-x) var(--grid-offset-y);
+}
+
+.workspace.dots {
+  background-image: radial-gradient(circle, var(--grid-color, rgba(255, 255, 255, 0.05)) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: var(--grid-offset-x) var(--grid-offset-y);
+}
+
+.canvasContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: all;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100000px;
+  height: 100000px;
+  cursor: default;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-perspective: 1000;
+  transform-origin: 0 0;
+  pointer-events: all;
+}
+
+.canvas[data-tool="select"] {
+  cursor: default;
+}
+
+.canvas[data-tool="rectangle"],
+.canvas[data-tool="ellipse"],
+.canvas[data-tool="shape_rectangle"],
+.canvas[data-tool="shape_ellipse"],
+.canvas[data-tool="shape_triangle"],
+.canvas[data-tool="shape_polygon"],
+.canvas[data-tool="shape_star"],
+.canvas[data-tool="shape_heart"] {
+  cursor: crosshair;
+}
+
+/* 쉬프트 키를 누른 상태에서의 커서 스타일 */
+.canvas[data-shift-pressed="true"] {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L12 22M2 12L22 12"/></svg>') 12 12, crosshair;
+}
+
+.canvas[data-tool="text"] {
+  cursor: text;
+}
+
+.canvas[data-tool="pan"] {
+  cursor: grab;
+}
+
+.canvas[data-tool="pan"]:active {
+  cursor: grabbing;
+}
+
+.element {
+  position: absolute;
+  box-sizing: border-box;
+  user-select: none;
+  will-change: transform, left, top;
+  transform-origin: center center;
+  touch-action: none;
+  transition: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-perspective: 1000;
+  pointer-events: all;
+}
+
+.element.selected {
+  outline: 2px solid var(--selected-color, #1E90FF);
+  outline-offset: 2px;
+  z-index: 2;
+}
+
+.selectionBox {
+  position: absolute;
+  border: 1px solid var(--selected-color, #1E90FF);
+  background: rgba(30, 144, 255, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.rectangle, .ellipse {
+  background: var(--element-fill, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--element-stroke, #FFFFFF);
+}
+
+.ellipse {
+  border-radius: 50%;
+}
+
+.text {
+  padding: 4px 8px;
+  min-width: 100px;
+  min-height: 24px;
+  background: transparent;
+  border: none;
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  color: var(--element-stroke, #FFFFFF);
+  cursor: text;
+  user-select: text;
+}
+
+.textInput {
+  width: 100%;
+  height: 100%;
+  min-width: 100px;
+  min-height: 24px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: inherit;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.textInput:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* 텍스트 선택 시 스타일 */
+.element.text.selected {
+  outline: 1px solid var(--selected-color, #1E90FF);
+  outline-offset: 2px;
+}
+
+.element.image {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.element.image.loading {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.element.image.error {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .workspace {
+    height: 100vh;
+  }
+}
+
+/* 드래그 앤 드롭 관련 스타일 */
+.workspace.dragOver {
+  outline: 2px dashed #4A90E2;
+  outline-offset: -2px;
+  background-color: rgba(74, 144, 226, 0.05);
+}
+
+.dropIndicator {
+  position: absolute;
+  border: 2px dashed #4A90E2;
+  border-radius: 4px;
+  background-color: rgba(74, 144, 226, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* 하이퍼링크 요소 스타일 */
+.hyperlink {
+  overflow: visible;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.element.hyperlink.selected {
+  outline: 2px solid #4A90E2;
+  outline-offset: 2px;
+}
+
+/* SVG 도형 스타일 */
+.element svg {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.element svg polygon,
+.element svg path {
+  transition: fill 0.2s, stroke 0.2s;
+} 

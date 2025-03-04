@@ -1,0 +1,480 @@
+.videoEditorFullscreenOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    inset: 0;
+    backdrop-filter: blur(5px);
+    pointer-events: auto;
+}
+
+.videoEditorContainer {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    width: 90vw;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.videoEditorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(to right, rgba(30, 30, 30, 0.95), rgba(40, 40, 40, 0.95));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    border-radius: 12px 12px 0 0;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    color: #fff;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.backButton, .saveButton {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.backButton {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.saveButton {
+    background: linear-gradient(135deg, #3a86ff, #4361ee);
+    padding: 0.5rem 1.2rem;
+    box-shadow: 0 2px 8px rgba(58, 134, 255, 0.3);
+}
+
+.backButton:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.saveButton:hover {
+    background: linear-gradient(135deg, #4361ee, #3a86ff);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
+}
+
+.editorContent {
+    padding: 0;
+    overflow: visible;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: none;
+}
+
+.error {
+    color: #ff4444;
+    font-size: 0.875rem;
+    margin: 0.75rem;
+    padding: 0.75rem;
+    background-color: rgba(255, 68, 68, 0.15);
+    border-radius: 8px;
+    border-left: 4px solid #ff4444;
+}
+
+/* 썸네일 관련 스타일 수정 */
+.thumbnailControls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden; /* 내용이 넘치지 않도록 설정 */
+}
+
+.thumbnailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    background: transparent;
+}
+
+.thumbnailTitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.thumbnailActions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.thumbnailButton {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.thumbnailButton:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.thumbnailUrlForm {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.thumbnailUrlInput {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+}
+
+.thumbnailUrlInput:hover,
+.thumbnailUrlInput:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+}
+
+.fileInput {
+    display: none;
+}
+
+.submitButton {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3a86ff, #4361ee);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(58, 134, 255, 0.3);
+}
+
+.submitButton:hover {
+    background: linear-gradient(135deg, #4361ee, #3a86ff);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
+}
+
+/* 썸네일 미리보기 컨테이너 크기 축소 */
+.thumbnailPreviewContainer {
+    width: 100%;
+    max-width: 200px; /* 300px에서 200px로 축소 */
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.thumbnailPreview {
+    width: 100%;
+    height: auto;
+    max-height: 150px; /* 최대 높이 제한 추가 */
+    display: block;
+    object-fit: contain;
+}
+
+/* 비디오 플레이어 섹션 */
+.playerSection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    max-width: 100%;
+    margin: 0;
+    padding: 4rem; /* 5rem에서 1rem으로 축소 */
+    background: #121212;
+}
+
+/* 편집 도구 스타일 */
+.editingTools {
+    width: 100%;
+    /* background: linear-gradient(to bottom, rgba(20, 20, 20, 0.95), rgba(15, 15, 15, 0.95)); */
+    padding: 1rem;
+    margin-top: 0;
+    /* border-top: 1px solid rgba(255, 255, 255, 0.05); */
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.05); */
+}
+
+.toolsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.toolsTitle {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.toolsButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.toolButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.toolButton:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.toolButton.active {
+    background: linear-gradient(135deg, rgba(58, 134, 255, 0.3), rgba(67, 97, 238, 0.3));
+    border-color: rgba(58, 134, 255, 0.6);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(58, 134, 255, 0.2);
+}
+
+/* 프레임 미리보기 스타일 */
+.framePreview {
+    margin-top: 1rem;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.framePreviewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.framePreviewTitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.frameTime {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* 프레임 미리보기 컨테이너 크기도 조정 */
+.framePreviewContainer {
+    width: 100%;
+    max-width: 300px; /* 400px에서 300px로 축소 */
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.framePreviewImage {
+    width: 100%;
+    height: auto;
+    max-height: 180px; /* 최대 높이 제한 추가 */
+    display: block;
+    object-fit: contain;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .videoEditorContainer {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .videoEditorHeader {
+        padding: 0.75rem 1rem;
+        border-radius: 0;
+    }
+    
+    .editorContent {
+        padding: 0;
+    }
+    
+    .thumbnailActions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .toolsButtons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+} 
+
+/* 확인 대화상자 스타일 */
+.confirmDialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(3px);
+}
+
+.confirmDialogContent {
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.confirmTitle {
+    font-size: 1.2rem;
+    color: #fff;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+}
+
+.confirmMessage {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.confirmButtons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.cancelButton, .confirmButton {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelButton {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.confirmButton {
+    background: linear-gradient(135deg, #ff4444, #ff6b6b);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+}
+
+.cancelButton:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.confirmButton:hover {
+    background: linear-gradient(135deg, #ff6b6b, #ff4444);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+}

@@ -1,0 +1,240 @@
+.modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease forwards;
+    overflow: hidden;
+}
+
+.modal_overlay.closing {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+.modal_content {
+    background-color: rgba(28, 28, 28, 0.95);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease forwards;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal_overlay.closing .modal_content {
+    animation: slideDown 0.3s ease forwards;
+}
+
+.modal_header_fixed {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(28, 28, 28, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal_header {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal_header h2 {
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal_close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    position: relative;
+    margin: -6px;
+}
+
+.modal_close:hover {
+    color: white;
+}
+
+.modal_body_wrapper {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.modal_body_wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal_body_wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal_body_wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.modal_body {
+    padding: 24px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+.modal_body h3 {
+    color: white;
+    margin-top: 16px;
+    margin-bottom: 2px;
+    font-size: 18px;
+}
+
+.modal_body p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.modal_body ul {
+    margin: 8px 0 16px;
+    padding-left: 20px;
+}
+
+.modal_body li {
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(50px);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        backdrop-filter: blur(50px);
+    }
+    to {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+@media (max-width: 639px) {
+    .modal_content {
+        width: 95%;
+        margin: 16px;
+    }
+    .modal_header {
+        padding: 16px;
+    }
+    .modal_body {
+        padding: 16px;
+    }
+}
+
+.header_content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.language_selector {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 16px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+
+.lang_btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang_btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1c1c1c;
+}
+
+.lang_btn:hover:not(.active) {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 639px) {
+    .header_content {
+        gap: 8px;
+    }
+    .language_selector {
+        margin-left: 8px;
+    }
+    .lang_btn {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+}

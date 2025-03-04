@@ -1,0 +1,906 @@
+.sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: rgba(45, 45, 45, 1);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  will-change: transform, width, height, left, top;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  opacity: 0;
+  transform: translateX(-20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* 최소 및 최대 크기 설정 */
+  min-width: 250px;
+  max-width: 80vw; /* 뷰포트 너비의 80% */
+  min-height: 400px;
+  max-height: 90vh; /* 뷰포트 높이의 90% */
+  
+  /* 애니메이션 추가 */
+  transition: opacity 0.3s ease, transform 0.3s ease, width 0.3s ease, min-width 0.3s ease, border-radius 0.3s ease;
+}
+
+.mounted {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 애니메이션 중인 상태 */
+.animating {
+  pointer-events: none; /* 애니메이션 중에는 상호작용 방지 */
+  will-change: width, transform, border-radius;
+}
+
+/* @keyframes float {
+  0% {
+    transform: translateY(0px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25), 0 8px 10px rgba(0, 0, 0, 0.22);
+  }
+  50% {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 32px rgba(0, 0, 0, 0.3), 0 10px 15px rgba(0, 0, 0, 0.25);
+  }
+  100% {
+    transform: translateY(0px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25), 0 8px 10px rgba(0, 0, 0, 0.22);
+  }
+} */
+
+.open {
+  min-width: 250px;
+  width: 320px; /* 기본 너비 */
+  transform: translateX(0);
+  transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease;
+}
+
+.closed {
+  width: 60px !important;
+  border-radius: 20px;
+  min-width: unset !important; /* 닫힌 상태에서는 최소 너비 무시 */
+  max-width: 60px !important; /* 닫힌 상태에서는 최대 너비 60px */
+  min-height: unset !important; /* 닫힌 상태에서는 최소 높이 무시 */
+  transform: translateX(0);
+  transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease, border-radius 0.3s ease, transform 0.3s ease;
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid rgba(61, 61, 61, 0.5);
+  height: 50px;
+  cursor: move; /* 드래그 가능함을 나타내는 커서 */
+  user-select: none; /* 텍스트 선택 방지 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.sidebarHeaderTitle {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+  pointer-events: none; /* 헤더 타이틀 텍스트가 드래그 이벤트를 방해하지 않도록 함 */
+}
+
+.toggleButton {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1; /* 버튼이 드래그 이벤트보다 우선하도록 함 */
+  position: relative; /* z-index가 작동하도록 position 설정 */
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid rgba(61, 61, 61, 0.5);
+  margin: 0 10px;
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #3D3D3D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  margin: 0 5px;
+}
+
+.tabsContainer {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(61, 61, 61, 0.5);
+  margin: 0 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #9D9D9D;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tab:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.tab.active {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.tabIcon {
+  font-size: 16px;
+}
+
+/* 사이드바가 닫혔을 때 탭 텍스트 숨기기 */
+.closed .tabText {
+  display: none;
+}
+
+.closed .sidebarHeader {
+  border-bottom: none;
+  justify-content: center;
+  padding: 10px 0;
+  height: 50px;
+}
+
+.closed .headerTitle {
+  display: none;
+}
+
+.closed .toggleButton {
+  margin: 0;
+}
+
+.closedIcons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.iconButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #9D9D9D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.iconButton:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.iconButton.active {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 리사이징 중에는 트랜지션 비활성화 */
+.resizing {
+  transition: none !important;
+  will-change: width, height, left, top;
+  cursor: grabbing;
+}
+
+.resizing * {
+  pointer-events: none;
+}
+
+/* Resize handles */
+.resizeHandle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.resizeHandle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.resizing .resizeHandle {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.top {
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.right {
+  top: 8px;
+  right: 0;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.bottom {
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.left {
+  top: 8px;
+  left: 0;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.topRight {
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: ne-resize;
+  border-radius: 0 0 0 6px;
+}
+
+.bottomRight {
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  border-radius: 6px 0 0 0;
+}
+
+.bottomLeft {
+  bottom: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: sw-resize;
+  border-radius: 0 6px 0 0;
+}
+
+.topLeft {
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nw-resize;
+  border-radius: 0 0 6px 0;
+}
+
+/* Draggable hyperlinks */
+.hyperlinkContainer {
+  padding: 15px;
+  border-bottom: 1px solid rgba(61, 61, 61, 0.5);
+  margin: 0 10px;
+}
+
+.sectionDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 20px 15px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 15px 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.draggableItem {
+  display: flex;
+  align-items: center;
+  background: rgba(45, 45, 45, 0.8);
+  border-radius: 8px;
+  margin-bottom: 0;
+  padding: 6px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.draggableItem:hover {
+  background: rgba(55, 55, 55, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.draggableItem:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.dragHandle {
+  color: #9D9D9D;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* 드래그 이미지 스타일 */
+.dragImage {
+  position: absolute;
+  top: -1000px;
+  left: -1000px;
+}
+
+.dragImageContent {
+  padding: 8px 12px;
+  background: rgba(40, 40, 40, 0.9);
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .sidebar {
+    min-width: 200px;
+    max-width: 90vw;
+  }
+  
+  .open {
+    width: 280px;
+  }
+  
+  .tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    min-width: 180px;
+    max-width: 95vw;
+  }
+  
+  .open {
+    width: 250px;
+  }
+}
+
+/* 스크롤바 최적화 */
+.sidebarContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebarContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.hyperlinkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+}
+
+.hyperlinkItem {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: grab;
+  background: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hyperlinkItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background: rgba(40, 40, 40, 0.9);
+}
+
+.hyperlinkItem:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .hyperlinkGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hyperlinkGrid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+}
+
+/* 검색 기능 스타일 */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  position: relative;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 150px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.filterContainer {
+  position: relative;
+  min-width: 90px;
+  max-width: 100px;
+  width: auto;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.filterSelect {
+  appearance: none;
+  background-color: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 28px 8px 12px;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.filterSelect:hover {
+  background-color: rgba(40, 40, 40, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(40, 40, 40, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.filterArrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background-color: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(40, 40, 40, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.clearButton {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filterDropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  width: 180px;
+  background-color: rgba(30, 30, 30, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.filterOption {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filterOption:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filterOption.selected {
+  background-color: rgba(52, 152, 219, 0.3);
+  color: #3498db;
+}
+
+/* 스크롤 래퍼 */
+.scrollWrapper {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  margin: 0 5px;
+}
+
+/* 커스텀 스크롤바 컨테이너 */
+.customScrollContainer {
+  width: calc(100% - 12px); /* 스크롤바 너비 고려 */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding: 10px;
+}
+
+/* Webkit 브라우저용 스크롤바 숨기기 */
+.customScrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* 스크롤바 트랙 */
+.scrollTrack {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  z-index: 10;
+  cursor: pointer;
+}
+
+/* 스크롤바 썸 (움직이는 부분) */
+.scrollThumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 60px; /* 기본값, 동적으로 조정됨 */
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  z-index: 11;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.scrollThumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.scrollThumb:active {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 빈 상태 및 로딩 스타일 */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .searchInput {
+    padding: 8px 10px 8px 32px;
+    font-size: 13px;
+  }
+  
+  .searchIcon {
+    left: 10px;
+    font-size: 12px;
+  }
+  
+  .clearButton {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+  }
+  
+  .scrollTrack {
+    width: 6px;
+  }
+  
+  .scrollThumb {
+    width: 6px;
+  }
+  
+  .tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  
+  .searchInputWrapper {
+    min-width: 120px;
+    flex: 1;
+  }
+  
+  .filterContainer {
+    min-width: 90px;
+    max-width: 120px;
+  }
+  
+  .filterSelect {
+    padding: 6px 24px 6px 8px;
+    font-size: 13px;
+  }
+  
+  .filterDropdown {
+    width: 150px;
+  }
+  
+  .searchContainer {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchInput {
+    padding: 6px 8px 6px 28px;
+    font-size: 12px;
+  }
+  
+  .searchIcon {
+    left: 8px;
+    font-size: 10px;
+  }
+  
+  .clearButton {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+  
+  .scrollTrack {
+    width: 4px;
+  }
+  
+  .scrollThumb {
+    width: 4px;
+  }
+  
+  .tab {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  
+  .searchInputWrapper {
+    min-width: 100%;
+    margin-bottom: 6px;
+  }
+  
+  .filterContainer {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .filterSelect {
+    padding: 5px 20px 5px 6px;
+    font-size: 12px;
+  }
+  
+  .filterDropdown {
+    width: 100%;
+  }
+  
+  .searchContainer {
+    flex-direction: column;
+    padding: 8px 12px;
+  }
+}
+
+/* 열고 닫을 때 내부 콘텐츠 애니메이션 */
+.open .sidebarHeaderTitle span {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+}
+
+.closed .sidebarHeaderTitle span {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 중복된 필터 스타일 제거 */
+/* 이 부분은 상단에서 이미 정의되어 있으므로 삭제합니다 */
+
+@media (max-width: 768px) {
+  .filterButton {
+    padding: 4px;
+  }
+  
+  .filterDropdown {
+    width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filterButton {
+    padding: 3px;
+  }
+  
+  .filterDropdown {
+    width: 130px;
+  }
+} 

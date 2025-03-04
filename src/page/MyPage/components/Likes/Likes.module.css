@@ -1,0 +1,86 @@
+.likesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .likesGrid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 2fr));
+        gap: 1rem;
+        justify-items: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .likesGrid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+}
+
+.likeCard {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.likeCard:hover {
+    transform: translateY(-4px);
+}
+
+.likeImage {
+    width: 100%;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.likeInfo {
+    padding: 1rem;
+}
+
+.likeInfo h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.likeInfo p {
+    margin: 0.5rem 0 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    margin: 6rem auto;
+    max-width: 600px;
+}
+
+.emptyTitle {
+    font-size: 1.5rem;
+    color: #2e2e2e;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.emptyDescription, .highlight {
+    font-size: 1rem;
+    color: #515151;
+    line-height: 1.5;
+}
+
+.highlight {
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    font-weight: 300;
+    letter-spacing: 0.05rem;
+}

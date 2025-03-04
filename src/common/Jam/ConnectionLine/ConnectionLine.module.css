@@ -1,0 +1,97 @@
+.connectionLine {
+    position: absolute;
+    height: 0; /* 높이를 0으로 설정하고 border-top으로 선 표시 */
+    border-top: 2px solid rgba(255, 255, 255, 0.7); /* 투명도 조정 */
+    pointer-events: all;
+    cursor: pointer;
+    transition: border-color 0.2s, border-width 0.2s;
+    z-index: 10;
+}
+
+.connectionLine:hover {
+    border-color: var(--selected-color);
+    border-width: 3px;
+}
+
+.connectionLine.selected {
+    border-color: var(--selected-color);
+    border-width: 3px;
+}
+
+/* 직선 연결점 스타일 */
+.connectionLine::before,
+.connectionLine::after {
+    content: '';
+    position: absolute;
+    width: 6px; /* 크기 줄임 */
+    height: 6px; /* 크기 줄임 */
+    border-radius: 50%;
+    background: currentColor;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.connectionLine::before {
+    left: -3px;
+}
+
+.connectionLine::after {
+    right: -3px;
+}
+
+/* 곡선 연결선 스타일 */
+.curvedLine {
+    pointer-events: none;
+    z-index: 10;
+}
+
+.curvedLine path {
+    stroke: rgba(255, 255, 255, 0.7); /* 투명도 조정 */
+    transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.curvedLine path:hover {
+    stroke: var(--selected-color);
+    stroke-width: 3px;
+}
+
+.selectedPath {
+    stroke: var(--selected-color) !important;
+    stroke-width: 3px !important;
+}
+
+/* 연결점 스타일 - 상하좌우 모서리에 붙는 앵커 포인트 */
+.anchorPoint {
+    position: absolute;
+    width: 8px; /* 크기 줄임 */
+    height: 8px; /* 크기 줄임 */
+    background-color: var(--selected-color);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0.7; /* 항상 보이도록 투명도 설정 */
+}
+
+.anchorPoint.top {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.anchorPoint.right {
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.anchorPoint.bottom {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.anchorPoint.left {
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+} 

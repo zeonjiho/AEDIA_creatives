@@ -1,0 +1,1112 @@
+.wrap {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(50px) contrast(1.1) saturate(1.1);
+    -webkit-backdrop-filter: blur(50px) contrast(1.1) saturate(1.1);
+    color-scheme: dark;
+    padding: 1.5rem;
+    color: #fff;
+    box-sizing: border-box;
+    z-index: 1100;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+    cursor: pointer;
+}
+
+/* 최소화되었을 때 배경 스타일 */
+.wrap[data-minimized="true"] {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+}
+
+/* 최소화된 모달은 포인터 이벤트 허용 */
+.wrap[data-minimized="true"] .minimizedModal {
+    pointer-events: auto;
+}
+
+@media (color-gamut: p3) {
+    /* .wrap {
+        background-color: color(display-p3 0 0 0 / 0.7);
+    } */
+    .modalContent {
+        background-color: color(display-p3 0.09 0.09 0.09 / 0.8);
+        border: 1px solid color(display-p3 1 1 1 / 0.1);
+    }
+}
+
+.modalWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    max-width: 75rem;
+    min-width: 45rem;
+    cursor: default;
+}
+
+.modalContent {
+    width: 100%;
+    max-width: 75rem;
+    min-width: 45rem;
+    margin: 0 auto;
+    background-color: color(display-p3 0.04 0.04 0.04 / 1);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    position: relative;
+    border: 1px solid color(display-p3 1 1 1 / 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 0.3s ease forwards;
+    will-change: transform, opacity;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 모달이 닫힐 때
+.modalContent.closing {
+    animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+} */
+
+.modalHeader {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+}
+
+.modalBody {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 3rem;
+    position: relative;  /* 오버레이의 기준점 */
+}
+
+.modalBody.blurred {
+    filter: blur(8px);
+    pointer-events: none;
+}
+
+.modalFooter {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+/* 스크롤바 스타일 */
+
+.modalBody::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modalBody::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.linkContainer {
+    width: 100%;
+    background-color: rgba(29, 29, 29, 0.8);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    backdrop-filter: blur(50px);
+    position: relative;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.2s var(--timing-function);
+    padding-top: 4rem;
+}
+
+
+/* 모바일 환경 대응 */
+
+@media screen and (max-width: 768px) {
+    .modalWrapper {
+        width: auto;
+    }
+    .linkContainer {
+        padding: 1.5rem;
+        padding-top: 4rem;
+    }
+    .wrap {
+        padding: 0.5rem;
+    }
+    .modalContent {
+        width: 95%;
+        min-width: auto;
+    }
+    .buttonActions {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    .closeButton,
+    .publishButton {
+        height: 2.75rem;
+    }
+    .closeButton {
+        flex: 0.5;
+    }
+    .publishButton {
+        flex: 1.5;
+    }
+    
+    .modalHeader {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    .headerLeft {
+        width: auto;
+    }
+    
+    .visibilityControls {
+        width: auto;
+        justify-content: flex-end;
+    }
+}
+
+@media screen and (max-height: 700px) {
+    .modalContent {
+        max-height: 80vh;
+    }
+}
+
+
+/* 더 작은 모바일 화면 대응 */
+
+@media screen and (max-width: 480px) {
+    .modalWrapper {
+        width: auto;
+    }
+    .linkContainer {
+        padding: 1rem;
+        padding-top: 4rem;
+    }
+    .wrap {
+        padding: 0.25rem;
+    }
+    .modalContent {
+        width: 100%;
+        border-radius: 0.75rem;
+    }
+}
+
+
+/* 퍼블릭 상태일 때 */
+
+.linkContainer[data-public="true"] {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+
+/* 프라이빗 상태일 때 */
+
+.linkContainer[data-public="false"] {
+    border-color: rgba(255, 255, 255, 0.5);
+    border-width: 1px;
+}
+
+.buttonGroup {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.buttonContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0;
+}
+
+.buttonActions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    align-items: center;
+}
+
+.closeButton,
+.publishButton {
+    all: unset;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+.closeButton {
+    all: unset;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--color-error, #ff4444);
+    border: 1px solid rgba(255, 59, 48, 0.2);
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+    background: rgba(255, 59, 48, 0.15);
+    border-color: rgba(255, 59, 48, 0.3);
+}
+
+.publishButton {
+    flex: 3;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.publishButtonSpinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.publishButton:hover:not(:disabled) {
+    background-color: var(--color-primary);
+}
+
+.publishButton:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.title {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.content {
+    margin-top: 48px;
+    word-break: break-all;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.controlsHeader {
+    margin: 0.5rem 0;
+}
+
+.inputLabel {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.titleInput {
+    width: 100%;
+    height: 2.5rem;
+    font-size: 0.875rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.titleInput:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
+.contentInput {
+    width: 100%;
+    padding: 0.75rem 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    margin: 0.5rem 0;
+}
+
+.contentInput:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.contentInput:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
+.contentInput::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.visibilityControls {
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    background: rgba(29, 29, 29, 0.8);
+    border-radius: 2rem;
+    padding: 0.25rem;
+    gap: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.aiToggle,
+.visibilityText {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    min-width: 0;
+    width: auto;
+    transition: all 0.2s var(--timing-function);
+    overflow: hidden;
+    height: 2.25rem;
+    box-sizing: border-box;
+}
+
+.aiToggle[data-enabled="true"],
+.visibilityText[data-public="false"] {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.aiToggle:hover,
+.visibilityText:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+
+/* 호버 시 아이콘도 밝아지게 */
+
+.aiToggle:hover .aiIcon,
+.visibilityText:hover .lockIcon,
+.aiToggle[data-enabled="true"] .aiIcon,
+.visibilityText[data-public="false"] .lockIcon {
+    opacity: 1;
+}
+
+
+/* 기본 AI 효과 */
+.modalContent[data-ai-enabled="true"] {
+    box-shadow: 
+        20px 20px 100px color(display-p3 0 1 1 / 0.1),
+        -20px -20px 100px color(display-p3 1 0 1 / 0.1),
+        20px -20px 100px color(display-p3 1 0 0.5 / 0.1),
+        -20px 20px 100px color(display-p3 0 1 0.8 / 0.1);
+    animation: 
+        slideUp 0.3s ease forwards,
+        rainbow-shadow 12s ease infinite;
+}
+
+@keyframes rainbow-shadow {
+    0% {
+        box-shadow: 
+            20px 20px 100px color(display-p3 0 1 1 / 0.1),
+            -20px -20px 100px color(display-p3 1 0 1 / 0.1),
+            20px -20px 100px color(display-p3 1 0 0.5 / 0.1),
+            -20px 20px 100px color(display-p3 0 1 1 / 0.1);
+    }
+    33% {
+        box-shadow: 
+            -25px 25px 100px color(display-p3 1 0 1 / 0.1),
+            25px -25px 100px color(display-p3 0 1 1 / 0.1),
+            25px 25px 100px color(display-p3 1 1 0 / 0.1),
+            -25px -25px 100px color(display-p3 0 1 1 / 0.1);
+    }
+    66% {
+        box-shadow: 
+            -20px -20px 100px color(display-p3 0 0.5 1 / 0.1),
+            20px 20px 100px color(display-p3 1 0 1 / 0.1),
+            -20px 20px 100px color(display-p3 0 1 0.5 / 0.1),
+            20px -20px 100px color(display-p3 1 0 1 / 0.1);
+    }
+    100% {
+        box-shadow: 
+            20px 20px 100px color(display-p3 0 1 1 / 0.1),
+            -20px -20px 100px color(display-p3 1 0 1 / 0.1),
+            20px -20px 100px color(display-p3 1 0 0.5 / 0.1),
+            -20px 20px 100px color(display-p3 0 1 1 / 0.1);
+    }
+}
+
+
+/* Private 상태일 때의 스타일 */
+.modalContent[data-public="false"] {
+    border-color: color(display-p3 1 1 1 / 0.5);
+    box-shadow: 
+        0 0 0 1px color(display-p3 1 1 1 / 0.2),
+        0 4px 32px color(display-p3 1 1 1 / 0.1);
+    animation: 
+        slideUp 0.3s ease forwards,
+        glowBorder 2s ease-in-out infinite;
+}
+
+/* Private + AI 활성화 상태일 때의 스타일 (더 높은 우선순위) */
+.modalContent[data-ai-enabled="true"][data-public="false"] {
+    border-color: color(display-p3 1 1 1 / 0.5);
+    box-shadow: 
+        20px 20px 100px color(display-p3 0 0.616 1 / 0.08),
+        -20px -20px 100px color(display-p3 0.518 0 1 / 0.08),
+        20px -20px 100px color(display-p3 1 0 0.384 / 0.08),
+        -20px 20px 100px color(display-p3 0 1 0.569 / 0.08),
+        0 0 0 1px color(display-p3 1 1 1 / 0.2),
+        0 4px 32px color(display-p3 1 1 1 / 0.1);
+    animation: 
+        slideUp 0.3s ease forwards,
+        rainbow-shadow 12s ease infinite,
+        glowBorder 2s ease-in-out infinite;
+}
+
+
+/* 비디오 썸네일 컨테이너 스타일 */
+.videoThumbnailContainer {
+    width: 100%;
+    position: relative;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin: 0.5rem auto;
+    max-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.thumbnailOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: f;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 0.5rem;
+}
+
+/* 기존 썸네일 컨테이너 스타일 개선 */
+.thumbnailContainer {
+    width: 100%;
+    position: relative;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin: 0.5rem auto;
+    max-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.thumbnailPreview {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.removeImageButton {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.removeImageButton:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+
+/* 로그인 필요 상태일 때의 스타일 */
+
+.loginRequired {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.loginLink {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.loginLink:hover {
+    color: var(--color-primary-hover);
+}
+
+.publishButton.loginRequired {
+    background: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+}
+
+.publishButton.loginRequired:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+
+/* 로그인 필요 메시지 애니메이션 */
+
+.loginMessage {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cancelWarning {
+    color: var(--color-error, #ff4444);
+    font-weight: 500;
+}
+
+.cancelConfirmButton {
+    all: unset;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--color-error, #ff4444);
+    border: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+.cancelConfirmButton:hover {
+    background: rgba(255, 59, 48, 0.15);
+    border-color: rgba(255, 59, 48, 0.3);
+}
+
+.cancelCancelButton {
+    all: unset;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cancelCancelButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cancelWarning {
+    color: var(--color-error, #ff4444);
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeInWarning {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.buttonContainer {
+    position: relative;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cancelWarningContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+.cancelWarningMessage {
+    position: static;
+    transform: none;
+    animation: fadeIn 0.2s ease;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    font-weight: 500;
+    word-break: keep-all;
+    white-space: normal;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.backToEditButton {
+    all: unset;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    flex: 2;
+    transition: all 0.2s ease;
+}
+
+.backToEditButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.confirmButtons {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+
+/* Do Cancel 상태일 때의 스타일 */
+
+.closeButton[data-confirm="true"] {
+    flex: 0.7;
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--color-error, #ff4444);
+    border: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+.highlight {
+    color: var(--color-error, #ff4444);
+    font-weight: 700;
+    text-decoration-color: var(--color-error, #ff4444);
+    text-underline-offset: 2px;
+}
+
+.loginWarningMessage {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    animation: fadeIn 0.2s ease;
+}
+
+.loginHighlight {
+    color: var(--color-primary);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.loginHighlight:hover {
+    text-decoration: underline;
+}
+
+.previewButton {
+    all: unset;
+    box-sizing: border-box;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-primary-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary-light);
+    color: #fff;
+    width: auto;
+}
+
+.previewButton:hover {
+    background-color: var(--color-primary-light-hover);
+    border-color: var(--color-primary-border-hover);
+}
+
+.collectionSelector {
+    position: relative;
+    z-index: 2;
+    /* margin-top: 3rem; */
+}
+
+.collectionText {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-family: var(--font-secondary);
+    /* color: rgba(255, 255, 255, 0.9); */
+    /* background: rgba(255, 255, 255, 0.05); */
+    /* padding: 0.5rem 0.75rem; */
+    /* border-radius: 0.5rem; */
+    /* border: 1px solid rgba(255, 255, 255, 0.1); */
+}
+
+ .collectionText:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+} 
+
+
+.collectionName {
+    margin: 0 0.5rem;
+    font-family: var(--font-secondary);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.collectionIcon {
+    width: 14px;
+    height: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.collectionText:hover .collectionIcon {
+    opacity: 1;
+}
+
+/* 모바일 대응 */
+@media screen and (max-width: 1024px) {
+    .modalWrapper {
+        width: 100%;
+        max-width: 75rem;
+        min-width: auto;
+    }
+    
+    .modalContent {
+        min-width: auto;
+    }
+    
+    .modalBody {
+        padding: 1.5rem;
+    }
+}
+
+.topControls {
+    position: absolute;
+    top: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    z-index: 2;
+    width: auto;
+}
+
+.collectionSelector {
+    position: relative;
+    pointer-events: auto;
+    margin-left: 0;
+}
+
+
+
+/* 모바일 대응 수정 */
+@media screen and (max-width: 768px) {
+}
+
+/* AI 토글 아이콘 상태 스타일 */
+.aiToggle .aiIcon {
+  transition: opacity 0.2s ease;
+  opacity: 0.6;
+}
+
+[data-ai-enabled="true"] .aiIcon {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.clearCollectionButton {
+    all: unset;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.clearCollectionButton:hover {
+    color: rgba(255, 255, 255, 0.9);
+    opacity: 1;
+}
+/* 자물쇠 아이콘 애니메이션 */
+.visibilityText .lockIcon {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center 55%;
+}
+
+.visibilityText[data-public="true"] .lockIcon {
+  animation: unlockAnimation 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.visibilityText[data-public="false"] .lockIcon {
+  animation: lockAnimation 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes unlockAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-20deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes lockAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(20deg);
+  }
+  60% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.minimizeButton {
+    display: none;
+}
+
+/* Video와 Music 타입을 위한 추가 스타일 */
+[data-type="video"] .contentInput,
+[data-type="music"] .contentInput {
+    padding-left: 2.5rem;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>');
+    background-repeat: no-repeat;
+    background-position: 0.75rem center;
+    background-size: 1rem;
+}
+
+[data-type="video"] .contentInput:focus,
+[data-type="music"] .contentInput:focus {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>');
+}
+
+/* 오버레이 아이콘 제거 */
+.wrap::after {
+    display: none;
+}
+
+/* 소셜 미디어 임베드 스타일 */
+.socialMediaEmbed {
+    width: 100%;
+    max-width: 550px;
+    margin: 1rem auto;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.socialMediaEmbed iframe {
+    width: 100% !important;
+    border: none !important;
+    max-height: 600px;
+}

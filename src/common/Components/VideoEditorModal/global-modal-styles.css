@@ -1,0 +1,12 @@
+/* 비디오 에디터 모달 관련 전역 스타일 */
+body.editor-modal-open {
+    overflow: hidden !important;
+    padding-right: 15px; /* 스크롤바 너비만큼 패딩 추가하여 레이아웃 점프 방지 */
+}
+
+/* 모바일 환경에서는 패딩 제거 */
+@media (max-width: 768px) {
+    body.editor-modal-open {
+        padding-right: 0;
+    }
+} 

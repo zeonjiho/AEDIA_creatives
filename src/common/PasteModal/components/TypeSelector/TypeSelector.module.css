@@ -1,0 +1,176 @@
+.typeSection {
+    margin: 0rem 0;
+}
+
+.typeHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.typeTitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+
+}
+
+.typeList {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.typeButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0);
+    border: 1px solid rgba(255, 255, 255, 0);
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.typeButton:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.typeButton.selected {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.typeIcon {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+/* Video와 Music 타입 버튼을 위한 추가 스타일 */
+.typeButton[data-type="video"] .typeIcon,
+.typeButton[data-type="music"] .typeIcon {
+    font-size: 0.9rem;  /* 아이콘 크기 약간 조정 */
+}
+
+.typeButton[data-type="video"].selected,
+.typeButton[data-type="music"].selected {
+    background: rgba(var(--color-primary-rgb), 0.15);
+    border-color: rgba(var(--color-primary-rgb), 0.3);
+}
+
+.typeSelector {
+    position: relative;
+    display: inline-block;
+}
+
+.typeSelectorButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    
+}
+
+.typeSelectorButton:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.currentTypeIcon {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.currentTypeLabel {
+    font-weight: 500;
+}
+
+.dropdownIcon {
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+}
+
+.typeSelectorButton[aria-expanded="true"] .dropdownIcon {
+    transform: rotate(180deg);
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 150px;
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+}
+
+.dropdownItem:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdownItem.selected {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-weight: 500;
+}
+
+.typeIcon {
+    font-size: 0.9rem;
+    width: 1rem;
+    text-align: center;
+}
+
+.typeLabel {
+    flex: 1;
+}

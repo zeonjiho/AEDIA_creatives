@@ -1,0 +1,218 @@
+.layout {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #000;
+}
+
+/* 상단 헤더 */
+.top_header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background-color: rgba(0, 0, 0, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+}
+
+.top_header_content {
+    max-width: 100%;
+    height: 100%;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo_wrap {
+    height: 24px;
+}
+
+.logo_wrap svg {
+    height: 100%;
+    width: auto;
+}
+
+.action_buttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.action_btn {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action_btn:hover {
+    color: #fff;
+}
+
+.notification_badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #FF4444;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* 하단 네비게이션 */
+.bottom_header {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 85px;
+    background-color: rgba(0, 0, 0, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav_menu {
+    height: 60px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav_btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav_btn svg {
+    width: 24px;
+    height: 24px;
+    pointer-events: none; /* SVG 자체의 이벤트 방지 */
+}
+
+.nav_btn::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: 0;
+}
+
+.nav_btn.active {
+    color: #fff;
+}
+
+.nav_btn:hover {
+    color: #fff;
+}
+
+/* 메인 컨텐츠 영역 */
+.main_content {
+    flex: 1;
+    padding: 56px 0 85px 0;
+    width: 100%;
+    padding-bottom: calc(85px + env(safe-area-inset-bottom));
+}
+
+/* 프로필 이미지 */
+.profile_image {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: opacity 0.2s var(--timing-function);
+}
+
+.profile_image:hover {
+    opacity: 0.8;
+}
+
+/* 로그인 버튼 */
+.login_btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login_btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 푸터 스타일 수정 */
+.footer_wrap {
+    flex-shrink: 0;
+    width: 100%;
+    padding: 1rem 0; /* 좌우 패딩 제거 */
+    margin-bottom: calc(85px + env(safe-area-inset-bottom));
+}
+
+.footer_content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    /* padding: 0 16px; 패딩 제거 */
+}
+
+.footer_link {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.footer_link:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer_copyright {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* 기존 미디어 쿼리 수정 */
+@media (min-width: 769px) {
+    .top_header,
+    .bottom_header,
+    .footer_wrap {  /* 푸터도 PC 버전에서는 숨김 */
+        display: none;
+    }
+
+    .main_content {
+        padding: 0;
+    }
+}

@@ -1,0 +1,418 @@
+.container {
+    width: 100%;
+    max-width: 87.5rem;
+    /* 1400px - Home.module.css와 동일 */
+    margin: 0 auto;
+    padding: 1.25rem;
+    box-sizing: border-box;
+    margin-top: 56px;
+    /* 헤더 높이만큼 여백 */
+    position: relative;
+    /* 모달이 열려있을 때도 컨테이너는 스크롤되지 않도록 */
+    height: 100%;
+    min-height: 100vh;
+    overflow-x: hidden; /* 가로 스크롤 방지 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
+/* 드래그 방지를 위한 추가 스타일 */
+
+.container * {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+}
+
+.content {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.tabsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    /* background와 backdrop-filter 제거 */
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+@media (min-width: 769px) {
+    .tabsContainer {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        height: 4.5rem;
+    }
+
+    .tabs {
+        padding: 0;
+    }
+}
+
+.tab {
+    padding: 0.5rem 1rem; /* 패딩 값 조정 */
+    background: transparent;
+    border: none;
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: #ffffff0e;
+}
+
+.tab.active {
+    color: #fff;
+    background-color: #ffffff1c;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+
+/* 짝대기 */
+
+
+/* .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    animation: tabIndicator 0.3s ease-out;
+} */
+
+@keyframes tabIndicator {
+    from {
+        opacity: 0;
+        transform: scaleX(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+.addButton {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    color: white;
+    padding: .7rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /* margin-right: 1rem; */
+    font-size: 0.9rem;
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.addButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+    /* transform: translateY(-1px); */
+}
+
+.addButton:active {
+    transform: translateY(0);
+}
+
+.postsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.mypage_fullName {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    padding-top: 0.5rem;
+}
+
+.mypage_occupation {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    /* background-color: var(--color-primary-light); */
+    padding: 0.3rem 0rem;
+    /* transform: translateY(0.5rem); */
+    /* border: 1px solid var(--color-primary-border); */
+    /* border-radius: 8px; */
+    display: inline-block;
+    margin-top: 1px;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0 1rem;
+}
+
+.actionBtn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.followBtn {
+    background-color: #fff;
+    color: #000;
+}
+
+.followBtn:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.messageBtn {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.messageBtn:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.editButtons {
+    display: flex;
+    gap: 0.5rem;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+}
+
+.editButton {
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s var(--timing-function);
+}
+
+.editButton:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0; /* 패딩 제거 */
+        margin-top: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .content {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        margin-top: -1rem;
+        box-sizing: border-box;
+    }
+
+    .tabContent {
+        width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .tabsContainer {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+        background: none; /* 배경 제거 */
+        backdrop-filter: none; /* backdrop-filter 제거 */
+    }
+
+    .tabs {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        overflow-x: auto;
+        /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
+    }
+
+    .tab {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    .addButton {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    .postsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 2fr));
+        gap: 1rem;
+        justify-items: center;
+        justify-content: center;
+    }
+    .actionButtons {
+        padding: 0 0.75rem;
+    }
+    .actionBtn {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+    .editButtons {
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+    .editButton {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0;
+        width: 100%;
+    }
+    .tabsContainer {
+        margin-bottom: 1rem;
+    }
+    .tabs {
+        gap: 1rem;
+    }
+    .tab {
+        padding: 0.7rem 0.5rem;
+        font-size: 0.85rem;
+    }
+    .addButton {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    .postsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    .actionButtons {
+        padding: 0 0.5rem;
+    }
+    .actionBtn {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    .editButtons {
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+    .editButton {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+.actionsContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.createButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.createButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.createIcon {
+    font-size: 0.7rem;
+}
+
+.createText {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    /* ... existing media query styles ... */
+    
+    .actionsContainer {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        justify-content: space-between;
+    }
+    
+    .createButton {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* ... existing media query styles ... */
+    
+    .actionsContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .createButton {
+        width: 100%;
+        justify-content: center;
+    }
+}

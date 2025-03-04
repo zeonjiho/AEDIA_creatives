@@ -1,0 +1,469 @@
+.toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(45, 45, 45, 0.8);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    position: fixed;
+    top: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.toolGroup {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toolGroup:last-child {
+    border-right: none;
+}
+
+.tool {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    color: #9D9D9D;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.tool:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.tool.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.scaleDisplay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3rem;
+    height: 2.25rem;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0 0.5rem;
+}
+
+/* 드롭다운 메뉴가 있는 도구 */
+.tool.hasDropdown {
+    position: relative;
+    padding-right: 1.5rem;
+}
+
+.tool.hasDropdown::after {
+    content: '';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid rgba(255, 255, 255, 0.7);
+    transition: transform 0.2s ease;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .toolbar {
+        width: calc(100% - 2rem);
+        border-radius: 8px;
+        padding: 0.35rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .toolGroup {
+        flex-shrink: 0;
+    }
+}
+
+.toolbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.toolbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.toolbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.toolbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 프로젝트 정보 스타일 */
+.projectInfo {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    height: 2.25rem;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin-left: 0.5rem;
+}
+
+.projectName {
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .projectInfo {
+        display: none;
+    }
+}
+
+/* 드롭다운 관련 스타일 추가 */
+.shapeDropdownContainer {
+    position: relative;
+}
+
+.hasDropdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px 0 0;
+    min-width: 42px;
+}
+
+.dropdownIcon {
+    font-size: 10px;
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+}
+
+.hasDropdown.open .dropdownIcon {
+    transform: rotate(180deg);
+}
+
+.shapeDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 220px;
+    background-color: rgba(45, 45, 45, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    padding: 8px;
+    margin-top: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.2s ease;
+}
+
+/* 아이콘만 표시하는 도형 드롭다운 */
+.shapeDropdown.iconsOnly {
+    width: 180px;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 10px;
+}
+
+.shapeDropdown.iconsOnly .shapeOption {
+    justify-content: center;
+    padding: 12px;
+}
+
+.shapeDropdown.iconsOnly .shapeOption svg {
+    font-size: 18px;
+    margin: 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.shapeOption {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #9D9D9D;
+}
+
+.shapeOption:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.shapeOption.active {
+    background-color: rgba(74, 107, 255, 0.2);
+    color: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(74, 107, 255, 0.4);
+}
+
+.shapeOption span {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.shapeOption svg {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .shapeDropdown {
+        width: 180px;
+        grid-template-columns: 1fr;
+    }
+    
+    .shapeDropdown.iconsOnly {
+        width: 150px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .shapeOption {
+        padding: 8px;
+    }
+    
+    .shapeOption span {
+        font-size: 12px;
+    }
+}
+
+/* 확장 툴팁 스타일 */
+.extendedTooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    background-color: #1a1a1a;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: max-content;
+    max-width: 220px;
+    animation: fadeIn 0.2s ease-in-out;
+    pointer-events: none;
+    text-align: center;
+}
+
+.extendedTooltip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 6px 6px 6px;
+    border-style: solid;
+    border-color: transparent transparent #1a1a1a transparent;
+}
+
+.tooltipTitle {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #fff;
+}
+
+.tooltipDescription {
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 단축키 모달 스타일 */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.shortcutsModal {
+    background-color: rgba(45, 45, 45, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: modalFadeIn 0.3s ease;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.closeButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.modalContent {
+    padding: 20px;
+}
+
+.shortcutsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.shortcutItem {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.shortcutItem:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.shortcutKey {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 14px;
+    margin-right: 10px;
+    min-width: 30px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shortcutDescription {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    flex: 1;
+}
+
+.shortcutTip {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.shortcutTip svg {
+    margin-right: 10px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.shortcutTip kbd {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 0 4px;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 모바일 반응형 스타일 */
+@media (max-width: 768px) {
+    .shortcutsModal {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .shortcutsList {
+        grid-template-columns: 1fr;
+    }
+    
+    .extendedTooltip {
+        min-width: 150px;
+        max-width: 250px;
+        font-size: 12px;
+    }
+} 

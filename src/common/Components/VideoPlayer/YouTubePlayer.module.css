@@ -1,0 +1,63 @@
+/* ----------------------------------------------------------
+   YouTube Iframe 래퍼
+---------------------------------------------------------- */
+.iframeContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    background-color: #000;
+}
+
+.hiddenIframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    pointer-events: none;
+    border: none;
+}
+
+/* 유튜브 플레이어가 로드되기 전 표시할 로딩 상태 */
+.iframeContainer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: youtube-loading 1s infinite linear;
+    opacity: 0.7;
+    z-index: 0;
+}
+
+@keyframes youtube-loading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 숏츠 비디오를 위한 컨테이너 스타일 */
+.shortsContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+}
+
+.shortsContainer .hiddenIframe {
+    width: auto;
+    height: 100%;
+    aspect-ratio: 9/16;
+    max-width: 100%;
+}
