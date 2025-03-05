@@ -1,0 +1,535 @@
+.calendarContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    position: relative;
+}
+
+/* 캘린더 헤더 */
+.calendarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendarTitle {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.calendarTitle h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.calendarControls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.controlButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--border-radius-round);
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.controlButton:hover {
+    background-color: var(--button-hover);
+    color: var(--text-primary);
+}
+
+.todayButton {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.todayButton:hover {
+    background-color: var(--button-hover);
+    color: var(--text-primary);
+}
+
+.actionButtons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filterButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filterButton:hover, .filterButton.active {
+    background-color: var(--primary-light);
+}
+
+.addEventButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.addEventButton:hover {
+    background-color: var(--primary-dark);
+}
+
+/* 날짜 범위 선택 안내 */
+.rangeSelectionHelp {
+    padding: 0.5rem 1.5rem;
+    background-color: var(--info-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.rangeSelectionHelp p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--info);
+}
+
+/* 프로젝트 필터 */
+.projectFilters {
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filterHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.filterHeader h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.toggleAllButton {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggleAllButton:hover {
+    background-color: var(--button-hover);
+    color: var(--text-primary);
+}
+
+.filterList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.filterItem {
+    flex: 0 0 auto;
+}
+
+.filterLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.filterLabel:hover {
+    color: var(--text-primary);
+}
+
+.filterLabel input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.colorIndicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: var(--border-radius-round);
+    border: 1px solid var(--border-color);
+}
+
+/* 요일 헤더 */
+.weekdaysHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.weekday {
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* 캘린더 그리드 */
+.calendarGrid {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+.calendarWeek {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    position: relative;
+    min-height: 120px;
+}
+
+.calendarDay {
+    min-height: 100px;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.5rem;
+    background-color: var(--bg-primary);
+    transition: background-color 0.2s ease;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    z-index: 0;
+}
+
+.calendarDay:hover {
+    background-color: var(--hover-light);
+}
+
+/* 날짜 범위 선택 스타일 */
+.rangeStart {
+    background-color: var(--hover-primary) !important;
+}
+
+.rangeEnd {
+    background-color: var(--hover-primary) !important;
+}
+
+.inRange {
+    background-color: var(--hover-light) !important;
+}
+
+.otherMonth {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+
+.today {
+    background-color: rgba(var(--accent-color-rgb, 0, 0, 0), 0.05);
+}
+
+.dayNumber {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.today .dayNumber {
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+}
+
+.otherMonth .dayNumber {
+    color: var(--text-tertiary);
+}
+
+.eventsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow: hidden;
+    flex: 1;
+}
+
+.eventCard {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    color: white;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    border-top-width: 3px;
+    border-top-style: solid;
+}
+
+.eventCard:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.eventTitle {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eventDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    opacity: 0.9;
+}
+
+.eventProject {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eventAssignee {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eventStatus {
+    padding: 0.1rem 0.3rem;
+    border-radius: var(--border-radius-xs);
+    font-size: 0.65rem;
+    font-weight: 500;
+    margin-left: 0.25rem;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.eventRow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 24px;
+    display: flex;
+    z-index: 5;
+}
+
+.eventPlaceholder {
+    flex: 1;
+    height: 100%;
+}
+
+.multiDayEvent {
+    position: absolute;
+    height: 24px;
+    border-radius: 0;
+    z-index: 5;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0 1px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.multiDayEvent:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.eventStart {
+    border-top-left-radius: var(--border-radius-sm);
+    border-bottom-left-radius: var(--border-radius-sm);
+}
+
+.eventEnd {
+    border-top-right-radius: var(--border-radius-sm);
+    border-bottom-right-radius: var(--border-radius-sm);
+}
+
+/* 주 경계를 넘어가는 이벤트 스타일 */
+.continuesPrevWeek {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+    border-left: 3px dashed rgba(255, 255, 255, 0.8);
+    position: relative;
+    left: 0 !important;
+}
+
+.continuesPrevWeek::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
+}
+
+.continuesNextWeek {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: 0;
+    border-right: 3px dashed rgba(255, 255, 255, 0.8);
+    position: relative;
+    right: 0 !important;
+    width: calc(100% - 1px) !important;
+}
+
+.continuesNextWeek::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.2), transparent);
+}
+
+.eventItem:hover {
+    filter: brightness(0.95);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.moreEvents {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 0.25rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.moreEvents:hover {
+    color: var(--text-primary);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .calendarHeader {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .actionButtons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .projectFilters {
+        padding: 1rem;
+    }
+    
+    .filterList {
+        gap: 0.5rem;
+    }
+    
+    .calendarDay {
+        min-height: 80px;
+        padding: 0.25rem;
+    }
+    
+    .dayNumber {
+        font-size: 0.75rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .eventItem {
+        padding: 0.125rem 0.25rem;
+        font-size: 0.625rem;
+    }
+    
+    .eventTime, .eventAssignee {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendarGrid {
+        grid-template-rows: repeat(6, 60px);
+    }
+    
+    .calendarDay {
+        min-height: 60px;
+        padding: 0.125rem;
+    }
+    
+    .eventsList {
+        display: none;
+    }
+    
+    .filterList {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+} 

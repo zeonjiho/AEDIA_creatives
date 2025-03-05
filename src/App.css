@@ -26,6 +26,7 @@ html, body {
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f3f5;
   --text-primary: #212529;
+  --text-primary-inverse: #ffffff;
   --text-secondary: #495057;
   --text-tertiary: #868e96;
   --border-color: #e9ecef;
@@ -40,6 +41,7 @@ html, body {
   --input-bg: #ffffff;
   --input-border: #ced4da;
   --button-hover: rgba(0, 0, 0, 0.05);
+  --border-color-resize: rgba(0, 0, 0, 0.2);
   
   /* RGB 값 변수 */
   --bg-primary-rgb: 248, 249, 250;
@@ -89,14 +91,27 @@ html, body {
   --color-tag-8: rgba(121, 85, 72, 0.2); /* 갈색 */
   --color-tag-9: rgba(96, 125, 139, 0.2); /* 청회색 */
   --color-tag-10: rgba(233, 30, 99, 0.2); /* 분홍 */
+  
+  /* 프로젝트 상태 색상 */
+  --status-kickoff: #4285F4; /* 파랑 - 킥오프 */
+  --status-pre-production: #EA4335; /* 빨강 - 프리프로덕션 */
+  --status-production: #FBBC05; /* 노랑 - 프로덕션 */
+  --status-post-production: #34A853; /* 초록 - 포스트프로덕션 */
+  --status-delivery: #9C27B0; /* 보라 - 납품 */
+  --status-review: #FF9800; /* 주황 - 검토 */
+  --status-in-progress: #00BCD4; /* 청록 - 진행중 */
+  --status-completed: #795548; /* 갈색 - 완료 */
+  --status-on-hold: #607D8B; /* 청회색 - 보류 */
+  --status-cancelled: #E91E63; /* 분홍 - 취소 */
 }
 
 [data-theme="dark"] {
   /* 다크 모드 */
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #2d2d2d;
+  --bg-primary: #000000;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1d1d1d;
   --text-primary: #e9ecef;
+  --text-primary-inverse: #000000;
   --text-secondary: #ced4da;
   --text-tertiary: #adb5bd;
   --border-color: #444;
@@ -111,7 +126,7 @@ html, body {
   --input-bg: #2d2d2d;
   --input-border: #444;
   --button-hover: rgba(255, 255, 255, 0.08);
-  
+  --border-color-resize: rgba(255, 255, 255, 0.2);
   /* RGB 값 변수 */
   --bg-primary-rgb: 18, 18, 18;
   --bg-secondary-rgb: 30, 30, 30;

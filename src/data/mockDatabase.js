@@ -51,16 +51,30 @@ export const todos = [
   { id: 8, userId: 7, text: '음향 효과 라이브러리 구축', completed: true, dueDate: '2023-03-05' },
 ];
 
+// 프로젝트 상태 데이터
+export const projectStatuses = {
+  KICKOFF: { id: 1, name: 'Kickoff', color: 'var(--status-kickoff)' },
+  PRE_PRODUCTION: { id: 2, name: 'Pre-production', color: 'var(--status-pre-production)' },
+  PRODUCTION: { id: 3, name: 'Production', color: 'var(--status-production)' },
+  POST_PRODUCTION: { id: 4, name: 'Post-production', color: 'var(--status-post-production)' },
+  DELIVERY: { id: 5, name: 'Delivery', color: 'var(--status-delivery)' },
+  REVIEW: { id: 6, name: 'Review', color: 'var(--status-review)' },
+  IN_PROGRESS: { id: 7, name: 'In Progress', color: 'var(--status-in-progress)' },
+  COMPLETED: { id: 8, name: 'Completed', color: 'var(--status-completed)' },
+  ON_HOLD: { id: 9, name: 'On Hold', color: 'var(--status-on-hold)' },
+  CANCELLED: { id: 10, name: 'Cancelled', color: 'var(--status-cancelled)' }
+};
+
 // 캘린더 이벤트 데이터
 export const events = [
-  { id: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', location: '회의실 A', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 1 },
-  { id: 2, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', location: '회의실 B', participants: [1, 2, 5, 6], colorTag: 2 },
-  { id: 3, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', location: '회의실 C', participants: [1, 4], colorTag: 3 },
-  { id: 4, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', location: '회의실 A', participants: [1, 2, 3], colorTag: 4 },
-  { id: 5, title: '팀 빌딩 워크숍', start: '2023-03-17T13:00:00', end: '2023-03-17T17:00:00', location: '외부 스튜디오', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 5 },
-  { id: 6, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', location: '회의실 B', participants: [1, 2, 5, 8], colorTag: 6 },
-  { id: 7, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', location: '편집실', participants: [1, 2, 6], colorTag: 7 },
-  { id: 8, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', location: '음향 스튜디오', participants: [2, 7], colorTag: 8 },
+  { id: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', location: '회의실 A', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 1, projectId: 1, projectStatus: projectStatuses.IN_PROGRESS.id },
+  { id: 2, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', location: '회의실 B', participants: [1, 2, 5, 6], colorTag: 2, projectId: 2, projectStatus: projectStatuses.KICKOFF.id },
+  { id: 3, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', location: '회의실 C', participants: [1, 4], colorTag: 3, projectId: 3, projectStatus: projectStatuses.REVIEW.id },
+  { id: 4, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', location: '회의실 A', participants: [1, 2, 3], colorTag: 4, projectId: 1, projectStatus: projectStatuses.PRE_PRODUCTION.id },
+  { id: 5, title: '팀 빌딩 워크숍', start: '2023-03-17T13:00:00', end: '2023-03-17T17:00:00', location: '외부 스튜디오', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 5, projectId: 4, projectStatus: projectStatuses.IN_PROGRESS.id },
+  { id: 6, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', location: '회의실 B', participants: [1, 2, 5, 8], colorTag: 6, projectId: 2, projectStatus: projectStatuses.PRE_PRODUCTION.id },
+  { id: 7, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', location: '편집실', participants: [1, 2, 6], colorTag: 7, projectId: 3, projectStatus: projectStatuses.POST_PRODUCTION.id },
+  { id: 8, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', location: '음향 스튜디오', participants: [2, 7], colorTag: 8, projectId: 3, projectStatus: projectStatuses.POST_PRODUCTION.id },
 ];
 
 // 회의실 데이터
@@ -87,78 +101,10 @@ export const roomReservations = [
 
 // 프로젝트 데이터
 export const projects = [
-  { 
-    id: 1, 
-    title: '럭셔리 브랜드 광고 캠페인', 
-    description: '럭셔리 패션 브랜드의 신제품 라인을 위한 30초 광고 제작',
-    createdAt: '2023-02-15',
-    deadline: '2023-04-30',
-    status: '진행 중',
-    tasks: [
-      { id: 1, title: '컨셉 기획 및 스토리보드 작성', status: '완료', assigneeId: 2, deadline: '2023-02-28', createdAt: '2023-02-15' },
-      { id: 2, title: '촬영 장소 섭외', status: '완료', assigneeId: 1, deadline: '2023-03-10', createdAt: '2023-02-20' },
-      { id: 3, title: '모델 캐스팅', status: '완료', assigneeId: 4, deadline: '2023-03-15', createdAt: '2023-02-25' },
-      { id: 4, title: '촬영 준비 및 장비 점검', status: '진행 중', assigneeId: 5, deadline: '2023-03-20', createdAt: '2023-03-01' },
-      { id: 5, title: '메인 촬영', status: '할 일', assigneeId: 5, deadline: '2023-04-05', createdAt: '2023-03-10' },
-      { id: 6, title: '편집 및 VFX', status: '할 일', assigneeId: 6, deadline: '2023-04-20', createdAt: '2023-03-15' },
-      { id: 7, title: '음향 디자인 및 믹싱', status: '할 일', assigneeId: 7, deadline: '2023-04-25', createdAt: '2023-03-15' },
-      { id: 8, title: '최종 마스터링 및 납품', status: '할 일', assigneeId: 1, deadline: '2023-04-30', createdAt: '2023-03-15' },
-    ]
-  },
-  { 
-    id: 2, 
-    title: '기업 홍보 다큐멘터리', 
-    description: '친환경 에너지 기업의 10주년 기념 다큐멘터리 제작',
-    createdAt: '2023-03-01',
-    deadline: '2023-06-30',
-    status: '진행 중',
-    tasks: [
-      { id: 1, title: '기획 및 리서치', status: '완료', assigneeId: 1, deadline: '2023-03-15', createdAt: '2023-03-01' },
-      { id: 2, title: '인터뷰 대상자 섭외', status: '진행 중', assigneeId: 4, deadline: '2023-04-15', createdAt: '2023-03-16' },
-      { id: 3, title: '촬영 일정 조율', status: '진행 중', assigneeId: 1, deadline: '2023-04-20', createdAt: '2023-03-20' },
-      { id: 4, title: '인터뷰 촬영', status: '할 일', assigneeId: 5, deadline: '2023-05-15', createdAt: '2023-03-25' },
-      { id: 5, title: '현장 촬영', status: '할 일', assigneeId: 5, deadline: '2023-05-30', createdAt: '2023-03-25' },
-      { id: 6, title: '편집 및 내레이션 녹음', status: '할 일', assigneeId: 6, deadline: '2023-06-15', createdAt: '2023-03-30' },
-      { id: 7, title: '음향 작업 및 BGM 제작', status: '할 일', assigneeId: 7, deadline: '2023-06-25', createdAt: '2023-03-30' },
-      { id: 8, title: '최종 검수 및 납품', status: '할 일', assigneeId: 1, deadline: '2023-06-30', createdAt: '2023-03-30' },
-    ]
-  },
-  { 
-    id: 3, 
-    title: '뮤직비디오 제작', 
-    description: '신인 아티스트의 데뷔 싱글 뮤직비디오 제작',
-    createdAt: '2023-03-15',
-    deadline: '2023-05-31',
-    status: '계획',
-    tasks: [
-      { id: 1, title: '컨셉 회의 및 스토리보드 작성', status: '할 일', assigneeId: 2, deadline: '2023-04-01', createdAt: '2023-03-15' },
-      { id: 2, title: '촬영 장소 섭외', status: '할 일', assigneeId: 1, deadline: '2023-04-15', createdAt: '2023-03-15' },
-      { id: 3, title: '안무가 및 댄서 섭외', status: '할 일', assigneeId: 4, deadline: '2023-04-15', createdAt: '2023-03-15' },
-      { id: 4, title: '의상 및 소품 준비', status: '할 일', assigneeId: 3, deadline: '2023-04-20', createdAt: '2023-03-20' },
-      { id: 5, title: '촬영', status: '할 일', assigneeId: 5, deadline: '2023-05-10', createdAt: '2023-03-20' },
-      { id: 6, title: '편집 및 VFX', status: '할 일', assigneeId: 6, deadline: '2023-05-25', createdAt: '2023-03-20' },
-      { id: 7, title: '컬러 그레이딩', status: '할 일', assigneeId: 6, deadline: '2023-05-28', createdAt: '2023-03-20' },
-      { id: 8, title: '최종 마스터링 및 납품', status: '할 일', assigneeId: 1, deadline: '2023-05-31', createdAt: '2023-03-20' },
-    ]
-  },
-  { 
-    id: 4, 
-    title: '웹 시리즈 제작', 
-    description: '스타트업 기업을 위한 10부작 웹 시리즈 제작',
-    createdAt: '2023-02-01',
-    deadline: '2023-07-31',
-    status: '진행 중',
-    tasks: [
-      { id: 1, title: '시나리오 작성', status: '완료', assigneeId: 2, deadline: '2023-03-15', createdAt: '2023-02-01' },
-      { id: 2, title: '배우 캐스팅', status: '완료', assigneeId: 4, deadline: '2023-03-30', createdAt: '2023-02-15' },
-      { id: 3, title: '촬영 장소 섭외', status: '완료', assigneeId: 1, deadline: '2023-04-15', createdAt: '2023-03-01' },
-      { id: 4, title: '1-3화 촬영', status: '진행 중', assigneeId: 5, deadline: '2023-05-15', createdAt: '2023-04-01' },
-      { id: 5, title: '4-6화 촬영', status: '할 일', assigneeId: 5, deadline: '2023-06-15', createdAt: '2023-04-01' },
-      { id: 6, title: '7-10화 촬영', status: '할 일', assigneeId: 5, deadline: '2023-07-15', createdAt: '2023-04-01' },
-      { id: 7, title: '편집 및 후반 작업', status: '할 일', assigneeId: 6, deadline: '2023-07-25', createdAt: '2023-04-15' },
-      { id: 8, title: '최종 납품', status: '할 일', assigneeId: 1, deadline: '2023-07-31', createdAt: '2023-04-15' },
-    ]
-  },
+  { id: 1, title: '기업 홍보 영상', description: '대기업 연간 홍보 영상 제작', startDate: '2023-03-01', endDate: '2023-04-15', status: projectStatuses.PRE_PRODUCTION.id, manager: 1, team: [1, 2, 3, 5, 6, 7], budget: 50000000, client: '대한기업', colorTag: 1 },
+  { id: 2, title: '신제품 광고', description: '신제품 출시 TV 광고 캠페인', startDate: '2023-03-05', endDate: '2023-05-10', status: projectStatuses.KICKOFF.id, manager: 2, team: [1, 2, 4, 5, 8], budget: 80000000, client: '테크놀로지 주식회사', colorTag: 2 },
+  { id: 3, title: '웹 시리즈', description: '10부작 웹 시리즈 제작', startDate: '2023-02-15', endDate: '2023-06-30', status: projectStatuses.PRODUCTION.id, manager: 1, team: [1, 2, 3, 4, 6, 7, 8], budget: 120000000, client: '스트리밍 플랫폼 A', colorTag: 3 },
+  { id: 4, title: '다큐멘터리', description: '환경 다큐멘터리 시리즈', startDate: '2023-01-10', endDate: '2023-07-20', status: projectStatuses.PRE_PRODUCTION.id, manager: 3, team: [1, 3, 5, 7, 8], budget: 90000000, client: '방송국 B', colorTag: 4 },
 ];
 
 // 알림 데이터
@@ -171,6 +117,106 @@ export const notifications = [
   { id: 6, title: '클라이언트 피드백', message: '웹 시리즈 1화 러프컷에 대한 클라이언트 피드백이 도착했습니다. 확인 부탁드립니다.', type: '긴급', recipients: 'dev', read: false, createdAt: '2023-03-08T16:30:00' },
   { id: 7, title: '월간 회의 일정', message: '이번 달 전체 회의가 3월 25일 오후 2시에 진행됩니다. 프로젝트 진행 상황을 준비해주세요.', type: '공지사항', recipients: 'all', read: false, createdAt: '2023-03-10T11:00:00' },
   { id: 8, title: '음향 장비 점검', message: '스튜디오 음향 장비 정기 점검이 내일 오전에 진행됩니다. 해당 시간에는 녹음 작업이 불가합니다.', type: '일반', recipients: 'dev', read: true, createdAt: '2023-03-14T15:45:00' },
+];
+
+// 프로젝트 캘린더 이벤트 데이터
+export const projectEvents = [
+  { 
+    id: 1, 
+    title: '럭셔리 브랜드 광고 캠페인 - 컨셉 기획', 
+    start: '2023-03-06T10:00:00', 
+    end: '2023-03-06T17:00:00', 
+    projectId: 1,
+    taskId: 1,
+    assigneeId: 2,
+    colorTag: 1,
+    description: '럭셔리 패션 브랜드의 신제품 라인을 위한 컨셉 기획 및 스토리보드 작성',
+    location: '회의실 A'
+  },
+  { 
+    id: 2, 
+    title: '럭셔리 브랜드 광고 캠페인 - 촬영 장소 섭외', 
+    start: '2023-03-08T09:00:00', 
+    end: '2023-03-10T18:00:00', 
+    projectId: 1,
+    taskId: 2,
+    assigneeId: 1,
+    colorTag: 1,
+    description: '럭셔리 패션 브랜드 광고 촬영을 위한 장소 섭외 및 계약',
+    location: '외부 로케이션'
+  },
+  { 
+    id: 3, 
+    title: '럭셔리 브랜드 광고 캠페인 - 모델 캐스팅', 
+    start: '2023-03-13T10:00:00', 
+    end: '2023-03-15T16:00:00', 
+    projectId: 1,
+    taskId: 3,
+    assigneeId: 4,
+    colorTag: 1,
+    description: '광고 캠페인을 위한 모델 캐스팅 및 계약',
+    location: '회의실 B'
+  },
+  { 
+    id: 4, 
+    title: '기업 홍보 다큐멘터리 - 기획 및 리서치', 
+    start: '2023-03-01T09:00:00', 
+    end: '2023-03-15T18:00:00', 
+    projectId: 2,
+    taskId: 1,
+    assigneeId: 1,
+    colorTag: 2,
+    description: '친환경 에너지 기업의 10주년 기념 다큐멘터리 기획 및 리서치',
+    location: '회의실 C'
+  },
+  { 
+    id: 5, 
+    title: '기업 홍보 다큐멘터리 - 인터뷰 대상자 섭외', 
+    start: '2023-03-16T09:00:00', 
+    end: '2023-04-15T18:00:00', 
+    projectId: 2,
+    taskId: 2,
+    assigneeId: 4,
+    colorTag: 2,
+    description: '다큐멘터리 인터뷰 대상자 섭외 및 일정 조율',
+    location: '회의실 A'
+  },
+  { 
+    id: 6, 
+    title: '뮤직비디오 제작 - 컨셉 회의', 
+    start: '2023-03-20T13:00:00', 
+    end: '2023-03-20T17:00:00', 
+    projectId: 3,
+    taskId: 1,
+    assigneeId: 2,
+    colorTag: 3,
+    description: '신인 아티스트 데뷔 싱글 뮤직비디오 컨셉 회의',
+    location: '회의실 B'
+  },
+  { 
+    id: 7, 
+    title: '웹 시리즈 제작 - 1-3화 촬영', 
+    start: '2023-03-25T08:00:00', 
+    end: '2023-03-30T19:00:00', 
+    projectId: 4,
+    taskId: 4,
+    assigneeId: 5,
+    colorTag: 4,
+    description: '웹 시리즈 1-3화 촬영',
+    location: '촬영 스튜디오'
+  },
+  { 
+    id: 8, 
+    title: '럭셔리 브랜드 광고 캠페인 - 촬영 준비', 
+    start: '2023-03-18T09:00:00', 
+    end: '2023-03-20T18:00:00', 
+    projectId: 1,
+    taskId: 4,
+    assigneeId: 5,
+    colorTag: 1,
+    description: '럭셔리 패션 브랜드 광고 촬영 준비 및 장비 점검',
+    location: '장비실'
+  }
 ];
 
 // 데이터 조회 함수들
@@ -395,6 +441,78 @@ export const deleteNotification = (id) => {
     const deleted = notifications[index];
     notifications.splice(index, 1);
     return deleted;
+  }
+  return null;
+};
+
+// 프로젝트 이벤트 관련 함수
+let projectEventIdCounter = projectEvents.length + 1;
+
+export const getProjectEvents = () => {
+  return [...projectEvents];
+};
+
+export const addProjectEvent = (newEvent) => {
+  const id = projectEvents.length > 0 ? Math.max(...projectEvents.map(event => event.id)) + 1 : 1;
+  const event = {
+    id,
+    title: newEvent.title,
+    start: newEvent.start,
+    end: newEvent.end,
+    location: newEvent.location || '',
+    description: newEvent.description || '',
+    projectId: newEvent.projectId || 1,
+    taskId: newEvent.taskId,
+    assignees: newEvent.assignees || [], // 다중 담당자 배열
+    assigneeId: newEvent.assigneeId, // 이전 버전 호환성 유지
+    projectStatus: newEvent.projectStatus || projectStatuses.IN_PROGRESS.id, // 프로젝트 상태
+    colorTag: newEvent.colorTag || getProjectColorTag(newEvent.projectId || 1)
+  };
+  
+  projectEvents.push(event);
+  return event;
+};
+
+export const updateProjectEvent = (id, updates) => {
+  const index = projectEvents.findIndex(event => event.id === id);
+  if (index !== -1) {
+    projectEvents[index] = {
+      ...projectEvents[index],
+      ...updates,
+      assignees: updates.assignees || projectEvents[index].assignees || [], // 다중 담당자 배열
+      projectStatus: updates.projectStatus || projectEvents[index].projectStatus || projectStatuses.IN_PROGRESS.id // 프로젝트 상태
+    };
+    return projectEvents[index];
+  }
+  return null;
+};
+
+export const deleteProjectEvent = (id) => {
+  const index = projectEvents.findIndex(event => event.id === id);
+  if (index !== -1) {
+    const deleted = projectEvents[index];
+    projectEvents.splice(index, 1);
+    return deleted;
+  }
+  return null;
+};
+
+// 프로젝트 ID에 따른 색상 태그 반환 (프로젝트별 일관된 색상 사용)
+export const getProjectColorTag = (projectId) => {
+  // 프로젝트 ID에 따라 일관된 색상 태그 반환 (1-10 사이)
+  return ((projectId % 10) || 10);
+};
+
+// 프로젝트 ID로 프로젝트 정보 조회
+export const getProjectById = (projectId) => {
+  return projects.find(project => project.id === projectId);
+};
+
+// 프로젝트 ID와 태스크 ID로 태스크 정보 조회
+export const getTaskById = (projectId, taskId) => {
+  const project = getProjectById(projectId);
+  if (project && project.tasks) {
+    return project.tasks.find(task => task.id === taskId);
   }
   return null;
 }; 

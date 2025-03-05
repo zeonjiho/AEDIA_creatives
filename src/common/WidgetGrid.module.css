@@ -130,7 +130,7 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  border: 2px dashed transparent;
+  border: 2px solid transparent;
   border-radius: var(--border-radius-lg);
   z-index: 10;
   transition: border-color 0.2s ease;
@@ -141,16 +141,16 @@
 }
 
 .customize_mode .react-grid-item:hover .widget_resize_indicator {
-  border-color: var(--accent-color);
+    border-color: var(--border-color-resize);
 }
 
 .widget_resize_indicator.active {
-  border-color: var(--accent-color);
+  border-color: var(--border-color-resize);
 }
 
 .react-grid-item.resizing .widget_resize_indicator,
 .react-grid-item.react-draggable-dragging .widget_resize_indicator {
-  border-color: var(--accent-color);
+  border-color: var(--border-color-resize);
   border-style: solid;
 }
 

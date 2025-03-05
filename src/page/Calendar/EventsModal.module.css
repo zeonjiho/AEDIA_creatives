@@ -1,0 +1,97 @@
+.eventsModal {
+  position: absolute;
+  z-index: 1000;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.eventsModalContent {
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+  width: 300px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.eventsModalHeader {
+  padding: 0.8rem 1rem;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.eventsModalHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: var(--text-primary);
+}
+
+.eventsContainer {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.eventItem {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.eventItem:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.eventItem:last-child {
+  border-bottom: none;
+}
+
+.eventTitle {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.eventTime,
+.eventLocation,
+.eventParticipants {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+}
+
+.icon {
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.noEvents {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-tertiary);
+} 

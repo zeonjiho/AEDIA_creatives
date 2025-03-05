@@ -48,9 +48,9 @@
 
 .modalHeader h2 {
   font-size: 1.5rem;
+  font-weight: 600;
   color: var(--text-primary);
   margin: 0;
-  font-weight: 600;
 }
 
 .closeButton {
@@ -59,21 +59,22 @@
   color: var(--text-tertiary);
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--border-radius-round);
   transition: all 0.2s ease;
 }
 
 .closeButton:hover {
-  background-color: rgba(var(--text-primary-rgb), 0.1);
+  background-color: var(--button-hover);
   color: var(--text-primary);
-  transform: rotate(90deg);
 }
 
-.modal form {
+.modalContent {
   padding: 1.5rem;
 }
 
@@ -92,39 +93,63 @@
   margin-bottom: 0;
 }
 
-.formGroup label {
+.label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.formGroup input {
+.titleInput,
+.input,
+.dateInput,
+.timeInput,
+.textarea {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   background-color: var(--input-bg);
   color: var(--text-primary);
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
 }
 
-.formGroup input:focus {
+.titleInput {
+  font-size: 1.25rem;
+  font-weight: 500;
+  padding: 1rem;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.titleInput:focus,
+.input:focus,
+.dateInput:focus,
+.timeInput:focus,
+.textarea:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.1);
 }
 
-.formGroup input::placeholder {
+.titleInput::placeholder,
+.input::placeholder,
+.textarea::placeholder {
   color: var(--text-tertiary);
 }
 
-.participantsList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.8rem;
+.participantsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   max-height: 200px;
   overflow-y: auto;
   padding: 0.5rem;
@@ -133,36 +158,36 @@
   background-color: var(--input-bg);
 }
 
-.participantsList::-webkit-scrollbar {
+.participantsContainer::-webkit-scrollbar {
   width: 6px;
 }
 
-.participantsList::-webkit-scrollbar-track {
+.participantsContainer::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.participantsList::-webkit-scrollbar-thumb {
+.participantsContainer::-webkit-scrollbar-thumb {
   background-color: var(--scroll-color-before);
   border-radius: 3px;
 }
 
-.participantsList:hover::-webkit-scrollbar-thumb {
-  background-color: var(--scroll-color-active);
+.participantsContainer:hover::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-color-hover);
 }
 
 .participantItem {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 0.8rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--border-radius-md);
+  background-color: var(--bg-tertiary);
   cursor: pointer;
-  transition: background-color 0.2s;
-  position: relative;
+  transition: all 0.2s ease;
 }
 
 .participantItem:hover {
-  background-color: rgba(var(--text-primary-rgb), 0.05);
+  background-color: var(--button-hover);
 }
 
 .participantItem.selected {
@@ -170,47 +195,26 @@
   border: 1px solid var(--accent-color);
 }
 
-.participantAvatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-round);
   object-fit: cover;
-  margin-bottom: 0.5rem;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
 }
 
-.participantItem.selected .participantAvatar {
-  border-color: var(--accent-color);
-}
-
-.participantName {
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* 컬러 태그 선택기 스타일 */
-.colorTagSelector {
+.colorTagsContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.5rem;
 }
 
 .colorTag {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--border-radius-round);
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border: 2px solid transparent;
 }
 
@@ -218,47 +222,36 @@
   transform: scale(1.1);
 }
 
-.selectedColorTag {
-  border-color: var(--text-primary);
-  box-shadow: 0 0 0 2px rgba(var(--text-primary-rgb), 0.3);
+.selectedColor {
+  border: 2px solid var(--text-primary);
+  transform: scale(1.1);
 }
 
-.colorTagCheck {
-  color: white;
-  font-size: 0.9rem;
-  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
-}
-
-.checkIcon {
-  position: absolute;
-  top: 0;
-  right: 0;
-  color: var(--accent-color);
-  background-color: var(--bg-secondary);
-  border-radius: 50%;
-  padding: 2px;
-  font-size: 0.8rem;
-}
-
-.formActions {
+.modalFooter {
   display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
   border-top: 1px solid var(--border-color);
-  padding-top: 1.5rem;
 }
 
-.deleteButton, .cancelButton, .saveButton {
-  padding: 0.8rem 1.5rem;
+.actionButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.deleteButton,
+.cancelButton,
+.saveButton {
+  padding: 0.75rem 1.5rem;
   border-radius: var(--border-radius-md);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s;
 }
 
 .deleteButton {
@@ -272,103 +265,64 @@
 }
 
 .cancelButton {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .cancelButton:hover {
-  background-color: var(--bg-tertiary);
-  filter: brightness(1.1);
+  background-color: var(--button-hover);
+  color: var(--text-primary);
 }
 
 .saveButton {
   background-color: var(--accent-color);
-  color: var(--bg-primary);
+  color: white;
   border: none;
 }
 
 .saveButton:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
+  background-color: var(--accent-hover);
 }
 
-/* 이벤트 목록 모달 스타일 */
-.eventsModal {
-  max-width: 600px;
-}
-
-.eventsContainer {
-  padding: 1.5rem;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.eventListItem {
-  background-color: var(--bg-tertiary);
-  border-left: 4px solid var(--accent-color);
-  padding: 1.2rem;
-  border-radius: var(--border-radius-md);
-  margin-bottom: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--card-shadow);
-}
-
-.eventListItem:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.eventListItem:last-child {
-  margin-bottom: 0;
-}
-
-.eventListTime {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.eventListTitle {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.8rem;
-}
-
-.eventListLocation, .eventListParticipants {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.noEvents {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--text-tertiary);
-}
-
-.noEvents p {
-  font-size: 1.2rem;
-}
-
+/* 반응형 스타일 */
 @media (max-width: 768px) {
   .formRow {
     flex-direction: column;
     gap: 1rem;
   }
   
-  .participantsList {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  .participantsContainer {
+    max-height: 150px;
+  }
+  
+  .modal {
+    width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalHeader {
+    padding: 1rem;
+  }
+  
+  .modalContent {
+    padding: 1rem;
+  }
+  
+  .modalFooter {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  
+  .actionButtons {
+    width: 100%;
+  }
+  
+  .deleteButton,
+  .cancelButton,
+  .saveButton {
+    flex: 1;
+    justify-content: center;
   }
 } 

@@ -52,14 +52,18 @@
 /* 로고 스타일 */
 .logo_wrap {
     padding: 20px;
+    padding-left: 30px;
     border-bottom: 1px solid var(--border-color);
     text-align: center;
     display: flex;
+
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
+    
+    
 }
 
 .logo_wrap:hover {
@@ -77,6 +81,17 @@
     transition: color 0.3s ease;
     margin: 0;
     line-height: 1.2;
+}
+
+.logo_text_sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-family: var(--font-primary);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 /* 프로필 영역 */

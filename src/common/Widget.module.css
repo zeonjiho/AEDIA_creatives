@@ -19,7 +19,6 @@
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
   cursor: move;
   position: relative;
 }
@@ -119,8 +118,7 @@
 /* 스크롤 이벤트 처리를 위한 JavaScript 필요 */
 
 .widget_footer {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  padding: 20px 20px;
   text-align: center;
   font-weight: 500;
   color: var(--accent-color);

@@ -7,7 +7,7 @@
 .quickEventModalContent {
     background-color: var(--bg-secondary);
     border-radius: var(--border-radius-md);
-    width: 300px;
+    width: 320px;
     overflow: hidden;
     border: 1px solid var(--border-color);
     animation: slideUp 0.2s ease;
@@ -18,19 +18,36 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.quickEventModalHeader {
+.quickEventHeader {
     padding: 0.8rem 1rem;
     background-color: var(--bg-tertiary);
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.quickEventModalDateRange {
+.dateRange {
     font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
-.quickEventModalInput {
+.closeButton {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.closeButton:hover {
+    color: var(--text-primary);
+}
+
+.titleInput {
     width: 100%;
     padding: 1rem;
     border: none;
@@ -38,22 +55,213 @@
     color: var(--text-primary);
     font-size: 1rem;
     outline: none;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.quickEventModalInput::placeholder {
+.titleInput::placeholder {
     color: var(--text-tertiary);
 }
 
-.quickEventModalActions {
+/* 선택 영역 공통 스타일 */
+.selectSection {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.selectLabel {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.selectContainer {
+    position: relative;
+    width: 100%;
+}
+
+.selectValue {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.selectValue:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.dropdownIcon {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    z-index: 10;
+    margin-top: 0.25rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.dropdownItem:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.dropdownItem.selected {
+    background-color: rgba(var(--accent-color-rgb, 0, 0, 0), 0.1);
+    font-weight: 500;
+}
+
+.projectColorDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.assigneeAvatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.assigneeIcon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+/* 색상 태그 선택 영역 스타일 */
+.colorTagsSection {
+    padding: 0.75rem 1rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.colorTagsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.colorTag {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--border-radius-round);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.colorTag::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+}
+
+.colorTag:hover::before {
+    width: 120%;
+    height: 120%;
+    opacity: 1;
+}
+
+.colorTag::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+}
+
+.colorTag:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}
+
+.colorTag:hover::after {
+    opacity: 1;
+}
+
+.colorTag:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+.selectedColor {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--accent-color);
+    animation: pulseSelect 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes pulseSelect {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+    50% { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.2); }
+    100% { transform: scale(1.15); box-shadow: 0 0 0 2px var(--accent-color); }
+}
+
+.buttonGroup {
     display: flex;
     justify-content: flex-end;
     padding: 0.8rem;
-    border-top: 1px solid var(--border-color);
     gap: 0.5rem;
+    border-top: 1px solid var(--border-color);
 }
 
-.quickEventModalCancel,
-.quickEventModalSubmit {
+.cancelButton,
+.saveButton {
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius-sm);
     font-size: 0.9rem;
@@ -62,29 +270,86 @@
     transition: all 0.2s;
 }
 
-.quickEventModalCancel {
+.cancelButton {
     background-color: transparent;
     color: var(--text-secondary);
-    border: none;
+    border: 1px solid var(--border-color);
 }
 
-.quickEventModalCancel:hover {
-    background-color: rgba(var(--text-primary-rgb), 0.05);
+.cancelButton:hover {
+    background-color: var(--bg-tertiary);
     color: var(--text-primary);
 }
 
-.quickEventModalSubmit {
+.saveButton {
     background-color: var(--accent-color);
-    color: var(--bg-primary);
+    color: white;
     border: none;
 }
 
-.quickEventModalSubmit:hover {
-    filter: brightness(0.9);
+.saveButton:hover {
+    background-color: var(--accent-hover);
 }
 
-.quickEventModalSubmit:disabled {
-    background-color: var(--border-color);
+.saveButton:disabled {
+    background-color: var(--bg-tertiary);
     color: var(--text-tertiary);
     cursor: not-allowed;
+}
+
+.assigneeChips {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-right: 0.5rem;
+}
+
+.assigneeChip {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-tertiary);
+}
+
+.assigneeCountChip {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+}
+
+.assigneeSummary {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.checkIcon {
+    margin-left: auto;
+    color: var(--accent-color);
+    font-size: 0.8rem;
+}
+
+.statusBadge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
 } 

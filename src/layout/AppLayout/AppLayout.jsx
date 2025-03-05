@@ -179,7 +179,7 @@ const AppLayout = () => {
                         theme={theme}
                         className={ss.logo}
                     />
-                    <h1 className={ss.logo_text}>AEDIA STUDIO Creatives</h1>
+                    <h1 className={ss.logo_text}>AEDIA STUDIO <br/> <span className={ss.logo_text_sub}>Creatives</span></h1>
                 </div>
                 
                 {/* 프로필 영역 */}
