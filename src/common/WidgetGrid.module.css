@@ -1,0 +1,163 @@
+.widget_grid {
+  display: grid;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.widget_grid_item {
+  min-height: 150px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible !important;
+}
+
+.widget_grid_item_content {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 리사이즈 핸들 스타일링 */
+.widget_grid_item:hover .react-resizable-handle {
+  opacity: 1;
+}
+
+.react-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background-image: none !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #4a6cf7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.react-resizable-handle-se {
+  bottom: -5px !important;
+  right: -5px !important;
+}
+
+.react-resizable-handle-sw {
+  bottom: -5px !important;
+  left: -5px !important;
+}
+
+.react-resizable-handle-ne {
+  top: -5px !important;
+  right: -5px !important;
+}
+
+.react-resizable-handle-nw {
+  top: -5px !important;
+  left: -5px !important;
+}
+
+/* 드래그 중인 위젯 스타일 */
+.react-grid-item.react-grid-placeholder {
+  background: var(--primary-color, #4a6cf7) !important;
+  opacity: 0.2 !important;
+  border-radius: 12px;
+  transition-duration: 100ms !important;
+}
+
+/* 위젯 리사이즈 인디케이터 */
+.widget_resize_indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  border: 2px dashed transparent;
+  border-radius: 10px;
+  z-index: 10;
+  transition: border-color 0.2s ease;
+}
+
+.react-grid-item:hover .widget_resize_indicator {
+  border-color: transparent;
+}
+
+.customize_mode .react-grid-item:hover .widget_resize_indicator {
+  border-color: var(--primary-color, #4a6cf7);
+}
+
+.widget_resize_indicator.active {
+  border-color: var(--primary-color, #4a6cf7);
+}
+
+.react-grid-item.resizing .widget_resize_indicator,
+.react-grid-item.react-draggable-dragging .widget_resize_indicator {
+  border-color: var(--primary-color, #4a6cf7);
+  border-style: solid;
+}
+
+/* 커스터마이징 모드 스타일 */
+.customize_mode .widget_grid_item {
+  cursor: move;
+}
+
+.customize_mode .widget_grid_item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 위젯 헤더 길게 누르기 가이드 */
+.widget_header_press_guide {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.widget_grid_item:hover .widget_header_press_guide {
+  opacity: 0.8;
+}
+
+.customize_mode .widget_header_press_guide {
+  display: none;
+}
+
+/* 반응형 그리드 레이아웃 */
+@media (max-width: 1200px) {
+  .widget_grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .widget_grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .widget_grid_item {
+    grid-column: 1 !important;
+  }
+} 

@@ -1,0 +1,116 @@
+.project_status {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.project_item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
+.project_item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.project_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.project_title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #333);
+}
+
+.project_badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status_진행중,
+.status_in_progress {
+  background-color: var(--primary-light, rgba(74, 108, 247, 0.1));
+  color: var(--primary-color, #4a6cf7);
+}
+
+.status_완료,
+.status_completed {
+  background-color: var(--success-light, rgba(40, 199, 111, 0.1));
+  color: var(--success, #28c76f);
+}
+
+.status_지연,
+.status_delayed {
+  background-color: var(--warning-light, rgba(255, 159, 67, 0.1));
+  color: var(--warning, #ff9f43);
+}
+
+.status_중단,
+.status_paused {
+  background-color: var(--danger-light, rgba(234, 84, 85, 0.1));
+  color: var(--danger, #ea5455);
+}
+
+.progress_bar {
+  height: 8px;
+  background-color: var(--progress-bg, #eee);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--primary-color, #4a6cf7);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.project_details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.progress_text {
+  margin: 0;
+  color: var(--text-muted, #888);
+}
+
+.deadline_text {
+  margin: 0;
+  color: var(--text-muted, #888);
+}
+
+.deadline_soon {
+  color: var(--danger, #ea5455);
+  font-weight: 500;
+}
+
+.no_projects {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-muted, #888);
+  font-style: italic;
+}
+
+/* 다크 테마 지원 */
+:global([data-theme="dark"]) .project_title {
+  color: var(--text-color, #e0e0e0);
+}
+
+:global([data-theme="dark"]) .progress_bar {
+  background-color: var(--progress-bg, #444);
+}
+
+:global([data-theme="dark"]) .project_item {
+  border-color: var(--border-color, rgba(255, 255, 255, 0.08));
+} 

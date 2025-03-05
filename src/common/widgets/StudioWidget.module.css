@@ -1,0 +1,98 @@
+.rooms_grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.room_item {
+  background-color: var(--card-bg-secondary, #f9f9f9);
+  border-radius: 8px;
+  padding: 16px;
+  transition: transform 0.2s ease;
+}
+
+.room_item:hover {
+  transform: translateY(-2px);
+}
+
+.room_header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.room_type_icon {
+  margin-right: 8px;
+  color: var(--primary-color, #4a6cf7);
+  font-size: 1rem;
+}
+
+.room_name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #333);
+}
+
+.room_status_available,
+.room_status_occupied {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.room_status_available {
+  background-color: var(--success-light, rgba(40, 199, 111, 0.1));
+  color: var(--success, #28c76f);
+}
+
+.room_status_occupied {
+  background-color: var(--danger-light, rgba(234, 84, 85, 0.1));
+  color: var(--danger, #ea5455);
+  display: flex;
+  flex-direction: column;
+}
+
+.reservation_time {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: normal;
+}
+
+.room_features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feature_tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background-color: var(--tag-bg, rgba(0, 0, 0, 0.05));
+  color: var(--text-muted, #888);
+  border-radius: 4px;
+}
+
+/* 반응형 */
+@media (max-width: 600px) {
+  .rooms_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 다크 테마 지원 */
+:global([data-theme="dark"]) .room_item {
+  background-color: var(--card-bg-secondary, #333);
+}
+
+:global([data-theme="dark"]) .room_name {
+  color: var(--text-color, #e0e0e0);
+}
+
+:global([data-theme="dark"]) .feature_tag {
+  background-color: var(--tag-bg, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #aaa);
+} 

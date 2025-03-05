@@ -1,381 +1,375 @@
-import React, { useState, useEffect, useRef } from 'react'
-import Hyperium from '../../common/Hyperium/Hyperium'
+import React, { useState, useEffect } from 'react'
 import ss from './Home.module.css'
-import img1 from '../../img/image1.jpg'
-import img2 from '../../img/image2.jpg'
-import img3 from '../../img/image3.jpg'
-import img4 from '../../img/image4.jpg'
-import img5 from '../../img/image5.jpg'
-import img6 from '../../img/image6.jpg'
-import img7 from '../../img/image7.jpg'
-import img8 from '../../img/image8.jpeg'
-import img9 from '../../img/image9.jpg'
-import img10 from '../../img/image10.jpg'
-import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faHeart,
-  faChartSimple,
-  faCircleInfo,
-  faMagnifyingGlass,
-  faEllipsisH
-} from '@fortawesome/free-solid-svg-icons'
-import { jwtDecode } from 'jwt-decode'
-import api from '../../util/api'
-import PlatformIcon from '../../common/SupportedPlatforms/PlatformIcons'
-import SupportedPlatformsModal from '../../common/SupportedPlatforms/SupportedPlatformsModal/SupportedPlatformsModal'
-import { supportedPlatforms } from '../../common/SupportedPlatforms/PlatformIcons'
+import { useNavigate } from 'react-router-dom'
+import { 
+    FaSun,
+    FaMoon
+} from 'react-icons/fa'
+import { 
+    todos, 
+    events, 
+    rooms, 
+    projects, 
+    users, 
+    notifications,
+    roomReservations,
+    addTodo,
+    updateTodo,
+    deleteTodo
+} from '../../data/mockDatabase'
 
-const welcomeMessages = [
-  {
-    text: "Discover and explore the infinite possibilities of creativity.\nCreate your own collections, craft new realities, and let your imagination run wild."
-  },
-  {
-    text: "Welcome to a world where creativity knows no bounds.\nShare your vision, inspire others, and be part of something extraordinary."
-  },
-  {
-    text: "Every pixel tells a story, every creation matters.\nExplore, create, and connect with creators from around the world."
-  },
-  {
-    text: "Your imagination is the only limit.\nBuild your collections, share your perspective, and leave your mark."
-  },
-  {
-    text: "Where ideas come to life and creativity flows freely.\nJoin our community of creators and make something amazing."
-  }
-];
+// 위젯 그리드 및 위젯 컴포넌트 임포트
+import WidgetGrid, { WidgetGridItem } from '../../common/WidgetGrid'
+import TodoWidget from '../../common/widgets/TodoWidget'
+import ScheduleWidget from '../../common/widgets/ScheduleWidget'
+import StudioWidget from '../../common/widgets/StudioWidget'
+import ProjectWidget from '../../common/widgets/ProjectWidget'
+import TeamWidget from '../../common/widgets/TeamWidget'
+import NotificationWidget from '../../common/widgets/NotificationWidget'
 
 const Home = () => {
-  const [loadedImages, setLoadedImages] = useState([])
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [isLongHover, setIsLongHover] = useState(false);
-  const [blurredCard, setBlurredCard] = useState(null);
-  const hoverTimerRef = useRef(null);
-  const [likedCards, setLikedCards] = useState(new Set());
-  const [cards, setCards] = useState([]);
-  const [currentUser, setCurrentUser] = useState({
-    username: '',
-    fullname: ''
-  });
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [welcomeMessage, setWelcomeMessage] = useState("");
-  const navigate = useNavigate();
-  const [cardsData, setCardsData] = useState([]);
-  const [showPlatformsModal, setShowPlatformsModal] = useState(false);
-  const [tooltipContent, setTooltipContent] = useState('');
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const [visiblePlatforms, setVisiblePlatforms] = useState(8);
-
-  // Use a fallback object ({}), so it won't crash if undefined.
-  const {
-    isPasteModalOpen = false,
-    isMasterHandleModalOpen = false,
-    modalPosition = { x: 0, y: 0 },
-    activeModalId,
-    activeModalData,
-    minimizedModals,
-    handleCloseModal = () => {},
-    handleMinimizeModal = () => {},
-    handleMaximizeModal = () => {},
-    handleCloseMasterHandleModal = () => {},
-    handleOpenPaste = () => {}
-  } = useOutletContext() ?? {};
-
-  const breakpointColumns = {
-    default: 4,
-    1024: 3,
-    768: 2,
-    500: 2
-  }
-
-  const generateRandomLikes = () => {
-    // 0.7 확률로 큰 수 (1,000 ~ 1,000,000)
-    // 0.3 확률로 작은 수 (1 ~ 999)
-    if (Math.random() > 0.3) {
-      return Math.floor(Math.random() * 999000) + 1000;  // 큰 수
-    } else {
-      return Math.floor(Math.random() * 998) + 1;  // 작은 수
-    }
-  }
-
-  useEffect(() => {
-    // 이미지 순차 로딩
-    const loadImages = async () => {
-      for (const card of cardsData) {
-        const image = new Image()
-        image.src = card.img
-        await new Promise((resolve) => {
-          image.onload = resolve
-        })
-        setLoadedImages(prev => [...prev, card.id])
-      }
-    }
-    loadImages()
-  }, [])
-
-  useEffect(() => {
-    fetchCardsData()
-  }, [])
-
-  // PasteModal에서 발생한 refreshPageData 이벤트를 감지하여 페이지 데이터 새로고침
-  useEffect(() => {
-    // 페이지 데이터 새로고침 이벤트 리스너
-    const handleRefreshPageData = (event) => {
-      console.log('Home 페이지에서 refreshPageData 이벤트 감지:', event.detail);
-      // 현재 페이지가 홈 페이지인 경우에만 새로고침
-      if (window.location.pathname === '/' || window.location.pathname === '/home') {
-        fetchCardsData();
-      }
-    };
-
-    // 전역 함수로 등록하여 다른 컴포넌트에서도 접근 가능하게 함
-    window.refreshPageData = fetchCardsData;
+    const navigate = useNavigate()
     
-    // 이벤트 리스너 등록
-    window.addEventListener('refreshPageData', handleRefreshPageData);
+    // 기본 레이아웃 설정 - 이미지에 보이는 레이아웃과 동일하게 설정
+    const defaultLayouts = {
+        lg: [
+            // 첫 번째 행: Todo List, Today's Schedule, Studio Status
+            { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
+            { i: 'schedule-widget', x: 1, y: 0, w: 1, h: 2 },
+            { i: 'studio-widget', x: 2, y: 0, w: 1, h: 2 },
+            // 두 번째 행: Project Status, Team Members, Notifications
+            { i: 'project-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'team-widget', x: 1, y: 2, w: 1, h: 2 },
+            { i: 'notification-widget', x: 2, y: 2, w: 1, h: 2 }
+        ],
+        md: [
+            // 태블릿 레이아웃 (2열)
+            { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
+            { i: 'schedule-widget', x: 1, y: 0, w: 1, h: 2 },
+            { i: 'studio-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'project-widget', x: 1, y: 2, w: 1, h: 2 },
+            { i: 'team-widget', x: 0, y: 4, w: 1, h: 2 },
+            { i: 'notification-widget', x: 1, y: 4, w: 1, h: 2 }
+        ],
+        sm: [
+            // 모바일 레이아웃 (1열)
+            { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
+            { i: 'schedule-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'studio-widget', x: 0, y: 4, w: 1, h: 2 },
+            { i: 'project-widget', x: 0, y: 6, w: 1, h: 2 },
+            { i: 'team-widget', x: 0, y: 8, w: 1, h: 2 },
+            { i: 'notification-widget', x: 0, y: 10, w: 1, h: 2 }
+        ],
+        xs: [
+            // 작은 모바일 레이아웃 (1열)
+            { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
+            { i: 'schedule-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'studio-widget', x: 0, y: 4, w: 1, h: 2 },
+            { i: 'project-widget', x: 0, y: 6, w: 1, h: 2 },
+            { i: 'team-widget', x: 0, y: 8, w: 1, h: 2 },
+            { i: 'notification-widget', x: 0, y: 10, w: 1, h: 2 }
+        ]
+    };
     
-    // 컴포넌트 언마운트 시 이벤트 리스너 및 전역 함수 제거
-    return () => {
-      window.removeEventListener('refreshPageData', handleRefreshPageData);
-      delete window.refreshPageData;
-    };
-  }, []);
-
-  // 카드 마우스 오버 이벤트
-  const handleCardMouseEnter = (cardId) => {
-    setHoveredCard(cardId);
-    // 기존 타이머 제거
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-    }
-    // 새로운 타이머 설정
-    hoverTimerRef.current = setTimeout(() => {
-      setIsLongHover(true);
-    }, 5000);
-  };
-
-  const handleCardMouseLeave = () => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    setHoveredCard(null);
-    setIsLongHover(false);
-    setBlurredCard(null);
-  };
-
-  // cleanup
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
-  }, []);
-
-  // 정보 아이콘 클릭 핸들러 추가
-  const handleInfoClick = (cardId, e) => {
-    e.stopPropagation();  // 이벤트 버블링 방지
-    setBlurredCard(blurredCard === cardId ? null : cardId);  // 토글 기능
-  };
-
-  // 좋아요 처리 함수
-  const handleLike = (cardId, e) => {
-    e.stopPropagation();
-    setLikedCards(prev => {
-      const newLiked = new Set(prev);
-      if (newLiked.has(cardId)) {
-        newLiked.delete(cardId);
-      } else {
-        newLiked.add(cardId);
-      }
-      return newLiked;
-    });
-  };
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const fetchUserData = async () => {
-      try {
-        const response = await api.post('/user/validation-user-status-and-update-last-visit',
-          { userId: jwtDecode(token).userId }
-        );
-
-        if (response.status === 200) {
-          setCurrentUser({
-            username: response.data.userName?.toLowerCase() || 'username',
-            fullname: response.data.fullname?.toUpperCase() || 'Full Name'
-          });
+    // 테마 상태 관리
+    const [theme, setTheme] = useState(() => {
+        // 로컬 스토리지에서 테마 설정 불러오기
+        const savedTheme = localStorage.getItem('theme')
+        return savedTheme || 'light'
+    })
+    
+    // 위젯 레이아웃 상태 관리
+    const [layouts, setLayouts] = useState(() => {
+        // 로컬 스토리지에서 레이아웃 설정 불러오기
+        const savedLayouts = localStorage.getItem('dashboard_layouts')
+        
+        // 저장된 레이아웃이 없으면 기본 레이아웃 사용
+        if (!savedLayouts) {
+            // 초기 실행 시 기본 레이아웃을 로컬 스토리지에 저장
+            localStorage.setItem('dashboard_layouts', JSON.stringify(defaultLayouts))
+            return defaultLayouts
         }
-      } catch (err) {
-        console.log(err);
-        localStorage.removeItem('token');
-      } finally {
-        setIsLoaded(true);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    const isLoggedIn = localStorage.getItem('token');
-
-    let timeGreeting;
-    if (hour >= 5 && hour < 12) {
-      timeGreeting = "Good Morning";
-    } else if (hour >= 12 && hour < 18) {
-      timeGreeting = "Good Afternoon";
-    } else if (hour >= 18 && hour < 22) {
-      timeGreeting = "Good Evening";
-    } else {
-      timeGreeting = "Good Night";
-    }
-
-    return isLoggedIn ? `${timeGreeting} @${currentUser.username}.` : `${timeGreeting}.`;
-  };
-
-  useEffect(() => {
-    const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-    setWelcomeMessage(randomMessage.text);
-  }, []);
-
-  const fetchCardsData = async () => {
-    try {
-      // 최신순으로 정렬하기 위해 sort 파라미터 추가
-      const response = await api.get('/get-all-hyperlinks?from=home&sort=latest')
-      if (response.status === 200) {
-        setCardsData(response.data.reverse())
-      }
-    } catch (err) {
-      console.log(err)
-    }
-  }
-
-  // 툴팁 위치 계산 함수
-  const calculateTooltipPosition = (event) => {
-    const x = event.clientX;
-    const y = event.clientY;
+        
+        return JSON.parse(savedLayouts)
+    })
     
-    return {
-      x: x + 10, // 마우스 커서에서 약간 오른쪽으로
-      y: y + 10  // 마우스 커서에서 약간 아래로
-    };
-  };
-
-  // 플랫폼 아이콘 호버 핸들러
-  const handlePlatformHover = (event, platformName) => {
-    const position = calculateTooltipPosition(event);
-    setTooltipPosition(position);
-    setTooltipContent(platformName);
-    setIsTooltipVisible(true);
-  };
-
-  // 플랫폼 아이콘 호버 아웃 핸들러
-  const handlePlatformHoverEnd = () => {
-    setIsTooltipVisible(false);
-  };
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width > 1200) setVisiblePlatforms(8);
-      else if (width > 992) setVisiblePlatforms(6);
-      else if (width > 768) setVisiblePlatforms(5);
-      else if (width > 576) setVisiblePlatforms(4);
-      else setVisiblePlatforms(3);
-    };
-
-    handleResize(); // 초기 실행
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    // 기존 애니메이션 효과 유지
-    if (isLoaded) {
-      // 플랫폼 아이콘 애니메이션 추가
-      const platformIcons = document.querySelector(`.${ss.platform_icons}`);
-      if (platformIcons) {
-        setTimeout(() => {
-          platformIcons.classList.add(ss.animate);
-        }, 300); // 텍스트 애니메이션 이후에 실행
-      }
+    // 커스터마이징 모드 상태 관리
+    const [isCustomizeMode, setIsCustomizeMode] = useState(false);
+    
+    // 임시 레이아웃 상태 (커스터마이징 모드에서 사용)
+    const [tempLayouts, setTempLayouts] = useState(null);
+    
+    // 레이아웃 초기화 함수
+    const resetLayout = () => {
+        if (isCustomizeMode) {
+            setTempLayouts(defaultLayouts);
+        } else {
+            setLayouts(defaultLayouts);
+            localStorage.setItem('dashboard_layouts', JSON.stringify(defaultLayouts));
+        }
     }
-  }, [isLoaded]);
+    
+    // 커스터마이징 모드 변경 함수
+    const handleCustomizeModeChange = (mode) => {
+        if (mode) {
+            // 커스터마이징 모드 활성화 시 현재 레이아웃 백업
+            setTempLayouts({...layouts});
+        }
+        setIsCustomizeMode(mode);
+    }
+    
+    // 커스터마이징 모드 저장 함수
+    const saveCustomization = () => {
+        if (tempLayouts) {
+            setLayouts(tempLayouts);
+            localStorage.setItem('dashboard_layouts', JSON.stringify(tempLayouts));
+        }
+        setIsCustomizeMode(false);
+        setTempLayouts(null);
+    }
+    
+    // 커스터마이징 모드 취소 함수
+    const cancelCustomization = () => {
+        setIsCustomizeMode(false);
+        setTempLayouts(null);
+    }
+    
+    // 레이아웃 변경 함수
+    const handleLayoutChange = (newLayouts) => {
+        if (isCustomizeMode) {
+            setTempLayouts(newLayouts);
+        } else {
+            setLayouts(newLayouts);
+            localStorage.setItem('dashboard_layouts', JSON.stringify(newLayouts));
+        }
+    }
+    
+    // 테마 변경 시 HTML 속성 업데이트
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme)
+    }, [theme])
+    
+    // 투두 리스트 상태 관리
+    const [todoList, setTodoList] = useState([])
+    const [newTodo, setNewTodo] = useState('')
+    
+    // 초기 데이터 로드
+    useEffect(() => {
+        // 현재 사용자의 할 일만 필터링 (예시로 userId 1 사용)
+        const currentUserId = 1
+        setTodoList(todos.filter(todo => todo.userId === currentUserId))
+    }, [])
 
-  return (
-    <div className={ss.container}>
+    // 투두 상태 변경 함수
+    const toggleTodo = (id) => {
+        const todo = todoList.find(todo => todo.id === id)
+        if (todo) {
+            const updated = updateTodo(id, { completed: !todo.completed })
+            if (updated) {
+                setTodoList(todoList.map(t => t.id === id ? updated : t))
+            }
+        }
+    }
 
-      <div className={`${ss.welcome_message} ${isLoaded ? ss.animate : ''}`}>
-        <h1 className={ss.greeting}>{getGreeting()}</h1>
-        <p className={ss.welcome_text}>
-          Welcome to <span className={ss.hyper_text}>HYPER</span><span className={ss.trademark}>™</span>
-        </p>
-        <p className={ss.sub_text}>
-          {welcomeMessage.split('\n').map((line, index) => (
-            <React.Fragment key={index}>
-              {line}
-              {index < welcomeMessage.split('\n').length - 1 && <br />}
-            </React.Fragment>
-          ))}
-        </p>
-        <div className={ss.supported_platforms}>
-          <div className={ss.platform_icons}>
-            {supportedPlatforms
-              .slice(0, visiblePlatforms)
-              .map(platform => (
-                <div 
-                  key={platform.key}
-                  className={ss.platform_icon_wrapper}
-                  onMouseMove={(e) => handlePlatformHover(e, platform.name)}
-                  onMouseLeave={handlePlatformHoverEnd}
-                >
-                  <PlatformIcon 
-                    url={`https://${platform.domains[0]}`}
-                    className={ss.platform_icon}
-                  />
+    // 투두 추가 함수
+    const handleAddTodo = (e) => {
+        e.preventDefault()
+        if (newTodo.trim()) {
+            const added = addTodo({
+                userId: 1, // 현재 사용자 ID
+                text: newTodo,
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 일주일 후
+            })
+            if (added) {
+                setTodoList([...todoList, added])
+                setNewTodo('')
+            }
+        }
+    }
+    
+    // 프로젝트 진행률 계산
+    const calculateProgress = (project) => {
+        if (!project.tasks || project.tasks.length === 0) return 0
+        const completedTasks = project.tasks.filter(task => task.status === '완료').length
+        return Math.round((completedTasks / project.tasks.length) * 100)
+    }
+    
+    // 오늘 날짜 구하기
+    const today = new Date()
+    const formattedDate = today.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })
+    
+    // 현재 시간을 표시하기 위한 상태 추가
+    const [currentTime, setCurrentTime] = useState(new Date())
+    
+    // 1초마다 시간 업데이트
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date())
+        }, 1000)
+        
+        // 컴포넌트 언마운트 시 타이머 정리
+        return () => clearInterval(timer)
+    }, [])
+    
+    // 시간 포맷팅 - 영어로 변경
+    const formattedTime = currentTime.toLocaleTimeString('en-US')
+    
+    // 오늘의 이벤트 필터링
+    const todayEvents = events.filter(event => {
+        const eventDate = new Date(event.start)
+        return eventDate.toDateString() === today.toDateString()
+    })
+    
+    // 가장 가까운 마감일 프로젝트 찾기
+    const upcomingProjects = [...projects]
+        .filter(project => new Date(project.deadline) > today)
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 3)
+    
+    // 날짜 포맷팅 함수 - 영어로 변경
+    const formatDate = (dateString) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        })
+    }
+    
+    // 남은 일수 계산
+    const calculateRemainingDays = (deadline) => {
+        const deadlineDate = new Date(deadline)
+        const timeDiff = deadlineDate - today
+        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
+    }
+
+    return (
+        <div className={ss.wrap}>
+            {/* 대시보드 헤더 */}
+            <div className={ss.dashboard_header}>
+                <div>
+                    <h1 className={ss.dashboard_title}>
+                        {isCustomizeMode ? '편집 모드' : 'My Dashboard'}
+                    </h1>
+                    <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>
-              ))}
-            <button 
-              className={ss.more_platforms_button}
-              onClick={() => setShowPlatformsModal(true)}
+                
+                {/* 커스터마이징 모드 컨트롤 */}
+                {isCustomizeMode ? (
+                    <div className={ss.customize_controls}>
+                        <button 
+                            className={`${ss.customize_btn} ${ss.save_btn}`} 
+                            onClick={saveCustomization}
+                        >
+                            저장
+                        </button>
+                        <button 
+                            className={`${ss.customize_btn} ${ss.cancel_btn}`} 
+                            onClick={cancelCustomization}
+                        >
+                            취소
+                        </button>
+                    </div>
+                ) : (
+                    <button 
+                        className={`${ss.customize_btn} ${ss.edit_btn}`} 
+                        onClick={() => handleCustomizeModeChange(true)}
+                    >
+                        레이아웃 수정
+                    </button>
+                )}
+            </div>
+            
+            {/* 위젯 그리드 레이아웃 */}
+            <WidgetGrid 
+                columns={3} 
+                gap="15px" 
+                className={ss.dashboard_grid}
+                layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
+                onLayoutChange={handleLayoutChange}
+                isCustomizeMode={isCustomizeMode}
+                onCustomizeModeChange={handleCustomizeModeChange}
             >
-              <span>and more</span>
-              <FontAwesomeIcon icon={faEllipsisH} />
-            </button>
-          </div>
+                {/* 투두 리스트 위젯 */}
+                <WidgetGridItem 
+                    key="todo-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <TodoWidget 
+                        todos={todoList}
+                        onToggleTodo={toggleTodo}
+                        onAddTodo={handleAddTodo}
+                        newTodo={newTodo}
+                        onNewTodoChange={(e) => setNewTodo(e.target.value)}
+                        onViewAllClick={() => navigate('/todos')}
+                        formatDate={formatDate}
+                    />
+                </WidgetGridItem>
+
+                {/* 오늘의 일정 위젯 */}
+                <WidgetGridItem 
+                    key="schedule-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <ScheduleWidget 
+                        events={todayEvents}
+                        onViewAllClick={() => navigate('/calendar')}
+                    />
+                </WidgetGridItem>
+
+                {/* 스튜디오 현황 위젯 */}
+                <WidgetGridItem 
+                    key="studio-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <StudioWidget 
+                        rooms={rooms.slice(0, 4)}
+                        reservations={roomReservations}
+                        onReservationClick={() => navigate('/room-reservation')}
+                    />
+                </WidgetGridItem>
+
+                {/* 프로젝트 현황 위젯 */}
+                <WidgetGridItem 
+                    key="project-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <ProjectWidget 
+                        projects={upcomingProjects}
+                        calculateProgress={calculateProgress}
+                        calculateRemainingDays={calculateRemainingDays}
+                        formatDate={formatDate}
+                        onViewAllClick={() => navigate('/projects')}
+                    />
+                </WidgetGridItem>
+
+                {/* 팀 멤버 위젯 */}
+                <WidgetGridItem 
+                    key="team-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <TeamWidget 
+                        members={users.slice(0, 4)}
+                        onViewAllClick={() => navigate('/team')}
+                    />
+                </WidgetGridItem>
+
+                {/* 알림 위젯 */}
+                <WidgetGridItem 
+                    key="notification-widget"
+                    onCustomizeModeChange={handleCustomizeModeChange}
+                >
+                    <NotificationWidget 
+                        notifications={notifications.slice(0, 3)}
+                        onViewAllClick={() => navigate('/notifications')}
+                    />
+                </WidgetGridItem>
+            </WidgetGrid>
         </div>
-      </div>
-
-      <Hyperium cards={cardsData} />
-
-      <SupportedPlatformsModal 
-        isOpen={showPlatformsModal}
-        onClose={() => setShowPlatformsModal(false)}
-      />
-
-      {/* 툴팁 렌더링 */}
-      {isTooltipVisible && (
-        <div 
-          className={`${ss.platform_tooltip} ${isTooltipVisible ? ss.visible : ''}`}
-          style={{
-            left: `${tooltipPosition.x}px`,
-            top: `${tooltipPosition.y}px`
-          }}
-        >
-          {tooltipContent}
-        </div>
-      )}
-    </div>
-  )
+    )
 }
 
 export default Home
-

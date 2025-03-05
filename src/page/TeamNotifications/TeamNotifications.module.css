@@ -1,0 +1,364 @@
+.notifications_container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-color);
+}
+
+.header_actions {
+    display: flex;
+    gap: 12px;
+}
+
+.add_button, .mark_all_button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add_button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.add_button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.mark_all_button {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.mark_all_button:hover {
+    background-color: var(--primary-color-light);
+}
+
+/* 필터 및 검색 */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search_box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search_icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.search_box input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.filter_group {
+    display: flex;
+    gap: 16px;
+}
+
+.filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.filter select {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+/* 알림 목록 */
+.notifications_list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notification_card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+    padding: 16px;
+}
+
+.notification_card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification_card.unread {
+    border-left: 4px solid var(--primary-color);
+    background-color: var(--unread-bg, rgba(0, 123, 255, 0.05));
+}
+
+.notification_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.notification_meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification_type {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.normal {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.important {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.urgent {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.announcement {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.notification_time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.notification_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mark_read_button, .delete_button {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.mark_read_button:hover {
+    color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.delete_button:hover {
+    color: var(--error-color);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.notification_content {
+    margin-bottom: 12px;
+}
+
+.notification_title {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.notification_message {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.notification_footer {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* 빈 상태 */
+.no_notifications {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.no_notifications_icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* 폼 스타일 */
+.add_form {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add_form h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.form_group {
+    margin-bottom: 16px;
+}
+
+.form_group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.form_group input, .form_group textarea, .form_group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.form_group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form_row {
+    display: flex;
+    gap: 16px;
+}
+
+.form_row .form_group {
+    flex: 1;
+}
+
+.form_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.cancel_button, .save_button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cancel_button {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.cancel_button:hover {
+    background-color: var(--hover-bg);
+}
+
+.save_button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.save_button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .search_box {
+        max-width: none;
+    }
+    
+    .filter_group {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .form_row {
+        flex-direction: column;
+        gap: 16px;
+    }
+} 

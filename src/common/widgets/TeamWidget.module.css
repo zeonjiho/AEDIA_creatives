@@ -1,0 +1,88 @@
+.team_members {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.team_member {
+  display: flex;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
+.team_member:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.member_avatar,
+.member_avatar_placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+  overflow: hidden;
+}
+
+.member_avatar {
+  object-fit: cover;
+}
+
+.member_avatar_placeholder {
+  background-color: var(--primary-light, rgba(74, 108, 247, 0.2));
+  color: var(--primary-color, #4a6cf7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.member_info {
+  flex: 1;
+}
+
+.member_name {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #333);
+}
+
+.member_position {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, #888);
+}
+
+.member_status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.online {
+  background-color: var(--success, #28c76f);
+  box-shadow: 0 0 0 2px var(--success-light, rgba(40, 199, 111, 0.2));
+}
+
+.offline {
+  background-color: var(--text-muted, #888);
+}
+
+.no_members {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-muted, #888);
+  font-style: italic;
+}
+
+/* 다크 테마 지원 */
+:global([data-theme="dark"]) .member_name {
+  color: var(--text-color, #e0e0e0);
+}
+
+:global([data-theme="dark"]) .team_member {
+  border-color: var(--border-color, rgba(255, 255, 255, 0.08));
+} 

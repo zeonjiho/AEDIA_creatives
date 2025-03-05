@@ -1,0 +1,415 @@
+.project_status_container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-color);
+}
+
+.add_button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add_button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* 프로젝트 카드 스타일 */
+.projects_list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.project_card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+.project_card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.project_card.expanded {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.project_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.project_header:hover {
+    background-color: var(--hover-bg);
+}
+
+.project_info {
+    flex: 1;
+}
+
+.project_info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.project_meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.deadline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.overdue {
+    color: var(--error-color);
+    font-weight: 500;
+}
+
+.due_soon {
+    color: var(--warning-color);
+    font-weight: 500;
+}
+
+.status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status_planned {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status_in_progress {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status_completed {
+    background-color: #e0f2f1;
+    color: #00796b;
+}
+
+.status_on_hold {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.project_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit_button, .delete_button {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.edit_button:hover {
+    color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.delete_button:hover {
+    color: var(--error-color);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 프로젝트 상세 내용 */
+.project_details {
+    padding: 20px;
+    background-color: var(--card-bg);
+}
+
+.project_description {
+    margin-bottom: 24px;
+}
+
+.project_description h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.project_description p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* 작업 섹션 */
+.tasks_section {
+    margin-top: 20px;
+}
+
+.tasks_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.tasks_header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.add_task_button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.add_task_button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* 작업 테이블 */
+.tasks_table_container {
+    overflow-x: auto;
+}
+
+.tasks_table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tasks_table th, .tasks_table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tasks_table th {
+    font-weight: 600;
+    color: var(--text-color);
+    background-color: var(--table-header-bg);
+}
+
+.tasks_table td {
+    color: var(--text-secondary);
+}
+
+.task_status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status_todo {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+
+.status_in_progress {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status_review {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status_completed {
+    background-color: #e0f2f1;
+    color: #00796b;
+}
+
+.task_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 폼 스타일 */
+.add_form, .add_task_form {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add_form h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.form_group {
+    margin-bottom: 16px;
+}
+
+.form_group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.form_group input, .form_group textarea, .form_group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.form_group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form_row {
+    display: flex;
+    gap: 16px;
+}
+
+.form_row .form_group {
+    flex: 1;
+}
+
+.form_actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.cancel_button, .save_button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cancel_button {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.cancel_button:hover {
+    background-color: var(--hover-bg);
+}
+
+.save_button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.save_button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* 프로젝트 수정 폼 */
+.project_edit_form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.project_edit_form .form_group {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.edit_actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* 빈 상태 메시지 */
+.no_projects, .no_tasks {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-secondary);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .form_row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .project_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .project_actions {
+        align-self: flex-end;
+    }
+    
+    .project_edit_form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+} 

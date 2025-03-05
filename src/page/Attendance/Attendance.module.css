@@ -1,0 +1,329 @@
+.attendance_wrap {
+    width: 100%;
+    max-width: 1440px;
+    box-sizing: border-box;
+    padding: 20px 40px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    transition: all 0.3s ease;
+}
+
+.attendance_title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: var(--text-primary);
+    text-align: center;
+    transition: color 0.3s ease;
+}
+
+.attendance_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.attendance_card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+}
+
+.attendance_card_full {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    grid-column: span 2;
+}
+
+.card_header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.card_icon {
+    font-size: 20px;
+    margin-right: 12px;
+    color: var(--accent-color);
+    transition: color 0.3s ease;
+}
+
+.card_header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.card_content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg);
+    transition: background-color 0.3s ease;
+}
+
+/* 현재 시간 및 상태 카드 스타일 */
+.time_display {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.current_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    transition: color 0.3s ease;
+}
+
+.current_time {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.status_display {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.status_badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.status_not_checked {
+    background-color: var(--text-tertiary);
+    color: white;
+}
+
+.status_checked_in {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status_checked_out {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.attendance_buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.check_in_button, .check_out_button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.check_in_button {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.check_in_button:hover:not(:disabled) {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.check_out_button {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.check_out_button:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+}
+
+.check_in_button:disabled, .check_out_button:disabled {
+    background-color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 이번 주 출근 현황 카드 스타일 */
+.week_summary {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.week_day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.day_circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.day_present {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.day_late {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.day_today {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.day_future {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.day_status {
+    color: var(--success-color);
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.week_stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.stat_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat_label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+.stat_value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+/* 출근 기록 테이블 스타일 */
+.attendance_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance_table th, .attendance_table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.attendance_table th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.attendance_table td {
+    color: var(--text-primary);
+}
+
+.status_tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status_normal {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status_late {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 1024px) {
+    .attendance_grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .attendance_card_full {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 639px) {
+    .attendance_wrap {
+        padding: 20px;
+    }
+    
+    .attendance_title {
+        font-size: 24px;
+    }
+    
+    .current_time {
+        font-size: 28px;
+    }
+    
+    .day_circle {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+    
+    .attendance_table th, .attendance_table td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+} 
