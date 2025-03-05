@@ -252,7 +252,7 @@ const Home = () => {
             <div className={ss.dashboard_header}>
                 <div>
                     <h1 className={ss.dashboard_title}>
-                        {isCustomizeMode ? '편집 모드' : 'My Dashboard'}
+                        {isCustomizeMode ? 'Edit Mode' : 'My Dashboard'}
                     </h1>
                     <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>

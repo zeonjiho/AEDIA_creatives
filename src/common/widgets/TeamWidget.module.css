@@ -31,7 +31,7 @@
 
 .member_avatar_placeholder {
   background-color: var(--primary-light, rgba(74, 108, 247, 0.2));
-  color: var(--primary-color, #4a6cf7);
+  color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;

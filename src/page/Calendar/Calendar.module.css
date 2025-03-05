@@ -1,23 +1,38 @@
 .calendarContainer {
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 1800px;
     margin: 0 auto;
+    margin-bottom: 2rem;
+    height: 99vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
     margin-bottom: 2rem;
     text-align: center;
+    position: relative;
 }
 
 .header h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.headerIcon {
+    color: var(--accent-color);
 }
 
 .header p {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 /* 캘린더 컨트롤 */
@@ -27,30 +42,40 @@
     align-items: center;
     margin-bottom: 1.5rem;
     background-color: var(--bg-secondary);
-    padding: 1rem;
-    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    border-radius: var(--border-radius-lg);
     box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
 .calendarNavigation {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.2rem;
 }
 
 .todayButton {
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.2rem;
     background-color: var(--accent-color);
-    color: white;
+    color: var(--bg-primary);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .todayButton:hover {
-    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.buttonIcon {
+    font-size: 0.9rem;
 }
 
 .navigationButtons {
@@ -60,26 +85,29 @@
 }
 
 .navigationButtons button {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--border-radius-round);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
 .navigationButtons button:hover {
-    background-color: var(--bg-tertiary);
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+    transform: scale(1.1);
 }
 
 .currentPeriod {
     font-size: 1.2rem;
-    font-weight: bold;
+    font-weight: 600;
     color: var(--text-primary);
     min-width: 200px;
     text-align: center;
@@ -91,65 +119,99 @@
 }
 
 .viewModeButton {
-    padding: 0.5rem 1rem;
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+    padding: 0.6rem 1.2rem;
+    background-color: transparent;
+    color: var(--text-primary);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
     font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.2s;
 }
 
 .viewModeButton:hover {
-    background-color: var(--border-color);
+    background-color: rgba(var(--accent-color-rgb), 0.1);
 }
 
 .viewModeButton.active {
     background-color: var(--accent-color);
-    color: white;
+    color: var(--bg-primary);
+    font-weight: 600;
+}
+
+/* 캘린더 콘텐츠 */
+.calendarContent {
+    flex: 1;
+    overflow: hidden;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
 /* 월간 뷰 */
 .monthView {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--card-shadow);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .weekDays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background-color: var(--bg-tertiary);
-    padding: 0.75rem 0;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
 }
 
 .weekDays div {
     text-align: center;
-    font-weight: bold;
-    color: var(--text-secondary);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.weekDays div:first-child,
+.weekDays div:last-child {
+    color: var(--accent-color);
 }
 
 .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    min-height: 600px;
+    grid-template-rows: repeat(6, minmax(100px, 1fr));
+    flex: 1;
+    height: calc(100% - 50px);
 }
 
 .calendarDay {
     border-right: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
-    padding: 0.5rem;
-    min-height: 100px;
+    padding: 0.8rem;
     cursor: pointer;
     transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 100px;
+    overflow: hidden;
+    user-select: none;
 }
 
 .calendarDay:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.05);
+}
+
+.calendarDay.dragging {
     background-color: var(--bg-tertiary);
+}
+
+.calendarDay.dragOver {
+    background-color: var(--bg-tertiary);
+    box-shadow: inset 0 0 0 2px var(--accent-color);
 }
 
 .calendarDay:nth-child(7n) {
@@ -161,128 +223,198 @@
 }
 
 .otherMonth {
-    opacity: 0.5;
+    background-color: rgba(var(--bg-tertiary-rgb), 0.5);
+    color: var(--text-tertiary);
 }
 
 .today {
-    background-color: rgba(66, 99, 235, 0.1);
+    background-color: rgba(var(--accent-color-rgb), 0.08);
 }
 
 .dayNumber {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    position: relative;
 }
 
 .today .dayNumber {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
     background-color: var(--accent-color);
-    color: white;
+    color: var(--bg-primary);
+    border-radius: var(--border-radius-round);
+}
+
+.todayIndicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-color);
     border-radius: 50%;
-    text-align: center;
-    line-height: 24px;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .dayEvents {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    overflow: hidden;
+    max-height: 160px;
 }
 
 .eventItem {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    border-left: 3px solid var(--accent-color);
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    transition: transform 0.2s;
+    height: 22px;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
 }
 
 .eventItem:hover {
     transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
 }
 
 .eventTime {
-    font-size: 0.7rem;
-    opacity: 0.8;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+    white-space: nowrap;
 }
 
 .eventTitle {
-    font-weight: bold;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
 }
 
 .moreEvents {
     font-size: 0.8rem;
     color: var(--accent-color);
     text-align: center;
-    margin-top: 0.25rem;
+    padding: 0.2rem 0.5rem;
     cursor: pointer;
+    background-color: rgba(var(--accent-color-rgb), 0.08);
+    border-radius: var(--border-radius-sm);
+    margin-top: auto;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+    height: 20px;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.moreEvents:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.2);
 }
 
 /* 주간 뷰 */
 .weekView {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--card-shadow);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .weekDayHeaders {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background-color: var(--bg-tertiary);
-    padding: 0.75rem 0;
+    padding: 1rem;
     border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
 }
 
 .weekDayHeader {
     text-align: center;
     padding: 0.5rem;
+    border-radius: var(--border-radius-md);
+}
+
+.weekDayHeader.today {
+    background-color: rgba(var(--accent-color-rgb), 0.1);
 }
 
 .weekDayName {
-    font-weight: bold;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    margin-bottom: 0.3rem;
 }
 
 .weekDayNumber {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+    font-weight: 600;
     color: var(--text-primary);
-    margin-top: 0.25rem;
 }
 
 .weekDayHeader.today .weekDayNumber {
-    display: inline-block;
-    width: 32px;
-    height: 32px;
     background-color: var(--accent-color);
-    color: white;
+    color: var(--bg-primary);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    text-align: center;
-    line-height: 32px;
+    margin: 0 auto;
 }
 
 .weekDayContents {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    min-height: 600px;
+    flex: 1;
+    height: calc(100% - 100px);
+    overflow-y: auto;
 }
 
 .weekDayContent {
-    border-right: 1px solid var(--border-color);
+    flex: 1;
     padding: 0.5rem;
+    border-right: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s;
+    min-height: 100px;
+    overflow-y: auto;
+    user-select: none;
 }
 
 .weekDayContent:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.05);
+}
+
+.weekDayContent.dragging {
     background-color: var(--bg-tertiary);
+}
+
+.weekDayContent.dragOver {
+    background-color: var(--bg-tertiary);
+    box-shadow: inset 0 0 0 2px var(--accent-color);
 }
 
 .weekDayContent:last-child {
@@ -290,57 +422,69 @@
 }
 
 .weekEventItem {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
+    background-color: var(--bg-tertiary);
+    border-left: 3px solid var(--accent-color);
+    padding: 0.8rem;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    box-shadow: var(--card-shadow);
 }
 
 .weekEventItem:hover {
     transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .weekEventTime {
-    font-size: 0.8rem;
-    opacity: 0.8;
-    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.eventIcon {
+    color: var(--accent-color);
+    font-size: 0.9rem;
 }
 
 .weekEventTitle {
-    font-weight: bold;
-    margin-bottom: 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
 }
 
 .weekEventLocation {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
 }
 
 /* 일간 뷰 */
 .dayView {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--card-shadow);
-    min-height: 600px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .dayHeader {
     background-color: var(--bg-tertiary);
-    padding: 1rem;
+    padding: 1.5rem;
     border-bottom: 1px solid var(--border-color);
-    text-align: center;
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
 }
 
 .dayHeaderDate {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 600;
     color: var(--text-primary);
+    text-align: center;
 }
 
 .dayHeaderDate.today {
@@ -348,61 +492,88 @@
 }
 
 .dayContent {
-    padding: 1rem;
-    cursor: pointer;
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 500px;
+    user-select: none;
+}
+
+.dayContent.dragging {
+    background-color: var(--bg-tertiary);
+}
+
+.dayContent.dragOver {
+    background-color: var(--bg-tertiary);
+    box-shadow: inset 0 0 0 2px var(--accent-color);
 }
 
 .noEvents {
-    text-align: center;
-    padding: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
     color: var(--text-tertiary);
+    gap: 1.5rem;
+}
+
+.noEvents p {
+    font-size: 1.2rem;
 }
 
 .addEventButton {
-    display: inline-flex;
+    padding: 0.8rem 1.5rem;
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
 .addEventButton:hover {
-    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.2);
 }
 
 .dayEventItem {
     background-color: var(--bg-tertiary);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
     border-left: 4px solid var(--accent-color);
+    padding: 1.2rem;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
+    box-shadow: var(--card-shadow);
 }
 
 .dayEventItem:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--card-shadow);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .dayEventTime {
     font-size: 0.9rem;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .dayEventTitle {
     font-size: 1.2rem;
-    font-weight: bold;
+    font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
 }
 
 .dayEventLocation, .dayEventParticipants {
@@ -414,206 +585,64 @@
     margin-top: 0.5rem;
 }
 
-/* 모달 */
-.modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.modalHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modalHeader h2 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.closeButton {
-    background: none;
-    border: none;
-    color: var(--text-tertiary);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-}
-
-.closeButton:hover {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-}
-
-.modal form {
-    padding: 1rem;
-}
-
-.formGroup {
-    margin-bottom: 1rem;
-}
-
-.formRow {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.formRow .formGroup {
-    flex: 1;
-    margin-bottom: 0;
-}
-
-.formGroup label {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.formGroup input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-}
-
-.participantsList {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 0.5rem;
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-    background-color: var(--input-bg);
-}
-
-.participantItem {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.participantItem:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.participantItem.selected {
-    background-color: rgba(66, 99, 235, 0.1);
-}
-
-.participantAvatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.participantName {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-}
-
-.checkIcon {
-    margin-left: auto;
-    color: var(--accent-color);
-}
-
-.formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
-}
-
-.deleteButton, .cancelButton, .saveButton {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background-color 0.2s;
-}
-
-.deleteButton {
-    background-color: var(--danger-color);
-    color: white;
-    margin-right: auto;
-}
-
-.deleteButton:hover {
-    background-color: #e03131;
-}
-
-.cancelButton {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-}
-
-.cancelButton:hover {
-    background-color: var(--border-color);
-}
-
-.saveButton {
-    background-color: var(--accent-color);
-    color: white;
-}
-
-.saveButton:hover {
-    background-color: var(--accent-hover);
-}
-
 /* 반응형 */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .calendarControls {
         flex-direction: column;
         gap: 1rem;
     }
     
-    .formRow {
-        flex-direction: column;
-        gap: 1rem;
+    .calendarNavigation {
+        width: 100%;
+        justify-content: space-between;
     }
     
-    .participantsList {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    .viewModeButtons {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendarContainer {
+        padding: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .calendarControls {
+        padding: 1rem;
+    }
+    
+    .weekDays div, .weekDayName {
+        font-size: 0.8rem;
+    }
+    
+    .dayNumber, .weekDayNumber {
+        font-size: 1rem;
+    }
+    
+    .calendarDay {
+        padding: 0.5rem;
+        min-height: 80px;
+    }
+    
+    .eventItem, .weekEventItem, .dayEventItem {
+        padding: 0.5rem;
+    }
+    
+    .eventTime, .weekEventTime, .dayEventTime,
+    .eventTitle, .weekEventTitle {
+        font-size: 0.8rem;
+    }
+    
+    .dayEventTitle {
+        font-size: 1rem;
+    }
+    
+    .weekDayContent, .dayContent {
+        padding: 0.8rem;
     }
 } 

@@ -53,14 +53,14 @@ export const todos = [
 
 // 캘린더 이벤트 데이터
 export const events = [
-  { id: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', location: '회의실 A', participants: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 2, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', location: '회의실 B', participants: [1, 2, 5, 6] },
-  { id: 3, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', location: '회의실 C', participants: [1, 4] },
-  { id: 4, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', location: '회의실 A', participants: [1, 2, 3] },
-  { id: 5, title: '팀 빌딩 워크숍', start: '2023-03-17T13:00:00', end: '2023-03-17T17:00:00', location: '외부 스튜디오', participants: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 6, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', location: '회의실 B', participants: [1, 2, 5, 8] },
-  { id: 7, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', location: '편집실', participants: [1, 2, 6] },
-  { id: 8, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', location: '음향 스튜디오', participants: [2, 7] },
+  { id: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', location: '회의실 A', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 1 },
+  { id: 2, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', location: '회의실 B', participants: [1, 2, 5, 6], colorTag: 2 },
+  { id: 3, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', location: '회의실 C', participants: [1, 4], colorTag: 3 },
+  { id: 4, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', location: '회의실 A', participants: [1, 2, 3], colorTag: 4 },
+  { id: 5, title: '팀 빌딩 워크숍', start: '2023-03-17T13:00:00', end: '2023-03-17T17:00:00', location: '외부 스튜디오', participants: [1, 2, 3, 4, 5, 6, 7, 8], colorTag: 5 },
+  { id: 6, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', location: '회의실 B', participants: [1, 2, 5, 8], colorTag: 6 },
+  { id: 7, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', location: '편집실', participants: [1, 2, 6], colorTag: 7 },
+  { id: 8, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', location: '음향 스튜디오', participants: [2, 7], colorTag: 8 },
 ];
 
 // 회의실 데이터
@@ -233,6 +233,7 @@ let eventIdCounter = events.length + 1;
 export const addEvent = (newEvent) => {
   const eventToAdd = {
     id: eventIdCounter++,
+    colorTag: Math.floor(Math.random() * 10) + 1, // 기본값으로 1-10 사이의 랜덤 컬러 태그 설정
     ...newEvent
   };
   events.push(eventToAdd);

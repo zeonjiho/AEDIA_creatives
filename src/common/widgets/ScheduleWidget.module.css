@@ -22,12 +22,13 @@
   min-width: 80px;
   padding: 6px 10px;
   background-color: var(--primary-light, rgba(74, 108, 247, 0.1));
-  color: var(--primary-color, #4a6cf7);
+  color: var(--accent-color);
   border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 500;
   text-align: center;
   margin-right: 12px;
+  margin-bottom: 4px;
 }
 
 .event_details {

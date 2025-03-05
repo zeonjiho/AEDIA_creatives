@@ -14,14 +14,14 @@
 }
 
 .todo_input:focus {
-  border-color: var(--primary-color, #4a6cf7);
+  border-color: var(--accent-color);
 }
 
 .todo_button {
   margin-left: 8px;
   padding: 10px 16px;
-  background-color: var(--primary-color, #4a6cf7);
-  color: white;
+  background-color: transparent;
+  color: var(--text-primary);
   border: none;
   border-radius: 6px;
   font-weight: 500;
@@ -30,7 +30,7 @@
 }
 
 .todo_button:hover {
-  background-color: var(--primary-dark, #3a5ce5);
+  background-color: var(--button-hover);
 }
 
 .todo_list {
@@ -53,10 +53,17 @@
 }
 
 .todo_checkbox {
-  margin-right: 12px;
-  cursor: pointer;
   width: 18px;
   height: 18px;
+  border: 2px solid var(--accent-color);
+  border-radius: 4px;
+  margin-right: 12px;
+  position: relative;
+  cursor: pointer;
+}
+
+.todo_checkbox.checked {
+  background-color: var(--accent-color);
 }
 
 .completed {
@@ -86,4 +93,44 @@
 
 :global([data-theme="dark"]) .todo_item {
   border-color: var(--border-color, rgba(255, 255, 255, 0.08));
-} 
+}
+
+/* 커스텀 스크롤바 스타일 */
+.todo_list {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.todo_list:hover {
+  scrollbar-color: var(--scroll-color-before) transparent;
+}
+
+.todo_list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.todo_list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.todo_list::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 20px;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.todo_list:hover::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-color-before);
+}
+
+.todo_list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-color-hover);
+}
+
+.todo_list.scrolling::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-color-active);
+}
+
+/* 스크롤 이벤트 처리를 위한 JavaScript 필요 */ 

@@ -1,14 +1,16 @@
 .wrap {
-    /* width: 100%; */
-    /* max-width: 100%; */
+    width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
     padding: 20px;
     margin: 0;
-    min-height: 100vh;
+    height: 100vh;
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .wrap::before {
@@ -28,7 +30,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     position: relative;
     z-index: 1;
 }
@@ -116,7 +118,9 @@
 .dashboard_grid {
     position: relative;
     z-index: 1;
-    margin-bottom: 30px;
+    margin-bottom: 0;
+    flex: 1;
+    overflow: auto;
 }
 
 /* 위젯 리사이징 및 드래그 앤 드롭 관련 스타일 */
@@ -666,6 +670,8 @@
 @media (max-width: 1024px) {
     .wrap {
         padding: 15px;
+        height: 100vh;
+        overflow: hidden;
     }
     
     .dashboard_title {
@@ -690,11 +696,17 @@
     .edit_btn::before {
         font-size: 14px;
     }
+    
+    .dashboard_header {
+        margin-bottom: 15px;
+    }
 }
 
 @media (max-width: 639px) {
     .wrap {
         padding: 10px;
+        height: 100vh;
+        overflow: hidden;
     }
     
     .dashboard_title {
@@ -708,6 +720,7 @@
     .dashboard_header {
         flex-direction: column;
         gap: 10px;
+        margin-bottom: 10px;
     }
     
     .customize_controls {

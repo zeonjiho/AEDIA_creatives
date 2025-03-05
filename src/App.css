@@ -15,7 +15,9 @@
 html, body {
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
@@ -37,6 +39,7 @@ html, body {
   --card-bg: rgba(255, 255, 255, 0.85);
   --input-bg: #ffffff;
   --input-border: #ced4da;
+  --button-hover: rgba(0, 0, 0, 0.05);
   
   /* RGB 값 변수 */
   --bg-primary-rgb: 248, 249, 250;
@@ -69,6 +72,23 @@ html, body {
   --font-primary: 'Syne', sans-serif;
   --font-secondary: 'Pretendard', sans-serif;
   --font-sans: 'Pretendard', sans-serif;
+
+  /* 스크롤바 색상 변수 */
+  --scroll-color-before: rgba(0, 0, 0, 0.1);
+  --scroll-color-active: rgba(0, 0, 0, 0.3);
+  --scroll-color-hover: rgba(0, 0, 0, 0.5);
+  
+  /* 이벤트 컬러 태그 */
+  --color-tag-1: rgba(66, 133, 244, 0.2); /* 파랑 */
+  --color-tag-2: rgba(234, 67, 53, 0.2); /* 빨강 */
+  --color-tag-3: rgba(251, 188, 5, 0.2); /* 노랑 */
+  --color-tag-4: rgba(52, 168, 83, 0.2); /* 초록 */
+  --color-tag-5: rgba(156, 39, 176, 0.2); /* 보라 */
+  --color-tag-6: rgba(255, 152, 0, 0.2); /* 주황 */
+  --color-tag-7: rgba(0, 188, 212, 0.2); /* 청록 */
+  --color-tag-8: rgba(121, 85, 72, 0.2); /* 갈색 */
+  --color-tag-9: rgba(96, 125, 139, 0.2); /* 청회색 */
+  --color-tag-10: rgba(233, 30, 99, 0.2); /* 분홍 */
 }
 
 [data-theme="dark"] {
@@ -90,6 +110,7 @@ html, body {
   --card-bg: rgba(30, 30, 30, 0.85);
   --input-bg: #2d2d2d;
   --input-border: #444;
+  --button-hover: rgba(255, 255, 255, 0.08);
   
   /* RGB 값 변수 */
   --bg-primary-rgb: 18, 18, 18;
@@ -107,6 +128,11 @@ html, body {
   --glass-effect: rgba(30, 30, 30, 0.8);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* 스크롤바 색상 변수 (다크 모드) */
+  --scroll-color-before: rgba(255, 255, 255, 0.1);
+  --scroll-color-active: rgba(255, 255, 255, 0.3);
+  --scroll-color-hover: rgba(255, 255, 255, 0.5);
 }
 
 body {

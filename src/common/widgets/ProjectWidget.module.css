@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  color: var(--accent-color);
+  font-weight: 500;
 }
 
 .project_item {
@@ -38,7 +40,7 @@
 .status_진행중,
 .status_in_progress {
   background-color: var(--primary-light, rgba(74, 108, 247, 0.1));
-  color: var(--primary-color, #4a6cf7);
+  color: var(--accent-color);
 }
 
 .status_완료,
@@ -69,7 +71,7 @@
 
 .progress {
   height: 100%;
-  background-color: var(--primary-color, #4a6cf7);
+  background-color: var(--accent-color);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -113,4 +115,16 @@
 
 :global([data-theme="dark"]) .project_item {
   border-color: var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.project_action_button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 } 

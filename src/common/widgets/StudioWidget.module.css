@@ -23,7 +23,7 @@
 
 .room_type_icon {
   margin-right: 8px;
-  color: var(--primary-color, #4a6cf7);
+  color: var(--accent-color);
   font-size: 1rem;
 }
 
@@ -76,6 +76,12 @@
   border-radius: 4px;
 }
 
+.studio_name {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--accent-color);
+}
+
 /* 반응형 */
 @media (max-width: 600px) {
   .rooms_grid {
@@ -95,4 +101,60 @@
 :global([data-theme="dark"]) .feature_tag {
   background-color: var(--tag-bg, rgba(255, 255, 255, 0.1));
   color: var(--text-muted, #aaa);
-} 
+}
+
+/* 커스텀 스크롤바 스타일 */
+.events_list,
+.rooms_grid,
+.widget_content {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.events_list:hover,
+.rooms_grid:hover,
+.widget_content:hover {
+  scrollbar-color: var(--scroll-color-before) transparent;
+}
+
+.events_list::-webkit-scrollbar,
+.rooms_grid::-webkit-scrollbar,
+.widget_content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.events_list::-webkit-scrollbar-track,
+.rooms_grid::-webkit-scrollbar-track,
+.widget_content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.events_list::-webkit-scrollbar-thumb,
+.rooms_grid::-webkit-scrollbar-thumb,
+.widget_content::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 20px;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.events_list:hover::-webkit-scrollbar-thumb,
+.rooms_grid:hover::-webkit-scrollbar-thumb,
+.widget_content:hover::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-color-before);
+}
+
+.events_list::-webkit-scrollbar-thumb:hover,
+.rooms_grid::-webkit-scrollbar-thumb:hover,
+.widget_content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-color-hover);
+}
+
+.events_list.scrolling::-webkit-scrollbar-thumb,
+.rooms_grid.scrolling::-webkit-scrollbar-thumb,
+.widget_content.scrolling::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-color-active);
+}
+
+/* 스크롤 이벤트 처리를 위한 JavaScript 필요 */ 
