@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './CalendarContainer.module.css';
 import { FaChevronLeft, FaChevronRight, FaPlus, FaFilter } from 'react-icons/fa';
 import MultiDayEventRow from './MultiDayEventRow';
@@ -45,6 +45,12 @@ const CalendarContainer = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState(null);
     
+    // 임시 드래그 이벤트 상태 추가
+    const [tempDragEvent, setTempDragEvent] = useState(null);
+    
+    // 드래그 중인 범위 시각적 표시를 위한 상태 - 사용하지 않음
+    // const [dragVisualElement, setDragVisualElement] = useState(null);
+    
     // 모달 상태 관리
     const [showEventModal, setShowEventModal] = useState(false);
     const [showQuickEventModal, setShowQuickEventModal] = useState(false);
@@ -64,6 +70,9 @@ const CalendarContainer = () => {
     // 캘린더 데이터 계산
     const [calendarDays, setCalendarDays] = useState([]);
     
+    // 캘린더 그리드 참조
+    const calendarGridRef = useRef(null);
+    
     // 데이터베이스에서 이벤트 로드
     useEffect(() => {
         loadEvents();
@@ -80,6 +89,9 @@ const CalendarContainer = () => {
                 // 범위가 선택되었고 시작과 끝이 다른 경우에만 모달 표시
                 if (dateRangeSelection.start && dateRangeSelection.end && 
                     dateRangeSelection.start.getTime() !== dateRangeSelection.end.getTime()) {
+                    
+                    // 임시 이벤트 생성 부분 제거 (handleDragEnd에서만 생성)
+                    
                     setShowQuickEventModal(true);
                     
                     // 범위 선택 완료
@@ -87,6 +99,9 @@ const CalendarContainer = () => {
                         ...prev,
                         isSelecting: false
                     }));
+                } else {
+                    // 범위 선택이 없거나 같은 날짜인 경우 임시 이벤트 초기화
+                    setTempDragEvent(null);
                 }
             }
         };
@@ -116,7 +131,8 @@ const CalendarContainer = () => {
             assigneeId: event.assigneeId, // 이전 버전 호환성 유지
             projectStatus: event.projectStatus || projectStatuses.IN_PROGRESS.id, // 프로젝트 상태
             color: `var(--color-tag-${event.colorTag || getProjectColorTag(event.projectId)})`,
-            colorTag: event.colorTag || getProjectColorTag(event.projectId)
+            colorTag: event.colorTag || getProjectColorTag(event.projectId),
+            isTemporary: false
         }));
         
         setEvents(formattedEvents);
@@ -135,8 +151,16 @@ const CalendarContainer = () => {
 
     // 필터링된 이벤트 가져오기
     const getFilteredEvents = () => {
-        if (filteredProjects.length === 0) return [];
-        return events.filter(event => filteredProjects.includes(event.projectId));
+        // 필터링된 이벤트와 임시 드래그 이벤트를 함께 반환
+        const filtered = filteredProjects.length === 0 ? [] : events.filter(event => filteredProjects.includes(event.projectId));
+        
+        // 드래그 중인 임시 이벤트가 있으면 추가
+        if (tempDragEvent) {
+            console.log('임시 드래그 이벤트:', tempDragEvent); // 디버깅용 로그
+            return [...filtered, tempDragEvent];
+        }
+        
+        return filtered;
     };
 
     // 캘린더 날짜 생성 함수
@@ -264,6 +288,9 @@ const CalendarContainer = () => {
             end: day.date,
             isSelecting: true
         });
+        
+        // 기존 임시 이벤트가 있으면 제거
+        setTempDragEvent(null);
     };
     
     // 드래그 중 핸들러
@@ -275,18 +302,34 @@ const CalendarContainer = () => {
             const current = new Date(day.date);
             
             // 시작과 현재 날짜 순서 정렬
+            let rangeStart, rangeEnd;
             if (start > current) {
-                setDateRangeSelection(prev => ({
-                    start: current,
-                    end: start,
-                    isSelecting: true
-                }));
+                rangeStart = current;
+                rangeEnd = start;
             } else {
-                setDateRangeSelection(prev => ({
-                    start: start,
-                    end: current,
-                    isSelecting: true
-                }));
+                rangeStart = start;
+                rangeEnd = current;
+            }
+            
+            // 날짜 범위 선택 업데이트
+            setDateRangeSelection({
+                start: rangeStart,
+                end: rangeEnd,
+                isSelecting: true
+            });
+            
+            // 임시 이벤트 업데이트
+            if (rangeStart && rangeEnd) {
+                const tempEvent = {
+                    id: 'temp-' + Date.now(), // 고유 ID 생성
+                    title: '새 일정 추가',
+                    start: new Date(rangeStart),
+                    end: new Date(rangeEnd),
+                    isTemporary: true,
+                    color: 'var(--text-primary)', // 색상 추가
+                    colorTag: 2 // 색상 태그 추가
+                };
+                setTempDragEvent(tempEvent);
             }
         }
     };
@@ -304,6 +347,20 @@ const CalendarContainer = () => {
                 isSelecting: false
             }));
             
+            // 임시 이벤트 생성
+            if (dateRangeSelection.start && dateRangeSelection.end) {
+                const tempEvent = {
+                    id: 'temp-' + Date.now(), // 고유 ID 생성
+                    title: '새 일정 추가',
+                    start: new Date(dateRangeSelection.start),
+                    end: new Date(dateRangeSelection.end),
+                    isTemporary: true,
+                    color: 'var(--text-primary)', // 색상 추가
+                    colorTag: 2 // 색상 태그 추가
+                };
+                setTempDragEvent(tempEvent);
+            }
+            
             // 퀵 이벤트 모달 표시
             setSelectedDate(day.date);
             setShowQuickEventModal(true);
@@ -318,6 +375,144 @@ const CalendarContainer = () => {
         
         // 드래그 시작 상태 초기화
         setDragStart(null);
+        
+        // 모든 날짜 셀에서 범위 클래스 제거
+        if (calendarGridRef.current) {
+            const allCells = calendarGridRef.current.querySelectorAll('[data-date]');
+            allCells.forEach(cell => {
+                cell.classList.remove(styles.rangeStart);
+                cell.classList.remove(styles.rangeEnd);
+                cell.classList.remove(styles.inRange);
+            });
+        }
+    };
+    
+    // 드래그 시각적 요소 생성 함수 - 사용하지 않음
+    const createDragVisualElement = (startDate, endDate, startRect) => {
+        // 비활성화
+        return;
+        
+        /*
+        if (!calendarGridRef.current) return;
+        
+        // 기존 요소가 있으면 제거
+        if (dragVisualElement) {
+            calendarGridRef.current.removeChild(dragVisualElement);
+        }
+        
+        // 새 요소 생성
+        const element = document.createElement('div');
+        element.className = styles.dragVisualElement;
+        
+        // 텍스트 추가
+        const textElement = document.createElement('div');
+        textElement.textContent = '새 이벤트';
+        textElement.style.fontWeight = '500';
+        textElement.style.fontSize = '0.85rem';
+        element.appendChild(textElement);
+        
+        // 요소 위치 및 크기 설정
+        updateElementPosition(element, startDate, endDate);
+        
+        // 캘린더 그리드에 추가
+        calendarGridRef.current.appendChild(element);
+        
+        // 상태 업데이트
+        setDragVisualElement(element);
+        
+        // 날짜 셀에 범위 클래스 추가
+        highlightDateRange(startDate, endDate);
+        */
+    };
+    
+    // 드래그 시각적 요소 업데이트 함수 - 사용하지 않음
+    const updateDragVisualElement = (startDate, endDate) => {
+        // 비활성화
+        return;
+        
+        /*
+        if (!dragVisualElement || !calendarGridRef.current) return;
+        
+        // 요소 위치 및 크기 업데이트
+        updateElementPosition(dragVisualElement, startDate, endDate);
+        */
+    };
+    
+    // 요소 위치 및 크기 업데이트 함수
+    const updateElementPosition = (element, startDate, endDate) => {
+        if (!calendarGridRef.current) return;
+        
+        // 시작 날짜와 종료 날짜에 해당하는 셀 찾기
+        const startCell = findDayCell(startDate);
+        const endCell = findDayCell(endDate);
+        
+        if (!startCell || !endCell) return;
+        
+        // 캘린더 그리드 기준 상대 위치 계산
+        const gridRect = calendarGridRef.current.getBoundingClientRect();
+        const startRect = startCell.getBoundingClientRect();
+        const endRect = endCell.getBoundingClientRect();
+        
+        // 요소 위치 및 크기 설정
+        const left = startRect.left - gridRect.left;
+        const top = startRect.top - gridRect.top + 30; // 날짜 숫자 아래에 위치
+        const width = (endRect.right - startRect.left);
+        const height = 24; // 이벤트 높이
+        
+        element.style.left = `${left}px`;
+        element.style.top = `${top}px`;
+        element.style.width = `${width}px`;
+        element.style.height = `${height}px`;
+        
+        // 날짜 셀에 범위 클래스 업데이트
+        highlightDateRange(startDate, endDate);
+    };
+    
+    // 날짜 범위 하이라이트 함수
+    const highlightDateRange = (startDate, endDate) => {
+        if (!calendarGridRef.current) return;
+        
+        // 모든 날짜 셀에서 범위 클래스 제거
+        const allCells = calendarGridRef.current.querySelectorAll('[data-date]');
+        allCells.forEach(cell => {
+            cell.classList.remove(styles.rangeStart);
+            cell.classList.remove(styles.rangeEnd);
+            cell.classList.remove(styles.inRange);
+        });
+        
+        // 시작 날짜와 종료 날짜가 같으면 처리하지 않음
+        if (startDate.getTime() === endDate.getTime()) return;
+        
+        // 시작 날짜와 종료 날짜 사이의 모든 날짜 계산
+        const currentDate = new Date(startDate);
+        const lastDate = new Date(endDate);
+        
+        // 시작 날짜부터 종료 날짜까지 반복
+        while (currentDate <= lastDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const cell = calendarGridRef.current.querySelector(`[data-date="${dateStr}"]`);
+            
+            if (cell) {
+                if (currentDate.getTime() === startDate.getTime()) {
+                    cell.classList.add(styles.rangeStart);
+                } else if (currentDate.getTime() === lastDate.getTime()) {
+                    cell.classList.add(styles.rangeEnd);
+                } else {
+                    cell.classList.add(styles.inRange);
+                }
+            }
+            
+            // 다음 날짜로 이동
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    };
+    
+    // 날짜에 해당하는 셀 찾기 함수
+    const findDayCell = (date) => {
+        if (!calendarGridRef.current) return null;
+        
+        const dateStr = date.toISOString().split('T')[0];
+        return calendarGridRef.current.querySelector(`[data-date="${dateStr}"]`);
     };
 
     // 이벤트 추가 버튼 클릭 핸들러
@@ -386,6 +581,16 @@ const CalendarContainer = () => {
         setEvents([...events, formattedEvent]);
         setShowEventModal(false);
         setShowQuickEventModal(false);
+        
+        // 임시 이벤트 초기화
+        setTempDragEvent(null);
+        
+        // 날짜 범위 선택 초기화
+        setDateRangeSelection({
+            start: null,
+            end: null,
+            isSelecting: false
+        });
     };
 
     // 이벤트 수정 핸들러
@@ -494,6 +699,11 @@ const CalendarContainer = () => {
 
     // 이벤트가 여러 날에 걸쳐 있는지 확인
     const isMultiDayEvent = (event) => {
+        if (!event) return false;
+        
+        // 임시 드래그 이벤트는 항상 멀티데이 이벤트로 처리
+        if (event.isTemporary) return true;
+        
         const start = new Date(event.start);
         const end = new Date(event.end);
         
@@ -614,7 +824,7 @@ const CalendarContainer = () => {
             </div>
 
             {/* 캘린더 그리드 */}
-            <div className={styles.calendarGrid}>
+            <div className={styles.calendarGrid} ref={calendarGridRef}>
                 {/* 주 단위로 렌더링 */}
                 {groupEventsByWeek().map(({ week, weekIndex }) => {
                     // 이 주에 표시될 여러 날짜에 걸친 이벤트 찾기
@@ -625,6 +835,8 @@ const CalendarContainer = () => {
                     
                     const filteredEvents = getFilteredEvents();
                     const multiDayEvents = filteredEvents.filter(event => {
+                        if (!event) return false;
+                        
                         const eventStart = new Date(event.start);
                         const eventEnd = new Date(event.end);
                         eventStart.setHours(0, 0, 0, 0);
@@ -664,6 +876,9 @@ const CalendarContainer = () => {
                                     isDateInEventRange(day.date, event) && !isMultiDayEvent(event)
                                 );
 
+                                // 날짜 문자열 생성 (데이터 속성용)
+                                const dateStr = day.date.toISOString().split('T')[0];
+
                                 return (
                                     <CalendarDay
                                         key={`day-${weekIndex}-${dayIndex}`}
@@ -679,6 +894,7 @@ const CalendarContainer = () => {
                                         handleEventSelect={handleEventSelect}
                                         getAssigneeNames={getAssigneeNames}
                                         styles={styles}
+                                        dataDate={dateStr}
                                     />
                                 );
                             })}
@@ -704,8 +920,14 @@ const CalendarContainer = () => {
             {showQuickEventModal && (
                 <QuickEventModal
                     position={modalPosition}
-                    onClose={() => setShowQuickEventModal(false)}
-                    onSave={handleAddEvent}
+                    onClose={() => {
+                        setShowQuickEventModal(false);
+                        setTempDragEvent(null); // 임시 이벤트 초기화
+                    }}
+                    onSave={(eventData) => {
+                        handleAddEvent(eventData);
+                        setTempDragEvent(null); // 임시 이벤트 초기화
+                    }}
                     date={selectedDate}
                     timeRange={dateRangeSelection.start && dateRangeSelection.end ? {
                         start: dateRangeSelection.start,

@@ -278,12 +278,17 @@
 
 /* 범위 선택 스타일 */
 .rangeStart, .rangeEnd {
-  background-color: var(--color-primary-lightest);
+  background-color: rgba(var(--accent-color-rgb), 0.15) !important;
 }
 
 .inRange {
-  background-color: var(--color-primary-lightest);
-  opacity: 0.7;
+  background-color: rgba(var(--accent-color-rgb), 0.08) !important;
+}
+
+/* inRange 클래스가 적용된 날짜의 숫자 스타일 */
+.inRange, .rangeStart, .rangeEnd {
+  font-weight: 900;
+  color: var(--inRange-color);
 }
 
 /* 이벤트 목록 */
@@ -370,6 +375,28 @@
   z-index: 10;
 }
 
+/* 임시 드래그 이벤트 스타일 */
+.multiDayEvent[data-temporary="true"] {
+  background-color: var(--color-primary-light) !important;
+  border: 2px dashed var(--color-primary) !important;
+  opacity: 0.8 !important;
+  animation: pulse 1.5s infinite !important;
+  z-index: 100 !important; /* 임시 이벤트는 항상 최상위에 표시 */
+  pointer-events: none !important; /* 임시 이벤트는 포인터 이벤트를 받지 않음 */
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
 .multiDayEvent:hover {
   transform: translateY(-1px) scale(1.01);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
@@ -399,6 +426,36 @@
   background-color: inherit;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+/* 드래그 시각적 요소 */
+.dragVisualElement {
+  position: absolute;
+  background-color: rgba(var(--accent-color-rgb), 0.1);
+  border: 2px dashed var(--accent-color);
+  border-radius: var(--border-radius-sm);
+  opacity: 0.8;
+  z-index: 100;
+  pointer-events: none;
+  animation: pulse 1.5s infinite;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+  box-shadow: var(--card-shadow);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
 
 /* 반응형 스타일 */

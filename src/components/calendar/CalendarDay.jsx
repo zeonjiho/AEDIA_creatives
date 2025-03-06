@@ -19,6 +19,7 @@ import styles from './CalendarDay.module.css';
  * @param {Function} props.handleEventSelect - 이벤트 선택 핸들러
  * @param {Function} props.getAssigneeNames - 담당자 이름 가져오기 함수
  * @param {Object} props.styles - 스타일 객체
+ * @param {string} props.dataDate - 날짜 데이터 속성
  * @returns {JSX.Element}
  */
 const CalendarDay = ({
@@ -33,7 +34,8 @@ const CalendarDay = ({
     handleDateClick,
     handleEventSelect,
     getAssigneeNames,
-    styles
+    styles,
+    dataDate
 }) => {
     return (
         <div
@@ -43,6 +45,7 @@ const CalendarDay = ({
             onMouseUp={handleDragEnd}
             onClick={handleDateClick}
             draggable={false}
+            data-date={dataDate}
         >
             <div className={styles.dayNumber}>{day.date.getDate()}</div>
             <div className={styles.eventsList}>
@@ -75,18 +78,19 @@ const CalendarDay = ({
 };
 
 CalendarDay.propTypes = {
-  day: PropTypes.object.isRequired,
-  dayIndex: PropTypes.number.isRequired,
-  weekIndex: PropTypes.number.isRequired,
-  rangeClass: PropTypes.string.isRequired,
-  dayEvents: PropTypes.array.isRequired,
-  handleDragStart: PropTypes.func.isRequired,
-  handleDragOver: PropTypes.func.isRequired,
-  handleDragEnd: PropTypes.func.isRequired,
-  handleDateClick: PropTypes.func.isRequired,
-  handleEventSelect: PropTypes.func.isRequired,
-  getAssigneeNames: PropTypes.func.isRequired,
-  styles: PropTypes.object.isRequired
+    day: PropTypes.object.isRequired,
+    dayIndex: PropTypes.number.isRequired,
+    weekIndex: PropTypes.number.isRequired,
+    rangeClass: PropTypes.string.isRequired,
+    dayEvents: PropTypes.array.isRequired,
+    handleDragStart: PropTypes.func.isRequired,
+    handleDragOver: PropTypes.func.isRequired,
+    handleDragEnd: PropTypes.func.isRequired,
+    handleDateClick: PropTypes.func.isRequired,
+    handleEventSelect: PropTypes.func.isRequired,
+    getAssigneeNames: PropTypes.func.isRequired,
+    styles: PropTypes.object.isRequired,
+    dataDate: PropTypes.string
 };
 
 export default CalendarDay; 

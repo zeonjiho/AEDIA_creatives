@@ -19,25 +19,25 @@
   background-color: var(--hover-light) !important;
 }
 
-.rangeStart {
-  background-color: var(--hover-primary) !important;
-}
-
-.rangeEnd {
-  background-color: var(--hover-primary) !important;
+.rangeStart, .rangeEnd {
+  background-color: rgba(var(--accent-color-rgb), 0.15) !important;
 }
 
 .inRange {
-  background-color: var(--hover-light) !important;
+  background-color: rgba(var(--accent-color-rgb), 0.08) !important;
+}
+
+.inRange .dayNumber {
+  font-weight: 700;
 }
 
 .otherMonth {
   background-color: var(--bg-secondary);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .today {
-  background-color: rgba(var(--accent-color-rgb, 0, 0, 0), 0.05);
+  background-color: rgba(var(--accent-color-rgb), 0.05);
 }
 
 .dayNumber {
@@ -142,4 +142,70 @@
 
 .moreEvents:hover {
   color: var(--text-primary);
+}
+
+/* 드래그 관련 스타일 */
+.dragging {
+  background-color: var(--bg-tertiary);
+}
+
+.dragOver {
+  background-color: var(--bg-tertiary);
+  box-shadow: inset 0 0 0 2px var(--accent-color);
+}
+
+/* 드래그 시각적 요소 */
+.dragVisualElement {
+  position: absolute;
+  background-color: #e8f0fe; /* 연한 파란색 */
+  border-left: 3px solid #4285f4; /* 파란색 테두리 */
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  opacity: 0.9;
+  z-index: 100;
+  pointer-events: none;
+  animation: pulse 1.5s infinite;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333333; /* 어두운 텍스트 색상 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 22px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+/* 임시 이벤트 스타일 */
+.temporaryEvent {
+  background-color: var(--color-secondary-light) !important;
+  border: 2px dashed var(--color-secondary) !important;
+  border-top-color: var(--color-secondary) !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.temporaryEventTitle {
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  text-align: center !important;
+  font-size: 0.9rem !important;
 } 

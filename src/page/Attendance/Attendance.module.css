@@ -1,16 +1,18 @@
 .attendance_wrap {
     width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
     box-sizing: border-box;
-    padding: 20px;
-    margin: 0;
-    height: auto;
+    padding: 20px 20px 0;
+    margin: 0 auto;
+    height: 100vh;
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    padding-bottom: 0;
 }
 
 .attendance_wrap::before {
@@ -97,20 +99,23 @@
     flex: 1;
     position: relative;
     z-index: 1;
+    margin: 10px auto 200px;
+    width: 100%;
 }
 
 .status_card {
     background-color: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    border-radius: 3rem;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.05);;
     padding: 40px;
     width: 100%;
     max-width: 500px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    /* gap: 20px; */
     border: 1px solid var(--border-color);
+    margin: -10px auto 0;
 }
 
 .status_icon {
@@ -217,12 +222,15 @@
 .attendance_grid {
     position: relative;
     z-index: 1;
-    margin-bottom: 0;
+    margin: 20px auto 0;
     flex: 1;
-    overflow: auto;
+    overflow: visible;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+    padding-bottom: 0;
 }
 
 .attendance_card {
@@ -443,6 +451,7 @@
 @media (max-width: 1024px) {
     .attendance_wrap {
         padding: 15px;
+        max-width: 100%;
     }
     
     .attendance_title {
@@ -454,8 +463,14 @@
         font-size: 14px;
     }
     
+    .attendance_center {
+        margin: 5px auto 15px;
+    }
+    
     .status_card {
         padding: 30px;
+        max-width: 450px;
+        margin: -5px auto 0;
     }
     
     .status_icon {
@@ -470,6 +485,15 @@
     .attendance_btn {
         width: 100%;
         justify-content: center;
+    }
+    
+    .attendance_grid {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+    }
+    
+    .attendance_card_full {
+        grid-column: auto;
     }
 }
 
@@ -490,8 +514,15 @@
         margin-bottom: 15px;
     }
     
+    .attendance_center {
+        margin: 5px auto 250px;
+    }
+    
     .status_card {
         padding: 20px;
+        max-width: 100%;
+        border-radius: 2rem;
+        margin: 0 auto;
     }
     
     .status_icon {
@@ -505,6 +536,10 @@
     .check_in_button, .check_out_button {
         padding: 12px 30px;
         font-size: 14px;
+    }
+    
+    .attendance_grid {
+        gap: 15px;
     }
 }
 
@@ -553,4 +588,20 @@
 .refresh_location_btn:hover {
     background-color: var(--accent);
     color: var(--text-on-accent);
+}
+
+body {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+html {
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 } 

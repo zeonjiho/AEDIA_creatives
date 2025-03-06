@@ -78,7 +78,7 @@
 /* 네비게이션 아이템 */
 .nav_item {
     display: flex;
-    height: 44px;
+    height: 30px;
     padding: 0.5rem;
     align-items: center;
     padding: 0 15px;
@@ -385,7 +385,7 @@
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    max-width: 1400px;
+    max-width: 100%;
     width: 100%;
     margin: 0 auto;
 }
