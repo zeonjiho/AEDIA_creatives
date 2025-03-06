@@ -21,12 +21,12 @@ const Attendance = () => {
 
     // 허용된 위치 좌표 (예: 회사 위치)
     const ALLOWED_LOCATION = {
-        latitude: 37.520559, // 와석순환로 15 좌표
-        longitude: 127.021723,
-        radius: 20 // 미터 단위의 허용 반경
+        latitude: 37.708305, // 와석순환로 15 좌표
+        longitude: 126.756299,
+        radius: 100 // 미터 단위의 허용 반경
     }
 
-    // 현재 시간 업데이트
+    // 현재 시간 업데이트ㄴ
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date())
@@ -258,7 +258,7 @@ const Attendance = () => {
             {/* 출근 인증 헤더 */}
             <div className={ss.attendance_header}>
                 <div>
-                    <h1 className={ss.attendance_title}>Authentication</h1>
+                    <h1 className={ss.attendance_title}>Attendance</h1>
                     <p className={ss.attendance_date}>{formattedDate} {formattedTime}</p>
                 </div>
                 
@@ -268,7 +268,7 @@ const Attendance = () => {
                     onClick={openModal}
                 >
                     <FaRegListAlt />
-                    Authentication Records
+                    Attendance Records
                 </button>
             </div>
             
