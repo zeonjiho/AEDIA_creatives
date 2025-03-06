@@ -1,0 +1,301 @@
+.modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal_container {
+    background-color: var(--bg-primary);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.modal_header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.close_btn {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close_btn:hover {
+    background-color: var(--button-color-hover);
+}
+
+.modal_tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.tab_btn {
+    flex: 1;
+    padding: 15px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-bottom: 3px solid transparent;
+}
+
+.tab_btn:hover {
+    color: var(--text-primary);
+    background-color: var(--button-color-hover);
+}
+
+.tab_btn.active {
+    color: var(--accent-color);
+    border-bottom: 3px solid var(--accent-color);
+}
+
+.modal_content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* 주간 요약 탭 스타일 */
+.weekly_tab {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.week_summary {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.week_day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.day_circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.day_present {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.day_late {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.day_today {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.day_future {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.day_status {
+    color: var(--success-color);
+    font-size: 16px;
+}
+
+.week_stats {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.stat_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat_label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat_value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* 출근 기록 탭 스타일 */
+.history_tab {
+    overflow-x: auto;
+}
+
+.attendance_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.attendance_table th, .attendance_table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.attendance_table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.attendance_table td {
+    color: var(--text-secondary);
+}
+
+.status_tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status_normal {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status_late {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .modal_container {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal_header h2 {
+        font-size: 20px;
+    }
+    
+    .tab_btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .day_circle {
+        width: 40px;
+        height: 40px;
+        font-size: 12px;
+    }
+    
+    .stat_value {
+        font-size: 20px;
+    }
+    
+    .attendance_table th, .attendance_table td {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .week_summary {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .week_stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stat_item {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .tab_btn {
+        font-size: 12px;
+        padding: 10px 5px;
+    }
+    
+    .day_circle {
+        width: 35px;
+        height: 35px;
+        font-size: 11px;
+    }
+} 

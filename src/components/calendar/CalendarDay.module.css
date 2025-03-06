@@ -1,0 +1,145 @@
+.calendarDay {
+  min-height: 100px;
+  border-right: 1px solid var(--border-color);
+  padding: 0.5rem;
+  background-color: var(--bg-primary);
+  transition: background-color 0.2s ease;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.calendarDay:hover {
+  background-color: var(--hover-light);
+}
+
+.selected {
+  background-color: var(--hover-light) !important;
+}
+
+.rangeStart {
+  background-color: var(--hover-primary) !important;
+}
+
+.rangeEnd {
+  background-color: var(--hover-primary) !important;
+}
+
+.inRange {
+  background-color: var(--hover-light) !important;
+}
+
+.otherMonth {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.today {
+  background-color: rgba(var(--accent-color-rgb, 0, 0, 0), 0.05);
+}
+
+.dayNumber {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.today .dayNumber {
+  background-color: var(--accent-color);
+  color: var(--text-primary-inverse);
+}
+
+.otherMonth .dayNumber {
+  color: var(--text-tertiary);
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow: hidden;
+  flex: 1;
+  margin-top: calc(26px * var(--event-rows, 0) + 4px);
+}
+
+.eventCard {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  color: white;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border-top-width: 3px;
+  border-top-style: solid;
+}
+
+.eventCard:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.eventTitle {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+
+.eventProject {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventAssignee {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventStatus {
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--border-radius-xs);
+  font-size: 0.65rem;
+  font-weight: 500;
+  margin-left: 0.25rem;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.moreEvents {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.moreEvents:hover {
+  color: var(--text-primary);
+} 

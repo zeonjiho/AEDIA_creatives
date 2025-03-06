@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap');
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
 
 
 * {
@@ -15,7 +15,7 @@
 html, body {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  /* overflow: hidden; */
   margin: 0;
   padding: 0;
 }
@@ -40,7 +40,8 @@ html, body {
   --card-bg: rgba(255, 255, 255, 0.85);
   --input-bg: #ffffff;
   --input-border: #ced4da;
-  --button-hover: rgba(0, 0, 0, 0.05);
+  --button-color-hover: rgba(0, 0, 0, 0.05);
+  --button-color: rgba(0, 0, 0, 0.05);
   --border-color-resize: rgba(0, 0, 0, 0.2);
   
   /* RGB 값 변수 */
@@ -72,8 +73,8 @@ html, body {
   --empty-dark: #3D3D3D;
   --font-mono: 'SFMono-Regular', Menlo, Consolas, Liberation Mono, monospace;
   --font-primary: 'Syne', sans-serif;
-  --font-secondary: 'Pretendard', sans-serif;
-  --font-sans: 'Pretendard', sans-serif;
+  --font-secondary: 'PretendardVariable', sans-serif;
+  --font-sans: 'PretendardVariable', sans-serif;
 
   /* 스크롤바 색상 변수 */
   --scroll-color-before: rgba(0, 0, 0, 0.1);
@@ -125,7 +126,8 @@ html, body {
   --card-bg: rgba(30, 30, 30, 0.85);
   --input-bg: #2d2d2d;
   --input-border: #444;
-  --button-hover: rgba(255, 255, 255, 0.08);
+  --button-color-hover: rgba(255, 255, 255, 0.08);
+  --button-color: rgba(255, 255, 255, 0.1);
   --border-color-resize: rgba(255, 255, 255, 0.2);
   /* RGB 값 변수 */
   --bg-primary-rgb: 18, 18, 18;

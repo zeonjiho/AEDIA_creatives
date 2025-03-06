@@ -8,6 +8,8 @@
     box-shadow: var(--card-shadow);
     overflow: hidden;
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* 캘린더 헤더 */
@@ -17,6 +19,7 @@
     align-items: center;
     padding: 1.5rem 1.5rem 1rem;
     border-bottom: 1px solid var(--border-color);
+    
 }
 
 .calendarTitle {
@@ -233,6 +236,7 @@
     flex: 1;
     overflow-y: auto;
     position: relative;
+    overflow-x: hidden;
 }
 
 .calendarWeek {
@@ -240,6 +244,9 @@
     grid-template-columns: repeat(7, 1fr);
     position: relative;
     min-height: 120px;
+    overflow: visible;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .calendarDay {
@@ -311,6 +318,7 @@
     gap: 0.25rem;
     overflow: hidden;
     flex: 1;
+    margin-top: calc(26px * var(--event-rows, 0) + 4px) !important;
 }
 
 .eventCard {
@@ -376,8 +384,11 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 24px;
+    height: 26px;
     display: flex;
+    overflow: visible;
+    width: 100%;
+    pointer-events: none;
     z-index: 5;
 }
 
@@ -390,17 +401,22 @@
     position: absolute;
     height: 24px;
     border-radius: 0;
-    z-index: 5;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin: 0 1px;
+    margin: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    padding: 0.25rem 0.5rem;
+    pointer-events: auto;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 10;
 }
 
 .multiDayEvent:hover {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+    z-index: 30 !important;
 }
 
 .eventStart {
@@ -418,39 +434,46 @@
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     margin-left: 0;
-    border-left: 3px dashed rgba(255, 255, 255, 0.8);
+    border-left: 2px dashed rgba(255, 255, 255, 0.8);
     position: relative;
     left: 0 !important;
+    margin-left: -5px;
+    padding-left: 8px;
+    z-index: 15;
 }
 
 .continuesPrevWeek::before {
     content: '';
     position: absolute;
-    left: 0;
+    left: -4px;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 8px;
     background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
+    z-index: -1;
 }
 
 .continuesNextWeek {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
     margin-right: 0;
-    border-right: 3px dashed rgba(255, 255, 255, 0.8);
+    border-right: 2px dashed rgba(255, 255, 255, 0.8);
     position: relative;
-    right: 0 !important;
-    width: calc(100% - 1px) !important;
+    right: 0;
+    margin-right: -5px;
+    padding-right: 8px;
+    z-index: 15;
 }
 
 .continuesNextWeek::after {
     content: '';
     position: absolute;
-    right: 0;
+    right: -4px;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 8px;
     background: linear-gradient(to left, rgba(0, 0, 0, 0.2), transparent);
+    z-index: -1;
 }
 
 .eventItem:hover {
@@ -532,4 +555,27 @@
         flex-direction: column;
         gap: 0.5rem;
     }
+}
+
+/* 주 경계 연결 효과 */
+.continuesPrevWeek::after {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background-color: inherit;
+    z-index: 1;
+}
+
+.continuesNextWeek::before {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background-color: inherit;
+    z-index: 1;
 } 

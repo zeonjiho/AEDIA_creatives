@@ -30,6 +30,19 @@ import NotificationWidget from '../../common/widgets/NotificationWidget'
 const Home = () => {
     const navigate = useNavigate()
     
+    // 화면 크기 감지를 위한 상태 추가
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+    
+    // 화면 크기 변경 감지
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768)
+        }
+        
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+    
     // 기본 레이아웃 설정 - 이미지에 보이는 레이아웃과 동일하게 설정
     const defaultLayouts = {
         lg: [
@@ -257,7 +270,7 @@ const Home = () => {
                     <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>
                 
-                {/* 커스터마이징 모드 컨트롤 */}
+                {/* 커스터마이징 모드 컨트롤 - 모바일에서는 표시하지 않음 */}
                 {isCustomizeMode ? (
                     <div className={ss.customize_controls}>
                         <button 
@@ -274,12 +287,14 @@ const Home = () => {
                         </button>
                     </div>
                 ) : (
-                    <button 
-                        className={`${ss.customize_btn} ${ss.edit_btn}`} 
-                        onClick={() => handleCustomizeModeChange(true)}
-                    >
-                        레이아웃 수정
-                    </button>
+                    !isMobile && (
+                        <button 
+                            className={`${ss.customize_btn} ${ss.edit_btn}`} 
+                            onClick={() => handleCustomizeModeChange(true)}
+                        >
+                            Change Layout
+                        </button>
+                    )
                 )}
             </div>
             

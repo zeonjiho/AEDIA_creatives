@@ -41,14 +41,14 @@ export const currentUser = users[0];
 
 // 할 일 목록 데이터
 export const todos = [
-  { id: 1, userId: 1, text: '클라이언트 킥오프 미팅 준비', completed: false, dueDate: '2023-03-10' },
-  { id: 2, userId: 1, text: '프로젝트 예산안 검토', completed: true, dueDate: '2023-03-08' },
-  { id: 3, userId: 2, text: '스토리보드 검토 회의', completed: false, dueDate: '2023-03-12' },
-  { id: 4, userId: 3, text: '타이틀 시퀀스 디자인 완성', completed: false, dueDate: '2023-03-15' },
-  { id: 5, userId: 4, text: '마케팅 캠페인 전략 수립', completed: true, dueDate: '2023-03-07' },
-  { id: 6, userId: 5, text: '촬영 장비 점검 및 예약', completed: false, dueDate: '2023-03-14' },
-  { id: 7, userId: 6, text: '러프 컷 편집 완료', completed: false, dueDate: '2023-03-18' },
-  { id: 8, userId: 7, text: '음향 효과 라이브러리 구축', completed: true, dueDate: '2023-03-05' },
+  { id: 1, userId: 1, text: '클라이언트 킥오프 미팅 준비', completed: false, dueDate: '2023-03-10', dueTime: '14:00' },
+  { id: 2, userId: 1, text: '프로젝트 예산안 검토', completed: true, dueDate: '2023-03-08', dueTime: '10:30' },
+  { id: 3, userId: 2, text: '스토리보드 검토 회의', completed: false, dueDate: '2023-03-12', dueTime: '15:00' },
+  { id: 4, userId: 3, text: '타이틀 시퀀스 디자인 완성', completed: false, dueDate: '2023-03-15', dueTime: null },
+  { id: 5, userId: 4, text: '마케팅 캠페인 전략 수립', completed: true, dueDate: '2023-03-07', dueTime: '09:00' },
+  { id: 6, userId: 5, text: '촬영 장비 점검 및 예약', completed: false, dueDate: '2023-03-14', dueTime: null },
+  { id: 7, userId: 6, text: '러프 컷 편집 완료', completed: false, dueDate: '2023-03-18', dueTime: '17:00' },
+  { id: 8, userId: 7, text: '음향 효과 라이브러리 구축', completed: true, dueDate: '2023-03-05', dueTime: '13:30' },
 ];
 
 // 프로젝트 상태 데이터
@@ -79,24 +79,21 @@ export const events = [
 
 // 회의실 데이터
 export const rooms = [
-  { id: 1, name: '회의실 A', capacity: 10, facilities: ['프로젝터', '화이트보드', '화상회의 장비'] },
-  { id: 2, name: '회의실 B', capacity: 6, facilities: ['화이트보드', '화상회의 장비'] },
-  { id: 3, name: '회의실 C', capacity: 4, facilities: ['화이트보드'] },
-  { id: 4, name: '편집실', capacity: 3, facilities: ['편집 워크스테이션', '모니터링 시스템'] },
-  { id: 5, name: '음향 스튜디오', capacity: 4, facilities: ['녹음 장비', '믹싱 콘솔', '모니터 스피커'] },
-  { id: 6, name: '촬영 스튜디오', capacity: 15, facilities: ['그린 스크린', '조명 장비', '카메라 리그'] },
+  { id: 1, name: '3F 회의실 A', capacity: 10, facilities: ['프로젝터', '화이트보드', '화상회의 장비'] },
+  { id: 3, name: '4F 회의실 A', capacity: 4, facilities: ['화이트보드'] },
+  { id: 4, name: '4F 회의실 B', capacity: 3, facilities: ['편집 워크스테이션', '모니터링 시스템'] },
 ];
 
 // 회의실 예약 데이터
 export const roomReservations = [
-  { id: 1, roomId: 1, userId: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', participants: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 2, roomId: 2, userId: 1, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', participants: [1, 2, 5, 6] },
-  { id: 3, roomId: 3, userId: 4, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', participants: [1, 4] },
-  { id: 4, roomId: 1, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', participants: [1, 2, 3] },
-  { id: 5, roomId: 2, userId: 1, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', participants: [1, 2, 5, 8] },
-  { id: 6, roomId: 4, userId: 6, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', participants: [1, 2, 6] },
-  { id: 7, roomId: 5, userId: 7, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', participants: [2, 7] },
-  { id: 8, roomId: 6, userId: 5, title: '제품 촬영 세션', start: '2023-03-25T09:00:00', end: '2023-03-25T17:00:00', participants: [1, 5, 8] },
+  { id: 1, roomId: 1, userId: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', participants: [1, 2, 3, 4, 5, 6, 7, 8], project: '기업 홍보 영상' },
+  { id: 2, roomId: 2, userId: 1, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', participants: [1, 2, 5, 6], project: '신제품 광고' },
+  { id: 3, roomId: 3, userId: 4, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', participants: [1, 4], project: '웹 시리즈' },
+  { id: 4, roomId: 1, title: '콘셉트 디자인 리뷰', start: '2023-03-13T15:00:00', end: '2023-03-13T16:00:00', participants: [1, 2, 3], project: '기업 홍보 영상' },
+  { id: 5, roomId: 2, userId: 1, title: '촬영 준비 회의', start: '2023-03-15T10:00:00', end: '2023-03-15T11:30:00', participants: [1, 2, 5, 8], project: '신제품 광고' },
+  { id: 6, roomId: 4, userId: 6, title: '편집 리뷰 세션', start: '2023-03-20T14:00:00', end: '2023-03-20T16:00:00', participants: [1, 2, 6], project: '웹 시리즈' },
+  { id: 7, roomId: 5, userId: 7, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', participants: [2, 7], project: '웹 시리즈' },
+  { id: 8, roomId: 6, userId: 5, title: '제품 촬영 세션', start: '2023-03-25T09:00:00', end: '2023-03-25T17:00:00', participants: [1, 5, 8], project: '신제품 광고' },
 ];
 
 // 프로젝트 데이터
@@ -311,7 +308,8 @@ let reservationIdCounter = roomReservations.length + 1;
 export const addReservation = (newReservation) => {
   const reservationToAdd = {
     id: reservationIdCounter++,
-    ...newReservation
+    ...newReservation,
+    project: newReservation.project || '일반 회의'
   };
   roomReservations.push(reservationToAdd);
   return reservationToAdd;
@@ -515,4 +513,356 @@ export const getTaskById = (projectId, taskId) => {
     return project.tasks.find(task => task.id === taskId);
   }
   return null;
+};
+
+// 영수증 카테고리 데이터
+export const receiptCategories = [
+  { id: 'OFFICE_SUPPLIES', name: '사무용품', nameEn: 'Office Supplies' },
+  { id: 'MEAL', name: '식비', nameEn: 'Meal Expenses' },
+  { id: 'TRANSPORTATION', name: '교통비', nameEn: 'Transportation' },
+  { id: 'IT_SOFTWARE', name: 'IT/소프트웨어', nameEn: 'IT/Software' },
+  { id: 'ENTERTAINMENT', name: '접대비', nameEn: 'Entertainment' },
+  { id: 'ACCOMMODATION', name: '숙박비', nameEn: 'Accommodation' },
+  { id: 'EQUIPMENT', name: '장비구매/대여', nameEn: 'Equipment' },
+  { id: 'OTHER', name: '기타', nameEn: 'Other' }
+];
+
+// 영수증 결제 방법 데이터
+export const paymentMethods = [
+  { id: 'CORPORATE_CARD', name: '법인카드', nameEn: 'Corporate Card' },
+  { id: 'PERSONAL_PAYMENT', name: '개인결제', nameEn: 'Personal Payment' },
+  { id: 'CASH', name: '현금', nameEn: 'Cash' },
+  { id: 'BANK_TRANSFER', name: '계좌이체', nameEn: 'Bank Transfer' }
+];
+
+// 영수증 상태 데이터
+export const receiptStatuses = [
+  { id: 'PENDING', name: '승인대기', nameEn: 'Pending' },
+  { id: 'APPROVED', name: '승인완료', nameEn: 'Approved' },
+  { id: 'REJECTED', name: '반려', nameEn: 'Rejected' }
+];
+
+// 영수증 유형 데이터
+export const receiptTypes = [
+  { id: 'MEAL', name: '식대', nameEn: 'Meal Expenses' },
+  { id: 'TAXI', name: '택시', nameEn: 'Taxi Expenses' },
+  { id: 'OTHER', name: '기타', nameEn: 'Other' }
+];
+
+// 영수증 데이터
+export const receipts = [
+  {
+    id: 1,
+    userId: 1,
+    date: '2023-03-01',
+    title: '사무용품 구매',
+    amount: 150000,
+    category: 'OFFICE_SUPPLIES',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'OTHER',
+    projectId: 1,
+    description: '프로젝트 진행을 위한 사무용품 구매',
+    createdAt: '2023-03-01T10:30:00',
+    updatedAt: '2023-03-02T14:20:00'
+  },
+  {
+    id: 2,
+    userId: 1,
+    date: '2023-03-05',
+    title: '팀 회식비',
+    amount: 320000,
+    category: 'MEAL',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'PENDING',
+    attachmentUrl: null,
+    type: 'MEAL',
+    projectId: 2,
+    description: '프로젝트 킥오프 후 팀 회식',
+    createdAt: '2023-03-05T21:45:00',
+    updatedAt: '2023-03-05T21:45:00'
+  },
+  {
+    id: 3,
+    userId: 2,
+    date: '2023-03-10',
+    title: '교통비 정산',
+    amount: 45000,
+    category: 'TRANSPORTATION',
+    paymentMethod: 'PERSONAL_PAYMENT',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'TAXI',
+    projectId: 1,
+    description: '클라이언트 미팅 참석을 위한 택시비',
+    createdAt: '2023-03-10T18:20:00',
+    updatedAt: '2023-03-11T09:15:00'
+  },
+  {
+    id: 4,
+    userId: 3,
+    date: '2023-03-15',
+    title: '소프트웨어 구독료',
+    amount: 250000,
+    category: 'IT_SOFTWARE',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'PENDING',
+    attachmentUrl: null,
+    type: 'OTHER',
+    projectId: 3,
+    description: '디자인 작업을 위한 소프트웨어 구독',
+    createdAt: '2023-03-15T11:30:00',
+    updatedAt: '2023-03-15T11:30:00'
+  },
+  {
+    id: 5,
+    userId: 1,
+    date: '2023-03-20',
+    title: '외부 미팅 식비',
+    amount: 85000,
+    category: 'MEAL',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'MEAL',
+    projectId: 2,
+    description: '클라이언트와의 중간 점검 미팅 식대',
+    createdAt: '2023-03-20T14:10:00',
+    updatedAt: '2023-03-21T10:05:00'
+  },
+  {
+    id: 6,
+    userId: 5,
+    date: '2023-03-22',
+    title: '택시비 (야근)',
+    amount: 25000,
+    category: 'TRANSPORTATION',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'TAXI',
+    projectId: 3,
+    description: '야간 촬영 후 귀가 택시비',
+    createdAt: '2023-03-22T23:45:00',
+    updatedAt: '2023-03-23T09:30:00'
+  },
+  {
+    id: 7,
+    userId: 4,
+    date: '2023-03-25',
+    title: '고객 미팅 식대',
+    amount: 120000,
+    category: 'MEAL',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'PENDING',
+    attachmentUrl: null,
+    type: 'MEAL',
+    projectId: 4,
+    description: '신규 프로젝트 논의를 위한 고객 미팅 식대',
+    createdAt: '2023-03-25T13:20:00',
+    updatedAt: '2023-03-25T13:20:00'
+  },
+  {
+    id: 8,
+    userId: 2,
+    date: '2023-03-28',
+    title: '택시비 (출장)',
+    amount: 35000,
+    category: 'TRANSPORTATION',
+    paymentMethod: 'PERSONAL_PAYMENT',
+    status: 'PENDING',
+    attachmentUrl: null,
+    type: 'TAXI',
+    projectId: 2,
+    description: '지방 출장 시 이동 택시비',
+    createdAt: '2023-03-28T09:15:00',
+    updatedAt: '2023-03-28T09:15:00'
+  },
+  {
+    id: 9,
+    userId: 6,
+    date: '2023-04-02',
+    title: '장비 대여비',
+    amount: 450000,
+    category: 'EQUIPMENT',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'OTHER',
+    projectId: 3,
+    description: '특수 촬영을 위한 장비 대여',
+    createdAt: '2023-04-02T10:00:00',
+    updatedAt: '2023-04-03T11:20:00'
+  },
+  {
+    id: 10,
+    userId: 1,
+    date: '2023-04-05',
+    title: '팀 점심 식대',
+    amount: 95000,
+    category: 'MEAL',
+    paymentMethod: 'CORPORATE_CARD',
+    status: 'APPROVED',
+    attachmentUrl: null,
+    type: 'MEAL',
+    projectId: 1,
+    description: '프로젝트 중간 점검 후 팀 점심',
+    createdAt: '2023-04-05T13:45:00',
+    updatedAt: '2023-04-06T09:10:00'
+  }
+];
+
+// 모든 영수증 조회
+export const getReceipts = () => {
+  return [...receipts];
+};
+
+// 사용자별 영수증 조회
+export const getReceiptsByUserId = (userId) => {
+  return receipts.filter(receipt => receipt.userId === userId);
+};
+
+// 프로젝트별 영수증 조회
+export const getReceiptsByProjectId = (projectId) => {
+  return receipts.filter(receipt => receipt.projectId === projectId);
+};
+
+// 영수증 유형별 조회
+export const getReceiptsByType = (type) => {
+  return receipts.filter(receipt => receipt.type === type);
+};
+
+// 영수증 상태별 조회
+export const getReceiptsByStatus = (status) => {
+  return receipts.filter(receipt => receipt.status === status);
+};
+
+// 영수증 카테고리별 조회
+export const getReceiptsByCategory = (category) => {
+  return receipts.filter(receipt => receipt.category === category);
+};
+
+// 영수증 추가
+export const addReceipt = (newReceipt) => {
+  const receipt = {
+    ...newReceipt,
+    id: receipts.length > 0 ? Math.max(...receipts.map(r => r.id)) + 1 : 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  receipts.push(receipt);
+  return receipt;
+};
+
+// 영수증 수정
+export const updateReceipt = (id, updates) => {
+  const index = receipts.findIndex(receipt => receipt.id === id);
+  if (index !== -1) {
+    receipts[index] = {
+      ...receipts[index],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    return receipts[index];
+  }
+  return null;
+};
+
+// 영수증 삭제
+export const deleteReceipt = (id) => {
+  const index = receipts.findIndex(receipt => receipt.id === id);
+  if (index !== -1) {
+    const deletedReceipt = receipts[index];
+    receipts.splice(index, 1);
+    return deletedReceipt;
+  }
+  return null;
+};
+
+// 영수증 승인
+export const approveReceipt = (id) => {
+  return updateReceipt(id, { status: 'APPROVED' });
+};
+
+// 영수증 반려
+export const rejectReceipt = (id, reason) => {
+  return updateReceipt(id, { 
+    status: 'REJECTED',
+    rejectionReason: reason
+  });
+};
+
+// 영수증 ID로 영수증 정보 조회
+export const getReceiptById = (id) => {
+  return receipts.find(receipt => receipt.id === id);
+};
+
+// 영수증 통계 조회 (카테고리별 합계)
+export const getReceiptStatsByCategory = () => {
+  const stats = {};
+  receiptCategories.forEach(category => {
+    stats[category.id] = {
+      id: category.id,
+      name: category.name,
+      nameEn: category.nameEn,
+      total: 0,
+      count: 0
+    };
+  });
+  
+  receipts.forEach(receipt => {
+    if (stats[receipt.category]) {
+      stats[receipt.category].total += receipt.amount;
+      stats[receipt.category].count += 1;
+    }
+  });
+  
+  return Object.values(stats);
+};
+
+// 영수증 통계 조회 (유형별 합계)
+export const getReceiptStatsByType = () => {
+  const stats = {};
+  receiptTypes.forEach(type => {
+    stats[type.id] = {
+      id: type.id,
+      name: type.name,
+      nameEn: type.nameEn,
+      total: 0,
+      count: 0
+    };
+  });
+  
+  receipts.forEach(receipt => {
+    if (stats[receipt.type]) {
+      stats[receipt.type].total += receipt.amount;
+      stats[receipt.type].count += 1;
+    }
+  });
+  
+  return Object.values(stats);
+};
+
+// 영수증 통계 조회 (프로젝트별 합계)
+export const getReceiptStatsByProject = () => {
+  const stats = {};
+  
+  projects.forEach(project => {
+    stats[project.id] = {
+      id: project.id,
+      name: project.name,
+      total: 0,
+      count: 0
+    };
+  });
+  
+  receipts.forEach(receipt => {
+    if (stats[receipt.projectId]) {
+      stats[receipt.projectId].total += receipt.amount;
+      stats[receipt.projectId].count += 1;
+    }
+  });
+  
+  return Object.values(stats);
 }; 

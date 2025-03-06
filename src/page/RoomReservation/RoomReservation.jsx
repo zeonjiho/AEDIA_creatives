@@ -14,7 +14,8 @@ import {
     FaChevronLeft,
     FaChevronRight,
     FaSearch,
-    FaProjectDiagram
+    FaProjectDiagram,
+    FaRegListAlt
 } from 'react-icons/fa'
 import { 
     rooms as initialRooms, 
@@ -23,34 +24,57 @@ import {
     updateReservation, 
     deleteReservation, 
     users, 
-    currentUser 
+    currentUser,
+    projects
 } from '../../data/mockDatabase'
+import ReservationModal from './ReservationModal'
 
 const RoomReservation = () => {
     const navigate = useNavigate()
     
     // 상태 관리
+    const [currentUserState] = useState(currentUser) // 현재 로그인한 사용자 (임시)
     const [rooms, setRooms] = useState([])
     const [reservations, setReservations] = useState([])
     const [selectedRoom, setSelectedRoom] = useState(null)
-    const [currentDate, setCurrentDate] = useState(new Date())
+    const [currentDate, setCurrentDate] = useState(new Date('2023-03-06')) // 2023년 3월 6일로 설정
     const [showReservationForm, setShowReservationForm] = useState(false)
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [reservationFormData, setReservationFormData] = useState({
         title: '',
         start: '',
         end: '',
-        participants: []
+        participants: [],
+        project: ''
     })
     const [searchTerm, setSearchTerm] = useState('')
     const [filterFacility, setFilterFacility] = useState('')
     const [filterCapacity, setFilterCapacity] = useState('')
+    const [statusMessage, setStatusMessage] = useState('')
+    const [messageType, setMessageType] = useState('') // 'success' 또는 'error'
+    const [projectsList, setProjectsList] = useState([])
+    const [projectSearchTerm, setProjectSearchTerm] = useState('')
     
     // 초기 데이터 로드
     useEffect(() => {
         setRooms(initialRooms)
         setReservations(initialReservations)
+        
+        // 프로젝트 목록 설정
+        setProjectsList(projects)
     }, [])
+
+    // 상태 메시지 자동 제거
+    useEffect(() => {
+        if (statusMessage) {
+            const timer = setTimeout(() => {
+                setStatusMessage('')
+                setMessageType('')
+            }, 5000)
+            
+            return () => clearTimeout(timer)
+        }
+    }, [statusMessage])
     
     // 필터링된 회의실 목록
     const filteredRooms = rooms.filter(room => {
@@ -71,19 +95,20 @@ const RoomReservation = () => {
     
     // 날짜 관련 함수들
     const formatDate = (date) => {
-        return date.toLocaleDateString('ko-KR', { 
+        return date.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'long', 
-            day: 'numeric' 
+            day: 'numeric',
+            weekday: 'long'
         })
     }
     
     const formatTime = (dateString) => {
         const date = new Date(dateString)
-        return date.toLocaleTimeString('ko-KR', { 
+        return date.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit',
-            hour12: false
+            hour12: true
         })
     }
     
@@ -158,7 +183,8 @@ const RoomReservation = () => {
             title: '',
             start: formatDateTimeForInput(startDateTime),
             end: formatDateTimeForInput(endDateTime),
-            participants: [currentUser.id]
+            participants: [currentUserState.id],
+            project: ''
         })
         
         setSelectedReservation(null)
@@ -173,7 +199,8 @@ const RoomReservation = () => {
             title: reservation.title,
             start: formatDateTimeForInput(new Date(reservation.start)),
             end: formatDateTimeForInput(new Date(reservation.end)),
-            participants: reservation.participants || []
+            participants: reservation.participants || [],
+            project: reservation.project || ''
         })
     }
     
@@ -203,33 +230,91 @@ const RoomReservation = () => {
         })
     }
     
+    // 프로젝트 검색어 변경 처리
+    const handleProjectSearchChange = (e) => {
+        setProjectSearchTerm(e.target.value)
+    }
+    
+    // 프로젝트 선택 처리
+    const handleProjectSelect = (projectId) => {
+        const selectedProject = projectsList.find(project => project.id === projectId)
+        setReservationFormData(prev => ({
+            ...prev,
+            project: selectedProject.title
+        }))
+        setProjectSearchTerm('')
+    }
+    
+    // 필터링된 프로젝트 목록
+    const filteredProjects = projectSearchTerm 
+        ? projectsList.filter(project => 
+            project.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
+            project.description.toLowerCase().includes(projectSearchTerm.toLowerCase())
+          )
+        : projectsList
+    
     const handleFormSubmit = (e) => {
         e.preventDefault()
         
+        // 시작 시간과 종료 시간이 유효한지 확인
+        const startTime = new Date(reservationFormData.start)
+        const endTime = new Date(reservationFormData.end)
+        
+        if (startTime >= endTime) {
+            setStatusMessage('종료 시간은 시작 시간보다 나중이어야 합니다.')
+            setMessageType('error')
+            return
+        }
+        
         const reservationData = {
             roomId: selectedRoom.id,
-            userId: currentUser.id,
+            userId: currentUserState.id,
             title: reservationFormData.title,
             start: reservationFormData.start,
             end: reservationFormData.end,
-            participants: reservationFormData.participants
+            participants: reservationFormData.participants,
+            project: reservationFormData.project
         }
         
-        if (selectedReservation) {
-            // 예약 수정
-            const updatedReservation = updateReservation(selectedReservation.id, reservationData)
-            setReservations(reservations.map(reservation => 
-                reservation.id === selectedReservation.id ? updatedReservation : reservation
-            ))
-        } else {
-            // 새 예약 추가
-            const newReservation = addReservation(reservationData)
-            setReservations([...reservations, newReservation])
+        try {
+            if (selectedReservation) {
+                // 예약 수정
+                const updatedReservation = updateReservation(selectedReservation.id, reservationData)
+                if (updatedReservation) {
+                    setReservations(reservations.map(reservation => 
+                        reservation.id === selectedReservation.id ? updatedReservation : reservation
+                    ))
+                    setStatusMessage('예약이 성공적으로 수정되었습니다.')
+                    setMessageType('success')
+                    
+                    // 폼 닫기
+                    setShowReservationForm(false)
+                    setSelectedReservation(null)
+                } else {
+                    setStatusMessage('예약 수정 중 오류가 발생했습니다.')
+                    setMessageType('error')
+                }
+            } else {
+                // 새 예약 추가
+                const newReservation = addReservation(reservationData)
+                if (newReservation) {
+                    setReservations([...reservations, newReservation])
+                    setStatusMessage('새 예약이 성공적으로 추가되었습니다.')
+                    setMessageType('success')
+                    
+                    // 폼 닫기
+                    setShowReservationForm(false)
+                    setSelectedReservation(null)
+                } else {
+                    setStatusMessage('예약 추가 중 오류가 발생했습니다.')
+                    setMessageType('error')
+                }
+            }
+        } catch (error) {
+            console.error('예약 처리 중 오류:', error)
+            setStatusMessage('예약 처리 중 오류가 발생했습니다.')
+            setMessageType('error')
         }
-        
-        // 폼 닫기
-        setShowReservationForm(false)
-        setSelectedReservation(null)
     }
     
     const handleDeleteReservation = () => {
@@ -238,6 +323,8 @@ const RoomReservation = () => {
             setReservations(reservations.filter(reservation => reservation.id !== selectedReservation.id))
             setShowReservationForm(false)
             setSelectedReservation(null)
+            setStatusMessage('Reservation deleted successfully')
+            setMessageType('success')
         }
     }
     
@@ -284,31 +371,146 @@ const RoomReservation = () => {
         })
     }
     
+    // 현재 시간 포맷팅 (Attendance 스타일)
+    const formattedDate = formatDate(currentDate)
+    const formattedTime = new Date().toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    })
+    
+    // 예약 현황 통계 계산
+    const calculateReservationStats = () => {
+        // 오늘 날짜의 모든 예약
+        const todayReservations = reservations.filter(reservation => {
+            const reservationDate = new Date(reservation.start)
+            return (
+                reservationDate.getFullYear() === currentDate.getFullYear() &&
+                reservationDate.getMonth() === currentDate.getMonth() &&
+                reservationDate.getDate() === currentDate.getDate()
+            )
+        })
+        
+        // 내 예약
+        const myReservations = todayReservations.filter(reservation => 
+            reservation.userId === currentUserState.id
+        )
+        
+        // 참여 예약 (내가 참석자로 포함된 예약)
+        const participatingReservations = todayReservations.filter(reservation => 
+            reservation.userId !== currentUserState.id && 
+            reservation.participants && 
+            reservation.participants.includes(currentUserState.id)
+        )
+        
+        // 회의실별 예약 현황
+        const roomStats = rooms.map(room => {
+            const roomReservations = todayReservations.filter(reservation => 
+                reservation.roomId === room.id
+            )
+            
+            return {
+                roomId: room.id,
+                roomName: room.name,
+                totalReservations: roomReservations.length,
+                availableHours: timeSlots.length - roomReservations.length,
+                utilization: Math.round((roomReservations.length / timeSlots.length) * 100)
+            }
+        }).sort((a, b) => b.utilization - a.utilization) // 활용도 높은 순으로 정렬
+        
+        return {
+            total: todayReservations.length,
+            my: myReservations.length,
+            participating: participatingReservations.length,
+            roomStats: roomStats
+        }
+    }
+    
+    const reservationStats = calculateReservationStats()
+    
+    // 프로젝트별 색상 매핑
+    const getProjectColor = (projectName) => {
+        if (!projectName) return 'var(--accent-color)';
+        
+        switch(projectName) {
+            case '기업 홍보 영상':
+                return '#4CAF50'; // 녹색
+            case '신제품 광고':
+                return '#2196F3'; // 파란색
+            case '웹 시리즈':
+                return '#FF9800'; // 주황색
+            case '다큐멘터리':
+                return '#9C27B0'; // 보라색
+            default:
+                return 'var(--accent-color)';
+        }
+    };
+    
     return (
-        <div className={ss.roomReservationContainer}>
-            <div className={ss.header}>
-                <h1>회의실 예약</h1>
-                <p>회의실 예약 및 관리 시스템입니다.</p>
+        <div className={ss.roomReservation_wrap}>
+            {/* 회의실 예약 헤더 */}
+            <div className={ss.roomReservation_header}>
+                <div>
+                    <h1 className={ss.roomReservation_title}>Room Reservation</h1>
+                    <p className={ss.roomReservation_date}>{formattedDate} {formattedTime}</p>
+                </div>
+                
+                {/* 날짜 네비게이션 */}
+                <div className={ss.roomReservation_controls}>
+                    <button 
+                        className={`${ss.roomReservation_btn} ${ss.today_btn}`}
+                        onClick={goToToday}
+                    >
+                        <FaCalendarAlt />
+                        Today
+                    </button>
+                    <div className={ss.navigation_buttons}>
+                        <button 
+                            className={ss.nav_btn}
+                            onClick={goToPreviousDay}
+                        >
+                            <FaChevronLeft />
+                        </button>
+                        <button 
+                            className={ss.nav_btn}
+                            onClick={goToNextDay}
+                        >
+                            <FaChevronRight />
+                        </button>
+                    </div>
+                </div>
             </div>
             
-            <div className={ss.contentWrapper}>
+            {/* 상태 메시지 표시 */}
+            {statusMessage && (
+                <div className={`${ss.status_message} ${ss[messageType]}`}>
+                    {statusMessage}
+                </div>
+            )}
+            
+            <div className={ss.roomReservation_content}>
                 {/* 회의실 목록 */}
-                <div className={ss.roomListSection}>
-                    <div className={ss.sectionHeader}>
-                        <h2>회의실 목록</h2>
-                        <div className={ss.searchBar}>
-                            <FaSearch className={ss.searchIcon} />
-                            <input
-                                type="text"
-                                placeholder="회의실 검색"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                <div className={ss.room_list_card}>
+                    <div className={ss.card_header}>
+                        <div className={ss.card_icon}>
+                            <FaBuilding />
                         </div>
+                        <h2>회의실 목록</h2>
                     </div>
                     
-                    <div className={ss.filterControls}>
-                        <div className={ss.filterItem}>
+                    <div className={ss.search_bar}>
+                        <FaSearch className={ss.search_icon} />
+                        <input
+                            type="text"
+                            placeholder="회의실 검색"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className={ss.filter_controls}>
+                        <div className={ss.filter_item}>
                             <label>시설:</label>
                             <select 
                                 value={filterFacility} 
@@ -321,42 +523,42 @@ const RoomReservation = () => {
                                 <option value="음향">음향 시스템</option>
                             </select>
                         </div>
-                        <div className={ss.filterItem}>
+                        <div className={ss.filter_item}>
                             <label>수용 인원:</label>
                             <select 
                                 value={filterCapacity} 
                                 onChange={(e) => setFilterCapacity(e.target.value)}
                             >
                                 <option value="">전체</option>
-                                <option value="4">4명 이상</option>
-                                <option value="6">6명 이상</option>
-                                <option value="10">10명 이상</option>
-                                <option value="20">20명 이상</option>
+                                <option value="5">5인 이하</option>
+                                <option value="10">10인 이하</option>
+                                <option value="20">20인 이하</option>
+                                <option value="30">30인 이하</option>
                             </select>
                         </div>
                     </div>
                     
-                    <div className={ss.roomList}>
+                    <div className={ss.room_list}>
                         {filteredRooms.length === 0 ? (
-                            <div className={ss.emptyState}>
+                            <div className={ss.empty_state}>
                                 <p>검색 결과가 없습니다.</p>
                             </div>
                         ) : (
                             filteredRooms.map(room => (
                                 <div 
                                     key={room.id} 
-                                    className={`${ss.roomItem} ${selectedRoom?.id === room.id ? ss.selected : ''}`}
+                                    className={`${ss.room_item} ${selectedRoom?.id === room.id ? ss.selected : ''}`}
                                     onClick={() => handleRoomSelect(room)}
                                 >
-                                    <div className={ss.roomHeader}>
+                                    <div className={ss.room_header}>
                                         <h3>{room.name}</h3>
-                                        <span className={ss.roomCapacity}>
+                                        <span className={ss.room_capacity}>
                                             <FaUsers /> {room.capacity}명
                                         </span>
                                     </div>
-                                    <div className={ss.roomFacilities}>
+                                    <div className={ss.room_facilities}>
                                         {room.facilities.map((facility, index) => (
-                                            <span key={index} className={ss.facilityTag}>
+                                            <span key={index} className={ss.facility_tag}>
                                                 {facility === '프로젝터' && <FaProjectDiagram />}
                                                 {facility === '화이트보드' && <FaEdit />}
                                                 {facility === '화상회의 장비' && <FaUsers />}
@@ -372,39 +574,67 @@ const RoomReservation = () => {
                 </div>
                 
                 {/* 예약 일정 */}
-                <div className={ss.scheduleSection}>
-                    <div className={ss.dateNavigation}>
-                        <button 
-                            className={ss.todayButton}
-                            onClick={goToToday}
-                        >
-                            오늘
-                        </button>
-                        <div className={ss.navigationButtons}>
-                            <button onClick={goToPreviousDay}><FaChevronLeft /></button>
-                            <span className={`${ss.currentDate} ${isToday(currentDate) ? ss.today : ''}`}>
-                                {formatDate(currentDate)}
-                            </span>
-                            <button onClick={goToNextDay}><FaChevronRight /></button>
+                <div className={ss.schedule_card}>
+                    <div className={ss.card_header}>
+                        <div className={ss.card_icon}>
+                            <FaCalendarAlt />
+                        </div>
+                        <h2>예약 일정</h2>
+                    </div>
+                    
+                    {/* 예약 현황 요약 */}
+                    <div className={ss.reservation_summary}>
+                        <h3>예약 현황</h3>
+                        <div className={ss.summary_stats}>
+                            <div className={ss.stat_item}>
+                                <div className={ss.stat_value}>{reservationStats.total}</div>
+                                <div className={ss.stat_label}>전체 예약</div>
+                            </div>
+                            <div className={ss.stat_item}>
+                                <div className={ss.stat_value}>{reservationStats.my}</div>
+                                <div className={ss.stat_label}>내 예약</div>
+                            </div>
+                            <div className={ss.stat_item}>
+                                <div className={ss.stat_value}>{reservationStats.participating}</div>
+                                <div className={ss.stat_label}>참여 예약</div>
+                            </div>
+                        </div>
+                        
+                        <div className={ss.room_utilization}>
+                            <h3>회의실 활용도</h3>
+                            <div className={ss.utilization_list}>
+                                {reservationStats.roomStats.slice(0, 3).map(stat => (
+                                    <div key={stat.roomId} className={ss.utilization_item}>
+                                        <div className={ss.room_name}>{stat.roomName}</div>
+                                        <div className={ss.utilization_bar_container}>
+                                            <div 
+                                                className={ss.utilization_bar} 
+                                                style={{width: `${stat.utilization}%`}}
+                                            ></div>
+                                        </div>
+                                        <div className={ss.utilization_value}>{stat.utilization}%</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     
-                    <div className={ss.scheduleGrid}>
-                        <div className={ss.timeColumn}>
+                    <div className={ss.schedule_grid}>
+                        <div className={ss.time_column}>
                             {timeSlots.map(hour => (
-                                <div key={hour} className={ss.timeSlot}>
+                                <div key={hour} className={ss.time_slot}>
                                     {hour}:00
                                 </div>
                             ))}
                         </div>
                         
-                        <div className={ss.roomColumns}>
+                        <div className={ss.room_columns}>
                             {filteredRooms.map(room => (
-                                <div key={room.id} className={ss.roomColumn}>
-                                    <div className={ss.roomColumnHeader}>
+                                <div key={room.id} className={ss.room_column}>
+                                    <div className={ss.room_column_header}>
                                         {room.name}
                                     </div>
-                                    <div className={ss.roomTimeSlots}>
+                                    <div className={ss.room_time_slots}>
                                         {timeSlots.map(hour => {
                                             const isReserved = isTimeSlotReserved(room.id, hour)
                                             const reservation = getReservationAtTimeSlot(room.id, hour)
@@ -412,23 +642,57 @@ const RoomReservation = () => {
                                             return (
                                                 <div 
                                                     key={hour} 
-                                                    className={`${ss.roomTimeSlot} ${isReserved ? ss.reserved : ''}`}
+                                                    className={`${ss.room_time_slot} ${isReserved ? ss.reserved : ''}`}
                                                     onClick={() => isReserved 
                                                         ? handleReservationClick(reservation) 
                                                         : handleAddReservation(room.id)
                                                     }
                                                 >
                                                     {isReserved ? (
-                                                        <div className={ss.reservationInfo}>
-                                                            <div className={ss.reservationTitle}>
+                                                        <div 
+                                                            className={ss.reservation_info}
+                                                            style={{ backgroundColor: getProjectColor(reservation.project) }}
+                                                        >
+                                                            <div className={ss.reservation_title}>
                                                                 {reservation.title}
                                                             </div>
-                                                            <div className={ss.reservationTime}>
+                                                            <div className={ss.reservation_time}>
                                                                 {formatTime(reservation.start)} - {formatTime(reservation.end)}
+                                                            </div>
+                                                            <div className={ss.reservation_details}>
+                                                                <div className={ss.reservation_project}>
+                                                                    {reservation.project || '일반 회의'}
+                                                                </div>
+                                                                <div className={ss.reservation_participants}>
+                                                                    {reservation.participants && 
+                                                                     reservation.participants.length > 0 ? (
+                                                                        <div className={ss.participants_preview}>
+                                                                            {reservation.participants.slice(0, 3).map(participantId => {
+                                                                                const participant = users.find(user => user.id === participantId);
+                                                                                return participant ? (
+                                                                                    <div key={participantId} className={ss.participant_preview}>
+                                                                                        <img 
+                                                                                            src={participant.avatar} 
+                                                                                            alt={participant.name}
+                                                                                            className={ss.participant_avatar_small}
+                                                                                        />
+                                                                                    </div>
+                                                                                ) : null;
+                                                                            })}
+                                                                            {reservation.participants.length > 3 && (
+                                                                                <div className={ss.more_participants}>
+                                                                                    +{reservation.participants.length - 3}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className={ss.no_participants}>참석자 없음</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <div className={ss.addReservation}>
+                                                        <div className={ss.add_reservation}>
                                                             <FaPlus />
                                                         </div>
                                                     )}
@@ -445,112 +709,23 @@ const RoomReservation = () => {
             
             {/* 예약 폼 모달 */}
             {showReservationForm && (
-                <div className={ss.modalOverlay}>
-                    <div className={ss.modal}>
-                        <div className={ss.modalHeader}>
-                            <h2>{selectedReservation ? '예약 수정' : '새 예약 추가'}</h2>
-                            <button 
-                                className={ss.closeButton}
-                                onClick={handleCancelForm}
-                            >
-                                <FaTimes />
-                            </button>
-                        </div>
-                        <form onSubmit={handleFormSubmit}>
-                            <div className={ss.formGroup}>
-                                <label htmlFor="room">회의실</label>
-                                <input
-                                    type="text"
-                                    id="room"
-                                    value={selectedRoom.name}
-                                    disabled
-                                />
-                            </div>
-                            <div className={ss.formGroup}>
-                                <label htmlFor="title">회의 제목</label>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    name="title"
-                                    value={reservationFormData.title}
-                                    onChange={handleFormChange}
-                                    required
-                                    placeholder="회의 제목을 입력하세요"
-                                />
-                            </div>
-                            <div className={ss.formRow}>
-                                <div className={ss.formGroup}>
-                                    <label htmlFor="start">시작 시간</label>
-                                    <input
-                                        type="datetime-local"
-                                        id="start"
-                                        name="start"
-                                        value={reservationFormData.start}
-                                        onChange={handleFormChange}
-                                        required
-                                    />
-                                </div>
-                                <div className={ss.formGroup}>
-                                    <label htmlFor="end">종료 시간</label>
-                                    <input
-                                        type="datetime-local"
-                                        id="end"
-                                        name="end"
-                                        value={reservationFormData.end}
-                                        onChange={handleFormChange}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className={ss.formGroup}>
-                                <label>참석자</label>
-                                <div className={ss.participantsList}>
-                                    {users.map(user => (
-                                        <div 
-                                            key={user.id} 
-                                            className={`${ss.participantItem} ${reservationFormData.participants.includes(user.id) ? ss.selected : ''}`}
-                                            onClick={() => handleParticipantChange(user.id)}
-                                        >
-                                            <img 
-                                                src={user.avatar} 
-                                                alt={user.name} 
-                                                className={ss.participantAvatar}
-                                            />
-                                            <span className={ss.participantName}>{user.name}</span>
-                                            {reservationFormData.participants.includes(user.id) && (
-                                                <FaCheck className={ss.checkIcon} />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className={ss.formActions}>
-                                {selectedReservation && (
-                                    <button 
-                                        type="button" 
-                                        className={ss.deleteButton}
-                                        onClick={handleDeleteReservation}
-                                    >
-                                        <FaTrash /> 삭제
-                                    </button>
-                                )}
-                                <button 
-                                    type="button" 
-                                    className={ss.cancelButton}
-                                    onClick={handleCancelForm}
-                                >
-                                    취소
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className={ss.saveButton}
-                                >
-                                    {selectedReservation ? '수정' : '예약'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <ReservationModal
+                    isOpen={showReservationForm}
+                    selectedRoom={selectedRoom}
+                    selectedReservation={selectedReservation}
+                    reservationFormData={reservationFormData}
+                    projectSearchTerm={projectSearchTerm}
+                    filteredProjects={filteredProjects}
+                    users={users}
+                    onClose={handleCancelForm}
+                    onFormChange={handleFormChange}
+                    onProjectSearchChange={handleProjectSearchChange}
+                    onProjectSelect={handleProjectSelect}
+                    onParticipantChange={handleParticipantChange}
+                    onSubmit={handleFormSubmit}
+                    onDelete={handleDeleteReservation}
+                    onClearProject={() => setReservationFormData(prev => ({...prev, project: ''}))}
+                />
             )}
         </div>
     )

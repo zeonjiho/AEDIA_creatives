@@ -20,7 +20,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(var(--bg-secondary-rgb), 0.05) 0%, rgba(var(--text-primary-rgb), 0.05) 100%);
+    /* background: linear-gradient(135deg, rgba(var(--bg-secondary-rgb), 0.05) 0%, rgba(var(--text-primary-rgb), 0.05) 100%); */
     z-index: 0;
     pointer-events: none;
 }
@@ -67,6 +67,7 @@
 .customize_btn {
     padding: 10px 20px;
     border-radius: var(--border-radius-md);
+    background-color: transparent;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -96,8 +97,8 @@
 
 /* 레이아웃 수정 버튼 스타일 */
 .edit_btn {
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
+    background-color: transparent;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -105,9 +106,9 @@
 }
 
 .edit_btn:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(var(--text-primary-rgb), 0.1);
+    /* background-color: var(--accent-hover); */
+    background-color: var(--button-color-hover);
+    /* transform: translateY(-2px); */
 }
 
 .edit_btn::before {
@@ -121,549 +122,6 @@
     margin-bottom: 0;
     flex: 1;
     overflow: auto;
-}
-
-/* 위젯 리사이징 및 드래그 앤 드롭 관련 스타일 */
-.dashboard_grid :global(.react-grid-item) {
-    transition: all 200ms ease;
-    transition-property: left, top, width, height;
-}
-
-.dashboard_grid :global(.react-grid-item.react-grid-placeholder) {
-    background: var(--accent-color);
-    opacity: 0.2;
-    border-radius: var(--border-radius-lg);
-    transition-duration: 100ms;
-}
-
-.dashboard_grid :global(.react-grid-item.cssTransforms) {
-    transition-property: transform, width, height;
-}
-
-.dashboard_grid :global(.react-grid-item.resizing) {
-    z-index: 10;
-    will-change: width, height;
-}
-
-.dashboard_grid :global(.react-grid-item.react-draggable-dragging) {
-    z-index: 10;
-    will-change: transform;
-    cursor: move;
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle) {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    bottom: 0;
-    right: 0;
-    cursor: se-resize;
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-sw) {
-    bottom: 0;
-    left: 0;
-    cursor: sw-resize;
-    transform: rotate(90deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-nw) {
-    top: 0;
-    left: 0;
-    cursor: nw-resize;
-    transform: rotate(180deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-ne) {
-    top: 0;
-    right: 0;
-    cursor: ne-resize;
-    transform: rotate(270deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-w),
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-e) {
-    top: 50%;
-    margin-top: -10px;
-    cursor: ew-resize;
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-n),
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-s) {
-    left: 50%;
-    margin-left: -10px;
-    cursor: ns-resize;
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-w) {
-    left: 0;
-    transform: rotate(135deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-e) {
-    right: 0;
-    transform: rotate(315deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-n) {
-    top: 0;
-    transform: rotate(225deg);
-}
-
-.dashboard_grid :global(.react-grid-item > .react-resizable-handle.react-resizable-handle-s) {
-    bottom: 0;
-    transform: rotate(45deg);
-}
-
-.dashboard_card {
-    background-color: var(--glass-effect);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--glass-shadow);
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    border: var(--glass-border);
-    backdrop-filter: var(--glass-backdrop);
-    -webkit-backdrop-filter: var(--glass-backdrop);
-}
-
-.dashboard_card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--card-shadow);
-}
-
-.card_header {
-    display: flex;
-    align-items: center;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background-color: transparent;
-    transition: background-color 0.3s ease;
-}
-
-.card_icon {
-    font-size: 22px;
-    margin-right: 14px;
-    color: var(--accent-color);
-    transition: color 0.3s ease;
-}
-
-.card_header h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-    letter-spacing: 0.5px;
-}
-
-.card_content {
-    padding: 24px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: transparent;
-    transition: background-color 0.3s ease;
-}
-
-/* 투두 리스트 스타일 */
-.todo_form {
-    display: flex;
-    margin-bottom: 20px;
-    gap: 10px;
-}
-
-.todo_input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius-md);
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-    font-size: 14px;
-    transition: all 0.3s ease;
-}
-
-.todo_input:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.1);
-}
-
-.todo_button {
-    padding: 12px 20px;
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.todo_button:hover {
-    background-color: var(--accent-hover);
-}
-
-.todo_list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.todo_item {
-    display: flex;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color);
-    transition: border-color 0.3s ease;
-}
-
-.todo_item input[type="checkbox"] {
-    margin-right: 10px;
-    cursor: pointer;
-}
-
-.todo_item span {
-    font-size: 14px;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.completed {
-    text-decoration: line-through;
-    color: var(--text-tertiary) !important;
-    opacity: 0.7;
-}
-
-/* 캘린더 스타일 */
-.calendar_header {
-    margin-bottom: 16px;
-    text-align: center;
-}
-
-.calendar_header h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.calendar_grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-bottom: 16px;
-}
-
-.calendar_day {
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    border-radius: var(--border-radius-sm);
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    transition: all 0.3s ease;
-}
-
-.calendar_events {
-    margin-top: 10px;
-}
-
-.calendar_event {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.event_dot {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--border-radius-round);
-    background-color: var(--accent-color);
-    margin-right: 8px;
-    transition: background-color 0.3s ease;
-}
-
-.calendar_event p {
-    font-size: 13px;
-    margin: 0;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-/* 회의실 예약 스타일 */
-.meeting_rooms {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.meeting_room {
-    padding: 12px;
-    border-radius: var(--border-radius-md);
-    background-color: var(--bg-tertiary);
-    transition: background-color 0.3s ease;
-}
-
-.meeting_room h3 {
-    font-size: 16px;
-    margin: 0 0 8px 0;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.room_status_available {
-    color: var(--success-color);
-    font-size: 14px;
-    margin-bottom: 10px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.room_status_occupied {
-    color: var(--danger-color);
-    font-size: 14px;
-    margin-bottom: 10px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.reserve_button {
-    padding: 10px 16px;
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-.reserve_button:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.reserve_button:disabled {
-    background-color: var(--bg-tertiary);
-    color: var(--text-tertiary);
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* 프로젝트 현황 스타일 */
-.project_status {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.project_item {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.project_item h3 {
-    font-size: 16px;
-    margin: 0 0 10px 0;
-    color: var(--text-primary);
-    font-weight: 600;
-    transition: color 0.3s ease;
-}
-
-.progress_bar {
-    height: 8px;
-    background-color: rgba(var(--bg-tertiary-rgb), 0.5);
-    border-radius: var(--border-radius-round);
-    margin-bottom: 8px;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    background-color: var(--accent-color);
-    border-radius: var(--border-radius-round);
-    transition: width 0.5s ease, background-color 0.3s ease;
-}
-
-.project_item p {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    margin: 8px 0 0 0;
-    color: var(--text-secondary);
-    transition: color 0.3s ease;
-}
-
-/* 팀 멤버 스타일 */
-.team_members {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.team_member {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    background-color: rgba(var(--bg-tertiary-rgb), 0.5);
-    border-radius: var(--border-radius-md);
-    transition: all 0.3s ease;
-}
-
-.team_member:hover {
-    transform: translateX(5px);
-    box-shadow: var(--card-shadow);
-}
-
-.member_avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--border-radius-round);
-    background-color: var(--accent-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    color: var(--bg-secondary);
-    font-weight: 600;
-    font-size: 16px;
-    overflow: hidden;
-}
-
-.member_avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.member_info {
-    flex: 1;
-}
-
-.member_info h3 {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0 0 4px 0;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.member_info p {
-    font-size: 13px;
-    margin: 0;
-    color: var(--text-secondary);
-    transition: color 0.3s ease;
-}
-
-.member_status_online {
-    width: 10px;
-    height: 10px;
-    border-radius: var(--border-radius-round);
-    background-color: var(--success-color);
-    transition: background-color 0.3s ease;
-}
-
-.member_status_offline {
-    width: 10px;
-    height: 10px;
-    border-radius: var(--border-radius-round);
-    background-color: var(--danger-color);
-    transition: background-color 0.3s ease;
-}
-
-/* 알림 스타일 */
-.notifications {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.notification_item {
-    padding: 16px;
-    background-color: rgba(var(--bg-tertiary-rgb), 0.6);
-    border-radius: var(--border-radius-md);
-    border-left: 3px solid var(--accent-color);
-    transition: all 0.3s ease;
-    box-shadow: var(--card-shadow);
-}
-
-.notification_header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.notification_title {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.notification_type {
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-weight: 500;
-}
-
-.type_urgent {
-    background-color: var(--danger-color);
-    color: var(--bg-secondary);
-}
-
-.type_info {
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
-}
-
-.type_success {
-    background-color: var(--success-color);
-    color: var(--bg-secondary);
-}
-
-.notification_time {
-    font-size: 12px;
-    color: var(--text-tertiary);
-    margin: 8px 0 0 0;
-    transition: color 0.3s ease;
-}
-
-.notification_text {
-    font-size: 14px;
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.view_all_button {
-    margin-top: 20px;
-    padding: 10px 16px;
-    background-color: transparent;
-    color: var(--accent-color);
-    border: 1px solid var(--accent-color);
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    align-self: center;
-}
-
-.view_all_button:hover {
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
 }
 
 /* 반응형 스타일 */
@@ -702,7 +160,7 @@
     }
 }
 
-@media (max-width: 639px) {
+@media (max-width: 768px) {
     .wrap {
         padding: 10px;
         height: 100vh;
@@ -719,86 +177,19 @@
     
     .dashboard_header {
         flex-direction: column;
-        gap: 10px;
+        align-items: flex-start;
+        gap: 5px;
         margin-bottom: 10px;
     }
     
     .customize_controls {
         width: 100%;
         flex-direction: row;
-        justify-content: flex-end;
+        justify-content: space-between;
     }
     
+    /* 모바일에서는 Change Layout 버튼이 표시되지 않으므로 관련 스타일 제거 */
     .edit_btn {
-        width: 100%;
-        margin-top: 5px;
+        display: none;
     }
-}
-
-/* 기존 스타일 유지 (필요한 경우) */
-.lv1 {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    position: relative;
-}
-
-.lv1 img {
-    display: block;
-}
-
-.card_img_size1,
-.card_img_size2,
-.card_docu {
-    border-radius: var(--border-radius-xl);
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-}
-
-.card_img_size1 {
-    width: 30.2%;
-}
-
-.card_img_size2 {
-    width: 48%;
-}
-
-.card_img_size1>img,
-.card_img_size2>img {
-    width: 100%;
-}
-
-.card_wrap_docu {
-    width: 100%;
-}
-
-.card_docu {
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-secondary);
-}
-
-.card_blur_wrap {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, rgba(var(--bg-primary-rgb), 0) 0%, rgba(var(--bg-primary-rgb), 0.8) 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.card_tag {
-    display: inline-block;
-    padding: 4px 8px;
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
-    border-radius: var(--border-radius-sm);
-    font-size: 12px;
-    margin-bottom: 8px;
 }

@@ -1,24 +1,225 @@
 .attendance_wrap {
     width: 100%;
-    max-width: 1440px;
+    max-width: 100%;
     box-sizing: border-box;
-    padding: 20px 40px;
-    margin: 0 auto;
-    min-height: 100vh;
+    padding: 20px;
+    margin: 0;
+    height: auto;
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.attendance_wrap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background: linear-gradient(135deg, rgba(var(--bg-secondary-rgb), 0.05) 0%, rgba(var(--text-primary-rgb), 0.05) 100%); */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 헤더 스타일 */
+.attendance_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 .attendance_title {
-    font-size: 28px;
+    font-size: 50px;
     font-weight: 700;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     color: var(--text-primary);
-    text-align: center;
+    text-align: left;
     transition: color 0.3s ease;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-primary);
+}
+
+.attendance_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+}
+
+/* 버튼 스타일 */
+.attendance_controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.attendance_btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-md);
+    background-color: transparent;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.record_btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.record_btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+/* 중앙 상태 카드 스타일 */
+.attendance_center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.status_card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.status_icon {
+    font-size: 60px;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.status_time {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.current_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    font-family: var(--font-mono);
+}
+
+.current_time {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.status_display {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.status_badge {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    background-color: transparent;
+}
+
+.status_not_checked {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.status_checked_in {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status_checked_out {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.attendance_action {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.check_in_button, .check_out_button {
+    padding: 15px 40px;
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+}
+
+.check_in_button {
+    background-color: var(--accent-color);
+    color: var(--bg-secondary);
+}
+
+.check_in_button:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+}
+
+.check_out_button {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.check_out_button:hover:not(:disabled) {
+    background-color: var(--bg-tertiary);
+}
+
+.check_in_button:disabled, .check_out_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .attendance_grid {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0;
+    flex: 1;
+    overflow: auto;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -34,6 +235,7 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .attendance_card_full {
@@ -47,129 +249,37 @@
     flex-direction: column;
     border: 1px solid var(--border-color);
     grid-column: span 2;
+    position: relative;
 }
 
 .card_header {
     display: flex;
     align-items: center;
-    padding: 16px 20px;
-    background-color: var(--header-bg);
+    padding: 15px 20px;
+    background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     transition: background-color 0.3s ease;
 }
 
 .card_icon {
     font-size: 20px;
-    margin-right: 12px;
+    margin-right: 10px;
     color: var(--accent-color);
-    transition: color 0.3s ease;
 }
 
 .card_header h2 {
+    margin: 0;
     font-size: 18px;
     font-weight: 600;
-    margin: 0;
     color: var(--text-primary);
-    transition: color 0.3s ease;
 }
 
 .card_content {
     padding: 20px;
-    flex-grow: 1;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--card-bg);
-    transition: background-color 0.3s ease;
-}
-
-/* 현재 시간 및 상태 카드 스타일 */
-.time_display {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.current_date {
-    font-size: 16px;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-    transition: color 0.3s ease;
-}
-
-.current_time {
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
-}
-
-.status_display {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.status_badge {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.status_not_checked {
-    background-color: var(--text-tertiary);
-    color: white;
-}
-
-.status_checked_in {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.status_checked_out {
-    background-color: var(--accent-color);
-    color: white;
-}
-
-.attendance_buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: auto;
-}
-
-.check_in_button, .check_out_button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.check_in_button {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.check_in_button:hover:not(:disabled) {
-    background-color: var(--success-color);
-    opacity: 0.9;
-}
-
-.check_out_button {
-    background-color: var(--accent-color);
-    color: white;
-}
-
-.check_out_button:hover:not(:disabled) {
-    background-color: var(--accent-hover);
-}
-
-.check_in_button:disabled, .check_out_button:disabled {
-    background-color: var(--text-tertiary);
-    cursor: not-allowed;
-    opacity: 0.7;
+    gap: 15px;
 }
 
 /* 이번 주 출근 현황 카드 스타일 */
@@ -292,38 +402,155 @@
     color: white;
 }
 
+/* 상태 메시지 스타일 */
+.status_message {
+    margin-top: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success {
+    background-color: rgba(var(--success-color-rgb), 0.15);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.error {
+    background-color: rgba(var(--danger-color-rgb), 0.15);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
 /* 반응형 스타일 */
 @media (max-width: 1024px) {
-    .attendance_grid {
-        grid-template-columns: 1fr;
+    .attendance_wrap {
+        padding: 15px;
     }
     
-    .attendance_card_full {
-        grid-column: span 1;
+    .attendance_title {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+    
+    .attendance_date {
+        font-size: 14px;
+    }
+    
+    .status_card {
+        padding: 30px;
+    }
+    
+    .status_icon {
+        font-size: 50px;
+    }
+    
+    .attendance_header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .attendance_btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
 @media (max-width: 639px) {
     .attendance_wrap {
-        padding: 20px;
+        padding: 10px;
     }
     
     .attendance_title {
-        font-size: 24px;
+        font-size: 28px;
+    }
+    
+    .attendance_date {
+        font-size: 12px;
+    }
+    
+    .attendance_header {
+        margin-bottom: 15px;
+    }
+    
+    .status_card {
+        padding: 20px;
+    }
+    
+    .status_icon {
+        font-size: 40px;
     }
     
     .current_time {
         font-size: 28px;
     }
     
-    .day_circle {
-        width: 30px;
-        height: 30px;
-        font-size: 12px;
-    }
-    
-    .attendance_table th, .attendance_table td {
-        padding: 8px 10px;
+    .check_in_button, .check_out_button {
+        padding: 12px 30px;
         font-size: 14px;
     }
+}
+
+/* 위치 정보 관련 스타일 */
+.location_status {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: rgba(var(--bg-secondary-rgb), 0.5);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.location_icon {
+    font-size: 1.2rem;
+    margin-right: 10px;
+    color: var(--text-primary);
+}
+
+.location_text {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.location_valid {
+    color: var(--success);
+}
+
+.location_invalid {
+    color: var(--error);
+}
+
+.refresh_location_btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh_location_btn:hover {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
 } 

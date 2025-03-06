@@ -14,12 +14,12 @@
 /* 헤더 */
 .header {
     width: 100%;
-    height: 70px;
+    height: 60px;
     background-color: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 15px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -32,23 +32,26 @@
 .header_left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    justify-content: flex-start;
+    width: auto;
 }
 
 /* 로고 스타일 */
 .logo_wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     cursor: pointer;
 }
 
 .logo {
+    width: 30px;
+    height: 32px;
     flex-shrink: 0;
 }
 
 .logo_text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-color);
     margin: 0;
@@ -59,7 +62,7 @@
 }
 
 .logo_text_sub {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: 400;
     color: var(--text-secondary);
     letter-spacing: 2px;
@@ -67,78 +70,11 @@
     text-transform: uppercase;
 }
 
-/* 모바일 메뉴 토글 버튼 */
-.menu_toggle {
-    display: none;
-    font-size: 1.5rem;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* 헤더 중앙 - 네비게이션 */
-.main_nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 100%;
-}
-
-/* 네비게이션 아이템 */
-.nav_item {
-    display: flex;
-    height: 44px;
-    padding: 0.5rem;
-    align-items: center;
-    padding: 0 15px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    position: relative;
-    border-radius: 0.75rem;
-}
-
-.nav_item:hover {
-    color: var(--primary-color);
-}
-
-.nav_item.active {
-    color: var(--primary-color);
-    font-weight: 600;
-    background-color: var(--button-color);
-
-}
-
-.nav_icon {
-    margin-right: 8px;
-    font-size: 1.1rem;
-}
-
-.nav_label {
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    font-family: 'Pretendard Variable', sans-serif;
-}
-
-/* 호버 시 라벨 스타일 */
-.nav_item:hover .nav_label {
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-/* 활성화된 아이템 라벨 스타일 */
-.nav_item.active .nav_label {
-    color: var(--primary-color);
-    font-size: 0.9rem;
-    font-weight: 750;
-}
-
 /* 헤더 오른쪽 영역 */
 .header_right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 /* 검색 버튼 아이콘 */
@@ -159,7 +95,6 @@
 .search_button_icon:hover {
     color: var(--primary-color);
     background-color: var(--hover-bg);
-    transform: translateY(-2px);
 }
 
 /* 알림 컨테이너 */
@@ -186,7 +121,6 @@
 .notification_button:hover {
     color: var(--primary-color);
     background-color: var(--hover-bg);
-    transform: translateY(-2px);
 }
 
 /* 알림 배지 */
@@ -210,8 +144,8 @@
 .notifications_dropdown {
     position: absolute;
     top: 100%;
-    right: 0;
-    width: 320px;
+    right: -10px;
+    width: 280px;
     background-color: var(--bg-secondary);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -220,7 +154,6 @@
     margin-top: 10px;
     z-index: 1000;
     overflow: hidden;
-    
 }
 
 /* 알림 헤더 */
@@ -319,7 +252,6 @@
 .theme_toggle:hover {
     color: var(--primary-color);
     background-color: var(--hover-bg);
-    transform: translateY(-2px);
 }
 
 /* 프로필 영역 */
@@ -331,10 +263,9 @@
 .profile_button {
     display: flex;
     align-items: center;
-    gap: 10px;
+    padding: 5px;
     cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 20px;
+    border-radius: 50%;
     transition: all 0.3s ease;
 }
 
@@ -352,17 +283,11 @@
     color: var(--text-secondary);
 }
 
-.user_name {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-color);
-}
-
 /* 프로필 드롭다운 */
 .profile_dropdown {
     position: absolute;
     top: 100%;
-    right: 0;
+    right: -10px;
     width: 200px;
     background-color: var(--card-bg);
     border-radius: 8px;
@@ -390,135 +315,129 @@
     color: var(--primary-color);
 }
 
-/* 모바일 메뉴 오버레이 */
-.mobile_menu_overlay {
-    display: none;
-    position: fixed;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 70px);
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 90;
-}
-
 /* 메인 콘텐츠 */
 .content_area {
     flex: 1;
-    padding: 20px;
+    padding: 10px;
     overflow-y: auto;
-    max-width: 1400px;
     width: 100%;
-    margin: 0 auto;
+    margin-bottom: 60px; /* 하단 네비게이션 바 높이만큼 여백 추가 */
 }
 
-/* 반응형 스타일 */
-@media (max-width: 1200px) {
-    .search_input {
-        width: 180px;
-    }
-    
-    .search_input:focus {
-        width: 220px;
-    }
-    
-    .nav_item {
-        padding: 0 10px;
-    }
+/* 하단 네비게이션 바 (인스타그램 스타일) */
+.bottom_nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    padding: 0 0 0.5rem 0;
+    background-color: var(--bg-primary);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
-@media (max-width: 992px) {
-    .main_nav {
-        display: none;
-    }
-    
-    .menu_toggle {
-        display: block;
-    }
-    
-    .mobile_menu_open {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 70px;
-        left: 0;
-        width: 250px;
-        height: calc(100vh - 70px);
-        background-color: var(--card-bg);
-        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        padding: 20px 0;
-        gap: 5px;
-    }
-    
-    .mobile_menu_overlay {
-        display: block;
-    }
-    
-    .nav_item {
-        height: auto;
-        padding: 15px 20px;
-    }
+.bottom_nav_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    width: 20%;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
-@media (max-width: 768px) {
-    .header {
-        padding: 0 15px;
-    }
-    
-    .logo_text {
-        font-size: 1rem;
-    }
-    
-    .logo_text_sub {
-        font-size: 0.6rem;
-    }
-    
-    .user_name {
-        display: none;
-    }
-    
-    .profile_button {
-        padding: 5px;
-    }
-    
-    .content_area {
-        padding: 15px;
-    }
+.bottom_nav_icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
 }
 
-@media (max-width: 480px) {
-    .header {
-        height: 60px;
-        padding: 0 10px;
-    }
-    
-    .logo_wrap {
-        gap: 5px;
-    }
-    
-    .logo {
-        width: 30px;
-        height: 32px;
-    }
-    
-    .notifications_dropdown,
-    .profile_dropdown {
-        width: 280px;
-        right: -10px;
-    }
-    
-    .mobile_menu_overlay {
-        top: 60px;
-        height: calc(100vh - 60px);
-    }
-    
-    .mobile_menu_open {
-        top: 60px;
-        height: calc(100vh - 60px);
-    }
-    
-    .content_area {
-        padding: 10px;
-    }
+.bottom_nav_label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
+
+.bottom_nav_item:hover {
+    color: var(--primary-color);
+}
+
+.bottom_nav_item.active {
+    color: var(--primary-color);
+    background-color: var(--button-color);
+}
+
+.bottom_nav_item.active .bottom_nav_icon {
+    /* transform: scale(1.1); */
+}
+
+/* 더보기 메뉴 컨테이너 */
+.more_menu_container {
+    position: relative;
+}
+
+/* 더보기 메뉴 */
+.more_menu {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    z-index: 101;
+    padding: 8px 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* 더보기 메뉴 아이템 */
+.more_menu_item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.more_menu_icon {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.more_menu_label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.more_menu_item:hover {
+    background-color: var(--hover-bg);
+}
+
+.more_menu_item:hover .more_menu_icon {
+    color: var(--primary-color);
+}
+
+.more_menu_item.active {
+    background-color: var(--button-color);
+}
+
+.more_menu_item.active .more_menu_icon,
+.more_menu_item.active .more_menu_label {
+    color: var(--primary-color);
+    font-weight: 600;
+} 

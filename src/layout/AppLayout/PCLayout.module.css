@@ -67,15 +67,6 @@
     text-transform: uppercase;
 }
 
-/* 모바일 메뉴 토글 버튼 */
-.menu_toggle {
-    display: none;
-    font-size: 1.5rem;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
 /* 헤더 중앙 - 네비게이션 */
 .main_nav {
     display: flex;
@@ -96,7 +87,7 @@
     font-weight: 500;
     transition: all 0.3s ease;
     position: relative;
-    border-radius: 0.75rem;
+    /* border-radius: 0.75rem; */
 }
 
 .nav_item:hover {
@@ -106,8 +97,8 @@
 .nav_item.active {
     color: var(--primary-color);
     font-weight: 600;
-    background-color: var(--button-color);
-
+    /* background-color: var(--button-color); */
+    background-color: var(--text-primary);
 }
 
 .nav_icon {
@@ -220,7 +211,6 @@
     margin-top: 10px;
     z-index: 1000;
     overflow: hidden;
-    
 }
 
 /* 알림 헤더 */
@@ -390,18 +380,6 @@
     color: var(--primary-color);
 }
 
-/* 모바일 메뉴 오버레이 */
-.mobile_menu_overlay {
-    display: none;
-    position: fixed;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 70px);
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 90;
-}
-
 /* 메인 콘텐츠 */
 .content_area {
     flex: 1;
@@ -412,113 +390,9 @@
     margin: 0 auto;
 }
 
-/* 반응형 스타일 */
+/* PC 전용 반응형 스타일 */
 @media (max-width: 1200px) {
-    .search_input {
-        width: 180px;
-    }
-    
-    .search_input:focus {
-        width: 220px;
-    }
-    
     .nav_item {
         padding: 0 10px;
     }
-}
-
-@media (max-width: 992px) {
-    .main_nav {
-        display: none;
-    }
-    
-    .menu_toggle {
-        display: block;
-    }
-    
-    .mobile_menu_open {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 70px;
-        left: 0;
-        width: 250px;
-        height: calc(100vh - 70px);
-        background-color: var(--card-bg);
-        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        padding: 20px 0;
-        gap: 5px;
-    }
-    
-    .mobile_menu_overlay {
-        display: block;
-    }
-    
-    .nav_item {
-        height: auto;
-        padding: 15px 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        padding: 0 15px;
-    }
-    
-    .logo_text {
-        font-size: 1rem;
-    }
-    
-    .logo_text_sub {
-        font-size: 0.6rem;
-    }
-    
-    .user_name {
-        display: none;
-    }
-    
-    .profile_button {
-        padding: 5px;
-    }
-    
-    .content_area {
-        padding: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    .header {
-        height: 60px;
-        padding: 0 10px;
-    }
-    
-    .logo_wrap {
-        gap: 5px;
-    }
-    
-    .logo {
-        width: 30px;
-        height: 32px;
-    }
-    
-    .notifications_dropdown,
-    .profile_dropdown {
-        width: 280px;
-        right: -10px;
-    }
-    
-    .mobile_menu_overlay {
-        top: 60px;
-        height: calc(100vh - 60px);
-    }
-    
-    .mobile_menu_open {
-        top: 60px;
-        height: calc(100vh - 60px);
-    }
-    
-    .content_area {
-        padding: 10px;
-    }
-}
+} 

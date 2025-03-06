@@ -47,40 +47,6 @@ const AediaLogo = ({
         />
       </g>
       
-      {/* AEDIA 텍스트를 SVG 경로로 변환 */}
-      <g className="logo-text" transform="translate(10, 120)">
-        {/* A */}
-        <path 
-          d="M10.5 0H13.5L20 20H17L15.5 15H8.5L7 20H4L10.5 0ZM14.5 12L12 5L9.5 12H14.5Z" 
-          fill={textColor}
-          className="text-path"
-        />
-        {/* E */}
-        <path 
-          d="M23 0H36V3H26V8.5H35V11.5H26V17H36V20H23V0Z" 
-          fill={textColor}
-          className="text-path"
-        />
-        {/* D */}
-        <path 
-          d="M39 0H46C48.7614 0 51 2.23858 51 5V15C51 17.7614 48.7614 20 46 20H39V0ZM42 3V17H46C47.1046 17 48 16.1046 48 15V5C48 3.89543 47.1046 3 46 3H42Z" 
-          fill={textColor}
-          className="text-path"
-        />
-        {/* I */}
-        <path 
-          d="M54 0H57V20H54V0Z" 
-          fill={textColor}
-          className="text-path"
-        />
-        {/* A */}
-        <path 
-          d="M60.5 0H63.5L70 20H67L65.5 15H58.5L57 20H54L60.5 0ZM64.5 12L62 5L59.5 12H64.5Z" 
-          fill={textColor}
-          className="text-path"
-        />
-      </g>
-      
       <defs>
         <clipPath id="clip0_aedia">
           <rect width="99.86" height="104.35" fill="white"/>
