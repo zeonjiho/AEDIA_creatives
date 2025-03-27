@@ -157,7 +157,7 @@ const PCLayout = () => {
                             theme={theme}
                             className={ss.logo}
                         />
-                        <h1 className={ss.logo_text}>AEDIA STUDIO <span className={ss.logo_text_sub}>Creatives</span></h1>
+                        {/* <h1 className={ss.logo_text}>AEDIA STUDIO <span className={ss.logo_text_sub}>Creatives</span></h1> */}
                     </div>
                 </div>
                 

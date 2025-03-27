@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Receipts.module.css';
 import { FaPlus, FaSearch, FaFileDownload, FaTrash, FaEdit, FaReceipt, FaUtensils, FaTaxi } from 'react-icons/fa';
-import ReceiptModal from './ReceiptModal';
+import ReceiptStepper from '../../components/ReceiptStepper/ReceiptStepper';
 import { 
   receipts as initialReceiptsData, 
   receiptCategories, 
@@ -122,14 +122,7 @@ const Receipts = () => {
   };
 
   // 영수증 추가 또는 수정
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    const receiptData = {
-      ...formData,
-      amount: parseInt(formData.amount, 10)
-    };
-    
+  const handleSubmit = (receiptData) => {    
     if (modalMode === 'add') {
       // 새 영수증 추가
       addReceipt(receiptData);
@@ -140,7 +133,6 @@ const Receipts = () => {
     
     loadReceipts();
     loadStats();
-    closeModal();
   };
 
   // 영수증 삭제
@@ -325,13 +317,12 @@ const Receipts = () => {
       </div>
 
       {/* 영수증 모달 컴포넌트 */}
-      <ReceiptModal
+      <ReceiptStepper
         isOpen={isModalOpen}
         onClose={closeModal}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        modalMode={modalMode}
+        onSubmit={handleSubmit}
+        mode={modalMode}
+        initialData={formData}
       />
     </div>
   );

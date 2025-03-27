@@ -175,10 +175,9 @@
 
 .receipts_table_container {
   background-color: var(--bg-secondary);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
 .receipts_table {
@@ -189,48 +188,34 @@
 .receipts_table th {
   background-color: var(--bg-tertiary);
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
-  padding: 16px;
+  padding: 14px 16px;
   font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .receipts_table td {
-  padding: 16px;
+  padding: 14px 16px;
   border-top: 1px solid var(--border-color);
   color: var(--text-primary);
   font-size: 14px;
-  transition: all 0.2s;
-}
-
-.receipt_row {
-  transition: all 0.2s;
 }
 
 .receipt_row:hover {
   background-color: var(--bg-hover);
 }
 
-.receipt_row:hover td {
-  color: var(--primary-color);
-}
-
 .amount {
-  font-weight: 600;
+  font-weight: 500;
   text-align: right;
-  color: var(--primary-color) !important;
 }
 
 .status {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 6px;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
   font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
+  font-weight: 500;
 }
 
 .PENDING {
@@ -256,21 +241,16 @@
 .action_button {
   background: none;
   border: none;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 50%;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.2s;
 }
 
 .action_button:hover {
-  background-color: var(--bg-hover);
   color: var(--primary-color);
-  transform: translateY(-2px);
+  background-color: rgba(var(--primary-color-rgb), 0.1);
 }
 
 .no_data {
@@ -342,14 +322,13 @@
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 20px;
-  cursor: pointer;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -486,55 +465,6 @@
   line-height: 1.5;
 }
 
-/* OCR 처리 상태 스타일 */
-.processing_indicator {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: rgba(var(--primary-color-rgb), 0.1);
-  color: var(--primary-color);
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-top: 12px;
-  animation: pulse 1.5s infinite;
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(var(--primary-color-rgb), 0.3);
-  border-top-color: var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error_message {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #f44336;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-top: 12px;
-}
-
-.ocr_success {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-top: 10px;
-}
-
 .image_preview {
   margin-top: 16px;
   border-radius: 8px;
@@ -592,13 +522,6 @@
   box-shadow: 0 4px 10px rgba(var(--primary-color-rgb), 0.3);
 }
 
-.submit_button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
 /* 반응형 스타일 */
 @media (max-width: 768px) {
   .receipts_header {
@@ -650,14 +573,6 @@
     grid-template-columns: 1fr;
   }
   
-  .form_group {
-    grid-column: 1 !important;
-  }
-  
-  .image_preview img {
-    max-height: 250px;
-  }
-  
   .modal_mobile_fullscreen {
     width: 100%;
     height: 100%;
@@ -672,5 +587,9 @@
   
   .form_group[style*="span 2"] {
     grid-column: 1 !important;
+  }
+  
+  .image_preview img {
+    max-height: 250px;
   }
 } 

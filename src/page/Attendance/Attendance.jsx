@@ -258,7 +258,7 @@ const Attendance = () => {
             {/* 출근 인증 헤더 */}
             <div className={ss.attendance_header}>
                 <div>
-                    <h1 className={ss.attendance_title}>Attendance</h1>
+                    <h1 className={ss.attendance_title}>Authorization</h1>
                     <p className={ss.attendance_date}>{formattedDate} {formattedTime}</p>
                 </div>
                 

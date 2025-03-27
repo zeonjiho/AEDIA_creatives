@@ -170,14 +170,14 @@ const MobileLayout = () => {
                     {/* 로고 */}
                     <div className={ss.logo_wrap} onClick={() => navigate('/')}>
                         <AediaLogo 
-                            width={30} 
-                            height={32} 
+                            width={34} 
+                            height={34} 
                             color="#000000" 
                             secondaryColor="#4A90E2" 
                             theme={theme}
                             className={ss.logo}
                         />
-                        <h1 className={ss.logo_text}>AEDIA <span className={ss.logo_text_sub}>Creatives</span></h1>
+                        {/* <h1 className={ss.logo_text}>AEDIA <span className={ss.logo_text_sub}>Creatives</span></h1> */}
                     </div>
                 </div>
                 
