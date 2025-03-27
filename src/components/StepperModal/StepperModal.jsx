@@ -65,9 +65,9 @@ const StepperModal = ({
             ))}
           </div>
           
-          <div className={styles.step_indicator}>
+          {/* <div className={styles.step_indicator}>
             {currentStep} / {totalSteps}
-          </div>
+          </div> */}
         </div>
         
         <div className={styles.modal_content}>

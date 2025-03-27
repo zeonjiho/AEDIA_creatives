@@ -106,6 +106,29 @@
     background-color: var(--bg-tertiary);
 }
 
+/* 테마 토글 버튼 스타일 */
+.themeToggleBtn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.themeToggleBtn:hover {
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.3);
+}
+
 /* 할 일 추가 폼 */
 .addTodoForm {
     margin-bottom: 2.5rem;
@@ -123,6 +146,7 @@
     gap: 0.8rem;
     width: 100%;
     align-items: center;
+    margin-bottom: 1rem;
 }
 
 .todoInput {
@@ -144,13 +168,16 @@
 
 .dateTimePickerContainer {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.8rem;
+    width: 100%;
+    margin-bottom: 0.8rem;
 }
 
 .datePickerContainer, .timePickerContainer {
     position: relative;
     display: flex;
     align-items: center;
+    flex: 1;
 }
 
 .calendarIcon, .clockIcon {
@@ -169,11 +196,8 @@
     background-color: var(--input-bg);
     color: var(--text-primary);
     transition: all 0.3s ease;
-    min-width: 140px;
-}
-
-.timePicker {
-    min-width: 120px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .datePicker:focus, .timePicker:focus {
@@ -185,6 +209,7 @@
 .addButton {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     padding: 0.9rem 1.8rem;
     background-color: var(--accent-color);
@@ -196,6 +221,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.3);
+    min-width: 100px;
 }
 
 .addButton:hover {
@@ -210,6 +236,7 @@
     gap: 1rem;
     margin-bottom: 2rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .filterButton {
@@ -223,6 +250,9 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex-grow: 1;
+    text-align: center;
+    max-width: 150px;
 }
 
 .filterButton:hover {
@@ -239,10 +269,10 @@
 
 /* 할 일 목록 */
 .todoList {
-    margin-bottom: 2.5rem;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2.5rem;
 }
 
 .todoItem {
@@ -476,16 +506,6 @@
     justify-content: space-around;
     background-color: transparent;
     padding: 1.5rem;
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }
 
 .statItem {
@@ -532,75 +552,155 @@
 
 @media (max-width: 768px) {
     .todoListContainer {
-        padding: 1.5rem;
+        padding: 15px;
+        height: auto;
+        min-height: 100vh;
     }
     
     .dashboard_title {
-        font-size: 1.5rem;
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+    
+    .dashboard_date {
+        font-size: 0.8rem;
     }
     
     .inputGroup {
         flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .addButton {
+        width: 100%;
+        padding: 0.8rem;
     }
     
     .dateTimePickerContainer {
-        width: 100%;
-        margin-top: 0.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
     .datePicker, .timePicker {
         width: 100%;
     }
     
-    .addButton {
-        width: 100%;
-        margin-top: 0.8rem;
-        justify-content: center;
+    .addButtonText {
+        display: inline-block;
     }
     
     .filterButtons {
         flex-wrap: wrap;
+        gap: 0.5rem;
     }
     
     .filterButton {
-        font-size: 0.8rem;
-        padding: 0.5rem 0.8rem;
+        flex: 1;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        min-width: 80px;
     }
     
     .todoStats {
         flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
     }
     
-    .todoItem {
-        padding: 1rem;
+    .statItem {
+        flex: 1;
+        padding: 0.8rem;
     }
     
     .todoList {
         grid-template-columns: 1fr;
     }
     
-    .editMode {
-        flex-direction: column;
+    .todoItem {
+        padding: 0.8rem;
     }
     
-    .editDatePicker, .editInput, .editTimePicker {
+    .todoActions {
+        gap: 0.3rem;
+    }
+    
+    .editMode {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .editDateTimeContainer {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .editInput, .editDatePicker, .editTimePicker {
         width: 100%;
     }
     
     .editActions {
-        margin-top: 0.8rem;
+        margin-top: 0.5rem;
+        justify-content: flex-end;
     }
     
     .howToUseTooltip {
-        width: calc(100vw - 3rem);
-        max-width: 100%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-10px);
+        width: calc(100vw - 40px);
+        max-width: none;
+        left: 0;
+        right: 0;
+        transform: translateX(0);
+    }
+}
+
+/* 태블릿 레이아웃 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .todoList {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
     
-    .howToUseContainer:hover .howToUseTooltip {
-        transform: translateX(-50%) translateY(0);
+    .dashboard_title {
+        font-size: 2.5rem;
     }
+    
+    .inputGroup {
+        align-items: stretch;
+    }
+    
+    .dateTimePickerContainer {
+        flex-wrap: wrap;
+    }
+    
+    .datePickerContainer, .timePickerContainer {
+        min-width: 150px;
+    }
+}
+
+/* 큰 화면 레이아웃 */
+@media (min-width: 1025px) {
+    .todoList {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+/* 커스텀 스크롤바 */
+.todoListContainer::-webkit-scrollbar {
+    width: 10px;
+}
+
+.todoListContainer::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 5px;
+}
+
+.todoListContainer::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 5px;
+    border: 2px solid var(--bg-secondary);
+}
+
+.todoListContainer::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent-color);
 }
 
 /* 자연어 처리 미리보기 */
@@ -672,7 +772,7 @@
     gap: 0.5rem;
 }
 
-/* How to use 버튼 및 툴팁 */
+/* How to use 버튼 및 툴크 */
 .howToUseContainer {
   position: relative;
   margin-top: 0.8rem;

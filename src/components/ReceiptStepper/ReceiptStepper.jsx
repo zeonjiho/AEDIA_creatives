@@ -622,11 +622,11 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       totalSteps={totalSteps}
       onPrevStep={handlePrevStep}
       onNextStep={getStepActions().onNextStep || handleNextStep}
-      title={mode === 'add' ? '새 영수증 추가' : '영수증 편집'}
+      title={mode === 'add' ? 'Add Receipt' : 'Edit Receipt'}
       showPrevButton={getStepActions().showPrevButton !== false}
       showNextButton={getStepActions().showNextButton !== false}
-      prevButtonText={getStepActions().prevButtonText || '이전'}
-      nextButtonText={getStepActions().nextButtonText || '다음'}
+      prevButtonText={getStepActions().prevButtonText || 'Previous'}
+      nextButtonText={getStepActions().nextButtonText || 'Next'}
     >
       {renderStepContent()}
     </StepperModal>

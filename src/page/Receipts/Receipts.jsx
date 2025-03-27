@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './Receipts.module.css';
-import { FaPlus, FaSearch, FaFileDownload, FaTrash, FaEdit, FaReceipt, FaUtensils, FaTaxi } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFileDownload, FaTrash, FaEdit, FaReceipt, FaUtensils, FaTaxi, FaTimes } from 'react-icons/fa';
 import ReceiptStepper from '../../components/ReceiptStepper/ReceiptStepper';
 import { 
   receipts as initialReceiptsData, 
@@ -27,6 +27,8 @@ const Receipts = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'MEAL', 'TAXI'
   const [typeStats, setTypeStats] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   
   // 새 영수증 또는 편집할 영수증 데이터
   const [formData, setFormData] = useState({
@@ -42,6 +44,16 @@ const Receipts = () => {
     userId: currentUser.id,
     projectId: null
   });
+
+  // 화면 크기 변경 감지
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 데이터 로드
   useEffect(() => {
@@ -104,6 +116,7 @@ const Receipts = () => {
     });
     setSelectedReceipt(receipt);
     setIsModalOpen(true);
+    setIsActionModalOpen(false); // 작업 모달 닫기
   };
 
   // 모달 닫기
@@ -136,12 +149,25 @@ const Receipts = () => {
   };
 
   // 영수증 삭제
-  const handleDelete = (id) => {
+  const handleDelete = () => {
     if (window.confirm('정말로 이 영수증을 삭제하시겠습니까?')) {
-      deleteReceipt(id);
+      deleteReceipt(selectedReceipt.id);
       loadReceipts();
       loadStats();
+      setIsActionModalOpen(false); // 작업 모달 닫기
     }
+  };
+
+  // 행 클릭 시 선택된 영수증 설정 및 작업 모달 열기
+  const handleRowClick = (receipt) => {
+    setSelectedReceipt(receipt);
+    setIsActionModalOpen(true);
+  };
+
+  // 작업 모달 닫기
+  const closeActionModal = () => {
+    setIsActionModalOpen(false);
+    setSelectedReceipt(null);
   };
 
   // 금액 포맷팅 함수
@@ -155,11 +181,20 @@ const Receipts = () => {
     setFilterCategory('all'); // 탭 변경 시 카테고리 필터 초기화
   };
 
-  // 탭 제목 및 아이콘 설정
+  // 탭 제목 및 아이콘 설정 - 모바일과 데스크톱에 따라 다르게 표시
   const tabConfig = {
-    all: { title: 'All Receipts', icon: <FaReceipt className={styles.tab_icon} /> },
-    MEAL: { title: 'Meal Expenses', icon: <FaUtensils className={styles.tab_icon} /> },
-    TAXI: { title: 'Taxi Expenses', icon: <FaTaxi className={styles.tab_icon} /> }
+    all: { 
+      title: isMobile ? 'All' : 'All Receipts', 
+      icon: <FaReceipt className={styles.tab_icon} /> 
+    },
+    MEAL: { 
+      title: isMobile ? 'Meal' : 'Meal Expenses', 
+      icon: <FaUtensils className={styles.tab_icon} /> 
+    },
+    TAXI: { 
+      title: isMobile ? 'Taxi' : 'Taxi Expenses', 
+      icon: <FaTaxi className={styles.tab_icon} /> 
+    }
   };
 
   // 카테고리 이름 가져오기
@@ -214,7 +249,7 @@ const Receipts = () => {
           >
             {icon}
             <span className={styles.tab_text}>{title}</span>
-            {typeStats.find(stat => stat.id === key) && (
+            {!isMobile && typeStats.find(stat => stat.id === key) && (
               <span className={styles.tab_badge}>
                 {formatAmount(typeStats.find(stat => stat.id === key)?.total || 0)}
               </span>
@@ -256,58 +291,45 @@ const Receipts = () => {
         <table className={styles.receipts_table}>
           <thead>
             <tr>
-              <th>날짜</th>
+              {!isMobile && <th>날짜</th>}
               <th>제목</th>
               <th>금액</th>
-              <th>카테고리</th>
-              <th>결제방법</th>
+              {!isMobile && (
+                <>
+                  <th>카테고리</th>
+                  <th>결제방법</th>
+                </>
+              )}
               <th>상태</th>
-              <th>작업</th>
             </tr>
           </thead>
           <tbody>
             {filteredReceipts.length > 0 ? (
               filteredReceipts.map(receipt => (
-                <tr key={receipt.id} className={styles.receipt_row}>
-                  <td>{receipt.date}</td>
+                <tr 
+                  key={receipt.id} 
+                  className={styles.receipt_row}
+                  onClick={() => handleRowClick(receipt)}
+                >
+                  {!isMobile && <td>{receipt.date}</td>}
                   <td>{receipt.title}</td>
                   <td className={styles.amount}>{formatAmount(receipt.amount)}</td>
-                  <td>{getCategoryName(receipt.category)}</td>
-                  <td>{getPaymentMethodName(receipt.paymentMethod)}</td>
+                  {!isMobile && (
+                    <>
+                      <td>{getCategoryName(receipt.category)}</td>
+                      <td>{getPaymentMethodName(receipt.paymentMethod)}</td>
+                    </>
+                  )}
                   <td>
                     <span className={`${styles.status} ${styles[receipt.status]}`}>
                       {getStatusName(receipt.status)}
                     </span>
                   </td>
-                  <td className={styles.actions_cell}>
-                    <button 
-                      className={styles.action_button} 
-                      onClick={() => openEditModal(receipt)}
-                      title="편집"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button 
-                      className={styles.action_button} 
-                      onClick={() => handleDelete(receipt.id)}
-                      title="삭제"
-                    >
-                      <FaTrash />
-                    </button>
-                    {receipt.attachmentUrl && (
-                      <button 
-                        className={styles.action_button} 
-                        title="첨부파일 다운로드"
-                      >
-                        <FaFileDownload />
-                      </button>
-                    )}
-                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className={styles.no_data}>
+                <td colSpan={isMobile ? "3" : "6"} className={styles.no_data}>
                   검색 결과가 없습니다.
                 </td>
               </tr>
@@ -324,6 +346,71 @@ const Receipts = () => {
         mode={modalMode}
         initialData={formData}
       />
+
+      {/* 작업 모달 */}
+      {isActionModalOpen && selectedReceipt && (
+        <div className={styles.modal_overlay} onClick={closeActionModal}>
+          <div className={styles.action_modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.action_modal_header}>
+              <h3>{selectedReceipt.title}</h3>
+              <button className={styles.close_button} onClick={closeActionModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className={styles.action_modal_body}>
+              <div className={styles.receipt_info}>
+                <div className={styles.info_row}>
+                  <span>날짜:</span>
+                  <span>{selectedReceipt.date}</span>
+                </div>
+                <div className={styles.info_row}>
+                  <span>금액:</span>
+                  <span className={styles.amount}>{formatAmount(selectedReceipt.amount)}</span>
+                </div>
+                <div className={styles.info_row}>
+                  <span>카테고리:</span>
+                  <span>{getCategoryName(selectedReceipt.category)}</span>
+                </div>
+                <div className={styles.info_row}>
+                  <span>결제방법:</span>
+                  <span>{getPaymentMethodName(selectedReceipt.paymentMethod)}</span>
+                </div>
+                <div className={styles.info_row}>
+                  <span>상태:</span>
+                  <span className={`${styles.status_badge} ${styles[selectedReceipt.status]}`}>
+                    {getStatusName(selectedReceipt.status)}
+                  </span>
+                </div>
+                {selectedReceipt.description && (
+                  <div className={styles.info_description}>
+                    <span>메모:</span>
+                    <p>{selectedReceipt.description}</p>
+                  </div>
+                )}
+              </div>
+              <div className={styles.action_buttons}>
+                <button 
+                  className={styles.edit_button} 
+                  onClick={() => openEditModal(selectedReceipt)}
+                >
+                  <FaEdit /> 편집
+                </button>
+                <button 
+                  className={styles.delete_button} 
+                  onClick={handleDelete}
+                >
+                  <FaTrash /> 삭제
+                </button>
+                {selectedReceipt.attachmentUrl && (
+                  <button className={styles.download_button}>
+                    <FaFileDownload /> 첨부파일 다운로드
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

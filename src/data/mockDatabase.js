@@ -80,12 +80,15 @@ export const events = [
 // 회의실 데이터
 export const rooms = [
   { id: 1, name: '3F 회의실 A', capacity: 10, facilities: ['프로젝터', '화이트보드', '화상회의 장비'] },
+  { id: 2, name: '3F 회의실 B', capacity: 8, facilities: ['프로젝터', '화상회의 장비'] },
   { id: 3, name: '4F 회의실 A', capacity: 4, facilities: ['화이트보드'] },
   { id: 4, name: '4F 회의실 B', capacity: 3, facilities: ['편집 워크스테이션', '모니터링 시스템'] },
+  { id: 5, name: '음향 스튜디오', capacity: 4, facilities: ['음향 시스템', '녹음 장비'] },
+  { id: 6, name: '촬영 스튜디오', capacity: 15, facilities: ['조명 장비', '크로마키 월', '카메라 리그'] },
 ];
 
 // 회의실 예약 데이터
-export const roomReservations = [
+export let roomReservations = [
   { id: 1, roomId: 1, userId: 1, title: '주간 제작 회의', start: '2023-03-06T10:00:00', end: '2023-03-06T11:00:00', participants: [1, 2, 3, 4, 5, 6, 7, 8], project: '기업 홍보 영상' },
   { id: 2, roomId: 2, userId: 1, title: '브랜드 광고 프로젝트 킥오프', start: '2023-03-08T14:00:00', end: '2023-03-08T16:00:00', participants: [1, 2, 5, 6], project: '신제품 광고' },
   { id: 3, roomId: 3, userId: 4, title: '클라이언트 피드백 미팅', start: '2023-03-10T11:00:00', end: '2023-03-10T12:30:00', participants: [1, 4], project: '웹 시리즈' },
@@ -95,6 +98,73 @@ export const roomReservations = [
   { id: 7, roomId: 5, userId: 7, title: '사운드 믹싱 세션', start: '2023-03-22T11:00:00', end: '2023-03-22T13:00:00', participants: [2, 7], project: '웹 시리즈' },
   { id: 8, roomId: 6, userId: 5, title: '제품 촬영 세션', start: '2023-03-25T09:00:00', end: '2023-03-25T17:00:00', participants: [1, 5, 8], project: '신제품 광고' },
 ];
+
+// 예약 ID 카운터
+let reservationIdCounter = roomReservations.length + 1;
+
+// 예약 추가 함수
+export const addReservation = (newReservation) => {
+  console.log("Adding new reservation:", newReservation);
+  const reservationToAdd = {
+    id: reservationIdCounter++,
+    ...newReservation,
+    project: newReservation.project || '일반 회의'
+  };
+  
+  // 전역 배열에 새 예약 추가
+  roomReservations.push(reservationToAdd);
+  console.log("Updated reservations:", roomReservations);
+  
+  return reservationToAdd;
+};
+
+// 예약 수정 함수
+export const updateReservation = (id, updates) => {
+  console.log(`Updating reservation ${id}:`, updates);
+  const index = roomReservations.findIndex(reservation => reservation.id === id);
+  if (index !== -1) {
+    roomReservations[index] = { ...roomReservations[index], ...updates };
+    console.log("Updated reservations:", roomReservations);
+    return roomReservations[index];
+  }
+  return null;
+};
+
+// 예약 삭제 함수
+export const deleteReservation = (id) => {
+  console.log(`Deleting reservation ${id}`);
+  const index = roomReservations.findIndex(reservation => reservation.id === id);
+  if (index !== -1) {
+    const deleted = roomReservations[index];
+    roomReservations.splice(index, 1);
+    console.log("Updated reservations:", roomReservations);
+    return deleted;
+  }
+  return null;
+};
+
+// 예약 조회 함수
+export const getReservations = () => {
+  return [...roomReservations];
+};
+
+// 특정 회의실의 예약 조회
+export const getReservationsByRoomId = (roomId) => {
+  return roomReservations.filter(reservation => reservation.roomId === roomId);
+};
+
+// 특정 날짜의 예약 조회
+export const getReservationsByDate = (date) => {
+  const targetDate = new Date(date);
+  return roomReservations.filter(reservation => {
+    const reservationDate = new Date(reservation.start);
+    return (
+      reservationDate.getFullYear() === targetDate.getFullYear() &&
+      reservationDate.getMonth() === targetDate.getMonth() &&
+      reservationDate.getDate() === targetDate.getDate()
+    );
+  });
+};
 
 // 프로젝트 데이터
 export const projects = [
@@ -297,38 +367,6 @@ export const deleteEvent = (id) => {
   if (index !== -1) {
     const deleted = events[index];
     events.splice(index, 1);
-    return deleted;
-  }
-  return null;
-};
-
-// 회의실 예약 관련 함수
-let reservationIdCounter = roomReservations.length + 1;
-
-export const addReservation = (newReservation) => {
-  const reservationToAdd = {
-    id: reservationIdCounter++,
-    ...newReservation,
-    project: newReservation.project || '일반 회의'
-  };
-  roomReservations.push(reservationToAdd);
-  return reservationToAdd;
-};
-
-export const updateReservation = (id, updates) => {
-  const index = roomReservations.findIndex(reservation => reservation.id === id);
-  if (index !== -1) {
-    roomReservations[index] = { ...roomReservations[index], ...updates };
-    return roomReservations[index];
-  }
-  return null;
-};
-
-export const deleteReservation = (id) => {
-  const index = roomReservations.findIndex(reservation => reservation.id === id);
-  if (index !== -1) {
-    const deleted = roomReservations[index];
-    roomReservations.splice(index, 1);
     return deleted;
   }
   return null;

@@ -62,6 +62,8 @@ const RoomReservation = () => {
         
         // 프로젝트 목록 설정
         setProjectsList(projects)
+        
+        console.log("Initial reservations loaded:", initialReservations)
     }, [])
 
     // 상태 메시지 자동 제거
@@ -148,6 +150,9 @@ const RoomReservation = () => {
     // 회의실 관련 함수들
     const handleRoomSelect = (room) => {
         setSelectedRoom(room)
+        // 회의실 선택 시 해당 회의실의 예약 정보를 갱신
+        const roomReservations = getRoomReservations(room.id)
+        console.log(`${room.name} 회의실 선택됨, 예약 수: ${roomReservations.length}`)
     }
     
     const getRoomReservations = (roomId) => {
@@ -163,21 +168,16 @@ const RoomReservation = () => {
     }
     
     // 예약 관련 함수들
-    const handleAddReservation = (roomId) => {
+    const handleAddReservation = (roomId, hour) => {
         setSelectedRoom(rooms.find(room => room.id === roomId))
         setShowReservationForm(true)
         
-        // 폼 초기화
-        const hours = new Date().getHours()
-        const minutes = new Date().getMinutes()
-        
+        // 시작 시간과 종료 시간 설정
         const startDateTime = new Date(currentDate)
-        startDateTime.setHours(hours)
-        startDateTime.setMinutes(minutes)
+        startDateTime.setHours(hour, 0, 0)
         
         const endDateTime = new Date(currentDate)
-        endDateTime.setHours(hours + 1)
-        endDateTime.setMinutes(minutes)
+        endDateTime.setHours(hour + 1, 0, 0)
         
         setReservationFormData({
             title: '',
@@ -279,32 +279,45 @@ const RoomReservation = () => {
         try {
             if (selectedReservation) {
                 // 예약 수정
+                console.log("Updating reservation:", selectedReservation.id, reservationData)
                 const updatedReservation = updateReservation(selectedReservation.id, reservationData)
                 if (updatedReservation) {
-                    setReservations(reservations.map(reservation => 
+                    // 최신 데이터로 상태 업데이트
+                    const updatedReservations = reservations.map(reservation => 
                         reservation.id === selectedReservation.id ? updatedReservation : reservation
-                    ))
+                    )
+                    setReservations(updatedReservations)
+                    
                     setStatusMessage('예약이 성공적으로 수정되었습니다.')
                     setMessageType('success')
                     
                     // 폼 닫기
                     setShowReservationForm(false)
                     setSelectedReservation(null)
+                    
+                    console.log("Updated reservations state:", updatedReservations)
                 } else {
                     setStatusMessage('예약 수정 중 오류가 발생했습니다.')
                     setMessageType('error')
                 }
             } else {
                 // 새 예약 추가
+                console.log("Adding new reservation:", reservationData)
                 const newReservation = addReservation(reservationData)
                 if (newReservation) {
-                    setReservations([...reservations, newReservation])
+                    // 최신 상태로 업데이트
+                    const updatedReservations = [...reservations, newReservation]
+                    setReservations(updatedReservations)
+                    
                     setStatusMessage('새 예약이 성공적으로 추가되었습니다.')
                     setMessageType('success')
                     
                     // 폼 닫기
                     setShowReservationForm(false)
                     setSelectedReservation(null)
+                    
+                    console.log("New reservation added:", newReservation)
+                    console.log("Updated reservations state:", updatedReservations)
                 } else {
                     setStatusMessage('예약 추가 중 오류가 발생했습니다.')
                     setMessageType('error')
@@ -348,9 +361,8 @@ const RoomReservation = () => {
             const slotEnd = new Date(currentDate)
             slotEnd.setHours(hour + 1, 0, 0)
             
-            return (
-                (startTime < slotEnd && endTime > slotStart)
-            )
+            // 슬롯의 시작이나 끝이 예약 시간 범위 내에 있는지, 또는 예약이 슬롯을 완전히 포함하는지 확인
+            return (startTime < slotEnd && endTime > slotStart)
         })
     }
     
@@ -365,9 +377,8 @@ const RoomReservation = () => {
             const slotEnd = new Date(currentDate)
             slotEnd.setHours(hour + 1, 0, 0)
             
-            return (
-                (startTime < slotEnd && endTime > slotStart)
-            )
+            // 슬롯의 시작이나 끝이 예약 시간 범위 내에 있는지, 또는 예약이 슬롯을 완전히 포함하는지 확인
+            return (startTime < slotEnd && endTime > slotStart)
         })
     }
     
@@ -530,10 +541,10 @@ const RoomReservation = () => {
                                 onChange={(e) => setFilterCapacity(e.target.value)}
                             >
                                 <option value="">전체</option>
-                                <option value="5">5인 이하</option>
-                                <option value="10">10인 이하</option>
-                                <option value="20">20인 이하</option>
-                                <option value="30">30인 이하</option>
+                                <option value="5">5인 이상</option>
+                                <option value="10">10인 이상</option>
+                                <option value="20">20인 이상</option>
+                                <option value="30">30인 이상</option>
                             </select>
                         </div>
                     </div>
@@ -579,131 +590,105 @@ const RoomReservation = () => {
                         <div className={ss.card_icon}>
                             <FaCalendarAlt />
                         </div>
-                        <h2>예약 일정</h2>
+                        <h2>
+                            {selectedRoom ? `${selectedRoom.name} 회의실 예약 일정` : '회의실을 선택하세요'}
+                        </h2>
                     </div>
                     
-                    {/* 예약 현황 요약 */}
-                    <div className={ss.reservation_summary}>
-                        <h3>예약 현황</h3>
-                        <div className={ss.summary_stats}>
-                            <div className={ss.stat_item}>
-                                <div className={ss.stat_value}>{reservationStats.total}</div>
-                                <div className={ss.stat_label}>전체 예약</div>
-                            </div>
-                            <div className={ss.stat_item}>
-                                <div className={ss.stat_value}>{reservationStats.my}</div>
-                                <div className={ss.stat_label}>내 예약</div>
-                            </div>
-                            <div className={ss.stat_item}>
-                                <div className={ss.stat_value}>{reservationStats.participating}</div>
-                                <div className={ss.stat_label}>참여 예약</div>
-                            </div>
-                        </div>
-                        
-                        <div className={ss.room_utilization}>
-                            <h3>회의실 활용도</h3>
-                            <div className={ss.utilization_list}>
-                                {reservationStats.roomStats.slice(0, 3).map(stat => (
-                                    <div key={stat.roomId} className={ss.utilization_item}>
-                                        <div className={ss.room_name}>{stat.roomName}</div>
-                                        <div className={ss.utilization_bar_container}>
-                                            <div 
-                                                className={ss.utilization_bar} 
-                                                style={{width: `${stat.utilization}%`}}
-                                            ></div>
-                                        </div>
-                                        <div className={ss.utilization_value}>{stat.utilization}%</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className={ss.schedule_grid}>
-                        <div className={ss.time_column}>
-                            {timeSlots.map(hour => (
-                                <div key={hour} className={ss.time_slot}>
-                                    {hour}:00
+                    {selectedRoom ? (
+                        <>
+                            {/* 선택된 회의실 정보 */}
+                            <div className={ss.selected_room_info}>
+                                <div className={ss.room_detail}>
+                                    <span><FaUsers /> 수용 인원: {selectedRoom.capacity}명</span>
+                                    <span><FaRegListAlt /> 시설: {selectedRoom.facilities.join(', ')}</span>
+                                    <span><FaBuilding /> 위치: {selectedRoom.location || '본관'}</span>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
                         
-                        <div className={ss.room_columns}>
-                            {filteredRooms.map(room => (
-                                <div key={room.id} className={ss.room_column}>
-                                    <div className={ss.room_column_header}>
-                                        {room.name}
-                                    </div>
-                                    <div className={ss.room_time_slots}>
-                                        {timeSlots.map(hour => {
-                                            const isReserved = isTimeSlotReserved(room.id, hour)
-                                            const reservation = getReservationAtTimeSlot(room.id, hour)
+                            {/* 시간별 예약 현황 */}
+                            <div className={ss.time_slots_container}>
+                                {timeSlots.map(hour => {
+                                    const isReserved = isTimeSlotReserved(selectedRoom.id, hour)
+                                    const reservation = getReservationAtTimeSlot(selectedRoom.id, hour)
+                                    
+                                    return (
+                                        <div 
+                                            key={hour}
+                                            className={`${ss.time_slot_row} ${isReserved ? ss.reserved : ''}`}
+                                        >
+                                            <div className={ss.time_indicator}>
+                                                {hour}:00 - {hour + 1}:00
+                                            </div>
                                             
-                                            return (
+                                            {isReserved ? (
                                                 <div 
-                                                    key={hour} 
-                                                    className={`${ss.room_time_slot} ${isReserved ? ss.reserved : ''}`}
-                                                    onClick={() => isReserved 
-                                                        ? handleReservationClick(reservation) 
-                                                        : handleAddReservation(room.id)
-                                                    }
+                                                    className={ss.reservation_block}
+                                                    onClick={() => handleReservationClick(reservation)}
+                                                    style={{ backgroundColor: getProjectColor(reservation.project) }}
                                                 >
-                                                    {isReserved ? (
-                                                        <div 
-                                                            className={ss.reservation_info}
-                                                            style={{ backgroundColor: getProjectColor(reservation.project) }}
-                                                        >
-                                                            <div className={ss.reservation_title}>
-                                                                {reservation.title}
-                                                            </div>
-                                                            <div className={ss.reservation_time}>
-                                                                {formatTime(reservation.start)} - {formatTime(reservation.end)}
-                                                            </div>
-                                                            <div className={ss.reservation_details}>
-                                                                <div className={ss.reservation_project}>
-                                                                    {reservation.project || '일반 회의'}
-                                                                </div>
-                                                                <div className={ss.reservation_participants}>
-                                                                    {reservation.participants && 
-                                                                     reservation.participants.length > 0 ? (
-                                                                        <div className={ss.participants_preview}>
-                                                                            {reservation.participants.slice(0, 3).map(participantId => {
-                                                                                const participant = users.find(user => user.id === participantId);
-                                                                                return participant ? (
-                                                                                    <div key={participantId} className={ss.participant_preview}>
-                                                                                        <img 
-                                                                                            src={participant.avatar} 
-                                                                                            alt={participant.name}
-                                                                                            className={ss.participant_avatar_small}
-                                                                                        />
-                                                                                    </div>
-                                                                                ) : null;
-                                                                            })}
-                                                                            {reservation.participants.length > 3 && (
-                                                                                <div className={ss.more_participants}>
-                                                                                    +{reservation.participants.length - 3}
-                                                                                </div>
-                                                                            )}
+                                                    <div className={ss.reservation_title}>
+                                                        {reservation.title}
+                                                    </div>
+                                                    <div className={ss.reservation_details}>
+                                                        <div>
+                                                            <span className={ss.detail_item}>
+                                                                <FaClock /> {formatTime(reservation.start)} - {formatTime(reservation.end)}
+                                                            </span>
+                                                            {reservation.project && (
+                                                                <span className={ss.detail_item}>
+                                                                    <FaProjectDiagram /> {reservation.project}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className={ss.reservation_participants}>
+                                                            {reservation.participants && 
+                                                             reservation.participants.length > 0 ? (
+                                                                <div className={ss.participants_preview}>
+                                                                    {reservation.participants.slice(0, 3).map(participantId => {
+                                                                        const participant = users.find(user => user.id === participantId);
+                                                                        return participant ? (
+                                                                            <div key={participantId} className={ss.participant_preview}>
+                                                                                <img 
+                                                                                    src={participant.avatar} 
+                                                                                    alt={participant.name}
+                                                                                    className={ss.participant_avatar_small}
+                                                                                />
+                                                                            </div>
+                                                                        ) : null;
+                                                                    })}
+                                                                    {reservation.participants.length > 3 && (
+                                                                        <div className={ss.more_participants}>
+                                                                            +{reservation.participants.length - 3}
                                                                         </div>
-                                                                    ) : (
-                                                                        <span className={ss.no_participants}>참석자 없음</span>
                                                                     )}
                                                                 </div>
-                                                            </div>
+                                                            ) : (
+                                                                <span className={ss.no_participants}>참석자 없음</span>
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        <div className={ss.add_reservation}>
-                                                            <FaPlus />
-                                                        </div>
-                                                    )}
+                                                    </div>
                                                 </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
+                                            ) : (
+                                                <div 
+                                                    className={ss.empty_slot}
+                                                    onClick={() => handleAddReservation(selectedRoom.id, hour)}
+                                                >
+                                                    <div className={ss.add_reservation}>
+                                                        <FaPlus /> 예약 추가
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </>
+                    ) : (
+                        <div className={ss.no_room_selected}>
+                            <p>왼쪽에서 회의실을 선택하면 예약 일정이 표시됩니다.</p>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
             

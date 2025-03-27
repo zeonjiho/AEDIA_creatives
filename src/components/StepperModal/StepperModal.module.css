@@ -14,9 +14,9 @@
 }
 
 .modal {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
   width: 100%;
   max-width: 700px;
   max-height: 90vh;
@@ -30,13 +30,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  /* border-bottom: 1px solid var(--border-color); */
 }
 
 .modal_header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .close_button {
@@ -44,19 +44,19 @@
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
-  color: #666;
+  color: var(--text-tertiary);
   line-height: 1;
 }
 
 .stepper_container {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  /* border-bottom: 1px solid var(--border-color); */
 }
 
 .stepper_progress {
   height: 6px;
-  background-color: #eee;
-  border-radius: 3px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--border-radius-sm);
   margin-bottom: 1rem;
   position: relative;
 }
@@ -66,8 +66,8 @@
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #4285F4;
-  border-radius: 3px;
+  background-color: var(--accent-color);
+  border-radius: var(--border-radius-sm);
   transition: width 0.3s ease;
 }
 
@@ -91,9 +91,9 @@
 .stepper_step_number {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background-color: #eee;
-  color: #666;
+  border-radius: var(--border-radius-round);
+  background-color: var(--bg-tertiary);
+  color: var(--text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,24 +102,24 @@
 }
 
 .stepper_step.active .stepper_step_number {
-  background-color: #4285F4;
-  color: white;
+  background-color: var(--accent-color);
+  color: var(--text-primary-inverse);
 }
 
 .stepper_step_connector {
   flex: 1;
   height: 2px;
-  background-color: #eee;
+  background-color: var(--bg-tertiary);
   margin: 0 4px;
 }
 
 .stepper_step.active .stepper_step_connector {
-  background-color: #4285F4;
+  background-color: var(--accent-color);
 }
 
 .step_indicator {
   text-align: center;
-  color: #666;
+  color: var(--text-tertiary);
   font-size: 0.9rem;
 }
 
@@ -133,13 +133,13 @@
   display: flex;
   justify-content: space-between;
   padding: 1.5rem;
-  border-top: 1px solid #eee;
+  /* border-top: 1px solid #eee; */
 }
 
 .prev_button,
 .next_button {
   padding: 0.5rem 1.5rem;
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   cursor: pointer;
   font-weight: 500;
   border: none;
@@ -147,23 +147,23 @@
 }
 
 .prev_button {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
   margin-right: auto;
 }
 
 .prev_button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--button-color-hover);
 }
 
 .next_button {
-  background-color: #4285F4;
-  color: white;
+  background-color: var(--accent-color);
+  color: var(--text-primary-inverse);
   margin-left: auto;
 }
 
 .next_button:hover {
-  background-color: #3367D6;
+  background-color: var(--accent-hover);
 }
 
 /* 모바일 대응 */

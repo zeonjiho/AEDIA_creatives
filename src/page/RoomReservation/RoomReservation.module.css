@@ -4,10 +4,11 @@
     box-sizing: border-box;
     padding: 20px;
     margin: 0;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -140,7 +141,7 @@
     grid-template-columns: 350px 1fr;
     gap: 20px;
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
     z-index: 1;
 }
@@ -406,6 +407,7 @@
 .schedule_grid {
     display: flex;
     flex: 1;
+    min-height: 500px;
     overflow: auto;
 }
 
@@ -779,4 +781,210 @@
     color: #888;
     font-style: italic;
     font-size: 13px;
+}
+
+/* 선택된 회의실 정보 스타일 */
+.selected_room_info {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    animation: fadeIn 0.3s ease;
+}
+
+.room_detail {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.room_detail span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* 회의실 선택 안내 메시지 */
+.no_room_selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    color: var(--text-tertiary);
+    font-size: 16px;
+    text-align: center;
+    height: 100%;
+}
+
+/* 시간대별 예약 현황 */
+.time_slots_container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.time_slot_row {
+    display: flex;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.time_slot_row:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.time_slot_row.reserved {
+    border-color: var(--accent-color);
+}
+
+.time_indicator {
+    width: 120px;
+    min-width: 120px;
+    padding: 12px;
+    background-color: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+.reservation_block {
+    flex: 1;
+    padding: 12px 16px;
+    background-color: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 80px;
+    transition: all 0.2s ease;
+}
+
+.reservation_block:hover {
+    filter: brightness(1.1);
+}
+
+.reservation_title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.reservation_details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.detail_item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+}
+
+.empty_slot {
+    flex: 1;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 80px;
+}
+
+.empty_slot:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.05);
+}
+
+.add_reservation {
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.empty_slot:hover .add_reservation {
+    color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.participants_preview {
+    display: flex;
+    align-items: center;
+}
+
+.participant_preview {
+    margin-left: -5px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid white;
+    overflow: hidden;
+    background-color: var(--bg-secondary);
+}
+
+.participant_preview:first-child {
+    margin-left: 0;
+}
+
+.participant_avatar_small {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.more_participants {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -5px;
+    border: 2px solid white;
+}
+
+@media (max-width: 768px) {
+    .time_slots_container {
+        padding: 10px;
+    }
+    
+    .time_indicator {
+        width: 90px;
+        min-width: 90px;
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .reservation_title {
+        font-size: 14px;
+    }
+    
+    .reservation_details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
 } 

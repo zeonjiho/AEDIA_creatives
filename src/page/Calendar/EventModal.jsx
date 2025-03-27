@@ -15,18 +15,32 @@ import { users } from '../../data/mockDatabase';
  * @returns {JSX.Element}
  */
 const EventModal = ({ onClose, onSave, onDelete, event, initialDate }) => {
+  // 기본 색상 맵 정의
+  const colorMap = {
+    1: '#4285F4', // 파랑
+    2: '#EA4335', // 빨강
+    3: '#34A853', // 초록
+    4: '#FBBC05', // 노랑
+    5: '#8E24AA', // 보라
+    6: '#16A2B8', // 청록
+    7: '#FF9800', // 주황
+    8: '#607D8B', // 회색
+    9: '#795548', // 갈색
+    10: '#009688', // 청록
+  };
+
   // 이벤트 상태 초기화
   const [eventData, setEventData] = useState({
     id: event?.id || null,
     title: event?.title || '',
-    description: event?.description || '',
+    description: event?.resource?.description || '',
     date: event?.date || initialDate || new Date(),
     start: event?.start || initialDate || new Date(),
     end: event?.end || (initialDate ? new Date(initialDate.getTime() + 60 * 60 * 1000) : new Date(new Date().getTime() + 60 * 60 * 1000)),
-    location: event?.location || '',
-    participants: event?.participants || [],
-    colorTag: event?.colorTag || 1,
-    color: event?.color || 'var(--color-tag-1)'
+    location: event?.resource?.location || '',
+    participants: event?.resource?.participants || [],
+    colorTag: event?.resource?.colorTag || 1,
+    color: colorMap[event?.resource?.colorTag || 1]
   });
 
   // 입력 변경 핸들러
@@ -93,14 +107,24 @@ const EventModal = ({ onClose, onSave, onDelete, event, initialDate }) => {
     setEventData(prev => ({
       ...prev,
       colorTag,
-      color: `var(--color-tag-${colorTag})`
+      color: colorMap[colorTag]
     }));
   };
 
   // 저장 핸들러
   const handleSave = (e) => {
     e.preventDefault();
-    onSave(eventData);
+    // resource 형식으로 변환
+    const savedEventData = {
+      ...eventData,
+      resource: {
+        description: eventData.description,
+        location: eventData.location,
+        colorTag: eventData.colorTag,
+        participants: eventData.participants
+      }
+    };
+    onSave(savedEventData);
   };
 
   // 삭제 핸들러
@@ -254,7 +278,7 @@ const EventModal = ({ onClose, onSave, onDelete, event, initialDate }) => {
                 <div
                   key={tag}
                   className={`${styles.colorTag} ${eventData.colorTag === tag ? styles.selectedColor : ''}`}
-                  style={{ backgroundColor: `var(--color-tag-${tag})` }}
+                  style={{ backgroundColor: colorMap[tag] }}
                   onClick={() => handleColorTagChange(tag)}
                 />
               ))}

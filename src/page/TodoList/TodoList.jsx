@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ss from './TodoList.module.css'
-import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaClipboardCheck, FaRegClock, FaSun, FaMoon, FaQuestionCircle, FaInfoCircle } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaClipboardCheck, FaRegClock, FaInfoCircle } from 'react-icons/fa'
 import { todos as initialTodos, addTodo, updateTodo, deleteTodo, currentUser } from '../../data/mockDatabase'
 import { parseNaturalLanguageTodo, formatParsedTodo } from '../../utils/naturalLanguageUtils'
 
@@ -18,15 +18,6 @@ const TodoList = () => {
     const [editTime, setEditTime] = useState('')
     const [parsedTodo, setParsedTodo] = useState(null)
     const [showParsedPreview, setShowParsedPreview] = useState(false)
-    
-    // 테마 상태 관리 - 로컬 스토리지에서 불러오기
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        // 로컬 스토리지에서 테마 설정 불러오기
-        const savedTheme = localStorage.getItem('theme')
-        return savedTheme === 'dark'
-    })
-    
-    const [isCustomizeMode, setIsCustomizeMode] = useState(false)
     
     // 현재 날짜 및 시간 상태
     const [currentDate, setCurrentDate] = useState(new Date())
@@ -62,53 +53,11 @@ const TodoList = () => {
     // 시간 포맷팅 - 영어로 변경 (초 단위 포함)
     const formattedTime = currentTime.toLocaleTimeString('en-US');
     
-    // 테마 전환 함수
-    const toggleTheme = () => {
-        const newTheme = !isDarkMode;
-        setIsDarkMode(newTheme);
-        
-        // 테마 변경 및 로컬 스토리지에 저장
-        const themeValue = newTheme ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', themeValue);
-        localStorage.setItem('theme', themeValue);
-    };
-
-    // 커스터마이징 모드 변경 함수
-    const handleCustomizeModeChange = (mode) => {
-        setIsCustomizeMode(mode);
-    };
-
-    // 커스터마이징 저장 함수
-    const saveCustomization = () => {
-        setIsCustomizeMode(false);
-    };
-
-    // 커스터마이징 취소 함수
-    const cancelCustomization = () => {
-        setIsCustomizeMode(false);
-    };
-    
-    // 초기 데이터 로드 및 테마 설정
+    // 초기 데이터 로드
     useEffect(() => {
         // 현재 사용자의 할 일만 필터링
         const userTodos = initialTodos.filter(todo => todo.userId === currentUser.id)
         setTodos(userTodos)
-        
-        // 로컬 스토리지에서 테마 설정 불러오기
-        const savedTheme = localStorage.getItem('theme')
-        
-        // 저장된 테마가 없으면 시스템 테마 감지
-        if (!savedTheme) {
-            const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const themeValue = prefersDarkMode ? 'dark' : 'light';
-            setIsDarkMode(prefersDarkMode);
-            document.documentElement.setAttribute('data-theme', themeValue);
-            localStorage.setItem('theme', themeValue);
-        } else {
-            // 저장된 테마가 있으면 적용
-            setIsDarkMode(savedTheme === 'dark');
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        }
     }, [])
     
     // 필터링된 할 일 목록
@@ -298,36 +247,9 @@ const TodoList = () => {
             {/* 대시보드 헤더 */}
             <div className={ss.dashboard_header}>
                 <div>
-                    <h1 className={ss.dashboard_title}>
-                        {isCustomizeMode ? 'Edit Mode' : 'My Todo List'}
-                    </h1>
+                    <h1 className={ss.dashboard_title}>My Todo List</h1>
                     <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>
-                
-                {/* 커스터마이징 모드 컨트롤 */}
-                {isCustomizeMode ? (
-                    <div className={ss.customize_controls}>
-                        <button 
-                            className={`${ss.customize_btn} ${ss.save_btn}`} 
-                            onClick={saveCustomization}
-                        >
-                            저장
-                        </button>
-                        <button 
-                            className={`${ss.customize_btn} ${ss.cancel_btn}`} 
-                            onClick={cancelCustomization}
-                        >
-                            취소
-                        </button>
-                    </div>
-                ) : (
-                    <button 
-                        className={`${ss.customize_btn} ${ss.edit_btn}`} 
-                        onClick={() => handleCustomizeModeChange(true)}
-                    >
-                        Change Layout
-                    </button>
-                )}
             </div>
             
             {/* 할 일 추가 폼 */}
@@ -340,34 +262,35 @@ const TodoList = () => {
                         value={newTodoText}
                         onChange={handleNaturalLanguageInput}
                     />
-                    <div className={ss.dateTimePickerContainer}>
-                        <div className={ss.datePickerContainer}>
-                            <FaCalendarAlt className={ss.calendarIcon} />
-                            <input
-                                type="date"
-                                className={ss.datePicker}
-                                value={dueDate}
-                                onChange={(e) => setDueDate(e.target.value)}
-                            />
-                        </div>
-                        <div className={ss.timePickerContainer}>
-                            <FaRegClock className={ss.clockIcon} />
-                            <input
-                                type="time"
-                                className={ss.timePicker}
-                                value={parsedTodo?.dueTime || ''}
-                                onChange={(e) => {
-                                    if (parsedTodo) {
-                                        setParsedTodo({...parsedTodo, dueTime: e.target.value});
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
                     <button type="submit" className={ss.addButton}>
                         <FaPlus />
-                        <span>추가</span>
+                        <span className={ss.addButtonText}>추가</span>
                     </button>
+                </div>
+                
+                <div className={ss.dateTimePickerContainer}>
+                    <div className={ss.datePickerContainer}>
+                        <FaCalendarAlt className={ss.calendarIcon} />
+                        <input
+                            type="date"
+                            className={ss.datePicker}
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                        />
+                    </div>
+                    <div className={ss.timePickerContainer}>
+                        <FaRegClock className={ss.clockIcon} />
+                        <input
+                            type="time"
+                            className={ss.timePicker}
+                            value={parsedTodo?.dueTime || ''}
+                            onChange={(e) => {
+                                if (parsedTodo) {
+                                    setParsedTodo({...parsedTodo, dueTime: e.target.value});
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
                 
                 {/* 자연어 처리 미리보기 */}
@@ -390,7 +313,7 @@ const TodoList = () => {
                 <div className={ss.howToUseContainer}>
                     <button type="button" className={ss.howToUseBtn}>
                         <FaInfoCircle className={ss.howToUseIcon} />
-                        <span>How to use</span>
+                        <span>사용 방법</span>
                     </button>
                     <div className={ss.howToUseTooltip}>
                         <h4>자연어로 할 일 입력하기</h4>
