@@ -21,9 +21,12 @@ const Attendance = () => {
 
     // 허용된 위치 좌표 (예: 회사 위치)
     const ALLOWED_LOCATION = {
-        latitude: 37.708305, // 와석순환로 15 좌표
-        longitude: 126.756299,
-        radius: 100 // 미터 단위의 허용 반경
+        // latitude: 37.708305, // 와석순환로 15 좌표
+        // longitude: 126.756299,
+        // radius: 100 // 미터 단위의 허용 반경
+        latitude: 37.520574, // 서울시청 좌표
+        longitude: 127.021637,
+        radius: 50 // 미터 단위의 허용 반경
     }
 
     // 현재 시간 업데이트ㄴ
