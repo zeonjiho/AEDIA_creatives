@@ -168,4 +168,7 @@ body {
   left: 0;
   overflow-y: auto;
   overscroll-behavior: none;
+  /* 아래 두 속성은 attendance.module.css에서 전역으로 적용되어 있던 것에서 빼 온 것. */
+  display: flex;
+  flex-direction: column;
 }
