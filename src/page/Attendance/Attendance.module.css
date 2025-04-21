@@ -4,14 +4,14 @@
     box-sizing: border-box;
     padding: 20px 20px 0;
     margin: 0 auto;
-    height: 100vh;
+    height: calc(100vh - 110px);
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
     overflow: visible;
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    /* min-height: 100vh; */
     padding-bottom: 0;
 }
 
@@ -99,7 +99,7 @@
     flex: 1;
     position: relative;
     z-index: 1;
-    margin: 10px auto 200px;
+    margin: 50px auto 160px;
     width: 100%;
 }
 
