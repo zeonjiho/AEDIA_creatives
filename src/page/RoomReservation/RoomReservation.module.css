@@ -1,101 +1,67 @@
-.roomReservation_wrap {
+.container {
     width: 100%;
     max-width: 100%;
-    box-sizing: border-box;
-    padding: 20px;
-    margin: 0;
-    height: auto;
+    padding: 40px;
+    margin: 0 auto;
     min-height: 100vh;
     background-color: var(--bg-primary);
-    transition: all 0.3s ease;
-    overflow: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     position: relative;
     display: flex;
     flex-direction: column;
 }
 
-.roomReservation_wrap::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* background: linear-gradient(135deg, rgba(var(--bg-secondary-rgb), 0.05) 0%, rgba(var(--text-primary-rgb), 0.05) 100%); */
-    z-index: 0;
-    pointer-events: none;
-}
-
-/* 헤더 스타일 */
-.roomReservation_header {
+.header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 1;
+    margin-bottom: 40px;
 }
 
-.roomReservation_title {
-    font-size: 50px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--text-primary);
-    text-align: left;
-    transition: color 0.3s ease;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-primary);
-}
-
-.roomReservation_date {
-    font-size: 16px;
-    color: var(--text-secondary);
-    text-align: left;
-    margin-bottom: 0;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-mono);
-}
-
-/* 버튼 스타일 */
-.roomReservation_controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.roomReservation_btn {
-    padding: 10px 20px;
-    border-radius: var(--border-radius-md);
-    background-color: transparent;
+.header h1 {
+    font-size: 2.2rem;
     font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    outline: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin: 0 0 30px 0;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
-.today_btn {
+.date_navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 6px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.today_button {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.today_btn:hover {
-    background-color: var(--bg-tertiary);
+.today_button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
-.navigation_buttons {
+.date_controls {
     display: flex;
-    gap: 5px;
+    align-items: center;
+    gap: 10px;
 }
 
-.nav_btn {
+.nav_button {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -104,514 +70,615 @@
     justify-content: center;
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.nav_btn:hover {
-    background-color: var(--bg-tertiary);
+.nav_button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
+
+.current_date {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 10px;
+}
+
 
 /* 상태 메시지 */
+
 .status_message {
     padding: 12px 20px;
-    border-radius: var(--border-radius-md);
+    border-radius: 12px;
     margin-bottom: 20px;
     text-align: center;
     font-weight: 500;
     animation: fadeIn 0.3s ease;
-    position: relative;
-    z-index: 1;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .success {
-    background-color: var(--success-color);
+    background-color: rgba(var(--success-color-rgb), 0.8);
     color: white;
 }
 
 .error {
-    background-color: var(--error-color);
+    background-color: rgba(var(--error-color-rgb), 0.8);
     color: white;
 }
 
-/* 콘텐츠 레이아웃 */
-.roomReservation_content {
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 20px;
-    flex: 1;
-    overflow: auto;
-    position: relative;
-    z-index: 1;
+
+/* 필터 버튼 */
+
+.filter_toggle {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
-/* 카드 공통 스타일 */
-.room_list_card, .schedule_card {
+.filter_toggle:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
+}
+
+.filter_toggle:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+
+/* 필터 패널 */
+
+.filters_panel {
     background-color: var(--card-bg);
     border-radius: 16px;
-    box-shadow: var(--card-shadow);
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    animation: fadeIn 0.3s ease;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search_box {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+}
+
+.search_icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.search_box input {
+    width: 100%;
+    padding: 14px 14px 14px 45px;
+    border-radius: 12px;
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.search_box input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.filter_group {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+}
+
+.filter_group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.filter_group select {
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.filter_group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+
+/* 콘텐츠 그리드 */
+
+.content_grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 30px;
+    flex: 1;
+    margin-bottom: 40px;
+}
+
+
+/* 카드 공통 스타일 */
+
+.rooms_card,
+.schedule_card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card_header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
 }
 
-.card_icon {
-    font-size: 24px;
-    color: var(--accent-color);
+.header_icon {
+    font-size: 1.3rem;
+    color: var(--primary-color);
 }
 
 .card_header h2 {
-    font-size: 18px;
+    font-size: 1.2rem;
     font-weight: 600;
     margin: 0;
     color: var(--text-primary);
+    letter-spacing: -0.3px;
 }
 
-/* 예약 현황 요약 스타일 */
-.reservation_summary {
+
+/* 통계 요약 */
+
+.stats_summary {
+    display: flex;
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.summary_stats {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    gap: 15px;
 }
 
 .stat_item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
+    flex: 1;
     background-color: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-    min-width: 100px;
-    border: 1px solid var(--border-color);
-    transition: transform 0.2s ease;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border: 1px solid rgba(var(--border-color-rgb), 0.1);
 }
 
 .stat_item:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--card-shadow);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .stat_value {
-    font-size: 28px;
+    font-size: 1.8rem;
     font-weight: 700;
-    color: var(--accent-color);
+    color: var(--primary-color);
     margin-bottom: 5px;
 }
 
 .stat_label {
-    font-size: 14px;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    text-align: center;
+}
+
+
+/* 회의실 그리드 */
+
+.rooms_grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+.room_card {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 2px solid transparent;
+}
+
+.room_card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+}
+
+.room_card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 12px 40px rgba(var(--primary-color-rgb), 0.15);
+}
+
+.room_content {
+    padding: 20px;
+}
+
+.room_title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.room_meta {
+    display: flex;
+    justify-content: flex-start;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
 }
 
 .room_utilization {
-    margin-top: 10px;
-}
-
-.room_utilization h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 15px 0;
-    color: var(--text-primary);
-}
-
-.utilization_list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.utilization_item {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.room_name {
-    width: 120px;
-    font-size: 14px;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.utilization_bar_container {
-    flex: 1;
-    height: 8px;
-    background-color: var(--bg-tertiary);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.utilization_bar {
-    height: 100%;
-    background-color: var(--accent-color);
-    border-radius: 4px;
-}
-
-.utilization_value {
-    width: 40px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-align: right;
-}
-
-/* 회의실 목록 스타일 */
-.search_bar {
-    position: relative;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.search_icon {
-    position: absolute;
-    left: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-tertiary);
-}
-
-.search_bar input {
-    width: 100%;
-    padding: 10px 10px 10px 35px;
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius-md);
-    font-size: 14px;
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-}
-
-.filter_controls {
-    padding: 15px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.filter_item {
-    display: flex;
-    align-items: center;
-}
-
-.filter_item label {
-    font-size: 14px;
-    color: var(--text-secondary);
-    width: 80px;
-}
-
-.filter_item select {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius-md);
-    font-size: 14px;
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-}
-
-.room_list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.room_item {
-    background-color: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-    padding: 15px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-color);
-}
-
-.room_item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--card-shadow);
-}
-
-.room_item.selected {
-    border: 2px solid var(--accent-color);
-    background-color: rgba(var(--accent-color-rgb), 0.05);
-}
-
-.room_header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.room_header h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.room_capacity {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 14px;
-    color: var(--text-secondary);
+    gap: 8px;
 }
 
 .room_facilities {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 8px;
 }
 
 .facility_tag {
+    font-size: 0.8rem;
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    color: var(--primary-color);
+    padding: 6px 14px;
+    border-radius: 30px;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.no_rooms {
+    grid-column: 1 / -1;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding: 4px 8px;
-    background-color: var(--bg-tertiary);
-    border-radius: var(--border-radius-sm);
-    font-size: 12px;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--text-secondary);
+    text-align: center;
+    animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.no_rooms svg {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    animation: float 3s ease-in-out infinite;
+    color: var(--primary-color);
+}
+
+.no_rooms p {
+    font-size: 1.1rem;
+}
+
+
+/* 예약 일정 카드 */
+
+.schedule_content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.selected_room_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+}
+
+.room_detail h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.room_info {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
     color: var(--text-secondary);
 }
 
-.empty_state {
-    padding: 30px 0;
-    text-align: center;
-    color: var(--text-tertiary);
-}
-
-/* 예약 일정 스타일 */
-.schedule_grid {
+.room_info span {
     display: flex;
-    flex: 1;
-    min-height: 500px;
-    overflow: auto;
+    align-items: center;
+    gap: 8px;
 }
 
-.time_column {
-    min-width: 60px;
-    border-right: 1px solid var(--border-color);
-    background-color: var(--bg-secondary);
+.close_button {
+    background: rgba(var(--bg-color-rgb), 0.1);
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.close_button:hover {
+    background-color: var(--card-bg);
+    transform: rotate(90deg);
+}
+
+
+/* 시간 슬롯 */
+
+.time_slots {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 60vh;
 }
 
 .time_slot {
-    height: 80px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.room_columns {
-    display: flex;
-    flex: 1;
-}
-
-.room_column {
-    flex: 1;
-    min-width: 150px;
-    border-right: 1px solid var(--border-color);
-}
-
-.room_column:last-child {
-    border-right: none;
-}
-
-.room_column_header {
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    padding: 0 10px;
-    text-align: center;
-}
-
-.room_time_slots {
-    display: flex;
-    flex-direction: column;
-}
-
-.room_time_slot {
-    height: 60px;
-    border-bottom: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    position: relative;
-}
-
-.room_time_slot:hover {
-    background-color: rgba(var(--accent-color-rgb), 0.05);
-}
-
-.room_time_slot.reserved {
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-    cursor: pointer;
-}
-
-.reservation_info {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 6px 8px;
-    border-radius: var(--border-radius-sm);
-    background-color: var(--accent-color);
-    color: white;
+    border-radius: 12px;
     overflow: hidden;
-    position: relative;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: var(--bg-secondary);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.room_time_slot:hover .reservation_info {
+.time_slot:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.reservation_info::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.5);
+.time_label {
+    width: 60px;
+    padding: 15px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--bg-tertiary-rgb), 0.5);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-right: 1px solid rgba(var(--border-color-rgb), 0.1);
+}
+
+.empty_slot {
+    flex: 1;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.empty_slot:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.add_reservation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.empty_slot:hover .add_reservation {
+    color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.reservation_block {
+    flex: 1;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reservation_block:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .reservation_title {
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 1rem;
+    margin-bottom: 6px;
+    color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-left: 8px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .reservation_time {
-    font-size: 12px;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-left: 8px;
-}
-
-.reservation_details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-left: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .reservation_project {
     display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 10px;
+    font-size: 0.8rem;
     background-color: rgba(255, 255, 255, 0.2);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.reservation_participants {
+.no_selection {
+    flex: 1;
     display: flex;
-    align-items: center;
-}
-
-.participants_preview {
-    display: flex;
-    align-items: center;
-}
-
-.participant_preview {
-    margin-left: -5px;
-    border: 1px solid var(--accent-color);
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.participant_preview:first-child {
-    margin-left: 0;
-}
-
-.participant_avatar_small {
-    width: 18px;
-    height: 18px;
-    object-fit: cover;
-}
-
-.more_participants {
-    margin-left: 3px;
-    font-size: 10px;
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 60px 0;
+    color: var(--text-secondary);
+    text-align: center;
+    animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.no_participants {
-    font-size: 10px;
-    opacity: 0.7;
+.no_selection_icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    animation: float 3s ease-in-out infinite;
+    color: var(--primary-color);
 }
 
-.add_reservation {
+.no_selection p {
+    font-size: 1.1rem;
+}
+
+
+/* 모달 스타일 */
+
+.modal_wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: var(--text-tertiary);
-    opacity: 0.3;
-    transition: opacity 0.2s ease;
+    align-items: center;
+    z-index: 999;
+    animation: fadeIn 0.2s ease-in-out;
 }
 
-.room_time_slot:hover .add_reservation {
-    opacity: 1;
-    color: var(--accent-color);
+.modal_background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: -1;
+    animation: fadeBackground 0.3s ease-in-out;
 }
+
+.modal_panel {
+    position: relative;
+    width: 800px;
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: center;
+}
+
+.panel_header {
+    padding: 28px 32px;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    position: relative;
+    background-color: var(--card-bg);
+}
+
+.panel_title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel_title h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.panel_content {
+    padding: 32px;
+    overflow-y: auto;
+    max-height: calc(90vh - 100px);
+}
+
 
 /* 애니메이션 */
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -621,370 +688,95 @@
     }
 }
 
-/* 반응형 스타일 */
-@media (max-width: 1024px) {
-    .roomReservation_wrap {
-        padding: 15px;
+@keyframes fadeBackground {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
     }
-    
-    .roomReservation_title {
-        font-size: 36px;
+    to {
+        opacity: 1;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
-    
-    .roomReservation_date {
-        font-size: 14px;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
     }
-    
-    .roomReservation_content {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+
+/* 반응형 */
+
+@media (max-width: 992px) {
+    .modal_panel {
+        width: 700px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 24px;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .header h1 {
+        margin-bottom: 0;
+        font-size: 1.8rem;
+    }
+    .filter_toggle {
+        position: static;
+        margin-top: 20px;
+        align-self: flex-end;
+    }
+    .content_grid {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        gap: 24px;
     }
-    
-    .room_list_card {
+    .time_slots {
+        max-height: 400px;
+    }
+    .rooms_grid {
         max-height: 300px;
     }
 }
 
-@media (max-width: 639px) {
-    .roomReservation_wrap {
+@media (max-width: 480px) {
+    .container {
         padding: 16px;
     }
-    
-    .roomReservation_title {
-        font-size: 20px;
-    }
-    
-    .roomReservation_date {
-        font-size: 14px;
-    }
-    
-    .roomReservation_header {
+    .filters_panel {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        padding: 16px;
     }
-    
-    .form_row {
-        flex-direction: column;
+    .date_navigation {
+        width: 100%;
     }
-    
-    .form_actions {
-        flex-direction: column;
+    .search_box,
+    .filter_group {
+        width: 100%;
     }
 }
-
-.project_selector {
-    position: relative;
-    width: 100%;
-}
-
-.project_search {
-    position: relative;
-    width: 100%;
-}
-
-.project_search_input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.search_icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #888;
-}
-
-.project_dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    margin-top: 4px;
-}
-
-.project_item {
-    padding: 10px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.2s;
-}
-
-.project_item:last-child {
-    border-bottom: none;
-}
-
-.project_item:hover {
-    background-color: #f5f5f5;
-}
-
-.project_title {
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.project_description {
-    font-size: 12px;
-    color: #666;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.no_results {
-    padding: 12px;
-    text-align: center;
-    color: #888;
-}
-
-.selected_project {
-    margin-top: 8px;
-    min-height: 32px;
-}
-
-.project_tag {
-    display: inline-flex;
-    align-items: center;
-    background-color: #e3f2fd;
-    color: #1976d2;
-    padding: 6px 10px;
-    border-radius: 16px;
-    font-size: 13px;
-    margin-right: 8px;
-    margin-bottom: 8px;
-}
-
-.clear_project {
-    background: none;
-    border: none;
-    color: #1976d2;
-    cursor: pointer;
-    margin-left: 6px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-}
-
-.no_project {
-    color: #888;
-    font-style: italic;
-    font-size: 13px;
-}
-
-/* 선택된 회의실 정보 스타일 */
-.selected_room_info {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-secondary);
-    animation: fadeIn 0.3s ease;
-}
-
-.room_detail {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.room_detail span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--text-primary);
-}
-
-/* 회의실 선택 안내 메시지 */
-.no_room_selected {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 50px 20px;
-    color: var(--text-tertiary);
-    font-size: 16px;
-    text-align: center;
-    height: 100%;
-}
-
-/* 시간대별 예약 현황 */
-.time_slots_container {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
-    max-height: 100%;
-}
-
-.time_slot_row {
-    display: flex;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    transition: all 0.2s ease;
-}
-
-.time_slot_row:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.time_slot_row.reserved {
-    border-color: var(--accent-color);
-}
-
-.time_indicator {
-    width: 120px;
-    min-width: 120px;
-    padding: 12px;
-    background-color: var(--bg-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    border-right: 1px solid var(--border-color);
-}
-
-.reservation_block {
-    flex: 1;
-    padding: 12px 16px;
-    background-color: var(--accent-color);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 80px;
-    transition: all 0.2s ease;
-}
-
-.reservation_block:hover {
-    filter: brightness(1.1);
-}
-
-.reservation_title {
-    font-weight: 600;
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-
-.reservation_details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-}
-
-.detail_item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-right: 12px;
-}
-
-.empty_slot {
-    flex: 1;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 80px;
-}
-
-.empty_slot:hover {
-    background-color: rgba(var(--accent-color-rgb), 0.05);
-}
-
-.add_reservation {
-    color: var(--text-secondary);
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.empty_slot:hover .add_reservation {
-    color: var(--accent-color);
-    transform: scale(1.05);
-}
-
-.participants_preview {
-    display: flex;
-    align-items: center;
-}
-
-.participant_preview {
-    margin-left: -5px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid white;
-    overflow: hidden;
-    background-color: var(--bg-secondary);
-}
-
-.participant_preview:first-child {
-    margin-left: 0;
-}
-
-.participant_avatar_small {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.more_participants {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: -5px;
-    border: 2px solid white;
-}
-
-@media (max-width: 768px) {
-    .time_slots_container {
-        padding: 10px;
-    }
-    
-    .time_indicator {
-        width: 90px;
-        min-width: 90px;
-        padding: 8px;
-        font-size: 12px;
-    }
-    
-    .reservation_title {
-        font-size: 14px;
-    }
-    
-    .reservation_details {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-} 

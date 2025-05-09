@@ -25,7 +25,9 @@
     pointer-events: none;
 }
 
+
 /* 대시보드 헤더 스타일 */
+
 .dashboard_header {
     display: flex;
     justify-content: space-between;
@@ -57,7 +59,78 @@
     font-family: var(--font-mono);
 }
 
+
+/* 프로젝트 필터 스타일 */
+
+.projectFilterContainer {
+    position: relative;
+    z-index: 10;
+}
+
+.projectFilterButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.projectFilterButton:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.projectDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    z-index: 100;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+}
+
+.projectOption {
+    padding: 12px 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectOption:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.projectOption.selected {
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.projectColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+
 /* 커스터마이징 모드 컨트롤 스타일 */
+
 .customize_controls {
     display: flex;
     gap: 10px;
@@ -95,7 +168,9 @@
     background-color: var(--bg-tertiary);
 }
 
+
 /* 레이아웃 수정 버튼 스타일 */
+
 .edit_btn {
     background-color: transparent;
     color: var(--text-primary);
@@ -106,7 +181,9 @@
     background-color: var(--bg-tertiary);
 }
 
+
 /* 테마 토글 버튼 스타일 */
+
 .themeToggleBtn {
     width: 44px;
     height: 44px;
@@ -129,7 +206,9 @@
     box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.3);
 }
 
+
 /* 할 일 추가 폼 */
+
 .addTodoForm {
     margin-bottom: 2.5rem;
     background-color: var(--glass-effect);
@@ -166,21 +245,33 @@
     box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
 }
 
-.dateTimePickerContainer {
+
+/* 입력 옵션 컨테이너 */
+
+.inputOptionsContainer {
     display: flex;
-    gap: 0.8rem;
+    gap: 1rem;
     width: 100%;
     margin-bottom: 0.8rem;
 }
 
-.datePickerContainer, .timePickerContainer {
+.dateTimePickerContainer {
+    display: flex;
+    gap: 0.8rem;
+    flex: 3;
+}
+
+.datePickerContainer,
+.timePickerContainer {
     position: relative;
     display: flex;
     align-items: center;
     flex: 1;
 }
 
-.calendarIcon, .clockIcon {
+.calendarIcon,
+.clockIcon,
+.projectIcon {
     position: absolute;
     left: 0.8rem;
     color: var(--text-tertiary);
@@ -188,7 +279,8 @@
     pointer-events: none;
 }
 
-.datePicker, .timePicker {
+.datePicker,
+.timePicker {
     padding: 0.8rem 1.2rem 0.8rem 2.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
@@ -200,7 +292,42 @@
     box-sizing: border-box;
 }
 
-.datePicker:focus, .timePicker:focus {
+.datePicker:focus,
+.timePicker:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
+
+/* 프로젝트 선택 스타일 */
+
+.projectSelectContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 2;
+}
+
+.projectSelect {
+    padding: 0.8rem 1.2rem 0.8rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    cursor: pointer;
+}
+
+.projectSelect:focus {
     outline: none;
     border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
@@ -230,7 +357,9 @@
     box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.4);
 }
 
+
 /* 필터 버튼 */
+
 .filterButtons {
     display: flex;
     gap: 1rem;
@@ -267,7 +396,9 @@
     box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.3);
 }
 
+
 /* 할 일 목록 */
+
 .todoList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -319,12 +450,12 @@
     background-color: rgba(var(--accent-color-rgb), 0.1);
 }
 
-.todoCheckbox input[type="checkbox"]:checked + label {
+.todoCheckbox input[type="checkbox"]:checked+label {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
 }
 
-.todoCheckbox input[type="checkbox"]:checked + label::after {
+.todoCheckbox input[type="checkbox"]:checked+label::after {
     content: '✓';
     position: absolute;
     top: 50%;
@@ -352,6 +483,27 @@
 .todoItem.completed .todoText {
     text-decoration: line-through;
     color: var(--text-tertiary);
+}
+
+
+/* 투두 메타 정보 */
+
+.todoMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.todoProject {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid;
+    font-weight: 500;
 }
 
 .todoDueDate {
@@ -384,7 +536,10 @@
     gap: 0.8rem;
 }
 
-.editButton, .deleteButton, .saveButton, .cancelButton {
+.editButton,
+.deleteButton,
+.saveButton,
+.cancelButton {
     background-color: rgba(var(--bg-tertiary-rgb), 0.5);
     border: none;
     font-size: 1rem;
@@ -415,7 +570,10 @@
     color: var(--danger-color);
 }
 
-.editButton:hover, .deleteButton:hover, .saveButton:hover, .cancelButton:hover {
+.editButton:hover,
+.deleteButton:hover,
+.saveButton:hover,
+.cancelButton:hover {
     transform: scale(1.1);
 }
 
@@ -435,7 +593,9 @@
     background-color: rgba(var(--danger-color-rgb), 0.1);
 }
 
+
 /* 편집 모드 */
+
 .editMode {
     display: flex;
     flex-direction: column;
@@ -443,9 +603,39 @@
     width: 100%;
 }
 
+.editOptionsContainer {
+    display: flex;
+    gap: 0.8rem;
+}
+
 .editDateTimeContainer {
     display: flex;
     gap: 0.5rem;
+    flex: 3;
+}
+
+.editProjectContainer {
+    flex: 2;
+}
+
+.editProjectSelect {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+}
+
+.editProjectSelect:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .editInput {
@@ -463,7 +653,8 @@
     border-color: var(--accent-color);
 }
 
-.editDatePicker, .editTimePicker {
+.editDatePicker,
+.editTimePicker {
     padding: 0.8rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
@@ -480,12 +671,15 @@
     flex: 2;
 }
 
-.editDatePicker:focus, .editTimePicker:focus {
+.editDatePicker:focus,
+.editTimePicker:focus {
     outline: none;
     border-color: var(--accent-color);
 }
 
+
 /* 빈 상태 */
+
 .emptyState {
     text-align: center;
     padding: 4rem 0;
@@ -497,10 +691,13 @@
     border: var(--glass-border);
     backdrop-filter: blur(var(--glass-backdrop));
     -webkit-backdrop-filter: blur(var(--glass-backdrop));
-    grid-column: 1 / -1; /* 빈 상태 메시지는 전체 너비 차지 */
+    grid-column: 1 / -1;
+    /* 빈 상태 메시지는 전체 너비 차지 */
 }
 
+
 /* 통계 */
+
 .todoStats {
     display: flex;
     justify-content: space-around;
@@ -535,7 +732,9 @@
     font-family: var(--font-primary);
 }
 
+
 /* 반응형 */
+
 @media (min-width: 1200px) {
     .todoList {
         grid-template-columns: repeat(2, 1fr);
@@ -556,94 +755,107 @@
         height: auto;
         min-height: 100vh;
     }
-    
+    .dashboard_header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .projectFilterContainer {
+        width: 100%;
+    }
+    .projectFilterButton {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .projectDropdown {
+        width: 100%;
+    }
     .dashboard_title {
         font-size: 2rem;
         margin-bottom: 5px;
     }
-    
     .dashboard_date {
         font-size: 0.8rem;
     }
-    
     .inputGroup {
         flex-direction: column;
         gap: 0.5rem;
     }
-    
     .addButton {
         width: 100%;
         padding: 0.8rem;
     }
-    
+    .inputOptionsContainer {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
     .dateTimePickerContainer {
         flex-direction: column;
         gap: 0.5rem;
     }
-    
-    .datePicker, .timePicker {
+    .datePicker,
+    .timePicker,
+    .projectSelect {
         width: 100%;
     }
-    
     .addButtonText {
         display: inline-block;
     }
-    
     .filterButtons {
         flex-wrap: wrap;
         gap: 0.5rem;
     }
-    
     .filterButton {
         flex: 1;
         padding: 0.6rem 1rem;
         font-size: 0.9rem;
         min-width: 80px;
     }
-    
     .todoStats {
         flex-direction: column;
         gap: 0.5rem;
         margin-bottom: 1.5rem;
     }
-    
     .statItem {
         flex: 1;
         padding: 0.8rem;
     }
-    
     .todoList {
         grid-template-columns: 1fr;
     }
-    
     .todoItem {
         padding: 0.8rem;
     }
-    
+    .todoMeta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
     .todoActions {
         gap: 0.3rem;
     }
-    
     .editMode {
         flex-direction: column;
         gap: 0.5rem;
     }
-    
+    .editOptionsContainer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
     .editDateTimeContainer {
         flex-direction: column;
         gap: 0.5rem;
         width: 100%;
     }
-    
-    .editInput, .editDatePicker, .editTimePicker {
+    .editInput,
+    .editDatePicker,
+    .editTimePicker,
+    .editProjectSelect {
         width: 100%;
     }
-    
     .editActions {
         margin-top: 0.5rem;
         justify-content: flex-end;
     }
-    
     .howToUseTooltip {
         width: calc(100vw - 40px);
         max-width: none;
@@ -651,39 +863,52 @@
         right: 0;
         transform: translateX(0);
     }
+    .buttonGroup {
+        width: 100%;
+    }
+    .shareButton,
+    .addButton {
+        flex: 1;
+        padding: 0.8rem;
+        min-width: auto;
+    }
 }
 
+
 /* 태블릿 레이아웃 */
+
 @media (min-width: 769px) and (max-width: 1024px) {
     .todoList {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
-    
     .dashboard_title {
         font-size: 2.5rem;
     }
-    
     .inputGroup {
         align-items: stretch;
     }
-    
-    .dateTimePickerContainer {
+    .inputOptionsContainer {
         flex-wrap: wrap;
     }
-    
-    .datePickerContainer, .timePickerContainer {
+    .datePickerContainer,
+    .timePickerContainer,
+    .projectSelectContainer {
         min-width: 150px;
     }
 }
 
+
 /* 큰 화면 레이아웃 */
+
 @media (min-width: 1025px) {
     .todoList {
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     }
 }
 
+
 /* 커스텀 스크롤바 */
+
 .todoListContainer::-webkit-scrollbar {
     width: 10px;
 }
@@ -703,68 +928,72 @@
     background-color: var(--accent-color);
 }
 
+
 /* 자연어 처리 미리보기 */
+
 .parsedPreview {
-  margin-top: 0.8rem;
-  padding: 0.8rem 1.2rem;
-  background-color: var(--bg-tertiary);
-  border-radius: var(--border-radius-sm);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  animation: fadeIn 0.3s ease;
-  border-left: 3px solid var(--accent-color);
+    margin-top: 0.8rem;
+    padding: 0.8rem 1.2rem;
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    animation: fadeIn 0.3s ease;
+    border-left: 3px solid var(--accent-color);
 }
 
 .parsedPreview p {
-  margin: 0;
-  flex: 1;
+    margin: 0;
+    flex: 1;
 }
 
 .parsedPreview strong {
-  color: var(--text-primary);
-  margin-right: 0.5rem;
+    color: var(--text-primary);
+    margin-right: 0.5rem;
 }
 
 .previewCloseBtn {
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  padding: 0.3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
 }
 
 .previewCloseBtn:hover {
-  color: var(--text-primary);
-  background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
+
 /* 다크 모드 스타일 */
+
 :global([data-theme="dark"]) .parsedPreview {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid var(--accent-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid var(--accent-color);
 }
 
 :global([data-theme="dark"]) .previewCloseBtn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .editActions {
@@ -772,105 +1001,181 @@
     gap: 0.5rem;
 }
 
+
 /* How to use 버튼 및 툴크 */
+
 .howToUseContainer {
-  position: relative;
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: flex-start;
+    position: relative;
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .howToUseBtn {
-  background: none;
-  border: none;
-  color: var(--accent-color);
-  font-size: 0.9rem;
-  padding: 0.5rem 0;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  transition: all 0.2s ease;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    gap: 0.5rem;
 }
 
 .howToUseIcon {
-  font-size: 1rem;
+    font-size: 1rem;
 }
 
 .howToUseBtn:hover {
-  color: var(--accent-hover);
+    color: var(--accent-hover);
 }
 
 .howToUseTooltip {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  width: 400px;
-  background-color: var(--bg-tertiary);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--card-shadow);
-  padding: 1.5rem;
-  z-index: 100;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  transform: translateY(-10px);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 400px;
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(-10px);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 .howToUseContainer:hover .howToUseTooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .howToUseTooltip h4 {
-  margin: 0 0 0.8rem 0;
-  font-size: 1rem;
-  color: var(--text-primary);
+    margin: 0 0 0.8rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
 }
 
 .howToUseTooltip p {
-  margin: 0 0 0.8rem 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+    margin: 0 0 0.8rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
 .howToUseTooltip ul {
-  margin: 0 0 1.2rem 0;
-  padding-left: 1.5rem;
+    margin: 0 0 1.2rem 0;
+    padding-left: 1.5rem;
 }
 
 .howToUseTooltip li {
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
 .howToUseTooltip li:last-child {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 .howToUseTooltip strong {
-  color: var(--text-primary);
-  font-weight: 600;
+    color: var(--text-primary);
+    font-weight: 600;
 }
+
 
 /* 다크 모드 스타일 */
+
 :global([data-theme="dark"]) .howToUseTooltip {
-  background-color: var(--bg-tertiary);
-  border-color: var(--border-color);
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
 }
 
-/* 반응형 스타일 */
+
+/* 버튼 그룹 스타일 */
+
+.buttonGroup {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* 공유 버튼 스타일 */
+
+.shareButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.8rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 100px;
+}
+
+.shareButton:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.shareButton.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.addButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.8rem;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.3);
+    min-width: 100px;
+}
+
+.addButton:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.4);
+}
+
+
+/* 모바일 반응형 스타일 추가 */
+
 @media (max-width: 768px) {
-  .howToUseTooltip {
-    width: 300px;
-    left: 0;
-    right: auto;
-  }
+    .buttonGroup {
+        width: 100%;
+    }
+    .shareButton,
+    .addButton {
+        flex: 1;
+        padding: 0.8rem;
+        min-width: auto;
+    }
 }

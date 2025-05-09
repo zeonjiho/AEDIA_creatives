@@ -1,593 +1,678 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ProjectStatus.module.css';
 import { 
-    getProjects, 
-    addProject, 
-    updateProject, 
-    deleteProject,
-    addTask,
-    updateTask,
-    deleteTask
-} from '../../data/mockDatabase';
-import { FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+  HiPlus, HiPencil, HiTrash, HiX, 
+  HiCalendar, HiCheckCircle, HiChartBar, HiUserGroup, 
+  HiInformationCircle, HiLightBulb, HiSave,
+  HiStar, HiDocument, HiDocumentText, HiChevronDown, HiTag
+} from 'react-icons/hi';
+
+// 프로젝트 샘플 데이터
+const sampleProjects = [
+  {
+    id: 1,
+    title: '웹 앱 개발 프로젝트',
+    status: 'production',
+    progress: 65,
+    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+    description: '새로운 소셜 미디어 플랫폼 개발 프로젝트. 프론트엔드와 백엔드 작업 진행 중.',
+    deadline: '2023-12-15',
+    tasks: [
+      { id: 1, title: '로그인 시스템 구현', status: 'completed' },
+      { id: 2, title: '사용자 프로필 페이지', status: 'in_progress' },
+      { id: 3, title: '알림 시스템 개발', status: 'planned' },
+    ],
+    team: ['김개발', '이디자인', '박백엔드']
+  },
+  {
+    id: 2,
+    title: '모바일 앱 리디자인',
+    status: 'post_production',
+    progress: 85,
+    thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3',
+    description: '기존 모바일 앱의 UI/UX 개선 프로젝트. 사용자 피드백 반영 중.',
+    deadline: '2023-11-30',
+    tasks: [
+      { id: 1, title: '와이어프레임 작성', status: 'completed' },
+      { id: 2, title: '디자인 시스템 구축', status: 'completed' },
+      { id: 3, title: '프로토타입 테스트', status: 'in_progress' },
+    ],
+    team: ['최디자이너', '정UX', '강개발']
+  },
+  {
+    id: 3,
+    title: '데이터 분석 대시보드',
+    status: 'delivery',
+    progress: 100,
+    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f',
+    description: '마케팅 데이터 시각화를 위한 대시보드 개발 프로젝트.',
+    deadline: '2023-10-15',
+    tasks: [
+      { id: 1, title: '데이터 소스 연결', status: 'completed' },
+      { id: 2, title: '차트 구현', status: 'completed' },
+      { id: 3, title: '사용자 권한 설정', status: 'completed' },
+    ],
+    team: ['임데이터', '홍분석', '유개발']
+  },
+  {
+    id: 4,
+    title: '블록체인 기반 결제 시스템',
+    status: 'development',
+    progress: 20,
+    thumbnail: 'https://images.unsplash.com/photo-1639322537228-f710d846310a',
+    description: '암호화폐를 활용한 결제 시스템 개발 프로젝트. 기술 검토 중.',
+    deadline: '2024-02-28',
+    tasks: [
+      { id: 1, title: '기술 스택 검토', status: 'completed' },
+      { id: 2, title: '스마트 컨트랙트 개발', status: 'in_progress' },
+      { id: 3, title: '보안 감사', status: 'planned' },
+    ],
+    team: ['강블록', '조개발', '윤보안']
+  },
+  {
+    id: 5,
+    title: 'AI 추천 알고리즘 개발',
+    status: 'pre_production',
+    progress: 45,
+    thumbnail: 'https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1',
+    description: '사용자 행동 기반 AI 추천 시스템 개발 프로젝트.',
+    deadline: '2023-12-30',
+    tasks: [
+      { id: 1, title: '데이터 수집 및 전처리', status: 'completed' },
+      { id: 2, title: '모델 학습', status: 'in_progress' },
+      { id: 3, title: 'A/B 테스트', status: 'planned' },
+    ],
+    team: ['김AI', '이ML', '박데이터']
+  },
+  {
+    id: 6,
+    title: '마케팅 웹사이트 개발',
+    status: 'vfx',
+    progress: 90,
+    thumbnail: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c',
+    description: '신규 제품 출시를 위한 마케팅 웹사이트 개발 프로젝트.',
+    deadline: '2023-11-15',
+    tasks: [
+      { id: 1, title: '콘텐츠 작성', status: 'completed' },
+      { id: 2, title: '디자인 구현', status: 'completed' },
+      { id: 3, title: 'SEO 최적화', status: 'in_progress' },
+    ],
+    team: ['송마케팅', '조디자인', '최개발']
+  }
+];
 
 const ProjectStatus = () => {
-    const [projects, setProjects] = useState([]);
-    const [expandedProject, setExpandedProject] = useState(null);
-    const [newProject, setNewProject] = useState({ title: '', description: '', deadline: '', status: '진행 중' });
-    const [isAddingProject, setIsAddingProject] = useState(false);
-    const [editingProject, setEditingProject] = useState(null);
-    const [newTask, setNewTask] = useState({ title: '', assignee: '', deadline: '', status: '할 일' });
-    const [isAddingTask, setIsAddingTask] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProjectStatus, setEditingProjectStatus] = useState(false);
+  const [editingProgress, setEditingProgress] = useState(false);
+  const [editingDeadline, setEditingDeadline] = useState(false);
+  const [editingTeam, setEditingTeam] = useState(false);
+  const [newTeamMember, setNewTeamMember] = useState('');
+  const [newProject, setNewProject] = useState({
+    title: '',
+    description: '',
+    status: 'concept',
+    deadline: new Date().toISOString().split('T')[0]
+  });
 
-    // 프로젝트 상태 옵션
-    const projectStatusOptions = ['계획', '진행 중', '완료', '보류'];
-    // 작업 상태 옵션
-    const taskStatusOptions = ['할 일', '진행 중', '검토 중', '완료'];
+  useEffect(() => {
+    // 실제 앱에서는 API 호출로 대체
+    setProjects(sampleProjects);
+    setAllProjects(sampleProjects);
+  }, []);
 
-    useEffect(() => {
-        // 프로젝트 데이터 로드
-        const loadProjects = async () => {
-            try {
-                const projectsData = await getProjects();
-                setProjects(projectsData);
-            } catch (error) {
-                console.error('프로젝트 로드 실패:', error);
-            }
-        };
-        
-        loadProjects();
-    }, []);
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+    setEditingProjectStatus(false);
+    setEditingProgress(false);
+    setEditingDeadline(false);
+    setEditingTeam(false);
+  };
 
-    // 프로젝트 확장/축소 토글
-    const toggleProject = (projectId) => {
-        setExpandedProject(expandedProject === projectId ? null : projectId);
+  const handleCloseDetail = () => {
+    setSelectedProject(null);
+  };
+
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+    // 폼 초기화
+    setNewProject({
+      title: '',
+      description: '',
+      status: 'concept',
+      deadline: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const handleStatusFilterChange = (status, category = null) => {
+    setStatusFilter(status);
+    
+    if (status === 'all') {
+      setProjects(allProjects);
+      return;
+    }
+    
+    if (category === 'pre_production') {
+      setProjects(allProjects.filter(project => 
+        ['concept', 'development', 'pre_production'].includes(project.status)
+      ));
+      return;
+    }
+    
+    if (category === 'production') {
+      setProjects(allProjects.filter(project => 
+        project.status === 'production'
+      ));
+      return;
+    }
+    
+    if (category === 'post_production') {
+      setProjects(allProjects.filter(project => 
+        ['post_production', 'sound_design', 'vfx', 'quality_check', 'delivery'].includes(project.status)
+      ));
+      return;
+    }
+    
+    // 단일 상태 필터링
+    setProjects(allProjects.filter(project => project.status === status));
+  };
+
+  const handleShowAddForm = () => {
+    setShowAddForm(true);
+  };
+
+  const handleAddProject = (e) => {
+    e.preventDefault();
+    // 프로젝트 추가 로직
+    if (!newProject.title) return;
+    
+    const projectToAdd = {
+      ...newProject,
+      id: Date.now(),
+      progress: 0,
+      thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+      tasks: [],
+      team: []
     };
+    
+    setProjects([...projects, projectToAdd]);
+    handleCloseAddForm();
+  };
 
-    // 새 프로젝트 추가 폼 토글
-    const toggleAddProject = () => {
-        setIsAddingProject(!isAddingProject);
-        setNewProject({ title: '', description: '', deadline: '', status: '진행 중' });
-    };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewProject({
+      ...newProject,
+      [name]: value
+    });
+  };
 
-    // 프로젝트 추가 처리
-    const handleAddProject = async () => {
-        if (!newProject.title) return;
-        
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const projectToAdd = {
-                ...newProject,
-                deadline: newProject.deadline || today,
-                createdAt: today,
-                tasks: []
-            };
-            
-            const addedProject = await addProject(projectToAdd);
-            setProjects([...projects, addedProject]);
-            toggleAddProject();
-        } catch (error) {
-            console.error('프로젝트 추가 실패:', error);
-        }
-    };
+  const handleDeleteProject = (id) => {
+    // 프로젝트 삭제 로직
+    setProjects(projects.filter(project => project.id !== id));
+    if (selectedProject && selectedProject.id === id) {
+      setSelectedProject(null);
+    }
+  };
 
-    // 프로젝트 수정 시작
-    const handleStartEditProject = (project) => {
-        setEditingProject({ ...project });
-    };
+  const handleStatusChange = (newStatus) => {
+    if (!selectedProject) return;
 
-    // 프로젝트 수정 취소
-    const handleCancelEditProject = () => {
-        setEditingProject(null);
-    };
+    const updatedProject = { ...selectedProject, status: newStatus };
+    setSelectedProject(updatedProject);
+    setProjects(projects.map(project => 
+      project.id === selectedProject.id ? updatedProject : project
+    ));
+    setEditingProjectStatus(false);
+  };
 
-    // 프로젝트 수정 저장
-    const handleSaveProject = async () => {
-        if (!editingProject || !editingProject.title) return;
-        
-        try {
-            const updatedProject = await updateProject(editingProject.id, editingProject);
-            setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
-            setEditingProject(null);
-        } catch (error) {
-            console.error('프로젝트 수정 실패:', error);
-        }
-    };
+  const handleProgressChange = (e) => {
+    if (!selectedProject) return;
+    
+    const newProgress = parseInt(e.target.value);
+    const updatedProject = { ...selectedProject, progress: newProgress };
+    setSelectedProject(updatedProject);
+    setProjects(projects.map(project => 
+      project.id === selectedProject.id ? updatedProject : project
+    ));
+  };
 
-    // 프로젝트 삭제
-    const handleDeleteProject = async (projectId) => {
-        if (!window.confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
-        
-        try {
-            await deleteProject(projectId);
-            setProjects(projects.filter(p => p.id !== projectId));
-        } catch (error) {
-            console.error('프로젝트 삭제 실패:', error);
-        }
-    };
+  const handleSaveProgress = () => {
+    setEditingProgress(false);
+  };
 
-    // 새 작업 추가 폼 토글
-    const toggleAddTask = (projectId) => {
-        setIsAddingTask(isAddingTask === projectId ? null : projectId);
-        setNewTask({ title: '', assignee: '', deadline: '', status: '할 일' });
-    };
+  const handleDeadlineChange = (e) => {
+    if (!selectedProject) return;
+    
+    const newDeadline = e.target.value;
+    const updatedProject = { ...selectedProject, deadline: newDeadline };
+    setSelectedProject(updatedProject);
+    setProjects(projects.map(project => 
+      project.id === selectedProject.id ? updatedProject : project
+    ));
+  };
 
-    // 작업 추가 처리
-    const handleAddTask = async (projectId) => {
-        if (!newTask.title) return;
-        
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const taskToAdd = {
-                ...newTask,
-                deadline: newTask.deadline || today,
-                createdAt: today
-            };
-            
-            const updatedProject = await addTask(projectId, taskToAdd);
-            setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
-            toggleAddTask(null);
-        } catch (error) {
-            console.error('작업 추가 실패:', error);
-        }
-    };
+  const handleSaveDeadline = () => {
+    setEditingDeadline(false);
+  };
 
-    // 작업 수정 시작
-    const handleStartEditTask = (projectId, task) => {
-        setEditingTask({ projectId, ...task });
-    };
+  const handleTeamMemberRemove = (memberToRemove) => {
+    if (!selectedProject) return;
+    
+    const updatedTeam = selectedProject.team.filter(member => member !== memberToRemove);
+    const updatedProject = { ...selectedProject, team: updatedTeam };
+    setSelectedProject(updatedProject);
+    setProjects(projects.map(project => 
+      project.id === selectedProject.id ? updatedProject : project
+    ));
+  };
 
-    // 작업 수정 취소
-    const handleCancelEditTask = () => {
-        setEditingTask(null);
-    };
+  const handleTeamMemberAdd = (e) => {
+    e.preventDefault();
+    
+    if (!selectedProject || !newTeamMember.trim()) return;
+    
+    const updatedTeam = [...selectedProject.team, newTeamMember.trim()];
+    const updatedProject = { ...selectedProject, team: updatedTeam };
+    setSelectedProject(updatedProject);
+    setProjects(projects.map(project => 
+      project.id === selectedProject.id ? updatedProject : project
+    ));
+    
+    setNewTeamMember('');
+  };
 
-    // 작업 수정 저장
-    const handleSaveTask = async () => {
-        if (!editingTask || !editingTask.title) return;
-        
-        try {
-            const { projectId, ...taskData } = editingTask;
-            const updatedProject = await updateTask(projectId, taskData.id, taskData);
-            setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
-            setEditingTask(null);
-        } catch (error) {
-            console.error('작업 수정 실패:', error);
-        }
-    };
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'concept': return 'Concept';
+      case 'development': return 'Development';
+      case 'pre_production': return 'Pre-Production';
+      case 'production': return 'Production';
+      case 'post_production': return 'Post-Production';
+      case 'vfx': return 'VFX/CG';
+      case 'sound_design': return 'Sound Design';
+      case 'quality_check': return 'Quality Check';
+      case 'delivery': return 'Delivery';
+      default: return 'Unknown';
+    }
+  };
 
-    // 작업 삭제
-    const handleDeleteTask = async (projectId, taskId) => {
-        if (!window.confirm('정말로 이 작업을 삭제하시겠습니까?')) return;
-        
-        try {
-            const updatedProject = await deleteTask(projectId, taskId);
-            setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
-        } catch (error) {
-            console.error('작업 삭제 실패:', error);
-        }
-    };
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'concept': return styles.status_concept;
+      case 'development': return styles.status_development;
+      case 'pre_production': return styles.status_pre_production;
+      case 'production': return styles.status_production;
+      case 'post_production': return styles.status_post_production;
+      case 'vfx': return styles.status_vfx;
+      case 'sound_design': return styles.status_sound_design;
+      case 'quality_check': return styles.status_quality_check;
+      case 'delivery': return styles.status_delivery;
+      default: return '';
+    }
+  };
 
-    // 날짜 포맷팅
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    };
+  const filteredProjects = projects;
 
-    // 남은 일수 계산
-    const getDaysRemaining = (deadline) => {
-        if (!deadline) return null;
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const deadlineDate = new Date(deadline);
-        deadlineDate.setHours(0, 0, 0, 0);
-        
-        const diffTime = deadlineDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        return diffDays;
-    };
-
-    // 상태에 따른 색상 클래스 반환
-    const getStatusClass = (status, type = 'project') => {
-        if (type === 'project') {
-            switch (status) {
-                case '계획': return styles.status_planned;
-                case '진행 중': return styles.status_in_progress;
-                case '완료': return styles.status_completed;
-                case '보류': return styles.status_on_hold;
-                default: return '';
-            }
-        } else {
-            switch (status) {
-                case '할 일': return styles.status_todo;
-                case '진행 중': return styles.status_in_progress;
-                case '검토 중': return styles.status_review;
-                case '완료': return styles.status_completed;
-                default: return '';
-            }
-        }
-    };
-
-    return (
-        <div className={styles.project_status_container}>
-            <div className={styles.header}>
-                <h1>프로젝트 현황</h1>
-                <button 
-                    className={styles.add_button}
-                    onClick={toggleAddProject}
-                >
-                    <FaPlus /> 새 프로젝트
-                </button>
-            </div>
-
-            {/* 새 프로젝트 추가 폼 */}
-            {isAddingProject && (
-                <div className={styles.add_form}>
-                    <h3>새 프로젝트 추가</h3>
-                    <div className={styles.form_group}>
-                        <label>제목</label>
-                        <input 
-                            type="text" 
-                            value={newProject.title}
-                            onChange={(e) => setNewProject({...newProject, title: e.target.value})}
-                            placeholder="프로젝트 제목"
-                        />
-                    </div>
-                    <div className={styles.form_group}>
-                        <label>설명</label>
-                        <textarea 
-                            value={newProject.description}
-                            onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                            placeholder="프로젝트 설명"
-                        />
-                    </div>
-                    <div className={styles.form_row}>
-                        <div className={styles.form_group}>
-                            <label>마감일</label>
-                            <input 
-                                type="date" 
-                                value={newProject.deadline}
-                                onChange={(e) => setNewProject({...newProject, deadline: e.target.value})}
-                            />
-                        </div>
-                        <div className={styles.form_group}>
-                            <label>상태</label>
-                            <select 
-                                value={newProject.status}
-                                onChange={(e) => setNewProject({...newProject, status: e.target.value})}
-                            >
-                                {projectStatusOptions.map(status => (
-                                    <option key={status} value={status}>{status}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <div className={styles.form_actions}>
-                        <button 
-                            className={styles.cancel_button}
-                            onClick={toggleAddProject}
-                        >
-                            취소
-                        </button>
-                        <button 
-                            className={styles.save_button}
-                            onClick={handleAddProject}
-                        >
-                            저장
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* 프로젝트 목록 */}
-            <div className={styles.projects_list}>
-                {projects.length === 0 ? (
-                    <div className={styles.no_projects}>
-                        <p>등록된 프로젝트가 없습니다. 새 프로젝트를 추가해보세요.</p>
-                    </div>
-                ) : (
-                    projects.map(project => (
-                        <div 
-                            key={project.id} 
-                            className={`${styles.project_card} ${expandedProject === project.id ? styles.expanded : ''}`}
-                        >
-                            {/* 프로젝트 헤더 */}
-                            <div 
-                                className={styles.project_header}
-                                onClick={() => toggleProject(project.id)}
-                            >
-                                {editingProject && editingProject.id === project.id ? (
-                                    // 프로젝트 수정 모드
-                                    <div className={styles.project_edit_form}>
-                                        <div className={styles.form_group}>
-                                            <input 
-                                                type="text" 
-                                                value={editingProject.title}
-                                                onChange={(e) => setEditingProject({...editingProject, title: e.target.value})}
-                                                placeholder="프로젝트 제목"
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                        </div>
-                                        <div className={styles.form_row}>
-                                            <div className={styles.form_group}>
-                                                <input 
-                                                    type="date" 
-                                                    value={editingProject.deadline}
-                                                    onChange={(e) => setEditingProject({...editingProject, deadline: e.target.value})}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-                                            <div className={styles.form_group}>
-                                                <select 
-                                                    value={editingProject.status}
-                                                    onChange={(e) => setEditingProject({...editingProject, status: e.target.value})}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    {projectStatusOptions.map(status => (
-                                                        <option key={status} value={status}>{status}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className={styles.edit_actions} onClick={(e) => e.stopPropagation()}>
-                                            <button 
-                                                className={styles.cancel_button}
-                                                onClick={handleCancelEditProject}
-                                            >
-                                                <FaTimes />
-                                            </button>
-                                            <button 
-                                                className={styles.save_button}
-                                                onClick={handleSaveProject}
-                                            >
-                                                <FaCheck />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    // 프로젝트 보기 모드
-                                    <>
-                                        <div className={styles.project_info}>
-                                            <h3>{project.title}</h3>
-                                            <div className={styles.project_meta}>
-                                                <span className={styles.deadline}>
-                                                    마감일: {formatDate(project.deadline)}
-                                                    {getDaysRemaining(project.deadline) !== null && (
-                                                        <span className={getDaysRemaining(project.deadline) < 0 ? styles.overdue : getDaysRemaining(project.deadline) <= 3 ? styles.due_soon : ''}>
-                                                            ({getDaysRemaining(project.deadline) < 0 ? `${Math.abs(getDaysRemaining(project.deadline))}일 지남` : `${getDaysRemaining(project.deadline)}일 남음`})
-                                                        </span>
-                                                    )}
-                                                </span>
-                                                <span className={`${styles.status} ${getStatusClass(project.status)}`}>
-                                                    {project.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className={styles.project_actions} onClick={(e) => e.stopPropagation()}>
-                                            <button 
-                                                className={styles.edit_button}
-                                                onClick={() => handleStartEditProject(project)}
-                                            >
-                                                <FaEdit />
-                                            </button>
-                                            <button 
-                                                className={styles.delete_button}
-                                                onClick={() => handleDeleteProject(project.id)}
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                            {expandedProject === project.id ? <FaChevronUp /> : <FaChevronDown />}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* 프로젝트 상세 내용 */}
-                            {expandedProject === project.id && (
-                                <div className={styles.project_details}>
-                                    <div className={styles.project_description}>
-                                        <h4>프로젝트 설명</h4>
-                                        <p>{project.description || '설명이 없습니다.'}</p>
-                                    </div>
-
-                                    {/* 작업 목록 */}
-                                    <div className={styles.tasks_section}>
-                                        <div className={styles.tasks_header}>
-                                            <h4>작업 목록</h4>
-                                            <button 
-                                                className={styles.add_task_button}
-                                                onClick={() => toggleAddTask(project.id)}
-                                            >
-                                                <FaPlus /> 작업 추가
-                                            </button>
-                                        </div>
-
-                                        {/* 새 작업 추가 폼 */}
-                                        {isAddingTask === project.id && (
-                                            <div className={styles.add_task_form}>
-                                                <div className={styles.form_group}>
-                                                    <label>작업명</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={newTask.title}
-                                                        onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                                                        placeholder="작업명"
-                                                    />
-                                                </div>
-                                                <div className={styles.form_group}>
-                                                    <label>담당자</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={newTask.assignee}
-                                                        onChange={(e) => setNewTask({...newTask, assignee: e.target.value})}
-                                                        placeholder="담당자"
-                                                    />
-                                                </div>
-                                                <div className={styles.form_row}>
-                                                    <div className={styles.form_group}>
-                                                        <label>마감일</label>
-                                                        <input 
-                                                            type="date" 
-                                                            value={newTask.deadline}
-                                                            onChange={(e) => setNewTask({...newTask, deadline: e.target.value})}
-                                                        />
-                                                    </div>
-                                                    <div className={styles.form_group}>
-                                                        <label>상태</label>
-                                                        <select 
-                                                            value={newTask.status}
-                                                            onChange={(e) => setNewTask({...newTask, status: e.target.value})}
-                                                        >
-                                                            {taskStatusOptions.map(status => (
-                                                                <option key={status} value={status}>{status}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className={styles.form_actions}>
-                                                    <button 
-                                                        className={styles.cancel_button}
-                                                        onClick={() => toggleAddTask(null)}
-                                                    >
-                                                        취소
-                                                    </button>
-                                                    <button 
-                                                        className={styles.save_button}
-                                                        onClick={() => handleAddTask(project.id)}
-                                                    >
-                                                        저장
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* 작업 목록 테이블 */}
-                                        {project.tasks && project.tasks.length > 0 ? (
-                                            <div className={styles.tasks_table_container}>
-                                                <table className={styles.tasks_table}>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>작업명</th>
-                                                            <th>담당자</th>
-                                                            <th>마감일</th>
-                                                            <th>상태</th>
-                                                            <th>작업</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {project.tasks.map(task => (
-                                                            <tr key={task.id}>
-                                                                {editingTask && editingTask.id === task.id ? (
-                                                                    // 작업 수정 모드
-                                                                    <>
-                                                                        <td>
-                                                                            <input 
-                                                                                type="text" 
-                                                                                value={editingTask.title}
-                                                                                onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
-                                                                            />
-                                                                        </td>
-                                                                        <td>
-                                                                            <input 
-                                                                                type="text" 
-                                                                                value={editingTask.assignee}
-                                                                                onChange={(e) => setEditingTask({...editingTask, assignee: e.target.value})}
-                                                                            />
-                                                                        </td>
-                                                                        <td>
-                                                                            <input 
-                                                                                type="date" 
-                                                                                value={editingTask.deadline}
-                                                                                onChange={(e) => setEditingTask({...editingTask, deadline: e.target.value})}
-                                                                            />
-                                                                        </td>
-                                                                        <td>
-                                                                            <select 
-                                                                                value={editingTask.status}
-                                                                                onChange={(e) => setEditingTask({...editingTask, status: e.target.value})}
-                                                                            >
-                                                                                {taskStatusOptions.map(status => (
-                                                                                    <option key={status} value={status}>{status}</option>
-                                                                                ))}
-                                                                            </select>
-                                                                        </td>
-                                                                        <td>
-                                                                            <div className={styles.task_actions}>
-                                                                                <button 
-                                                                                    className={styles.cancel_button}
-                                                                                    onClick={handleCancelEditTask}
-                                                                                >
-                                                                                    <FaTimes />
-                                                                                </button>
-                                                                                <button 
-                                                                                    className={styles.save_button}
-                                                                                    onClick={handleSaveTask}
-                                                                                >
-                                                                                    <FaCheck />
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </>
-                                                                ) : (
-                                                                    // 작업 보기 모드
-                                                                    <>
-                                                                        <td>{task.title}</td>
-                                                                        <td>{task.assignee || '-'}</td>
-                                                                        <td>
-                                                                            {formatDate(task.deadline)}
-                                                                            {getDaysRemaining(task.deadline) !== null && (
-                                                                                <span className={getDaysRemaining(task.deadline) < 0 ? styles.overdue : getDaysRemaining(task.deadline) <= 3 ? styles.due_soon : ''}>
-                                                                                    ({getDaysRemaining(task.deadline) < 0 ? `${Math.abs(getDaysRemaining(task.deadline))}일 지남` : `${getDaysRemaining(task.deadline)}일 남음`})
-                                                                                </span>
-                                                                            )}
-                                                                        </td>
-                                                                        <td>
-                                                                            <span className={`${styles.task_status} ${getStatusClass(task.status, 'task')}`}>
-                                                                                {task.status}
-                                                                            </span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <div className={styles.task_actions}>
-                                                                                <button 
-                                                                                    className={styles.edit_button}
-                                                                                    onClick={() => handleStartEditTask(project.id, task)}
-                                                                                >
-                                                                                    <FaEdit />
-                                                                                </button>
-                                                                                <button 
-                                                                                    className={styles.delete_button}
-                                                                                    onClick={() => handleDeleteTask(project.id, task.id)}
-                                                                                >
-                                                                                    <FaTrash />
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </>
-                                                                )}
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        ) : (
-                                            <div className={styles.no_tasks}>
-                                                <p>등록된 작업이 없습니다. 새 작업을 추가해보세요.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
-            </div>
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>프로젝트 현황</h1>
+        <div className={styles.filters}>
+          <button 
+            className={`${styles.filter_tab} ${statusFilter === 'all' ? styles.active : ''}`}
+            onClick={() => handleStatusFilterChange('all')}
+          >
+            ALL
+          </button>
+          <button 
+            className={`${styles.filter_tab} ${(statusFilter === 'pre_production_category') ? styles.active : ''}`}
+            onClick={() => handleStatusFilterChange('pre_production_category', 'pre_production')}
+          >
+            PRE
+          </button>
+          <button 
+            className={`${styles.filter_tab} ${statusFilter === 'production_category' ? styles.active : ''}`}
+            onClick={() => handleStatusFilterChange('production_category', 'production')}
+          >
+            PRODUCTION
+          </button>
+          <button 
+            className={`${styles.filter_tab} ${statusFilter === 'post_production_category' ? styles.active : ''}`}
+            onClick={() => handleStatusFilterChange('post_production_category', 'post_production')}
+          >
+            POST
+          </button>
         </div>
-    );
+      </div>
+
+      <button className={styles.add_button} onClick={handleShowAddForm}>
+        <HiPlus /> 새 프로젝트
+      </button>
+
+      <div className={styles.projects_grid}>
+        {filteredProjects.length === 0 ? (
+          <div className={styles.no_projects}>
+            <HiDocument />
+            <p>현재 필터에 해당하는 프로젝트가 없습니다.</p>
+          </div>
+        ) : (
+          filteredProjects.map(project => (
+            <div 
+              key={project.id}
+              className={`${styles.project_card} ${selectedProject && selectedProject.id === project.id ? styles.selected : ''}`}
+              onClick={() => handleProjectClick(project)}
+            >
+              <img 
+                src={project.thumbnail} 
+                alt={project.title} 
+                className={styles.project_thumbnail}
+              />
+              <div className={styles.project_overlay}></div>
+              <div className={styles.project_content}>
+                <span className={`${styles.project_status} ${getStatusClass(project.status)}`}>
+                  {getStatusText(project.status)}
+                </span>
+                <h3 className={styles.project_title}>{project.title}</h3>
+                <div className={styles.project_progress}>
+                  <div 
+                    className={styles.progress_bar} 
+                    style={{ width: `${project.progress}%` }}
+                  ></div>
+                </div>
+                <div className={styles.project_meta}>
+                  <span className={styles.project_deadline}>
+                    <HiCalendar /> {new Date(project.deadline).toLocaleDateString()}
+                  </span>
+                  <span className={styles.project_tasks}>
+                    <HiCheckCircle /> {project.tasks.length}개
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 프로젝트 상세 모달 */}
+      {selectedProject && (
+        <div className={styles.modal_wrapper}>
+          <div className={styles.modal_background} onClick={handleCloseDetail}></div>
+          <div className={styles.modal_panel}>
+            <div className={styles.panel_header}>
+              <div className={styles.panel_title}>
+                <h2>{selectedProject.title}</h2>
+              </div>
+              <button className={styles.close_button} onClick={handleCloseDetail}>
+                <HiX />
+              </button>
+            </div>
+
+            <div className={styles.panel_content}>
+              <div className={styles.content_section}>
+                <h3><HiInformationCircle /> 프로젝트 개요</h3>
+                <p className={styles.project_description}>{selectedProject.description}</p>
+              </div>
+
+              <div className={styles.info_cards_container}>
+                {/* 상태 카드 */}
+                <div className={styles.info_card}>
+                  <div className={styles.info_card_header}>
+                    <HiTag className={styles.info_card_icon} />
+                    <h4>상태</h4>
+                  </div>
+                  {editingProjectStatus ? (
+                    <div className={styles.status_selector}>
+                      {['concept', 'development', 'pre_production', 'production', 'post_production', 'vfx', 'sound_design', 'quality_check', 'delivery'].map(status => (
+                        <div
+                          key={status}
+                          className={`${styles.status_option} ${selectedProject.status === status ? styles.selected : ''} ${getStatusClass(status)}`}
+                          onClick={() => handleStatusChange(status)}
+                        >
+                          {getStatusText(status)}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div 
+                      className={`${styles.status_display} ${getStatusClass(selectedProject.status)}`}
+                      onClick={() => setEditingProjectStatus(true)}
+                    >
+                      <span>{getStatusText(selectedProject.status)}</span>
+                      <HiPencil className={styles.edit_icon} />
+                    </div>
+                  )}
+                </div>
+
+                {/* 진행률 카드 */}
+                <div className={styles.info_card}>
+                  <div className={styles.info_card_header}>
+                    <HiChartBar className={styles.info_card_icon} />
+                    <h4>진행률</h4>
+                  </div>
+                  <div className={styles.progress_display}>
+                    <div className={styles.progress_bar_container}>
+                      <div 
+                        className={styles.progress_bar_full} 
+                        style={{ width: `${selectedProject.progress}%` }}
+                      ></div>
+                    </div>
+                    <div 
+                      className={styles.progress_percentage}
+                      onClick={() => setEditingProgress(true)}
+                    >
+                      <span>{selectedProject.progress}%</span>
+                      <HiPencil className={styles.edit_icon} />
+                    </div>
+                  </div>
+                  {editingProgress && (
+                    <div className={styles.progress_editor}>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        value={selectedProject.progress} 
+                        onChange={handleProgressChange}
+                        className={styles.progress_slider_full}
+                      />
+                      <div className={styles.progress_editor_actions}>
+                        <button 
+                          className={styles.save_button}
+                          onClick={handleSaveProgress}
+                        >
+                          <HiSave /> 저장
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 마감일 카드 */}
+                <div className={styles.info_card}>
+                  <div className={styles.info_card_header}>
+                    <HiCalendar className={styles.info_card_icon} />
+                    <h4>마감일</h4>
+                  </div>
+                  {editingDeadline ? (
+                    <div className={styles.deadline_editor}>
+                      <input 
+                        type="date" 
+                        value={selectedProject.deadline}
+                        onChange={handleDeadlineChange}
+                        className={styles.date_input}
+                      />
+                      <button 
+                        className={styles.save_button}
+                        onClick={handleSaveDeadline}
+                      >
+                        <HiSave /> 저장
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      className={styles.deadline_display}
+                      onClick={() => setEditingDeadline(true)}
+                    >
+                      <span>{new Date(selectedProject.deadline).toLocaleDateString()}</span>
+                      <HiPencil className={styles.edit_icon} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 팀원 섹션 */}
+              <div className={styles.team_section}>
+                <div className={styles.team_header}>
+                  <h3><HiUserGroup /> 팀원</h3>
+                  <button 
+                    className={styles.edit_team_button}
+                    onClick={() => setEditingTeam(!editingTeam)}
+                  >
+                    {editingTeam ? <HiX /> : <HiPencil />}
+                  </button>
+                </div>
+                
+                <div className={styles.team_members}>
+                  {selectedProject.team.length === 0 ? (
+                    <div className={styles.no_members}>
+                      <HiLightBulb />
+                      <p>할당된 팀원이 없습니다</p>
+                    </div>
+                  ) : (
+                    selectedProject.team.map((member, index) => (
+                      <div key={index} className={styles.member_chip}>
+                        <span>{member}</span>
+                        {editingTeam && (
+                          <button 
+                            className={styles.remove_member_button}
+                            onClick={() => handleTeamMemberRemove(member)}
+                          >
+                            <HiX />
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  
+                  {editingTeam && (
+                    <form onSubmit={handleTeamMemberAdd} className={styles.add_member_form}>
+                      <input 
+                        type="text"
+                        value={newTeamMember}
+                        onChange={(e) => setNewTeamMember(e.target.value)}
+                        placeholder="새 팀원 이름"
+                        className={styles.member_input}
+                      />
+                      <button 
+                        type="submit" 
+                        className={styles.add_member_button}
+                        disabled={!newTeamMember.trim()}
+                      >
+                        <HiPlus />
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+
+              {/* 작업 수 카드 */}
+              <div className={styles.info_card}>
+                <div className={styles.info_card_header}>
+                  <HiDocumentText className={styles.info_card_icon} />
+                  <h4>작업 개수</h4>
+                </div>
+                <div className={styles.task_count}>
+                  <span>{selectedProject.tasks.length}개</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 새 프로젝트 추가 모달 */}
+      {showAddForm && (
+        <div className={styles.modal_wrapper}>
+          <div className={styles.modal_background} onClick={handleCloseAddForm}></div>
+          <div className={styles.modal_panel}>
+            <div className={styles.panel_header}>
+              <div className={styles.panel_title}>
+                <h2>새 프로젝트 추가</h2>
+              </div>
+              <button className={styles.close_button} onClick={handleCloseAddForm}>
+                <HiX />
+              </button>
+            </div>
+            <div className={styles.panel_content}>
+              <form onSubmit={handleAddProject}>
+                <div className={styles.form_group}>
+                  <label>프로젝트명</label>
+                  <input 
+                    type="text" 
+                    name="title"
+                    value={newProject.title}
+                    onChange={handleInputChange}
+                    required 
+                  />
+                </div>
+                <div className={styles.form_group}>
+                  <label>설명</label>
+                  <textarea 
+                    name="description"
+                    value={newProject.description}
+                    onChange={handleInputChange}
+                    required
+                  ></textarea>
+                </div>
+                <div className={styles.form_row}>
+                  <div className={styles.form_group}>
+                    <label>상태</label>
+                    <select 
+                      name="status"
+                      value={newProject.status}
+                      onChange={handleInputChange}
+                    >
+                      <option value="concept">Concept</option>
+                      <option value="development">Development</option>
+                      <option value="pre_production">Pre-Production</option>
+                      <option value="production">Production</option>
+                      <option value="post_production">Post-Production</option>
+                      <option value="vfx">VFX/CG</option>
+                      <option value="sound_design">Sound Design</option>
+                      <option value="quality_check">Quality Check</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
+                  </div>
+                  <div className={styles.form_group}>
+                    <label>마감일</label>
+                    <input 
+                      type="date" 
+                      name="deadline"
+                      value={newProject.deadline}
+                      onChange={handleInputChange}
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className={styles.form_actions}>
+                  <button type="button" className={styles.cancel_button} onClick={handleCloseAddForm}>
+                    취소
+                  </button>
+                  <button type="submit" className={styles.save_button}>
+                    저장
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default ProjectStatus; 

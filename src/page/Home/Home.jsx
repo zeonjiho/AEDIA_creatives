@@ -260,10 +260,10 @@ const Home = () => {
     }
 
     return (
-        <div className={ss.wrap}>
+        <div className={ss.home_container}>
             {/* 대시보드 헤더 */}
-            <div className={ss.dashboard_header}>
-                <div>
+            <header className={ss.dashboard_header}>
+                <div className={ss.header_content}>
                     <h1 className={ss.dashboard_title}>
                         {isCustomizeMode ? 'Edit Mode' : 'My Dashboard'}
                     </h1>
@@ -271,118 +271,122 @@ const Home = () => {
                 </div>
                 
                 {/* 커스터마이징 모드 컨트롤 - 모바일에서는 표시하지 않음 */}
-                {isCustomizeMode ? (
-                    <div className={ss.customize_controls}>
-                        <button 
-                            className={`${ss.customize_btn} ${ss.save_btn}`} 
-                            onClick={saveCustomization}
-                        >
-                            저장
-                        </button>
-                        <button 
-                            className={`${ss.customize_btn} ${ss.cancel_btn}`} 
-                            onClick={cancelCustomization}
-                        >
-                            취소
-                        </button>
-                    </div>
-                ) : (
-                    !isMobile && (
-                        <button 
-                            className={`${ss.customize_btn} ${ss.edit_btn}`} 
-                            onClick={() => handleCustomizeModeChange(true)}
-                        >
-                            Change Layout
-                        </button>
-                    )
-                )}
-            </div>
+                <div className={ss.header_controls}>
+                    {isCustomizeMode ? (
+                        <div className={ss.customize_controls}>
+                            <button 
+                                className={`${ss.customize_btn} ${ss.save_btn}`} 
+                                onClick={saveCustomization}
+                            >
+                                저장
+                            </button>
+                            <button 
+                                className={`${ss.customize_btn} ${ss.cancel_btn}`} 
+                                onClick={cancelCustomization}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    ) : (
+                        !isMobile && (
+                            <button 
+                                className={`${ss.customize_btn} ${ss.edit_btn}`} 
+                                onClick={() => handleCustomizeModeChange(true)}
+                            >
+                                Change Layout
+                            </button>
+                        )
+                    )}
+                </div>
+            </header>
             
             {/* 위젯 그리드 레이아웃 */}
-            <WidgetGrid 
-                columns={3} 
-                gap="15px" 
-                className={ss.dashboard_grid}
-                layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
-                onLayoutChange={handleLayoutChange}
-                isCustomizeMode={isCustomizeMode}
-                onCustomizeModeChange={handleCustomizeModeChange}
-            >
-                {/* 투두 리스트 위젯 */}
-                <WidgetGridItem 
-                    key="todo-widget"
+            <main className={ss.dashboard_content}>
+                <WidgetGrid 
+                    columns={3} 
+                    gap="15px" 
+                    className={ss.dashboard_grid}
+                    layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
+                    onLayoutChange={handleLayoutChange}
+                    isCustomizeMode={isCustomizeMode}
                     onCustomizeModeChange={handleCustomizeModeChange}
                 >
-                    <TodoWidget 
-                        todos={todoList}
-                        onToggleTodo={toggleTodo}
-                        onAddTodo={handleAddTodo}
-                        newTodo={newTodo}
-                        onNewTodoChange={(e) => setNewTodo(e.target.value)}
-                        onViewAllClick={() => navigate('/todos')}
-                        formatDate={formatDate}
-                    />
-                </WidgetGridItem>
+                    {/* 투두 리스트 위젯 */}
+                    <WidgetGridItem 
+                        key="todo-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <TodoWidget 
+                            todos={todoList}
+                            onToggleTodo={toggleTodo}
+                            onAddTodo={handleAddTodo}
+                            newTodo={newTodo}
+                            onNewTodoChange={(e) => setNewTodo(e.target.value)}
+                            onViewAllClick={() => navigate('/todo')}
+                            formatDate={formatDate}
+                        />
+                    </WidgetGridItem>
 
-                {/* 오늘의 일정 위젯 */}
-                <WidgetGridItem 
-                    key="schedule-widget"
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    <ScheduleWidget 
-                        events={todayEvents}
-                        onViewAllClick={() => navigate('/calendar')}
-                    />
-                </WidgetGridItem>
+                    {/* 오늘의 일정 위젯 */}
+                    <WidgetGridItem 
+                        key="schedule-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <ScheduleWidget 
+                            events={todayEvents}
+                            onViewAllClick={() => navigate('/todo')}
+                        />
+                    </WidgetGridItem>
 
-                {/* 스튜디오 현황 위젯 */}
-                <WidgetGridItem 
-                    key="studio-widget"
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    <StudioWidget 
-                        rooms={rooms.slice(0, 4)}
-                        reservations={roomReservations}
-                        onReservationClick={() => navigate('/room-reservation')}
-                    />
-                </WidgetGridItem>
+                    {/* 스튜디오 현황 위젯 */}
+                    <WidgetGridItem 
+                        key="studio-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <StudioWidget 
+                            rooms={rooms.slice(0, 4)}
+                            reservations={roomReservations}
+                            onReservationClick={() => navigate('/room-reservation')}
+                        />
+                    </WidgetGridItem>
 
-                {/* 프로젝트 현황 위젯 */}
-                <WidgetGridItem 
-                    key="project-widget"
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    <ProjectWidget 
-                        projects={upcomingProjects}
-                        calculateProgress={calculateProgress}
-                        calculateRemainingDays={calculateRemainingDays}
-                        formatDate={formatDate}
-                        onViewAllClick={() => navigate('/projects')}
-                    />
-                </WidgetGridItem>
+                    {/* 프로젝트 현황 위젯 */}
+                    <WidgetGridItem 
+                        key="project-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <ProjectWidget 
+                            projects={upcomingProjects}
+                            calculateProgress={calculateProgress}
+                            calculateRemainingDays={calculateRemainingDays}
+                            formatDate={formatDate}
+                            onViewAllClick={() => navigate('/projects')}
+                        />
+                    </WidgetGridItem>
 
-                {/* 팀 멤버 위젯 */}
-                <WidgetGridItem 
-                    key="team-widget"
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    <TeamWidget 
-                        members={users.slice(0, 4)}
-                        onViewAllClick={() => navigate('/team')}
-                    />
-                </WidgetGridItem>
+                    {/* 팀 멤버 위젯 */}
+                    <WidgetGridItem 
+                        key="team-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <TeamWidget 
+                            members={users.slice(0, 4)}
+                            onViewAllClick={() => navigate('/team')}
+                        />
+                    </WidgetGridItem>
 
-                {/* 알림 위젯 */}
-                <WidgetGridItem 
-                    key="notification-widget"
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    <NotificationWidget 
-                        notifications={notifications.slice(0, 3)}
-                        onViewAllClick={() => navigate('/notifications')}
-                    />
-                </WidgetGridItem>
-            </WidgetGrid>
+                    {/* 알림 위젯 */}
+                    <WidgetGridItem 
+                        key="notification-widget"
+                        onCustomizeModeChange={handleCustomizeModeChange}
+                    >
+                        <NotificationWidget 
+                            notifications={notifications.slice(0, 3)}
+                            onViewAllClick={() => navigate('/notifications')}
+                        />
+                    </WidgetGridItem>
+                </WidgetGrid>
+            </main>
         </div>
     )
 }

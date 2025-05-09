@@ -1,330 +1,952 @@
-.project_status_container {
-    padding: 20px;
-    max-width: 1200px;
+.container {
+    padding: 40px;
+    max-width: 100%;
     margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 64px);
+    background-color: var(--bg-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 40px;
 }
 
 .header h1 {
-    margin: 0;
-    font-size: 1.8rem;
+    margin: 0 0 30px 0;
+    font-size: 2.2rem;
     color: var(--text-color);
+    font-weight: 600;
+    letter-spacing: -0.5px;
 }
 
-.add_button {
+.filters {
     display: flex;
     align-items: center;
     gap: 8px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 6px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.filter_tab {
+    padding: 10px 20px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border-radius: 10px;
+}
+
+.filter_tab:hover {
+    color: var(--text-color);
+    background-color: var(--card-bg);
+}
+
+.filter_tab.active {
+    color: white;
+    background-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    font-weight: 500;
+}
+
+.add_button {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .add_button:hover {
     background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
 }
 
-/* 프로젝트 카드 스타일 */
-.projects_list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.add_button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.add_button svg {
+    font-size: 1.1rem;
+}
+
+
+/* 프로젝트 그리드 스타일 */
+
+.projects_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
 }
 
 .project_card {
     background-color: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
     overflow: hidden;
-    transition: box-shadow 0.3s;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    height: 240px;
+    position: relative;
+    will-change: transform;
+    border: 2px solid transparent;
 }
 
 .project_card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
 }
 
-.project_card.expanded {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+.project_card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 12px 40px rgba(var(--primary-color-rgb), 0.15);
 }
 
-.project_header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.2s;
+.project_thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.project_header:hover {
-    background-color: var(--hover-bg);
+.project_card:hover .project_thumbnail {
+    transform: scale(1.05);
 }
 
-.project_info {
-    flex: 1;
+.project_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 2;
 }
 
-.project_info h3 {
-    margin: 0 0 8px 0;
-    font-size: 1.2rem;
+.project_content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+    z-index: 3;
+    color: white;
+}
+
+.project_title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+}
+
+.project_status {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.project_progress {
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 16px 0;
+}
+
+.progress_bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .project_meta {
     display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-top: 12px;
+    opacity: 0.9;
 }
 
-.deadline {
+.project_deadline,
+.project_tasks {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.overdue {
-    color: var(--error-color);
-    font-weight: 500;
+.project_deadline svg,
+.project_tasks svg {
+    font-size: 1rem;
 }
 
-.due_soon {
-    color: var(--warning-color);
-    font-weight: 500;
+
+/* 모달 스타일 */
+
+.modal_wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    animation: fadeIn 0.2s ease-in-out;
 }
 
-.status {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
-.status_planned {
-    background-color: #e3f2fd;
-    color: #1976d2;
+.modal_background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: -1;
+    animation: fadeBackground 0.3s ease-in-out;
 }
 
-.status_in_progress {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+@keyframes fadeBackground {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
 }
 
-.status_completed {
-    background-color: #e0f2f1;
-    color: #00796b;
+.modal_panel {
+    position: relative;
+    width: 800px;
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: center;
 }
 
-.status_on_hold {
-    background-color: #fff3e0;
-    color: #ef6c00;
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-.project_actions {
+.panel_header {
+    padding: 28px 32px;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    position: relative;
+    background-color: var(--card-bg);
+}
+
+.panel_title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
-.edit_button, .delete_button {
-    background: none;
+.panel_title h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-color);
+    letter-spacing: -0.5px;
+}
+
+.close_button {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: rgba(var(--bg-color-rgb), 0.1);
     border: none;
-    font-size: 1rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    color: var(--text-secondary);
-    transition: color 0.2s, background-color 0.2s;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.edit_button:hover {
-    color: var(--primary-color);
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.delete_button:hover {
-    color: var(--error-color);
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-/* 프로젝트 상세 내용 */
-.project_details {
-    padding: 20px;
+.close_button:hover {
     background-color: var(--card-bg);
+    transform: rotate(90deg);
+}
+
+.panel_content {
+    padding: 32px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 100px);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.content_section {
+    margin-bottom: 10px;
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+}
+
+.content_section h3 {
+    margin: 0 0 14px 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.3px;
+}
+
+.content_section h3 svg {
+    font-size: 1.2rem;
+    color: var(--primary-color);
 }
 
 .project_description {
-    margin-bottom: 24px;
-}
-
-.project_description h4 {
-    margin: 0 0 8px 0;
-    font-size: 1rem;
-    color: var(--text-color);
-}
-
-.project_description p {
     margin: 0;
     color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-/* 작업 섹션 */
-.tasks_section {
-    margin-top: 20px;
-}
-
-.tasks_header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.tasks_header h4 {
-    margin: 0;
     font-size: 1rem;
-    color: var(--text-color);
+    line-height: 1.6;
+    padding: 16px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    border-left: 3px solid var(--primary-color);
 }
 
-.add_task_button {
+
+/* 애플 스타일 정보 카드 */
+
+.info_cards_container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.info_card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
     display: flex;
-    align-items: center;
-    gap: 6px;
-    background-color: transparent;
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    border-radius: 4px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(var(--border-color-rgb), 0.1);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.add_task_button:hover {
-    background-color: var(--primary-color);
-    color: white;
+.info_card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
-/* 작업 테이블 */
-.tasks_table_container {
-    overflow-x: auto;
-}
-
-.tasks_table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.tasks_table th, .tasks_table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tasks_table th {
-    font-weight: 600;
-    color: var(--text-color);
-    background-color: var(--table-header-bg);
-}
-
-.tasks_table td {
-    color: var(--text-secondary);
-}
-
-.task_status {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.status_todo {
-    background-color: #f5f5f5;
-    color: #616161;
-}
-
-.status_in_progress {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.status_review {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.status_completed {
-    background-color: #e0f2f1;
-    color: #00796b;
-}
-
-.task_actions {
+.info_card_header {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-bottom: 6px;
 }
 
-/* 폼 스타일 */
-.add_form, .add_task_form {
+.info_card_icon {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.info_card h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: -0.3px;
+}
+
+
+/* 상태 표시 관련 스타일 */
+
+.status_display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.status_display:hover {
+    border-color: rgba(var(--border-color-rgb), 0.3);
+}
+
+.status_display span {
+    font-weight: 500;
+}
+
+.edit_icon {
+    opacity: 0;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.status_display:hover .edit_icon,
+.progress_percentage:hover .edit_icon,
+.deadline_display:hover .edit_icon {
+    opacity: 1;
+}
+
+.status_selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeInDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.status_option {
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity: 0.7;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.status_option:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.status_option.selected {
+    opacity: 1;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+/* 진행률 관련 스타일 */
+
+.progress_display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progress_bar_container {
+    height: 8px;
     background-color: var(--card-bg);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress_bar_full {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.progress_percentage {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.progress_percentage:hover {
+    border-color: rgba(var(--border-color-rgb), 0.3);
+}
+
+.progress_editor {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.progress_slider_full {
+    width: 100%;
+    height: 8px;
+    appearance: none;
+    background-color: var(--card-bg);
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.progress_slider_full::-webkit-slider-thumb {
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.progress_slider_full::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.progress_editor_actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+/* 마감일 관련 스타일 */
+
+.deadline_display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.deadline_display:hover {
+    border-color: rgba(var(--border-color-rgb), 0.3);
+}
+
+.deadline_editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.date_input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    margin-bottom: 8px;
+}
+
+.date_input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+
+/* 팀원 관련 스타일 */
+
+.team_section {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(var(--border-color-rgb), 0.1);
+}
+
+.team_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team_header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.3px;
+}
+
+.team_header h3 svg {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.edit_team_button {
+    background-color: var(--card-bg);
+    border: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.edit_team_button:hover {
+    background-color: var(--card-bg);
+    transform: scale(1.1);
+}
+
+.team_members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.member_chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.member_chip:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.add_form h3 {
-    margin: 0 0 16px 0;
-    font-size: 1.2rem;
-    color: var(--text-color);
+.remove_member_button {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--primary-color);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.form_group {
+.remove_member_button:hover {
+    transform: scale(1.2);
+}
+
+.no_members {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--text-tertiary);
+}
+
+.no_members svg {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    opacity: 0.5;
+    color: var(--primary-color);
+}
+
+.add_member_form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.member_input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.member_input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.add_member_button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    font-size: 1rem;
+}
+
+.add_member_button:hover:not(:disabled) {
+    background-color: var(--primary-color-dark);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.add_member_button:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+
+/* 작업 개수 카드 */
+
+.task_count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    height: 80px;
+}
+
+
+/* 빈 상태 메시지 */
+
+.no_projects {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-secondary);
+    grid-column: 1 / -1;
+    animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.no_projects svg {
+    font-size: 3rem;
     margin-bottom: 16px;
+    opacity: 0.3;
+    animation: float 3s ease-in-out infinite;
+    color: var(--primary-color);
+}
+
+.no_projects p {
+    font-size: 1.1rem;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+
+/* 상태 스타일 */
+
+.status_planned {
+    background-color: rgba(25, 118, 210, 0.2);
+    color: #1976d2;
+}
+
+.status_in_progress {
+    background-color: rgba(255, 160, 0, 0.2);
+    color: #ffa000;
+}
+
+.status_review {
+    background-color: rgba(56, 142, 60, 0.2);
+    color: #388e3c;
+}
+
+.status_revisions {
+    background-color: rgba(211, 47, 47, 0.2);
+    color: #d32f2f;
+}
+
+.status_completed {
+    background-color: rgba(0, 121, 107, 0.2);
+    color: #00796b;
+}
+
+.status_concept,
+.status_development,
+.status_pre_production {
+    background-color: rgba(51, 105, 255, 0.25);
+    color: rgb(0, 63, 192);
+    font-weight: 600;
+}
+
+.status_production {
+    background-color: rgba(221, 44, 0, 0.25);
+    color: rgb(184, 34, 0);
+    font-weight: 600;
+}
+
+.status_post_production,
+.status_sound_design,
+.status_vfx,
+.status_quality_check,
+.status_delivery {
+    background-color: rgba(0, 150, 136, 0.25);
+    color: rgb(0, 105, 92);
+    font-weight: 600;
+}
+
+
+/* 폼 스타일 */
+
+.form_group {
+    margin-bottom: 20px;
+    animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .form_group label {
     display: block;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
     color: var(--text-secondary);
+    font-weight: 500;
 }
 
-.form_group input, .form_group textarea, .form_group select {
+.form_group input,
+.form_group textarea,
+.form_group select {
     width: 100%;
-    padding: 8px 12px;
+    padding: 14px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: 12px;
     background-color: var(--input-bg);
     color: var(--text-color);
-    font-size: 0.9rem;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.form_group input:focus,
+.form_group textarea:focus,
+.form_group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
 }
 
 .form_group textarea {
-    min-height: 80px;
+    min-height: 120px;
     resize: vertical;
 }
 
 .form_row {
     display: flex;
-    gap: 16px;
+    gap: 20px;
 }
 
 .form_row .form_group {
@@ -335,81 +957,121 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 20px;
+    margin-top: 24px;
 }
 
-.cancel_button, .save_button {
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 0.9rem;
+.cancel_button,
+.save_button {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .cancel_button {
-    background-color: transparent;
-    color: var(--text-secondary);
+    background-color: var(--primary-color);
+    color: var(--text-color);
     border: 1px solid var(--border-color);
 }
 
 .cancel_button:hover {
     background-color: var(--hover-bg);
+    transform: translateY(-2px);
 }
 
 .save_button {
     background-color: var(--primary-color);
     color: white;
     border: none;
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .save_button:hover {
     background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
 }
 
-/* 프로젝트 수정 폼 */
-.project_edit_form {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
+.save_button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
-.project_edit_form .form_group {
-    margin-bottom: 0;
-    flex: 1;
+.save_button svg {
+    font-size: 1rem;
 }
 
-.edit_actions {
-    display: flex;
-    gap: 8px;
-}
-
-/* 빈 상태 메시지 */
-.no_projects, .no_tasks {
-    text-align: center;
-    padding: 40px 0;
-    color: var(--text-secondary);
-}
 
 /* 반응형 스타일 */
-@media (max-width: 768px) {
-    .form_row {
-        flex-direction: column;
-        gap: 16px;
+
+@media (max-width: 992px) {
+    .modal_panel {
+        width: 700px;
     }
-    
-    .project_header {
+    .info_cards_container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 24px;
+    }
+    .header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 20px;
+        margin-bottom: 30px;
     }
-    
-    .project_actions {
+    .header h1 {
+        margin-bottom: 0;
+        font-size: 1.8rem;
+    }
+    .add_button {
+        position: static;
+        margin-top: 20px;
         align-self: flex-end;
     }
-    
-    .project_edit_form {
-        flex-direction: column;
-        align-items: stretch;
+    .projects_grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
     }
-} 
+    .project_card {
+        height: 220px;
+    }
+    .modal_panel {
+        width: 95%;
+        max-height: 95vh;
+    }
+    .panel_header {
+        padding: 24px;
+    }
+    .panel_content {
+        padding: 24px;
+    }
+    .form_row {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .info_cards_container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .filters {
+        width: 100%;
+        overflow-x: auto;
+        padding: 4px;
+    }
+    .filter_tab {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+}
