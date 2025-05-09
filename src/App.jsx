@@ -10,6 +10,8 @@ import RoomReservation from './page/RoomReservation/RoomReservation';
 import ProjectStatus from './page/ProjectStatus/ProjectStatus';
 import TeamNotifications from './page/TeamNotifications/TeamNotifications';
 import Receipts from './page/Receipts/Receipts';
+import Signup from './page/Signup/Signup';
+import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           <Route path='projects' element={<ProjectStatus />} />
           <Route path='notifications' element={<TeamNotifications />} />
           <Route path='receipts' element={<Receipts />} />
+          <Route path='signup' element={<Signup />} />
+          <Route path='forgot-password' element={<ForgotPassword />} />
         </Route>
       </Routes>
     </div>

@@ -1,0 +1,175 @@
+.login_wrap {
+    width: 100%;
+    box-sizing: border-box;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.login_wrap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+}
+
+.login_box {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background-color: var(--card-bg);
+    border-radius: 2rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login_title {
+    font-size: 42px;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: 700;
+    font-family: var(--font-primary);
+    transition: color 0.3s ease;
+}
+
+.login_form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input_group {
+    margin-bottom: 5px;
+}
+
+.input_group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.input_group input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 16px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.input_group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.login_button {
+    background-color: var(--accent-color);
+    color: var(--bg-secondary);
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.login_button:hover {
+    background-color: var(--accent-hover);
+}
+
+.login_footer {
+    margin-top: 30px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.signup_link,
+.forgot_password {
+    color: var(--accent-color);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.signup_link:hover,
+.forgot_password:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+.forgot_password {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+
+/* 반응형 스타일 */
+
+@media (max-width: 1024px) {
+    .login_box {
+        padding: 30px;
+        max-width: 380px;
+    }
+    .login_title {
+        font-size: 36px;
+        margin-bottom: 25px;
+    }
+}
+
+@media (max-width: 639px) {
+    .login_box {
+        padding: 25px;
+        max-width: 90%;
+        border-radius: 2rem;
+    }
+    .login_title {
+        font-size: 30px;
+        margin-bottom: 20px;
+    }
+    .input_group input {
+        padding: 12px;
+    }
+    .login_button {
+        padding: 12px;
+    }
+}
