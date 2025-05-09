@@ -65,14 +65,15 @@ const MobileLayout = () => {
         { path: '/', label: '홈', icon: <FaHome /> },
         { path: '/attendance', label: '출석', icon: <FaUserClock /> },
         { path: '/todo', label: '할일', icon: <FaListUl /> },
-        { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
+        { path: '/receipts', label: '영수증', icon: <FaReceipt /> },
+        // { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
     ]
     
     // 더보기 메뉴 아이템
     const moreMenuItems = [
         { path: '/projects', label: '프로젝트', icon: <FaProjectDiagram /> },
         { path: '/room-reservation', label: '회의실 예약', icon: <FaDoorOpen /> },
-        { path: '/receipts', label: '영수증', icon: <FaReceipt /> },
+        
     ]
     
     // 프로필 메뉴 아이템

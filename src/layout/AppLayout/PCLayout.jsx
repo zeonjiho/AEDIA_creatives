@@ -54,8 +54,8 @@ const PCLayout = () => {
         { path: '/', label: 'Dashboard', icon: null },
         { path: '/attendance', label: 'Attendance', icon: null },
         { path: '/todo', label: 'Todo', icon: null },
-        { path: '/calendar', label: 'Calendar', icon: null },
-        { path: '/room-reservation', label: 'Room Reservation', icon: null },
+        // { path: '/calendar', label: 'Calendar', icon: null },
+        { path: '/room-reservation', label: 'Rooms', icon: null },
         { path: '/projects', label: 'Projects', icon: null },
         { path: '/receipts', label: 'Receipts', icon: null },
     ]
