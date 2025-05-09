@@ -106,7 +106,8 @@
 .status_card {
     background-color: var(--card-bg);
     border-radius: 3rem;
-    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.05);;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.05);
+    ;
     padding: 40px;
     width: 100%;
     max-width: 500px;
@@ -182,7 +183,8 @@
     justify-content: center;
 }
 
-.check_in_button, .check_out_button {
+.check_in_button,
+.check_out_button {
     padding: 15px 40px;
     border-radius: var(--border-radius-md);
     font-weight: 600;
@@ -214,7 +216,8 @@
     background-color: var(--bg-tertiary);
 }
 
-.check_in_button:disabled, .check_out_button:disabled {
+.check_in_button:disabled,
+.check_out_button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -375,7 +378,8 @@
     border-collapse: collapse;
 }
 
-.attendance_table th, .attendance_table td {
+.attendance_table th,
+.attendance_table td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
@@ -429,6 +433,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -453,45 +458,45 @@
         padding: 15px;
         max-width: 100%;
     }
-    
+
     .attendance_title {
         font-size: 36px;
         margin-bottom: 8px;
     }
-    
+
     .attendance_date {
         font-size: 14px;
     }
-    
+
     .attendance_center {
         margin: 5px auto 15px;
     }
-    
+
     .status_card {
         padding: 30px;
         max-width: 450px;
         margin: -5px auto 0;
     }
-    
+
     .status_icon {
         font-size: 50px;
     }
-    
+
     .attendance_header {
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .attendance_btn {
         width: 100%;
         justify-content: center;
     }
-    
+
     .attendance_grid {
         grid-template-columns: 1fr;
         max-width: 600px;
     }
-    
+
     .attendance_card_full {
         grid-column: auto;
     }
@@ -501,43 +506,44 @@
     .attendance_wrap {
         padding: 10px;
     }
-    
+
     .attendance_title {
         font-size: 28px;
     }
-    
+
     .attendance_date {
         font-size: 12px;
     }
-    
+
     .attendance_header {
         margin-bottom: 15px;
     }
-    
+
     .attendance_center {
         margin: 5px auto 250px;
     }
-    
+
     .status_card {
         padding: 20px;
         max-width: 100%;
         border-radius: 2rem;
         margin: 0 auto;
     }
-    
+
     .status_icon {
         font-size: 40px;
     }
-    
+
     .current_time {
         font-size: 28px;
     }
-    
-    .check_in_button, .check_out_button {
+
+    .check_in_button,
+    .check_out_button {
         padding: 12px 30px;
         font-size: 14px;
     }
-    
+
     .attendance_grid {
         gap: 15px;
     }
