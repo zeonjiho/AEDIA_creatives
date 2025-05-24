@@ -104,13 +104,24 @@ const sampleProjects = [
 ];
 
 const ProjectStatus = () => {
-  const [projects, setProjects] = useState([]);
-  const [allProjects, setAllProjects] = useState([]);
+  const [projects, setProjects] = useState(sampleProjects);
+  const [allProjects, setAllProjects] = useState(sampleProjects);
   const [selectedProject, setSelectedProject] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date())
   
+  // 이미지 로딩 상태 관리
+  const [imageLoadStates, setImageLoadStates] = useState({});
+
+  // 이미지 로드 완료 핸들러
+  const handleImageLoad = (projectId) => {
+    setImageLoadStates(prev => ({
+      ...prev,
+      [projectId]: true
+    }));
+  };
+
   useEffect(() => {
     // 실제 앱에서는 API 호출로 대체
     setProjects(sampleProjects);
@@ -268,11 +279,22 @@ const ProjectStatus = () => {
               className={`${styles.project_card} ${selectedProject && selectedProject.id === project.id ? styles.selected : ''}`}
               onClick={() => handleProjectClick(project)}
             >
+              {/* 이미지 스켈레톤 */}
+              {!imageLoadStates[project.id] && (
+                <div className={styles.image_skeleton}>
+                  <div className={styles.skeleton_animation}></div>
+                </div>
+              )}
+              
+              {/* 실제 이미지 */}
               <img 
                 src={project.thumbnail} 
                 alt={project.title} 
-                className={styles.project_thumbnail}
+                className={`${styles.project_thumbnail} ${imageLoadStates[project.id] ? styles.loaded : styles.loading}`}
+                onLoad={() => handleImageLoad(project.id)}
+                style={{ display: imageLoadStates[project.id] ? 'block' : 'none' }}
               />
+              
               <div className={styles.project_overlay}></div>
               <div className={styles.project_content}>
                 <span className={`${styles.project_status} ${getStatusClass(project.status)}`}>

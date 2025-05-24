@@ -9,7 +9,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999;
+    z-index: 1500;
+    backdrop-filter: blur(4px);
 }
 
 .modal_background {
@@ -18,29 +19,30 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: -1;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1499;
 }
 
 .modal_panel {
     position: relative;
-    width: 600px;
+    width: 800px;
     max-width: 90%;
     max-height: 90vh;
-    border-radius: 12px;
+    border-radius: var(--border-radius-lg);
     overflow: hidden;
-    z-index: 1000;
+    z-index: 1501;
     display: flex;
     flex-direction: column;
-    background-color: var(--card-bg);
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
+    box-shadow: var(--glass-shadow);
 }
 
 .panel_header {
     padding: 28px 32px;
     border-bottom: 1px solid var(--border-color);
     position: relative;
-    background-color: var(--card-bg);
+    background-color: var(--bg-secondary);
 }
 
 .panel_title {
@@ -53,29 +55,31 @@
     margin: 0;
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .close_button {
     position: absolute;
     top: 24px;
     right: 24px;
-    background: var(--bg-secondary);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    color: var(--text-color);
+    color: var(--text-primary);
     font-size: 1.1rem;
     cursor: pointer;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: var(--border-radius-round);
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease;
 }
 
 .close_button:hover {
     background-color: var(--danger-color);
     color: white;
+    transform: scale(1.05);
 }
 
 .panel_content {
@@ -100,17 +104,124 @@
     font-weight: 500;
 }
 
+
+/* 썸네일 섹션 */
+
+.thumbnail_section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.thumbnail_preview {
+    position: relative;
+    width: 280px;
+    height: 160px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.thumbnail_preview:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail_image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.thumbnail_image.loaded {
+    opacity: 1;
+    animation: fadeInSmooth 0.5s ease-in-out;
+}
+
+.thumbnail_image.loading {
+    opacity: 0;
+}
+
+.thumbnail_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.thumbnail_preview:hover .thumbnail_overlay {
+    opacity: 1;
+}
+
+.thumbnail_actions {
+    display: flex;
+    gap: 12px;
+}
+
+.thumbnail_upload_button,
+.thumbnail_remove_button {
+    padding: 10px 16px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.thumbnail_upload_button {
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+}
+
+.thumbnail_upload_button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.thumbnail_remove_button {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.thumbnail_remove_button:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+.thumbnail_help {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
 .form_group input,
 .form_group textarea,
 .form_group select {
     width: 100%;
     padding: 14px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
     background-color: var(--input-bg);
-    color: var(--text-color);
+    color: var(--text-primary);
     font-size: 1rem;
     box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
 .form_group input:focus,
@@ -118,11 +229,13 @@
 .form_group select:focus {
     border-color: var(--primary-color);
     outline: none;
+    box-shadow: 0 0 0 3px var(--primary-color-light);
 }
 
 .form_group textarea {
     min-height: 120px;
     resize: vertical;
+    font-family: inherit;
 }
 
 .form_row {
@@ -134,35 +247,197 @@
     flex: 1;
 }
 
+
+/* 스탭리스트 섹션 */
+
+.staff_section {
+    margin: 32px 0;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--bg-tertiary);
+}
+
+.staff_section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.staff_section h3 svg {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.staff_categories {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.staff_category {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.staff_category:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.category_header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.add_staff_button {
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--border-radius-round);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add_staff_button:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.add_staff_button:active {
+    transform: scale(0.95);
+}
+
+.staff_members {
+    min-height: 80px;
+}
+
+.no_staff {
+    margin: 0;
+    padding: 20px 0;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.staff_member {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    border-radius: 16px;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.member_name {
+    font-weight: 500;
+}
+
+.member_info {
+    opacity: 0.8;
+    font-size: 0.8rem;
+    margin-left: 8px;
+}
+
+.member_phone {
+    opacity: 0.8;
+    font-size: 0.8rem;
+    margin-left: 8px;
+}
+
+.external_badge {
+    background-color: rgba(255, 255, 255, 0.3);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.remove_staff_button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-round);
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+.remove_staff_button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
 .form_actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
 }
 
 .cancel_button,
 .save_button {
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .cancel_button {
-    background-color: var(--bg-secondary);
-    color: var(--text-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
 .cancel_button:hover {
-    background-color: var(--bg-tertiary);
+    background-color: var(--button-color-hover);
+    transform: translateY(-1px);
 }
 
 .save_button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
     border: none;
     display: flex;
     align-items: center;
@@ -170,11 +445,38 @@
 }
 
 .save_button:hover {
-    background-color: var(--primary-color-dark);
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .save_button svg {
     font-size: 1rem;
+}
+
+
+/* 애니메이션 */
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInSmooth {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 
@@ -194,5 +496,75 @@
     .form_row {
         flex-direction: column;
         gap: 20px;
+    }
+    .staff_categories {
+        grid-template-columns: 1fr;
+    }
+    .form_group input,
+    .form_group textarea,
+    .form_group select {
+        font-size: 16px;
+        /* iOS에서 줌인 방지 */
+    }
+}
+
+
+/* 썸네일 스켈레톤 */
+
+.image_skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary);
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-md);
+}
+
+.skeleton_animation {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient( 90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmerSmall 1.8s infinite;
+    position: relative;
+    border-radius: var(--border-radius-md);
+}
+
+.skeleton_animation::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.skeleton_animation::after {
+    content: '📷';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    opacity: 0.4;
+}
+
+
+/* 애니메이션 */
+
+@keyframes shimmerSmall {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
     }
 }

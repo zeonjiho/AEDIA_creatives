@@ -13,6 +13,7 @@ import {
     FaFileInvoiceDollar,
     FaEllipsisH,
     FaUserClock,
+    FaAddressBook,
 } from 'react-icons/fa'
 import { users, notifications, currentUser } from '../../data/mockDatabase'
 import AediaLogo from '../../components/AediaLogo/AediaLogo'
@@ -83,8 +84,8 @@ const MobileLayout = ({ user }) => {
     // 더보기 메뉴 아이템
     const moreMenuItems = [
         { path: '/projects', label: '프로젝트', icon: <FaProjectDiagram /> },
+        { path: '/contact', label: '연락처', icon: <FaAddressBook /> },
         { path: '/room-reservation', label: '회의실 예약', icon: <FaDoorOpen /> },
-
     ]
 
     // 프로필 메뉴 아이템

@@ -181,6 +181,89 @@
     object-fit: cover;
     z-index: 1;
     transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.project_thumbnail.loaded {
+    opacity: 1;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.project_thumbnail.loading {
+    opacity: 0;
+}
+
+
+/* 이미지 스켈레톤 */
+
+.image_skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-tertiary);
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skeleton_animation {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient( 90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    position: relative;
+}
+
+.skeleton_animation::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skeleton_animation::after {
+    content: '📸';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    opacity: 0.3;
+}
+
+
+/* 애니메이션 */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(1.02);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .project_overlay {
@@ -219,6 +302,8 @@
     background-color: rgba(255, 255, 255, 0.2);
     color: var(--text-color);
     margin-bottom: 10px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .project_progress {
@@ -231,7 +316,7 @@
 
 .progress_bar {
     height: 100%;
-    background-color: var(--primary-color);
+    background-color: #ffffff;
     border-radius: 3px;
 }
 
@@ -282,14 +367,16 @@
 .status_concept,
 .status_development,
 .status_pre_production {
-    background-color: rgba(0, 68, 255, 0.15);
+    background-color: rgba(0, 51, 152, 0.4);
     border: 1px solid rgba(0, 68, 255, 0.5);
+    color: rgba(225, 233, 255, 1);
     font-weight: 600;
 }
 
 .status_production {
-    background-color: rgba(255, 0, 0, 0.15);
+    background-color: rgba(255, 0, 0, 0.4);
     border: 1px solid rgba(255, 0, 0, 0.5);
+    color: rgba(255, 233, 233, 1);
     font-weight: 600;
 }
 
@@ -298,8 +385,9 @@
 .status_vfx,
 .status_quality_check,
 .status_delivery {
-    background-color: rgba(34, 255, 0, 0.15);
+    background-color: rgba(22, 165, 0, 0.4);
     border: 1px solid rgba(34, 255, 0, 0.5);
+    color: rgba(134, 255, 180, 1);
     font-weight: 600;
 }
 

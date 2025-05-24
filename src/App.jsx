@@ -13,6 +13,7 @@ import Receipts from './page/Receipts/Receipts';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
 import Settings from './page/Settings/Settings';
+import Contact from './page/Contact/Contact';
 import AdminLayout from './layout/AdminLayout/AdminLayout';
 import AdminMain from './page/Admin/AdminMain/AdminMain';
 import AdminProject from './page/Admin/AdminProject/AdminProject';
@@ -20,6 +21,7 @@ import AdminUser from './page/Admin/AdminUser/AdminUser';
 import AdminStaff from './page/Admin/AdminStaff/AdminStaff';
 import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
 import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
+
 
 function App() {
 
@@ -41,6 +43,7 @@ function App() {
           <Route path='calendar' element={<Calendar />} />
           <Route path='room-reservation' element={<RoomReservation />} />
           <Route path='projects' element={<ProjectStatus />} />
+          <Route path='contact' element={<Contact />} />
           <Route path='notifications' element={<TeamNotifications />} />
           <Route path='receipts' element={<Receipts />} />
           <Route path='profile' element={<Profile />} />

@@ -68,6 +68,7 @@ const PCLayout = ({ user }) => {
         { path: '/calendar', label: 'Calendar', icon: null },
         { path: '/room-reservation', label: 'Rooms', icon: null },
         { path: '/projects', label: 'Projects', icon: null },
+        { path: '/contact', label: 'Contact', icon: null },
         { path: '/receipts', label: 'Receipts', icon: null },
     ]
 
