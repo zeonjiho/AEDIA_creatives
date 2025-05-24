@@ -12,6 +12,10 @@ import Receipts from './page/Receipts/Receipts';
 import Signup from './page/Signup/Signup';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
+import AdminLayout from './layout/AdminLayout/AdminLayout';
+import AdminMain from './page/Admin/AdminMain/AdminMain';
+import AdminUser from './page/Admin/AdminUser/AdminUser';
+import AdminProject from './page/Admin/AdminProject/AdminProject';
 
 function App() {
   return (
@@ -30,6 +34,12 @@ function App() {
           <Route path='notifications' element={<TeamNotifications />} />
           <Route path='receipts' element={<Receipts />} />
           <Route path='profile' element={<Profile />} />
+        </Route>
+
+        <Route path='/admin' element={<AdminLayout />}>
+          <Route index element={<AdminMain />} />
+          <Route path='user' element={<AdminUser />} />
+          <Route path='project' element={<AdminProject />} />
         </Route>
       </Routes>
     </div>
