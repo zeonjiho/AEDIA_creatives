@@ -21,6 +21,7 @@ const port = 8181;
 const tokenSecretKey = 'temp_key';
 
 const User = require('./models/User')
+const Todo = require('./models/Todo')
 // const Category = require('./models/Category')
 // const Review = require('./models/Review')
 // const Product = require('./models/Product')
@@ -553,22 +554,124 @@ app.post('/attendance/new-check-in', async (req, res) => {
     }
 });
 
-
-
-// const devTest_slack = async () => {
-//     try {
-//         const message = '안녕하세요. 테스트 메시지입니다.'
-        
-//         // 방법 1: 테스트 채널 사용 (권장)
-//         await slackBot.chat.postMessage({
-//             channel: '@zeonjiho', // @빼면 안 되는 듯.
-//             text: message
-//         })
-        
-//         console.log('슬랙 메시지 전송 성공')
-//     } catch (err) {
-//         console.log('슬랙 메시지 전송 실패:', err)
-//     }
-// }
-
 // devTest_slack()
+
+// Todo 관련 API
+// 할 일 목록 조회
+app.get('/todos', async (req, res) => {
+    const { userId } = req.query;
+    try {
+        const todos = await Todo.find({ poster: userId })
+            .populate('poster', 'name email')
+            .sort({ createdAt: -1 });
+        
+        res.status(200).json(todos);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '할 일 목록 조회 실패' });
+    }
+});
+
+// 할 일 추가
+app.post('/todos', async (req, res) => {
+    const { userId } = req.query;
+    const { text, dueDate, dueTime, projectId } = req.body;
+    
+    try {
+        const newTodo = new Todo({
+            text,
+            dueDate,
+            dueTime: dueTime || null,
+            poster: userId,
+            projectId: projectId || null
+        });
+        
+        await newTodo.save();
+        
+        // populate해서 응답 (projectId 제외)
+        const populatedTodo = await Todo.findById(newTodo._id)
+            .populate('poster', 'name email');
+        
+        res.status(201).json(populatedTodo);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '할 일 추가 실패' });
+    }
+});
+
+// 할 일 수정
+app.put('/todos/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.query;
+    const { text, dueDate, dueTime, projectId } = req.body;
+    
+    try {
+        const todo = await Todo.findOne({ _id: id, poster: userId });
+        if (!todo) {
+            return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
+        }
+        
+        const updatedTodo = await Todo.findByIdAndUpdate(
+            id,
+            {
+                text,
+                dueDate,
+                dueTime: dueTime || null,
+                projectId: projectId || null,
+                updatedAt: new Date()
+            },
+            { new: true }
+        ).populate('poster', 'name email');
+        
+        res.status(200).json(updatedTodo);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '할 일 수정 실패' });
+    }
+});
+
+// 할 일 완료/미완료 토글
+app.patch('/todos/:id/toggle', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.query;
+    
+    try {
+        const todo = await Todo.findOne({ _id: id, poster: userId });
+        if (!todo) {
+            return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
+        }
+        
+        const updatedTodo = await Todo.findByIdAndUpdate(
+            id,
+            {
+                completed: !todo.completed,
+                updatedAt: new Date()
+            },
+            { new: true }
+        ).populate('poster', 'name email');
+        
+        res.status(200).json(updatedTodo);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '할 일 상태 변경 실패' });
+    }
+});
+
+// 할 일 삭제
+app.delete('/todos/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.query;
+    
+    try {
+        const todo = await Todo.findOne({ _id: id, poster: userId });
+        if (!todo) {
+            return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
+        }
+        
+        await Todo.findByIdAndDelete(id);
+        res.status(200).json({ message: '할 일이 삭제되었습니다.' });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '할 일 삭제 실패' });
+    }
+});

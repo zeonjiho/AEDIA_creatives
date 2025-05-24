@@ -279,6 +279,35 @@
     box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
 }
 
+.projectSelectButton {
+    padding: 0.8rem 1.2rem 0.8rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    text-align: left;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+}
+
+.projectSelectButton:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-color);
+}
+
+.projectSelectButton:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
 .addButton {
     display: flex;
     align-items: center;
@@ -752,7 +781,8 @@
     }
     .datePicker,
     .timePicker,
-    .projectSelect {
+    .projectSelect,
+    .projectSelectButton {
         width: 100%;
     }
     .addButtonText {
@@ -1191,4 +1221,33 @@
     height: 12px;
     border-radius: 50%;
     display: inline-block;
+}
+
+/* 로딩 상태 스타일 */
+.loadingState {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.loadingState p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* 비활성화된 버튼 스타일 */
+.addButton:disabled,
+.shareButton:disabled,
+.saveButton:disabled,
+.editButton:disabled,
+.deleteButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 비활성화된 체크박스 스타일 */
+.todoCheckbox input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
