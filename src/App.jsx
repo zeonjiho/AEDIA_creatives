@@ -11,6 +11,7 @@ import TeamNotifications from './page/TeamNotifications/TeamNotifications';
 import Receipts from './page/Receipts/Receipts';
 import Signup from './page/Signup/Signup';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
+import Profile from './page/Profile/Profile';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path='projects' element={<ProjectStatus />} />
           <Route path='notifications' element={<TeamNotifications />} />
           <Route path='receipts' element={<Receipts />} />
+          <Route path='profile' element={<Profile />} />
         </Route>
       </Routes>
     </div>

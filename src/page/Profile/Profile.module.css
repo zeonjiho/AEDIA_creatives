@@ -1,0 +1,308 @@
+.profile_container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--card-shadow);
+}
+
+.profile_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+}
+
+.profile_header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.edit_button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit_button:hover {
+    background-color: var(--accent-hover);
+}
+
+.edit_button.cancel {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.edit_button.cancel:hover {
+    background-color: var(--danger-color);
+    opacity: 0.9;
+}
+
+.profile_content {
+    display: flex;
+    gap: 32px;
+}
+
+.profile_avatar_section {
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.avatar_container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin-bottom: 16px;
+}
+
+.avatar_image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius-round);
+    border: 3px solid var(--accent-color);
+}
+
+.avatar_placeholder {
+    width: 100%;
+    height: 100%;
+    color: var(--text-secondary);
+}
+
+.change_avatar_button {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 36px;
+    height: 36px;
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: var(--border-radius-round);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.change_avatar_button:hover {
+    background-color: var(--accent-hover);
+}
+
+.user_name {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+}
+
+.user_role {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.profile_details {
+    flex: 1;
+}
+
+.form_group {
+    margin-bottom: 16px;
+}
+
+.form_group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form_group input,
+.form_group textarea,
+.form_group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.form_group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.save_button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 24px;
+}
+
+.save_button:hover {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.info_list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info_item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info_item label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.info_item p {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.info_item .bio {
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+
+/* 탭 스타일 */
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    width: 100%;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.tab {
+    padding: 8px 16px;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab:hover {
+    color: var(--accent-color);
+    background-color: var(--bg-tertiary);
+}
+
+.tab.active {
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
+    font-weight: 600;
+    background-color: transparent;
+}
+
+.tab_content {
+    padding-top: 16px;
+}
+
+
+/* 비밀번호 입력 필드 스타일 */
+
+.password_input_container {
+    position: relative;
+    display: flex;
+}
+
+.toggle_password_button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.toggle_password_button:hover {
+    color: var(--accent-color);
+}
+
+.error_message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--danger-color);
+    font-size: 14px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    border-radius: var(--border-radius-sm);
+}
+
+.readonly_input {
+    background-color: var(--bg-tertiary);
+    cursor: not-allowed;
+    color: var(--text-secondary);
+}
+
+.field_note {
+    display: block;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+
+/* 반응형 스타일 */
+
+@media (max-width: 768px) {
+    .profile_content {
+        flex-direction: column;
+    }
+    .profile_avatar_section {
+        margin-bottom: 24px;
+    }
+}
