@@ -35,8 +35,9 @@ const userSchema = new Schema({
         type: Array,
         default: [],
     },
-    profileImage: {
+    avatar: {
         type: String,
+        default: '',
     },
     status: {
         type: String,

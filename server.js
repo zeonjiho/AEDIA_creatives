@@ -371,14 +371,32 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
             { status: 'active' },
             { new: true }
         ).select('-password');
-        
+
         if (!updatedUser) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         res.status(200).json({ message: '사용자가 승인되었습니다.', user: updatedUser });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '승인 처리 중 오류가 발생했습니다.' });
+    }
+})
+
+// 사용자 정보 불러오기 (메인 등에서 사용)
+app.get('/get-user-info', async (req, res) => {
+    const { userId } = req.query;
+    try {
+        const user = await User.findById(userId).select('-password');
+        if (user) {
+            res.status(200).json(user);
+            return
+        } else {
+            res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+            return
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: '사용자 정보 불러오기 실패' });
     }
 })

@@ -22,6 +22,12 @@ import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
 import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
 
 function App() {
+
+  if (window.location.pathname !== '/login' && !localStorage.getItem('token')) {
+    window.location.href = '/login'
+    return
+  }
+
   return (
     <div>
       <Routes>
