@@ -14,8 +14,11 @@ import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
 import AdminLayout from './layout/AdminLayout/AdminLayout';
 import AdminMain from './page/Admin/AdminMain/AdminMain';
-import AdminUser from './page/Admin/AdminUser/AdminUser';
 import AdminProject from './page/Admin/AdminProject/AdminProject';
+import AdminUser from './page/Admin/AdminUser/AdminUser';
+import AdminStaff from './page/Admin/AdminStaff/AdminStaff';
+import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
+import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
 
 function App() {
   return (
@@ -38,8 +41,13 @@ function App() {
 
         <Route path='/admin' element={<AdminLayout />}>
           <Route index element={<AdminMain />} />
-          <Route path='user' element={<AdminUser />} />
+          <Route path='user-list' element={<AdminUser />} />
           <Route path='project' element={<AdminProject />} />
+          <Route path='staff-list' element={<AdminStaff />} />
+          <Route path='finance'>
+            <Route path='meal' element={<AdminFinanceMeal />} />
+            <Route path='taxi' element={<AdminFinanceTaxi />} />
+          </Route>
         </Route>
       </Routes>
     </div>
