@@ -15,6 +15,11 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    userType: {
+        type: String,
+        enum: ['internal', 'external'],
+        default: 'internal',
+    },
     phone: {
         type: String,
         required: false,
