@@ -555,20 +555,20 @@ app.post('/attendance/new-check-in', async (req, res) => {
 
 
 
-const devTest_slack = async () => {
-    try {
-        const message = '안녕하세요. 테스트 메시지입니다.'
+// const devTest_slack = async () => {
+//     try {
+//         const message = '안녕하세요. 테스트 메시지입니다.'
         
-        // 방법 1: 테스트 채널 사용 (권장)
-        await slackBot.chat.postMessage({
-            channel: '@zeonjiho', // @빼면 안 되는 듯.
-            text: message
-        })
+//         // 방법 1: 테스트 채널 사용 (권장)
+//         await slackBot.chat.postMessage({
+//             channel: '@zeonjiho', // @빼면 안 되는 듯.
+//             text: message
+//         })
         
-        console.log('슬랙 메시지 전송 성공')
-    } catch (err) {
-        console.log('슬랙 메시지 전송 실패:', err)
-    }
-}
+//         console.log('슬랙 메시지 전송 성공')
+//     } catch (err) {
+//         console.log('슬랙 메시지 전송 실패:', err)
+//     }
+// }
 
-devTest_slack()
+// devTest_slack()
