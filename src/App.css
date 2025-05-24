@@ -170,7 +170,7 @@ body {
 body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    transition: all 0.3s ease;
+    /* transition: all 0.3s ease; */
     position: fixed;
     top: 0;
     right: 0;
