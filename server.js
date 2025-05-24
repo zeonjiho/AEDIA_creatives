@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require('cors')
 const https = require('https')
@@ -9,18 +10,23 @@ const path = require('path')
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
 
+// 슬랙 관련
+const { WebClient } = require('@slack/web-api')
+const slackToken = process.env.SLACK_TOKEN
+const slackBot = new WebClient(slackToken)
+
 const app = express()
 
 const port = 8181;
 const tokenSecretKey = 'temp_key';
 
 const User = require('./models/User')
-    // const Category = require('./models/Category')
-    // const Review = require('./models/Review')
-    // const Product = require('./models/Product')
-    // const Order = require('./models/Order')
-    // const MainBanner = require('./models/MainBanner')
-    // const FreeDesign = require('./models/FreeDesign')
+// const Category = require('./models/Category')
+// const Review = require('./models/Review')
+// const Product = require('./models/Product')
+// const Order = require('./models/Order')
+// const MainBanner = require('./models/MainBanner')
+// const FreeDesign = require('./models/FreeDesign')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -53,233 +59,6 @@ app.use('/uploads', express.static('uploads'));
 
 
 // ----------------------------------------------------------
-// 목업 데이터
-// ----------------------------------------------------------
-
-const mockUsers = [{
-        loginId: 'kim.minsu',
-        password: 'password123',
-        name: '김민수',
-        userType: 'internal',
-        phone: '010-1234-5678',
-        email: 'kim.minsu@aedia.com',
-        roles: ['producer', 'project_manager'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'lee.soojin',
-        password: 'password123',
-        name: '이수진',
-        userType: 'internal',
-        phone: '010-2345-6789',
-        email: 'lee.soojin@aedia.com',
-        roles: ['creative_director'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'park.jiwon',
-        password: 'password123',
-        name: '박지원',
-        userType: 'internal',
-        phone: '010-3456-7890',
-        email: 'park.jiwon@aedia.com',
-        roles: ['editor', 'motion_graphics'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'choi.dohyun',
-        password: 'password123',
-        name: '최도현',
-        userType: 'external',
-        phone: '010-4567-8901',
-        email: 'choi.dohyun@freelancer.com',
-        roles: ['director', 'camera'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'jung.minji',
-        password: 'password123',
-        name: '정민지',
-        userType: 'internal',
-        phone: '010-5678-9012',
-        email: 'jung.minji@aedia.com',
-        roles: ['art_director', 'designer'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'kang.seungho',
-        password: 'password123',
-        name: '강승호',
-        userType: 'external',
-        phone: '010-6789-0123',
-        email: 'kang.seungho@lighting.com',
-        roles: ['lighting_director'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'yoon.haeun',
-        password: 'password123',
-        name: '윤하은',
-        userType: 'internal',
-        phone: '010-7890-1234',
-        email: 'yoon.haeun@aedia.com',
-        roles: ['account_manager'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'lim.jaehyuk',
-        password: 'password123',
-        name: '임재혁',
-        userType: 'external',
-        phone: '010-8901-2345',
-        email: 'lim.jaehyuk@sound.com',
-        roles: ['sound_engineer'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'han.yejin',
-        password: 'password123',
-        name: '한예진',
-        userType: 'internal',
-        phone: '010-9012-3456',
-        email: 'han.yejin@aedia.com',
-        roles: ['copywriter', 'content_planner'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'song.mingyu',
-        password: 'password123',
-        name: '송민규',
-        userType: 'external',
-        phone: '010-0123-4567',
-        email: 'song.mingyu@photo.com',
-        roles: ['photographer'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'oh.soyeon',
-        password: 'password123',
-        name: '오소연',
-        userType: 'internal',
-        phone: '010-1357-2468',
-        email: 'oh.soyeon@aedia.com',
-        roles: ['production_coordinator'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'kwon.taemin',
-        password: 'password123',
-        name: '권태민',
-        userType: 'external',
-        phone: '010-2468-1357',
-        email: 'kwon.taemin@vfx.com',
-        roles: ['vfx_artist'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'shin.eunji',
-        password: 'password123',
-        name: '신은지',
-        userType: 'internal',
-        phone: '010-3691-4702',
-        email: 'shin.eunji@aedia.com',
-        roles: ['marketing_manager'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'bae.jongsoo',
-        password: 'password123',
-        name: '배종수',
-        userType: 'external',
-        phone: '010-4702-5813',
-        email: 'bae.jongsoo@grip.com',
-        roles: ['gaffer', 'grip'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'moon.chaeyoung',
-        password: 'password123',
-        name: '문채영',
-        userType: 'internal',
-        phone: '010-5813-6924',
-        email: 'moon.chaeyoung@aedia.com',
-        roles: ['finance_manager'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'ahn.hyunwoo',
-        password: 'password123',
-        name: '안현우',
-        userType: 'external',
-        phone: '010-6924-7035',
-        email: 'ahn.hyunwoo@music.com',
-        roles: ['composer', 'music_director'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'go.yuri',
-        password: 'password123',
-        name: '고유리',
-        userType: 'internal',
-        phone: '010-7035-8146',
-        email: 'go.yuri@aedia.com',
-        roles: ['hr_manager'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'nam.jihoon',
-        password: 'password123',
-        name: '남지훈',
-        userType: 'external',
-        phone: '010-8146-9257',
-        email: 'nam.jihoon@makeup.com',
-        roles: ['makeup_artist'],
-        status: 'waiting',
-        projects: []
-    },
-    {
-        loginId: 'ryu.seungmin',
-        password: 'password123',
-        name: '류승민',
-        userType: 'internal',
-        phone: '010-9257-0368',
-        email: 'ryu.seungmin@aedia.com',
-        roles: ['tech_manager', 'equipment'],
-        status: 'active',
-        projects: []
-    },
-    {
-        loginId: 'jeon.yoona',
-        password: 'password123',
-        name: '전윤아',
-        userType: 'external',
-        phone: '010-0368-1479',
-        email: 'jeon.yoona@styling.com',
-        roles: ['stylist', 'wardrobe'],
-        status: 'active',
-        projects: []
-    }
-];
-
-
-// ----------------------------------------------------------
 // API 라우터
 // ----------------------------------------------------------
 
@@ -287,7 +66,7 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/get-user-list', async(req, res) => {
+app.get('/get-user-list', async (req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
@@ -306,7 +85,7 @@ app.get('/get-user-list', async(req, res) => {
     }
 })
 
-app.post('/signup', async(req, res) => {
+app.post('/signup', async (req, res) => {
     const { password, name, slackId, phone, email, position } = req.body;
     try {
         const alreadyExists = await User.findOne({ email: email });
@@ -333,7 +112,7 @@ app.post('/signup', async(req, res) => {
     }
 })
 
-app.post('/login', async(req, res) => {
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email: email });
@@ -367,7 +146,7 @@ app.post('/login', async(req, res) => {
 })
 
 // 유저 승인 API
-app.get('/admin/approve-user/:userId', async(req, res) => {
+app.get('/admin/approve-user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const updatedUser = await User.findByIdAndUpdate(
@@ -386,7 +165,7 @@ app.get('/admin/approve-user/:userId', async(req, res) => {
 })
 
 // 사용자 정보 불러오기 (메인 등에서 사용)
-app.get('/get-user-info', async(req, res) => {
+app.get('/get-user-info', async (req, res) => {
     const { userId } = req.query;
     try {
         const user = await User.findById(userId).select('-password');
@@ -406,26 +185,26 @@ app.get('/get-user-info', async(req, res) => {
 // 출근 체크인 API
 app.post('/attendance/check-in', async (req, res) => {
     const { location, method = 'manual' } = req.body;
-    const {userId} = req.query;
-    
+    const { userId } = req.query;
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
         const now = new Date();
-        
+
         // 오늘 출석 기록 찾기
         let todayAttendance = user.attendance.find(att => att.date === today);
-        
+
         const newRecord = {
             type: 'checkIn',
             time: now,
             method: method
         };
-        
+
         if (!todayAttendance) {
             // 새로운 출석 기록 생성 - MongoDB $push 사용
             await User.findByIdAndUpdate(userId, {
@@ -447,19 +226,19 @@ app.post('/attendance/check-in', async (req, res) => {
                 }
             );
         }
-        
+
         // 9시 이후면 지각
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
-        
-        const responseData = { 
+
+        const responseData = {
             message: '출근 처리되었습니다.',
             checkInTime: now,
             isLate: isLate,
             status: isLate ? '지각' : '정시'
         };
-        
+
         res.status(200).json(responseData);
-        
+
     } catch (err) {
         console.error('출근 처리 중 오류:', err);
         res.status(500).json({ message: '출근 처리 중 오류가 발생했습니다.' });
@@ -469,42 +248,42 @@ app.post('/attendance/check-in', async (req, res) => {
 // 퇴근 체크아웃 API
 app.post('/attendance/check-out', async (req, res) => {
     const { location, method = 'manual' } = req.body;
-    const {userId} = req.query;
-    
+    const { userId } = req.query;
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const today = new Date().toISOString().split('T')[0];
         const now = new Date();
-        
+
         // 오늘 출석 기록 찾기
         let todayAttendance = user.attendance.find(att => att.date === today);
         if (!todayAttendance) {
             return res.status(400).json({ message: '출근 기록이 없습니다.' });
         }
-        
+
         // 가장 최근 출근 기록 중에서 퇴근하지 않은 기록 찾기
         const checkInRecords = todayAttendance.records.filter(r => r.type === 'checkIn');
         const checkOutRecords = todayAttendance.records.filter(r => r.type === 'checkOut');
-        
+
         if (checkInRecords.length === 0) {
             return res.status(400).json({ message: '출근 기록이 없습니다.' });
         }
-        
+
         if (checkInRecords.length <= checkOutRecords.length) {
             return res.status(400).json({ message: '이미 퇴근 처리되었습니다.' });
         }
-        
+
         // 퇴근 기록 추가 - MongoDB $push 사용
         const newRecord = {
             type: 'checkOut',
             time: now,
             method: method
         };
-        
+
         await User.findOneAndUpdate(
             { _id: userId, 'attendance.date': today },
             {
@@ -513,18 +292,18 @@ app.post('/attendance/check-out', async (req, res) => {
                 }
             }
         );
-        
+
         // 가장 최근 출근과 퇴근 시간으로 근무 시간 계산
         const lastCheckIn = checkInRecords[checkInRecords.length - 1];
         const workMinutes = Math.floor((now - new Date(lastCheckIn.time)) / (1000 * 60));
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             message: '퇴근 처리되었습니다.',
             checkOutTime: now,
             workHours: workMinutes,
             workHoursFormatted: `${Math.floor(workMinutes / 60)}시간 ${workMinutes % 60}분`
         });
-        
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '퇴근 처리 중 오류가 발생했습니다.' });
@@ -535,13 +314,13 @@ app.post('/attendance/check-out', async (req, res) => {
 app.get('/attendance/history', async (req, res) => {
     const { userId } = req.query;
     const { limit = 30 } = req.query; // 기본 30개 기록
-    
+
     try {
         const user = await User.findById(userId).select('attendance');
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         // 최신 순으로 정렬하고 제한
         const attendanceHistory = user.attendance
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -549,11 +328,11 @@ app.get('/attendance/history', async (req, res) => {
             .map(att => {
                 const checkInRecords = att.records.filter(r => r.type === 'checkIn');
                 const checkOutRecords = att.records.filter(r => r.type === 'checkOut');
-                
+
                 // 첫 번째 출근과 마지막 퇴근 시간
                 const firstCheckIn = checkInRecords.length > 0 ? checkInRecords[0] : null;
                 const lastCheckOut = checkOutRecords.length > 0 ? checkOutRecords[checkOutRecords.length - 1] : null;
-                
+
                 // 상태 결정
                 let status = '정상';
                 if (firstCheckIn) {
@@ -562,7 +341,7 @@ app.get('/attendance/history', async (req, res) => {
                 }
                 if (!lastCheckOut && firstCheckIn) status = '미퇴근';
                 if (checkInRecords.length === 0) status = '결근';
-                
+
                 // 총 근무시간 계산
                 let totalWorkMinutes = 0;
                 for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
@@ -570,7 +349,7 @@ app.get('/attendance/history', async (req, res) => {
                     const checkOutTime = new Date(checkOutRecords[i].time);
                     totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
                 }
-                
+
                 return {
                     date: att.date,
                     checkIn: firstCheckIn ? new Date(firstCheckIn.time).toTimeString().slice(0, 5) : '-',
@@ -582,9 +361,9 @@ app.get('/attendance/history', async (req, res) => {
                     recordCount: checkInRecords.length + checkOutRecords.length
                 };
             });
-        
+
         res.status(200).json(attendanceHistory);
-        
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '출석 기록 조회 중 오류가 발생했습니다.' });
@@ -594,16 +373,16 @@ app.get('/attendance/history', async (req, res) => {
 // 오늘 출석 상태 조회 API
 app.get('/attendance/today', async (req, res) => {
     const { userId } = req.query;
-    
+
     try {
         const user = await User.findById(userId).select('attendance');
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const today = new Date().toISOString().split('T')[0];
         const todayAttendance = user.attendance.find(att => att.date === today);
-        
+
         if (!todayAttendance || todayAttendance.records.length === 0) {
             const response = {
                 status: '미출근',
@@ -613,13 +392,13 @@ app.get('/attendance/today', async (req, res) => {
             };
             return res.status(200).json(response);
         }
-        
+
         const checkInRecords = todayAttendance.records.filter(r => r.type === 'checkIn');
         const checkOutRecords = todayAttendance.records.filter(r => r.type === 'checkOut');
-        
+
         let status = '미출근';
         let canCheckOut = false;
-        
+
         if (checkInRecords.length > 0) {
             if (checkInRecords.length > checkOutRecords.length) {
                 status = '출근';
@@ -628,7 +407,7 @@ app.get('/attendance/today', async (req, res) => {
                 status = '퇴근';
             }
         }
-        
+
         const response = {
             status: status,
             records: todayAttendance.records,
@@ -636,9 +415,9 @@ app.get('/attendance/today', async (req, res) => {
             canCheckOut: canCheckOut,
             attendanceRecord: todayAttendance
         };
-        
+
         res.status(200).json(response);
-        
+
     } catch (err) {
         console.error('오늘 출석 상태 조회 중 오류:', err);
         res.status(500).json({ message: '오늘 출석 상태 조회 중 오류가 발생했습니다.' });
@@ -649,33 +428,33 @@ app.get('/attendance/today', async (req, res) => {
 app.patch('/attendance/update/:userId', async (req, res) => {
     const { userId } = req.params;
     const { date, recordIndex, time } = req.body;
-    
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const targetAttendance = user.attendance.find(att => att.date === date);
         if (!targetAttendance) {
             return res.status(404).json({ message: '해당 날짜의 출석 기록이 없습니다.' });
         }
-        
+
         if (recordIndex >= targetAttendance.records.length) {
             return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
         }
-        
+
         const newTime = new Date(time);
         targetAttendance.records[recordIndex].time = newTime;
         targetAttendance.records[recordIndex].method = 'manual_edit';
-        
+
         await user.save();
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             message: '출석 기록이 수정되었습니다.',
             updatedRecord: targetAttendance
         });
-        
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '출석 기록 수정 중 오류가 발생했습니다.' });
@@ -686,36 +465,36 @@ app.patch('/attendance/update/:userId', async (req, res) => {
 app.delete('/attendance/delete/:userId', async (req, res) => {
     const { userId } = req.params;
     const { date, recordIndex } = req.body;
-    
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const targetAttendance = user.attendance.find(att => att.date === date);
         if (!targetAttendance) {
             return res.status(404).json({ message: '해당 날짜의 출석 기록이 없습니다.' });
         }
-        
+
         if (recordIndex >= targetAttendance.records.length) {
             return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
         }
-        
+
         targetAttendance.records.splice(recordIndex, 1);
-        
+
         // 기록이 모두 삭제되면 날짜 자체도 삭제
         if (targetAttendance.records.length === 0) {
             user.attendance = user.attendance.filter(att => att.date !== date);
         }
-        
+
         await user.save();
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             message: '출석 기록이 삭제되었습니다.',
             updatedRecord: targetAttendance.records.length > 0 ? targetAttendance : null
         });
-        
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '출석 기록 삭제 중 오류가 발생했습니다.' });
@@ -727,19 +506,19 @@ app.post('/attendance/new-check-in', async (req, res) => {
     // 기본 check-in API와 동일한 로직 사용
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
-    
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const today = new Date().toISOString().split('T')[0];
         const now = new Date();
-        
+
         // 오늘 출석 기록 찾기
         let todayAttendance = user.attendance.find(att => att.date === today);
-        
+
         if (!todayAttendance) {
             // 새로운 출석 기록 생성
             todayAttendance = {
@@ -748,28 +527,48 @@ app.post('/attendance/new-check-in', async (req, res) => {
             };
             user.attendance.push(todayAttendance);
         }
-        
+
         // 새로운 출근 기록 추가
         todayAttendance.records.push({
             type: 'checkIn',
             time: now,
             method: method
         });
-        
+
         await user.save();
-        
+
         // 9시 이후면 지각
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             message: '출근 처리되었습니다.',
             checkInTime: now,
             isLate: isLate,
             status: isLate ? '지각' : '정시'
         });
-        
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '출근 처리 중 오류가 발생했습니다.' });
     }
 });
+
+
+
+const devTest_slack = async () => {
+    try {
+        const message = '안녕하세요. 테스트 메시지입니다.'
+        
+        // 방법 1: 테스트 채널 사용 (권장)
+        await slackBot.chat.postMessage({
+            channel: '@zeonjiho', // @빼면 안 되는 듯.
+            text: message
+        })
+        
+        console.log('슬랙 메시지 전송 성공')
+    } catch (err) {
+        console.log('슬랙 메시지 전송 실패:', err)
+    }
+}
+
+devTest_slack()
