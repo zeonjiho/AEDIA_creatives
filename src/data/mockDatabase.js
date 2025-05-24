@@ -190,11 +190,90 @@ export const getReservationsByDate = (date) => {
 };
 
 // 프로젝트 데이터
-export const projects = [
-    { id: 1, title: '기업 홍보 영상', description: '대기업 연간 홍보 영상 제작', startDate: '2023-03-01', endDate: '2023-04-15', status: projectStatuses.PRE_PRODUCTION.id, manager: 1, team: [1, 2, 3, 5, 6, 7], budget: 50000000, client: '대한기업', colorTag: 1 },
-    { id: 2, title: '신제품 광고', description: '신제품 출시 TV 광고 캠페인', startDate: '2023-03-05', endDate: '2023-05-10', status: projectStatuses.KICKOFF.id, manager: 2, team: [1, 2, 4, 5, 8], budget: 80000000, client: '테크놀로지 주식회사', colorTag: 2 },
-    { id: 3, title: '웹 시리즈', description: '10부작 웹 시리즈 제작', startDate: '2023-02-15', endDate: '2023-06-30', status: projectStatuses.PRODUCTION.id, manager: 1, team: [1, 2, 3, 4, 6, 7, 8], budget: 120000000, client: '스트리밍 플랫폼 A', colorTag: 3 },
-    { id: 4, title: '다큐멘터리', description: '환경 다큐멘터리 시리즈', startDate: '2023-01-10', endDate: '2023-07-20', status: projectStatuses.PRE_PRODUCTION.id, manager: 3, team: [1, 3, 5, 7, 8], budget: 90000000, client: '방송국 B', colorTag: 4 },
+export const projects = [{
+        id: 1,
+        title: '기업 홍보 영상',
+        description: '대기업 연간 홍보 영상 제작',
+        startDate: '2023-03-01',
+        endDate: '2023-04-15',
+        deadline: '2023-04-15',
+        status: 'pre-production',
+        manager: 1,
+        team: [1, 2, 3, 5, 6, 7],
+        budget: 50000000,
+        client: '대한기업',
+        colorTag: 1
+    },
+    {
+        id: 2,
+        title: '신제품 광고',
+        description: '신제품 출시 TV 광고 캠페인',
+        startDate: '2023-03-05',
+        endDate: '2023-05-10',
+        deadline: '2023-05-10',
+        status: 'kickoff',
+        manager: 2,
+        team: [1, 2, 4, 5, 8],
+        budget: 80000000,
+        client: '테크놀로지 주식회사',
+        colorTag: 2
+    },
+    {
+        id: 3,
+        title: '웹 시리즈',
+        description: '10부작 웹 시리즈 제작',
+        startDate: '2023-02-15',
+        endDate: '2023-06-30',
+        deadline: '2023-06-30',
+        status: 'production',
+        manager: 1,
+        team: [1, 2, 3, 4, 6, 7, 8],
+        budget: 120000000,
+        client: '스트리밍 플랫폼 A',
+        colorTag: 3
+    },
+    {
+        id: 4,
+        title: '다큐멘터리',
+        description: '환경 다큐멘터리 시리즈',
+        startDate: '2023-01-10',
+        endDate: '2023-07-20',
+        deadline: '2023-07-20',
+        status: 'pre-production',
+        manager: 3,
+        team: [1, 3, 5, 7, 8],
+        budget: 90000000,
+        client: '방송국 B',
+        colorTag: 4
+    },
+    {
+        id: 5,
+        title: '모바일 앱 홍보 영상',
+        description: '새로운 모바일 앱 런칭 영상',
+        startDate: '2023-03-20',
+        endDate: '2023-04-30',
+        deadline: '2023-04-30',
+        status: 'in-progress',
+        manager: 2,
+        team: [1, 2, 3, 4, 6],
+        budget: 35000000,
+        client: '스타트업 C',
+        colorTag: 5
+    },
+    {
+        id: 6,
+        title: '브랜드 캠페인',
+        description: '글로벌 브랜드 이미지 캠페인',
+        startDate: '2023-04-01',
+        endDate: '2023-06-15',
+        deadline: '2023-06-15',
+        status: 'review',
+        manager: 1,
+        team: [1, 2, 4, 5, 7, 8],
+        budget: 150000000,
+        client: '글로벌 브랜드 D',
+        colorTag: 6
+    }
 ];
 
 // 알림 데이터

@@ -5,7 +5,7 @@ import {
     HiPlus, HiPencil, HiTrash, HiX, 
     HiCalendar, HiOfficeBuilding, HiClock, HiUserGroup,
     HiChevronLeft, HiChevronRight, HiFilter, HiSearch,
-    HiDocumentText, HiCheckCircle, HiSave
+    HiDocumentText, HiCheckCircle, HiSave, HiBookmark
 } from 'react-icons/hi'
 import { 
     users, 
@@ -71,10 +71,13 @@ const RoomReservation = () => {
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [reservationFormData, setReservationFormData] = useState({
         title: '',
-        start: '',
-        end: '',
+        startDate: '',
+        endDate: '',
+        startTime: '',
+        endTime: '',
         participants: [],
-        project: ''
+        project: '',
+        description: ''
     })
     const [searchTerm, setSearchTerm] = useState('')
     const [filterFacility, setFilterFacility] = useState('')
@@ -199,23 +202,23 @@ const RoomReservation = () => {
     }
     
     // 예약 관련 함수들
-    const handleAddReservation = (roomId, hour) => {
-        setSelectedRoom(rooms.find(room => room.id === roomId))
+    const handleAddReservation = () => {
         setShowReservationForm(true)
         
-        // 시작 시간과 종료 시간 설정
-        const startDateTime = new Date(currentDate)
-        startDateTime.setHours(hour, 0, 0)
-        
-        const endDateTime = new Date(currentDate)
-        endDateTime.setHours(hour + 1, 0, 0)
+        // 오늘 날짜로 기본 설정
+        const today = new Date()
+        const tomorrow = new Date(today)
+        tomorrow.setDate(today.getDate() + 1)
         
         setReservationFormData({
             title: '',
-            start: formatDateTimeForInput(startDateTime),
-            end: formatDateTimeForInput(endDateTime),
+            startDate: today.toISOString().split('T')[0],
+            endDate: today.toISOString().split('T')[0],
+            startTime: '09:00',
+            endTime: '10:00',
             participants: [currentUserState.id],
-            project: ''
+            project: '',
+            description: ''
         })
         
         setSelectedReservation(null)
@@ -226,12 +229,18 @@ const RoomReservation = () => {
         setSelectedRoom(rooms.find(room => room.id === reservation.roomId))
         setShowReservationForm(true)
         
+        const startDate = new Date(reservation.start)
+        const endDate = new Date(reservation.end)
+        
         setReservationFormData({
             title: reservation.title,
-            start: formatDateTimeForInput(new Date(reservation.start)),
-            end: formatDateTimeForInput(new Date(reservation.end)),
-            participants: reservation.participants || [],
-            project: reservation.project || ''
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: startDate.toISOString().split('T')[0],
+            startTime: startDate.toTimeString().slice(0, 5),
+            endTime: endDate.toTimeString().slice(0, 5),
+            participants: reservation.participants || [currentUserState.id],
+            project: reservation.project || '',
+            description: reservation.description || ''
         })
     }
     
@@ -287,18 +296,20 @@ const RoomReservation = () => {
     const handleFormSubmit = (e) => {
         e.preventDefault()
         
-        const startTime = new Date(reservationFormData.start)
-        const endTime = new Date(reservationFormData.end)
+        // 날짜와 시간을 조합하여 DateTime 생성
+        const startDateTime = new Date(`${reservationFormData.startDate}T${reservationFormData.startTime}:00`)
+        const endDateTime = new Date(`${reservationFormData.endDate}T${reservationFormData.endTime}:00`)
         
         // 기존 예약 업데이트
         if (selectedReservation) {
             const updated = {
                 ...selectedReservation,
                 title: reservationFormData.title,
-                start: startTime.toISOString(),
-                end: endTime.toISOString(),
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
                 participants: reservationFormData.participants,
-                project: reservationFormData.project
+                project: reservationFormData.project,
+                description: reservationFormData.description
             }
             
             // 예약 목록 업데이트
@@ -315,11 +326,13 @@ const RoomReservation = () => {
                 id: Date.now(),
                 roomId: selectedRoom.id,
                 title: reservationFormData.title,
-                start: startTime.toISOString(),
-                end: endTime.toISOString(),
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString(),
                 userId: currentUserState.id,
                 participants: reservationFormData.participants,
-                project: reservationFormData.project
+                project: reservationFormData.project,
+                description: reservationFormData.description,
+                color: getProjectColor(reservationFormData.project)
             }
             
             // 예약 목록 업데이트
@@ -588,56 +601,74 @@ const RoomReservation = () => {
                                 <div className={styles.room_detail}>
                                     <h3>{selectedRoom.name}</h3>
                                     <div className={styles.room_info}>
+                                        <span><HiOfficeBuilding /> {selectedRoom.location}</span>
                                         <span><HiDocumentText /> {getRoomReservations(selectedRoom.id).length}건의 예약</span>
                                     </div>
                                 </div>
-                                <button className={styles.close_button} onClick={handleCloseDetail}>
-                                    <HiX />
-                                </button>
+                                <div className={styles.room_actions}>
+                                    <button 
+                                        className={styles.add_reservation_btn}
+                                        onClick={handleAddReservation}
+                                    >
+                                        <HiPlus />
+                                        예약하기
+                                    </button>
+                                    <button className={styles.close_button} onClick={handleCloseDetail}>
+                                        <HiX />
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className={styles.time_slots}>
-                                {Array.from({ length: 24 }, (_, hour) => (
-                                    <div 
-                                        key={hour}
-                                        className={`${styles.time_slot} ${isTimeSlotReserved(selectedRoom.id, hour) ? styles.reserved : ''}`}
-                                    >
-                                        <div className={styles.time_label}>
-                                            {`${hour}:00`}
-                                        </div>
-                                        {isTimeSlotReserved(selectedRoom.id, hour) ? (
-                                            <div 
-                                                className={styles.reservation_block}
-                                                onClick={() => handleReservationClick(getReservationAtTimeSlot(selectedRoom.id, hour))}
-                                                style={{
-                                                    backgroundColor: getProjectColor(getReservationAtTimeSlot(selectedRoom.id, hour)?.project)
-                                                }}
-                                            >
-                                                <div className={styles.reservation_title}>
-                                                    {getReservationAtTimeSlot(selectedRoom.id, hour)?.title}
+                            <div className={styles.reservations_list}>
+                                {getRoomReservations(selectedRoom.id).length > 0 ? (
+                                    getRoomReservations(selectedRoom.id).map(reservation => (
+                                        <div 
+                                            key={reservation.id}
+                                            className={styles.reservation_card}
+                                            onClick={() => handleReservationClick(reservation)}
+                                            style={{
+                                                borderLeft: `4px solid ${getProjectColor(reservation.project)}`
+                                            }}
+                                        >
+                                            <div className={styles.reservation_header}>
+                                                <h4 className={styles.reservation_title}>{reservation.title}</h4>
+                                                <span className={styles.reservation_time}>
+                                                    {formatTime(reservation.start)} - {formatTime(reservation.end)}
+                                                </span>
+                                            </div>
+                                            {reservation.project && (
+                                                <div className={styles.reservation_project}>
+                                                    <HiBookmark />
+                                                    {reservation.project}
                                                 </div>
-                                                <div className={styles.reservation_time}>
-                                                    {formatTime(getReservationAtTimeSlot(selectedRoom.id, hour)?.start)} - 
-                                                    {formatTime(getReservationAtTimeSlot(selectedRoom.id, hour)?.end)}
-                                                </div>
-                                                {getReservationAtTimeSlot(selectedRoom.id, hour)?.project && (
-                                                    <div className={styles.reservation_project}>
-                                                        {getReservationAtTimeSlot(selectedRoom.id, hour)?.project}
-                                                    </div>
+                                            )}
+                                            <div className={styles.reservation_meta}>
+                                                <span className={styles.reservation_duration}>
+                                                    <HiClock />
+                                                    {Math.round((new Date(reservation.end) - new Date(reservation.start)) / (1000 * 60))}분
+                                                </span>
+                                                {reservation.participants && (
+                                                    <span className={styles.reservation_participants}>
+                                                        <HiUserGroup />
+                                                        {reservation.participants.length}명
+                                                    </span>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div 
-                                                className={styles.empty_slot}
-                                                onClick={() => handleAddReservation(selectedRoom.id, hour)}
-                                            >
-                                                <div className={styles.add_reservation}>
-                                                    <HiPlus /> 예약하기
-                                                </div>
-                                            </div>
-                                        )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className={styles.no_reservations}>
+                                        <HiCalendar className={styles.no_reservations_icon} />
+                                        <p>오늘 예약된 회의가 없습니다.</p>
+                                        <button 
+                                            className={styles.add_first_reservation}
+                                            onClick={handleAddReservation}
+                                        >
+                                            <HiPlus />
+                                            첫 예약 만들기
+                                        </button>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
                     ) : (

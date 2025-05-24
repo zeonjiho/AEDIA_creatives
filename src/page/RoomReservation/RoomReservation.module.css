@@ -5,7 +5,7 @@
     margin: 0 auto;
     min-height: 100vh;
     background-color: var(--bg-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font-secondary);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -37,13 +37,13 @@
     padding: 6px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--card-shadow);
 }
 
 .today_button {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border: none;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 10px 20px;
     font-weight: 500;
@@ -52,9 +52,8 @@
 }
 
 .today_button:hover {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
 }
 
 .date_controls {
@@ -72,16 +71,15 @@
     justify-content: center;
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border: none;
+    border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nav_button:hover {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .current_date {
@@ -106,13 +104,13 @@
 }
 
 .success {
-    background-color: rgba(var(--success-color-rgb), 0.8);
-    color: white;
+    background-color: var(--success-color);
+    color: var(--text-primary-inverse);
 }
 
 .error {
-    background-color: rgba(var(--error-color-rgb), 0.8);
-    color: white;
+    background-color: var(--danger-color);
+    color: var(--text-primary-inverse);
 }
 
 
@@ -125,8 +123,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
     border: none;
     border-radius: 12px;
     padding: 12px 22px;
@@ -134,18 +132,15 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .filter_toggle:hover {
-    background-color: var(--primary-color-dark);
+    background-color: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
 }
 
 .filter_toggle:active {
     transform: translateY(0);
-    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
 
@@ -160,10 +155,10 @@
     flex-wrap: wrap;
     gap: 20px;
     animation: fadeIn 0.3s ease;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--card-shadow);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .search_box {
@@ -192,9 +187,9 @@
 }
 
 .search_box input:focus {
-    border-color: var(--primary-color);
+    border-color: var(--accent-color);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
 }
 
 .filter_group {
@@ -221,9 +216,9 @@
 }
 
 .filter_group select:focus {
-    border-color: var(--primary-color);
+    border-color: var(--accent-color);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
 }
 
 
@@ -245,12 +240,12 @@
     background-color: var(--card-bg);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--card-shadow);
     display: flex;
     flex-direction: column;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .card_header {
@@ -258,12 +253,12 @@
     align-items: center;
     gap: 12px;
     padding: 20px;
-    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header_icon {
     font-size: 1.3rem;
-    color: var(--primary-color);
+    color: var(--accent-color);
 }
 
 .card_header h2 {
@@ -280,7 +275,7 @@
 .stats_summary {
     display: flex;
     padding: 20px;
-    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    border-bottom: 1px solid var(--border-color);
     gap: 15px;
 }
 
@@ -291,18 +286,18 @@
     padding: 16px;
     text-align: center;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    border: 1px solid rgba(var(--border-color-rgb), 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .stat_item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--card-shadow);
 }
 
 .stat_value {
     font-size: 1.8rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--accent-color);
     margin-bottom: 5px;
 }
 
@@ -330,7 +325,7 @@
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     cursor: pointer;
     position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--card-shadow);
     border: 2px solid transparent;
 }
 
@@ -340,8 +335,8 @@
 }
 
 .room_card.selected {
-    border-color: var(--primary-color);
-    box-shadow: 0 12px 40px rgba(var(--primary-color-rgb), 0.15);
+    border-color: var(--accent-color);
+    box-shadow: 0 12px 40px rgba(var(--accent-color-rgb), 0.15);
 }
 
 .room_content {
@@ -378,8 +373,8 @@
 
 .facility_tag {
     font-size: 0.8rem;
-    background-color: rgba(var(--primary-color-rgb), 0.1);
-    color: var(--primary-color);
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--accent-color);
     padding: 6px 14px;
     border-radius: 30px;
     white-space: nowrap;
@@ -404,7 +399,7 @@
     margin-bottom: 16px;
     opacity: 0.3;
     animation: float 3s ease-in-out infinite;
-    color: var(--primary-color);
+    color: var(--accent-color);
 }
 
 .no_rooms p {
@@ -425,7 +420,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .room_detail h3 {
@@ -449,9 +444,35 @@
     gap: 8px;
 }
 
-.close_button {
-    background: rgba(var(--bg-color-rgb), 0.1);
+.room_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.add_reservation_btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
     border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.add_reservation_btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.close_button {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
     font-size: 1.1rem;
     cursor: pointer;
@@ -465,118 +486,129 @@
 }
 
 .close_button:hover {
-    background-color: var(--card-bg);
+    background-color: var(--danger-color);
+    color: var(--text-primary-inverse);
     transform: rotate(90deg);
 }
 
 
-/* 시간 슬롯 */
+/* 예약 목록 스타일 */
 
-.time_slots {
+.reservations_list {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     overflow-y: auto;
     max-height: 60vh;
 }
 
-.time_slot {
-    display: flex;
-    border-radius: 12px;
-    overflow: hidden;
+.reservation_card {
     background-color: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
 }
 
-.time_slot:hover {
+.reservation_card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--card-shadow);
+    background-color: var(--card-bg);
 }
 
-.time_label {
-    width: 60px;
-    padding: 15px 10px;
+.reservation_header {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(var(--bg-tertiary-rgb), 0.5);
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    border-right: 1px solid rgba(var(--border-color-rgb), 0.1);
-}
-
-.empty_slot {
-    flex: 1;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.empty_slot:hover {
-    background-color: rgba(var(--primary-color-rgb), 0.05);
-}
-
-.add_reservation {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.empty_slot:hover .add_reservation {
-    color: var(--primary-color);
-    transform: scale(1.05);
-}
-
-.reservation_block {
-    flex: 1;
-    padding: 15px 20px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.reservation_block:hover {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
 }
 
 .reservation_title {
+    font-size: 1.1rem;
     font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 6px;
-    color: white;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+    margin-right: 12px;
 }
 
 .reservation_time {
     font-size: 0.85rem;
-    margin-bottom: 6px;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+    font-weight: 500;
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
 }
 
 .reservation_project {
-    display: inline-block;
-    font-size: 0.8rem;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    margin-bottom: 8px;
     font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.reservation_meta {
+    display: flex;
+    gap: 15px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.reservation_duration,
+.reservation_participants {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.no_reservations {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.no_reservations_icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    color: var(--accent-color);
+    animation: float 3s ease-in-out infinite;
+}
+
+.no_reservations p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.add_first_reservation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.add_first_reservation:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
 }
 
 .no_selection {
@@ -596,7 +628,7 @@
     margin-bottom: 16px;
     opacity: 0.3;
     animation: float 3s ease-in-out infinite;
-    color: var(--primary-color);
+    color: var(--accent-color);
 }
 
 .no_selection p {
@@ -646,14 +678,14 @@
     background-color: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     transform-origin: center;
 }
 
 .panel_header {
     padding: 28px 32px;
-    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    border-bottom: 1px solid var(--border-color);
     position: relative;
     background-color: var(--card-bg);
 }
@@ -676,6 +708,83 @@
     padding: 32px;
     overflow-y: auto;
     max-height: calc(90vh - 100px);
+}
+
+
+/* 헤더 스타일 */
+
+.dashboard_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.header_content {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard_title {
+    font-size: 50px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    text-align: left;
+    transition: color 0.3s ease;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-primary);
+}
+
+.dashboard_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+}
+
+.header_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.customize_btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-md);
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-primary);
+}
+
+.customize_btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.save_btn {
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+}
+
+.save_btn:hover {
+    background-color: var(--accent-hover);
 }
 
 
@@ -758,7 +867,7 @@
         grid-template-columns: 1fr;
         gap: 24px;
     }
-    .time_slots {
+    .reservations_list {
         max-height: 400px;
     }
     .rooms_grid {
@@ -781,83 +890,4 @@
     .filter_group {
         width: 100%;
     }
-}
-
-
-/* 헤더 스타일 */
-
-.dashboard_header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-    width: 100%;
-}
-
-.header_content {
-    display: flex;
-    flex-direction: column;
-}
-
-.dashboard_title {
-    font-size: 50px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--text-primary);
-    text-align: left;
-    transition: color 0.3s ease;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-primary);
-}
-
-.dashboard_date {
-    font-size: 16px;
-    color: var(--text-secondary);
-    text-align: left;
-    margin-bottom: 0;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-mono);
-}
-
-.header_controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.customize_btn {
-    padding: 10px 20px;
-    border-radius: var(--border-radius-md);
-    background-color: transparent;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.customize_btn:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.save_btn {
-    background-color: var(--accent-color);
-    color: var(--bg-secondary);
-}
-
-.save_btn:hover {
-    background-color: var(--accent-hover);
 }

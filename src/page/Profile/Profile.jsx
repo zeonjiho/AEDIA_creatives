@@ -415,7 +415,7 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div className={styles.form_group}>
+                  {/* <div className={styles.form_group}>
                     <label>
                       <FaGraduationCap className={styles.input_icon} />
                       학력
@@ -427,7 +427,7 @@ const Profile = () => {
                       onChange={handleInputChange} 
                       placeholder="예: 00대학교 컴퓨터공학과"
                     />
-                  </div>
+                  </div> */}
 
                   <div className={styles.form_group}>
                     <label>
@@ -629,13 +629,13 @@ const Profile = () => {
                       <p>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : '미설정'}</p>
                     </div>
                   </div>
-                  <div className={styles.info_card}>
+                  {/* <div className={styles.info_card}>
                     <FaGraduationCap className={styles.info_icon} />
                     <div className={styles.info_content}>
                       <label>학력</label>
                       <p>{user.education || '미설정'}</p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
                 
                 {user.bio && (
