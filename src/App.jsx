@@ -5,6 +5,7 @@ import Home from './page/Home/Home';
 import Login from './page/Login/Login';
 import Attendance from './page/Attendance/Attendance';
 import TodoList from './page/TodoList/TodoList';
+import Calendar from './page/Calendar/Calendar';
 import RoomReservation from './page/RoomReservation/RoomReservation';
 import ProjectStatus from './page/ProjectStatus/ProjectStatus';
 import TeamNotifications from './page/TeamNotifications/TeamNotifications';
@@ -32,6 +33,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path='attendance' element={<Attendance />} />
           <Route path='todo' element={<TodoList />} />
+          <Route path='calendar' element={<Calendar />} />
           <Route path='room-reservation' element={<RoomReservation />} />
           <Route path='projects' element={<ProjectStatus />} />
           <Route path='notifications' element={<TeamNotifications />} />

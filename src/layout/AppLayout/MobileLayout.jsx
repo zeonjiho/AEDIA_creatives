@@ -65,8 +65,8 @@ const MobileLayout = () => {
         { path: '/', label: '홈', icon: <FaHome /> },
         { path: '/attendance', label: '출석', icon: <FaUserClock /> },
         { path: '/todo', label: '할일', icon: <FaListUl /> },
+        { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
         { path: '/receipts', label: '영수증', icon: <FaReceipt /> },
-        // { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
     ]
     
     // 더보기 메뉴 아이템
