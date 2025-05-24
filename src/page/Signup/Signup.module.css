@@ -1,13 +1,13 @@
 .signup_wrap {
     width: 100%;
     box-sizing: border-box;
-    height: 100vh;
+    /* height: 100vh; */
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    padding: 20px 0;
 }
 
 .signup_wrap::before {

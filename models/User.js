@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
     loginId: {
         type: String,
-        required: true,
         unique: true,
     },
     password: {
@@ -42,7 +41,7 @@ const userSchema = new Schema({
     status: {
         type: String,
         enum: ['active', 'inactive', 'deleted', 'waiting'],
-        default: 'active',
+        default: 'waiting',
     },
     projects: [{
         type: Schema.Types.ObjectId,

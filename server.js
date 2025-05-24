@@ -315,3 +315,58 @@ app.get('/get-user-list', async (req, res) => {
         res.status(500).json()
     }
 })
+
+app.post('/signup', async (req, res) => {
+    const { password, name, phone, email, position } = req.body;
+    try {
+        const alreadyExists = await User.findOne({ email: email });
+        if (alreadyExists) {
+            res.status(401).json({ message: '이미 존재하는 이메일입니다.' });
+            return;
+        }
+        const newUser = new User({
+            password,
+            name,
+            userType: 'internal',
+            phone,
+            email,
+            roles: [position],
+            status: 'waiting',
+            projects: []
+        });
+        await newUser.save();
+        res.status(200).json({ message: 'User added successfully' });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: 'Failed to add user' });
+    }
+})
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            res.status(401).json({ message: '존재하지 않는 이메일입니다.' });
+            return;
+        }
+        if (user.password !== password) {
+            res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
+            return;
+        }
+        if (user.status === 'waiting') {
+            res.status(401).json({ message: '대기 상태입니다. 관리자 승인 후 로그인 가능합니다.' });
+            return;
+        }
+        // JWT 토큰 생성 - userId만 포함 (시크릿 키 없이)
+        const token = jwt.sign(
+            { userId: user._id },
+            tokenSecretKey,
+            // { expiresIn: '1d' } // 유효기간 따로 없음
+        );
+        res.status(200).json({ message: '로그인 성공', user, token });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: '로그인 실패' });
+    }
+})
