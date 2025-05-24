@@ -46,6 +46,7 @@ body {
     --button-color-hover: rgba(0, 0, 0, 0.05);
     --button-color: rgba(0, 0, 0, 0.05);
     --border-color-resize: rgba(0, 0, 0, 0.2);
+    --button-color-active: rgba(0, 0, 0, 0.05);
     --inRange-color: #ff0000;
     /* RGB 값 변수 */
     --bg-primary-rgb: 248, 249, 250;
@@ -145,6 +146,7 @@ body {
     --input-border: #444;
     --button-color-hover: rgba(255, 255, 255, 0.08);
     --button-color: rgba(255, 255, 255, 0.1);
+    --button-color-active: rgba(255, 255, 255, 0.1);
     --border-color-resize: rgba(255, 255, 255, 0.2);
     /* RGB 값 변수 */
     --bg-primary-rgb: 18, 18, 18;

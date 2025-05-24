@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ProjectStatus.module.css';
+import ProjectDetailModal from '../../components/ProjectDetailModal/ProjectDetailModal';
+import AddProjectModal from '../../components/AddProjectModal/AddProjectModal';
 import { 
   HiPlus, HiPencil, HiTrash, HiX, 
   HiCalendar, HiCheckCircle, HiChartBar, HiUserGroup, 
@@ -107,17 +109,6 @@ const ProjectStatus = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingProjectStatus, setEditingProjectStatus] = useState(false);
-  const [editingProgress, setEditingProgress] = useState(false);
-  const [editingDeadline, setEditingDeadline] = useState(false);
-  const [editingTeam, setEditingTeam] = useState(false);
-  const [newTeamMember, setNewTeamMember] = useState('');
-  const [newProject, setNewProject] = useState({
-    title: '',
-    description: '',
-    status: 'concept',
-    deadline: new Date().toISOString().split('T')[0]
-  });
   const [currentTime, setCurrentTime] = useState(new Date())
   
   useEffect(() => {
@@ -137,10 +128,6 @@ const ProjectStatus = () => {
 
   const handleProjectClick = (project) => {
     setSelectedProject(project);
-    setEditingProjectStatus(false);
-    setEditingProgress(false);
-    setEditingDeadline(false);
-    setEditingTeam(false);
   };
 
   const handleCloseDetail = () => {
@@ -149,13 +136,6 @@ const ProjectStatus = () => {
 
   const handleCloseAddForm = () => {
     setShowAddForm(false);
-    // 폼 초기화
-    setNewProject({
-      title: '',
-      description: '',
-      status: 'concept',
-      deadline: new Date().toISOString().split('T')[0]
-    });
   };
 
   const handleStatusFilterChange = (status, category = null) => {
@@ -193,107 +173,6 @@ const ProjectStatus = () => {
 
   const handleShowAddForm = () => {
     setShowAddForm(true);
-  };
-
-  const handleAddProject = (e) => {
-    e.preventDefault();
-    // 프로젝트 추가 로직
-    if (!newProject.title) return;
-    
-    const projectToAdd = {
-      ...newProject,
-      id: Date.now(),
-      progress: 0,
-      thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-      tasks: [],
-      team: []
-    };
-    
-    setProjects([...projects, projectToAdd]);
-    handleCloseAddForm();
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewProject({
-      ...newProject,
-      [name]: value
-    });
-  };
-
-  const handleDeleteProject = (id) => {
-    // 프로젝트 삭제 로직
-    setProjects(projects.filter(project => project.id !== id));
-    if (selectedProject && selectedProject.id === id) {
-      setSelectedProject(null);
-    }
-  };
-
-  const handleStatusChange = (newStatus) => {
-    if (!selectedProject) return;
-
-    const updatedProject = { ...selectedProject, status: newStatus };
-    setSelectedProject(updatedProject);
-    setProjects(projects.map(project => 
-      project.id === selectedProject.id ? updatedProject : project
-    ));
-    setEditingProjectStatus(false);
-  };
-
-  const handleProgressChange = (e) => {
-    if (!selectedProject) return;
-    
-    const newProgress = parseInt(e.target.value);
-    const updatedProject = { ...selectedProject, progress: newProgress };
-    setSelectedProject(updatedProject);
-    setProjects(projects.map(project => 
-      project.id === selectedProject.id ? updatedProject : project
-    ));
-  };
-
-  const handleSaveProgress = () => {
-    setEditingProgress(false);
-  };
-
-  const handleDeadlineChange = (e) => {
-    if (!selectedProject) return;
-    
-    const newDeadline = e.target.value;
-    const updatedProject = { ...selectedProject, deadline: newDeadline };
-    setSelectedProject(updatedProject);
-    setProjects(projects.map(project => 
-      project.id === selectedProject.id ? updatedProject : project
-    ));
-  };
-
-  const handleSaveDeadline = () => {
-    setEditingDeadline(false);
-  };
-
-  const handleTeamMemberRemove = (memberToRemove) => {
-    if (!selectedProject) return;
-    
-    const updatedTeam = selectedProject.team.filter(member => member !== memberToRemove);
-    const updatedProject = { ...selectedProject, team: updatedTeam };
-    setSelectedProject(updatedProject);
-    setProjects(projects.map(project => 
-      project.id === selectedProject.id ? updatedProject : project
-    ));
-  };
-
-  const handleTeamMemberAdd = (e) => {
-    e.preventDefault();
-    
-    if (!selectedProject || !newTeamMember.trim()) return;
-    
-    const updatedTeam = [...selectedProject.team, newTeamMember.trim()];
-    const updatedProject = { ...selectedProject, team: updatedTeam };
-    setSelectedProject(updatedProject);
-    setProjects(projects.map(project => 
-      project.id === selectedProject.id ? updatedProject : project
-    ));
-    
-    setNewTeamMember('');
   };
 
   const getStatusText = (status) => {
@@ -421,278 +300,29 @@ const ProjectStatus = () => {
       </div>
 
       {/* 프로젝트 상세 모달 */}
-      {selectedProject && (
-        <div className={styles.modal_wrapper}>
-          <div className={styles.modal_background} onClick={handleCloseDetail}></div>
-          <div className={styles.modal_panel}>
-            <div className={styles.panel_header}>
-              <div className={styles.panel_title}>
-                <h2>{selectedProject.title}</h2>
-              </div>
-              <button className={styles.close_button} onClick={handleCloseDetail}>
-                <HiX />
-              </button>
-            </div>
-
-            <div className={styles.panel_content}>
-              <div className={styles.content_section}>
-                <h3><HiInformationCircle /> 프로젝트 개요</h3>
-                <p className={styles.project_description}>{selectedProject.description}</p>
-              </div>
-
-              <div className={styles.info_cards_container}>
-                {/* 상태 카드 */}
-                <div className={styles.info_card}>
-                  <div className={styles.info_card_header}>
-                    <HiTag className={styles.info_card_icon} />
-                    <h4>상태</h4>
-                  </div>
-                  {editingProjectStatus ? (
-                    <div className={styles.status_selector}>
-                      {['concept', 'development', 'pre_production', 'production', 'post_production', 'vfx', 'sound_design', 'quality_check', 'delivery'].map(status => (
-                        <div
-                          key={status}
-                          className={`${styles.status_option} ${selectedProject.status === status ? styles.selected : ''} ${getStatusClass(status)}`}
-                          onClick={() => handleStatusChange(status)}
-                        >
-                          {getStatusText(status)}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div 
-                      className={`${styles.status_display} ${getStatusClass(selectedProject.status)}`}
-                      onClick={() => setEditingProjectStatus(true)}
-                    >
-                      <span>{getStatusText(selectedProject.status)}</span>
-                      <HiPencil className={styles.edit_icon} />
-                    </div>
-                  )}
-                </div>
-
-                {/* 진행률 카드 */}
-                <div className={styles.info_card}>
-                  <div className={styles.info_card_header}>
-                    <HiChartBar className={styles.info_card_icon} />
-                    <h4>진행률</h4>
-                  </div>
-                  <div className={styles.progress_display}>
-                    <div className={styles.progress_bar_container}>
-                      <div 
-                        className={styles.progress_bar_full} 
-                        style={{ width: `${selectedProject.progress}%` }}
-                      ></div>
-                    </div>
-                    <div 
-                      className={styles.progress_percentage}
-                      onClick={() => setEditingProgress(true)}
-                    >
-                      <span>{selectedProject.progress}%</span>
-                      <HiPencil className={styles.edit_icon} />
-                    </div>
-                  </div>
-                  {editingProgress && (
-                    <div className={styles.progress_editor}>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={selectedProject.progress} 
-                        onChange={handleProgressChange}
-                        className={styles.progress_slider_full}
-                      />
-                      <div className={styles.progress_editor_actions}>
-                        <button 
-                          className={styles.save_button}
-                          onClick={handleSaveProgress}
-                        >
-                          <HiSave /> 저장
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 마감일 카드 */}
-                <div className={styles.info_card}>
-                  <div className={styles.info_card_header}>
-                    <HiCalendar className={styles.info_card_icon} />
-                    <h4>마감일</h4>
-                  </div>
-                  {editingDeadline ? (
-                    <div className={styles.deadline_editor}>
-                      <input 
-                        type="date" 
-                        value={selectedProject.deadline}
-                        onChange={handleDeadlineChange}
-                        className={styles.date_input}
-                      />
-                      <button 
-                        className={styles.save_button}
-                        onClick={handleSaveDeadline}
-                      >
-                        <HiSave /> 저장
-                      </button>
-                    </div>
-                  ) : (
-                    <div 
-                      className={styles.deadline_display}
-                      onClick={() => setEditingDeadline(true)}
-                    >
-                      <span>{new Date(selectedProject.deadline).toLocaleDateString()}</span>
-                      <HiPencil className={styles.edit_icon} />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* 팀원 섹션 */}
-              <div className={styles.team_section}>
-                <div className={styles.team_header}>
-                  <h3><HiUserGroup /> 팀원</h3>
-                  <button 
-                    className={styles.edit_team_button}
-                    onClick={() => setEditingTeam(!editingTeam)}
-                  >
-                    {editingTeam ? <HiX /> : <HiPencil />}
-                  </button>
-                </div>
-                
-                <div className={styles.team_members}>
-                  {selectedProject.team.length === 0 ? (
-                    <div className={styles.no_members}>
-                      <HiLightBulb />
-                      <p>할당된 팀원이 없습니다</p>
-                    </div>
-                  ) : (
-                    selectedProject.team.map((member, index) => (
-                      <div key={index} className={styles.member_chip}>
-                        <span>{member}</span>
-                        {editingTeam && (
-                          <button 
-                            className={styles.remove_member_button}
-                            onClick={() => handleTeamMemberRemove(member)}
-                          >
-                            <HiX />
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
-                  
-                  {editingTeam && (
-                    <form onSubmit={handleTeamMemberAdd} className={styles.add_member_form}>
-                      <input 
-                        type="text"
-                        value={newTeamMember}
-                        onChange={(e) => setNewTeamMember(e.target.value)}
-                        placeholder="새 팀원 이름"
-                        className={styles.member_input}
-                      />
-                      <button 
-                        type="submit" 
-                        className={styles.add_member_button}
-                        disabled={!newTeamMember.trim()}
-                      >
-                        <HiPlus />
-                      </button>
-                    </form>
-                  )}
-                </div>
-              </div>
-
-              {/* 작업 수 카드 */}
-              <div className={styles.info_card}>
-                <div className={styles.info_card_header}>
-                  <HiDocumentText className={styles.info_card_icon} />
-                  <h4>작업 개수</h4>
-                </div>
-                <div className={styles.task_count}>
-                  <span>{selectedProject.tasks.length}개</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProjectDetailModal
+        selectedProject={selectedProject}
+        onClose={handleCloseDetail}
+        onProjectUpdate={(updatedProject) => {
+          setSelectedProject(updatedProject);
+          setProjects(projects.map(project => 
+            project.id === updatedProject.id ? updatedProject : project
+          ));
+          setAllProjects(allProjects.map(project => 
+            project.id === updatedProject.id ? updatedProject : project
+          ));
+        }}
+      />
 
       {/* 새 프로젝트 추가 모달 */}
-      {showAddForm && (
-        <div className={styles.modal_wrapper}>
-          <div className={styles.modal_background} onClick={handleCloseAddForm}></div>
-          <div className={styles.modal_panel}>
-            <div className={styles.panel_header}>
-              <div className={styles.panel_title}>
-                <h2>새 프로젝트 추가</h2>
-              </div>
-              <button className={styles.close_button} onClick={handleCloseAddForm}>
-                <HiX />
-              </button>
-            </div>
-            <div className={styles.panel_content}>
-              <form onSubmit={handleAddProject}>
-                <div className={styles.form_group}>
-                  <label>프로젝트명</label>
-                  <input 
-                    type="text" 
-                    name="title"
-                    value={newProject.title}
-                    onChange={handleInputChange}
-                    required 
-                  />
-                </div>
-                <div className={styles.form_group}>
-                  <label>설명</label>
-                  <textarea 
-                    name="description"
-                    value={newProject.description}
-                    onChange={handleInputChange}
-                    required
-                  ></textarea>
-                </div>
-                <div className={styles.form_row}>
-                  <div className={styles.form_group}>
-                    <label>상태</label>
-                    <select 
-                      name="status"
-                      value={newProject.status}
-                      onChange={handleInputChange}
-                    >
-                      <option value="concept">Concept</option>
-                      <option value="development">Development</option>
-                      <option value="pre_production">Pre-Production</option>
-                      <option value="production">Production</option>
-                      <option value="post_production">Post-Production</option>
-                      <option value="vfx">VFX/CG</option>
-                      <option value="sound_design">Sound Design</option>
-                      <option value="quality_check">Quality Check</option>
-                      <option value="delivery">Delivery</option>
-                    </select>
-                  </div>
-                  <div className={styles.form_group}>
-                    <label>마감일</label>
-                    <input 
-                      type="date" 
-                      name="deadline"
-                      value={newProject.deadline}
-                      onChange={handleInputChange}
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className={styles.form_actions}>
-                  <button type="button" className={styles.cancel_button} onClick={handleCloseAddForm}>
-                    취소
-                  </button>
-                  <button type="submit" className={styles.save_button}>
-                    저장
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddProjectModal
+        isOpen={showAddForm}
+        onClose={handleCloseAddForm}
+        onAddProject={(newProject) => {
+          setProjects([...projects, newProject]);
+          setAllProjects([...allProjects, newProject]);
+        }}
+      />
     </div>
   );
 };

@@ -99,7 +99,7 @@
     font-weight: 500;
     transition: all 0.3s ease;
     position: relative;
-    /* border-radius: 0.75rem; */
+    border-radius: 0.5rem;
 }
 
 .nav_item:hover {
@@ -107,10 +107,10 @@
 }
 
 .nav_item.active {
-    color: #ffffff;
+    color: var(--text-primary);
     font-weight: 600;
     /* background-color: var(--button-color); */
-    background-color: var(--accent-color);
+    background-color: var(--button-color-active);
 }
 
 .nav_icon {
@@ -539,7 +539,7 @@
 }
 
 .profile_menu_item:hover {
-    /* background-color: var(--bg-tertiary); */
+    background-color: var(--bg-tertiary);
     color: var(--accent-color);
     transform: translateX(5px);
 }

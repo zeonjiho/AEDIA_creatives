@@ -3,7 +3,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import ss from './Calendar.module.css'
-import { FaSync, FaPlus, FaCalendarAlt, FaGoogle } from 'react-icons/fa'
+import { FaSync, FaPlus, FaCalendarAlt, FaGoogle, FaTimes } from 'react-icons/fa'
 import PublicCalendarService from '../../utils/publicCalendarService'
 import EventModal from './components/EventModal'
 import AddEventModal from './components/AddEventModal'
@@ -18,6 +18,10 @@ const CalendarPage = () => {
     const [currentDate, setCurrentDate] = useState(new Date())
     const [isLoading, setIsLoading] = useState(false)
     const [calendarStatus, setCalendarStatus] = useState(null)
+    
+    // 통합 토스트 상태
+    const [toast, setToast] = useState(null) // { type: 'loading'|'success', message: string }
+    const [toastExiting, setToastExiting] = useState(false)
     
     // 모달 상태
     const [selectedEvent, setSelectedEvent] = useState(null)
@@ -38,6 +42,26 @@ const CalendarPage = () => {
         return () => clearInterval(timer)
     }, [])
 
+    // 토스트 자동 숨김
+    useEffect(() => {
+        if (toast && toast.type === 'success') {
+            const timer = setTimeout(() => {
+                hideToast()
+            }, 2000) // 2초 후 자동 숨김
+            
+            return () => clearTimeout(timer)
+        }
+    }, [toast])
+
+    // 토스트 숨기기 함수 (애니메이션 포함)
+    const hideToast = () => {
+        setToastExiting(true)
+        setTimeout(() => {
+            setToast(null)
+            setToastExiting(false)
+        }, 250) // exit 애니메이션 시간과 맞춤
+    }
+
     // 컴포넌트 마운트 시 이벤트 로드
     useEffect(() => {
         loadEvents()
@@ -57,8 +81,12 @@ const CalendarPage = () => {
     }
 
     // 이벤트 로드
-    const loadEvents = async () => {
+    const loadEvents = async (showToast = false) => {
         setIsLoading(true)
+        if (showToast) {
+            setToast({ type: 'loading', message: 'Google Calendar에서 데이터 가져오는 중...' })
+        }
+        
         try {
             // 현재 보기에 따른 날짜 범위 계산
             const { start, end } = getDateRange()
@@ -67,8 +95,16 @@ const CalendarPage = () => {
             setEvents(loadedEvents)
             
             console.log(`${loadedEvents.length}개의 이벤트를 로드했습니다.`)
+            
+            // 수동 새로고침일 때만 성공 토스트 표시
+            if (showToast) {
+                setToast({ type: 'success', message: '동기화 완료!' })
+            }
         } catch (error) {
             console.error('이벤트 로드 실패:', error)
+            if (showToast) {
+                setToast({ type: 'error', message: '동기화 실패' })
+            }
         } finally {
             setIsLoading(false)
         }
@@ -141,7 +177,7 @@ const CalendarPage = () => {
     // 새로고침 핸들러
     const handleRefresh = () => {
         console.log('캘린더 새로고침 시작...')
-        loadEvents()
+        loadEvents(true)
     }
 
     // 이벤트 스타일 설정
@@ -416,13 +452,21 @@ const CalendarPage = () => {
                 </div>
             )}
 
-            {/* 로딩 오버레이 */}
-            {isLoading && (
-                <div className={ss.loading_overlay}>
-                    <div className={ss.loading_spinner}>
-                        <FaSync className={ss.spinning} />
-                        <p>구글 캘린더에서 데이터를 불러오는 중...</p>
-                    </div>
+            {/* 통합 토스트 */}
+            {toast && (
+                <div className={`${ss.toast} ${toastExiting ? ss.exit : ''}`}>
+                    {toast.type === 'loading' && <FaSync className={ss.spinning} />}
+                    {toast.type === 'success' && <FaCalendarAlt />}
+                    {toast.type === 'error' && <span>⚠️</span>}
+                    <span>{toast.message}</span>
+                    {toast.type !== 'loading' && (
+                        <button 
+                            className={ss.toast_close}
+                            onClick={hideToast}
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
             )}
 
