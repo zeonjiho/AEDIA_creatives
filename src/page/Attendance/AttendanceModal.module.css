@@ -127,7 +127,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .day_circle {
@@ -155,16 +155,39 @@
 .day_today {
     background-color: var(--accent-color);
     color: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 .day_future {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+    background-color: #e5e7eb;
+    color: #6b7280;
+    border: 2px dashed #d1d5db;
+}
+
+.day_incomplete {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.day_absent {
+    background-color: #9ca3af;
+    color: white;
 }
 
 .day_status {
     color: var(--success-color);
     font-size: 16px;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day_time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 500;
 }
 
 .week_stats {
@@ -191,12 +214,30 @@
 .stat_value {
     font-size: 24px;
     font-weight: 700;
-    color: var(--text-primary);
+}
+
+.stat_success {
+    color: var(--success-color);
+}
+
+.stat_warning {
+    color: var(--warning-color);
+}
+
+.stat_danger {
+    color: var(--error-color);
 }
 
 /* 출근 기록 탭 스타일 */
 .history_tab {
     overflow-x: auto;
+}
+
+.no_data {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 16px;
 }
 
 .attendance_table {
@@ -239,6 +280,21 @@
     color: white;
 }
 
+.status_incomplete {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.status_absent {
+    background-color: var(--text-muted);
+    color: white;
+}
+
+.status_early {
+    background-color: var(--info-color);
+    color: white;
+}
+
 @media (max-width: 768px) {
     .modal_container {
         width: 95%;
@@ -267,6 +323,10 @@
     .attendance_table th, .attendance_table td {
         padding: 10px;
         font-size: 14px;
+    }
+    
+    .day_time {
+        font-size: 10px;
     }
 }
 
@@ -297,5 +357,9 @@
         width: 35px;
         height: 35px;
         font-size: 11px;
+    }
+    
+    .day_time {
+        font-size: 9px;
     }
 } 

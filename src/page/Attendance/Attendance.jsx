@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import ss from './Attendance.module.css'
-import { FaCalendarCheck, FaUserClock, FaHistory, FaCheckCircle, FaRegListAlt, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaCalendarCheck, FaUserClock, FaHistory, FaCheckCircle, FaRegListAlt, FaMapMarkerAlt, FaEdit, FaTrash, FaPlus } from 'react-icons/fa'
 import AttendanceModal from './AttendanceModal'
+import api from '../../utils/api'
+import { jwtDecode } from 'jwt-decode'
 
 const Attendance = () => {
     const [currentTime, setCurrentTime] = useState(new Date())
@@ -9,27 +11,32 @@ const Attendance = () => {
     const [showModal, setShowModal] = useState(false)
     const [statusMessage, setStatusMessage] = useState('')
     const [messageType, setMessageType] = useState('') // 'success' 또는 'error'
-    const [attendanceHistory, setAttendanceHistory] = useState([
-        { date: '2023-10-01', checkIn: '09:05', checkOut: '18:10', status: '정상' },
-        { date: '2023-10-02', checkIn: '08:55', checkOut: '18:05', status: '정상' },
-        { date: '2023-10-03', checkIn: '09:15', checkOut: '18:20', status: '지각' },
-    ])
+    const [attendanceHistory, setAttendanceHistory] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [todayRecord, setTodayRecord] = useState(null)
+    const [todayRecords, setTodayRecords] = useState([])
+
+    const [userId, setUserId] = useState(null)
+    
     // 위치 관련 상태 추가
     const [userLocation, setUserLocation] = useState(null)
     const [locationStatus, setLocationStatus] = useState('')
     const [isLocationValid, setIsLocationValid] = useState(false)
+    const [canCheckIn, setCanCheckIn] = useState(true)
+    const [canCheckOut, setCanCheckOut] = useState(false)
+
+    // 수정 모드 상태
+    const [editMode, setEditMode] = useState({ active: false, recordIndex: -1, date: '' })
+    const [editTime, setEditTime] = useState('')
 
     // 허용된 위치 좌표 (예: 회사 위치)
     const ALLOWED_LOCATION = {
-        // latitude: 37.708305, // 와석순환로 15 좌표
-        // longitude: 126.756299,
-        // radius: 100 // 미터 단위의 허용 반경
         latitude: 37.520574, // 서울시청 좌표
         longitude: 127.021637,
         radius: 50 // 미터 단위의 허용 반경
     }
 
-    // 현재 시간 업데이트ㄴ
+    // 현재 시간 업데이트
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date())
@@ -38,13 +45,55 @@ const Attendance = () => {
         return () => clearInterval(timer)
     }, [])
 
+    // 컴포넌트 마운트 시 오늘 출석 상태 및 히스토리 로드
+    useEffect(() => {
+        if (userId) {
+            loadTodayAttendance()
+            loadAttendanceHistory()
+        }
+    }, [userId])
+
+    useEffect(() => {
+        if (!localStorage.getItem('token')) {
+            return
+        }
+        setUserId(jwtDecode(localStorage.getItem('token')).userId)
+    }, [])
+
+    // 오늘 출석 상태 로드
+    const loadTodayAttendance = async () => {
+        try {
+            const response = await api.get(`/attendance/today?userId=${userId}`)
+            const data = response.data
+            
+            setAttendanceStatus(data.status)
+            setCanCheckIn(data.canCheckIn)
+            setCanCheckOut(data.canCheckOut)
+            setTodayRecord(data.attendanceRecord)
+            setTodayRecords(data.records || [])
+            
+        } catch (error) {
+            console.error('오늘 출석 상태 로드 실패:', error)
+        }
+    }
+
+    // 출석 기록 로드
+    const loadAttendanceHistory = async () => {
+        try {
+            const response = await api.get(`/attendance/history?userId=${userId}&limit=10`)
+            setAttendanceHistory(response.data)
+        } catch (error) {
+            console.error('출석 기록 로드 실패:', error)
+        }
+    }
+
     // 상태 메시지 자동 제거
     useEffect(() => {
         if (statusMessage) {
             const timer = setTimeout(() => {
                 setStatusMessage('')
                 setMessageType('')
-            }, 5000)
+            }, 3000) // 3초로 단축
             
             return () => clearTimeout(timer)
         }
@@ -52,9 +101,11 @@ const Attendance = () => {
 
     // 위치 정보 가져오기
     useEffect(() => {
+        // 개발 단계에서는 위치 검증을 우회
+        setIsLocationValid(true)
+        setLocationStatus('개발 모드 - 위치 검증 우회')
+        
         if (navigator.geolocation) {
-            setLocationStatus('위치 정보를 가져오는 중...')
-            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     setUserLocation({
@@ -68,19 +119,19 @@ const Attendance = () => {
                         position.coords.longitude
                     )
                     
-                    setIsLocationValid(isValid)
-                    setLocationStatus(isValid ? '인증된 위치' : '인증되지 않은 위치')
+                    setIsLocationValid(true) // 개발 단계에서는 항상 true
+                    setLocationStatus('인증된 위치 (개발 모드)')
                 },
                 (error) => {
                     console.error('위치 정보 가져오기 오류:', error)
-                    setLocationStatus('위치 정보를 가져올 수 없습니다')
-                    setIsLocationValid(false)
+                    setLocationStatus('위치 정보 없음 (개발 모드)')
+                    setIsLocationValid(true) // 개발 단계에서는 오류가 있어도 true
                 },
                 { enableHighAccuracy: true }
             )
         } else {
-            setLocationStatus('브라우저가 위치 정보를 지원하지 않습니다')
-            setIsLocationValid(false)
+            setLocationStatus('위치 정보 지원 안함 (개발 모드)')
+            setIsLocationValid(true) // 개발 단계에서는 지원하지 않아도 true
         }
     }, [])
 
@@ -110,14 +161,18 @@ const Attendance = () => {
             ALLOWED_LOCATION.longitude
         )
         
-        return distance <= ALLOWED_LOCATION.radius
+        // return distance <= ALLOWED_LOCATION.radius
+        // 개발 단계에서 임시로 모든 위치를 허용함
+        return true
     }
 
     // 위치 정보 새로고침
     const refreshLocation = () => {
+        // 개발 단계에서는 위치 검증을 우회
+        setIsLocationValid(true)
+        setLocationStatus('위치 새로고침됨 (개발 모드)')
+        
         if (navigator.geolocation) {
-            setLocationStatus('위치 정보를 가져오는 중...')
-            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     setUserLocation({
@@ -131,13 +186,13 @@ const Attendance = () => {
                         position.coords.longitude
                     )
                     
-                    setIsLocationValid(isValid)
-                    setLocationStatus(isValid ? '인증된 위치' : '인증되지 않은 위치')
+                    setIsLocationValid(true) // 개발 단계에서는 항상 true
+                    setLocationStatus('인증된 위치 (개발 모드)')
                 },
                 (error) => {
                     console.error('위치 정보 가져오기 오류:', error)
-                    setLocationStatus('위치 정보를 가져올 수 없습니다')
-                    setIsLocationValid(false)
+                    setLocationStatus('위치 정보 없음 (개발 모드)')
+                    setIsLocationValid(true) // 개발 단계에서는 오류가 있어도 true
                 },
                 { enableHighAccuracy: true }
             )
@@ -145,78 +200,157 @@ const Attendance = () => {
     }
 
     // 출근 체크인 함수
-    const handleCheckIn = () => {
-        // 위치 유효성 검사
-        if (!isLocationValid) {
-            setStatusMessage('인증된 위치에서만 출근 체크가 가능합니다')
+    const handleCheckIn = async () => {
+        setLoading(true)
+        
+        try {
+            const response = await api.post(`/attendance/check-in?userId=${userId}`, {
+                location: userLocation || { latitude: 0, longitude: 0 },
+                method: 'manual'
+            })
+            
+            const data = response.data
+            setStatusMessage(`${data.message} (${data.status})`)
+            setMessageType('success')
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            
+        } catch (error) {
+            console.error('출근 처리 실패:', error)
+            setStatusMessage(error.response?.data?.message || '출근 처리 중 오류가 발생했습니다')
             setMessageType('error')
-            return
+        } finally {
+            setLoading(false)
         }
-
-        const now = new Date()
-        const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-        
-        // 9시 이후면 지각
-        const isLate = now.getHours() >= 9 && now.getMinutes() > 0
-        
-        setAttendanceStatus('출근')
-        
-        // 로컬 스토리지에 출근 시간 저장
-        localStorage.setItem('checkInTime', formattedTime)
-        localStorage.setItem('checkInDate', now.toISOString().split('T')[0])
-        
-        // 위치 정보도 저장
-        if (userLocation) {
-            localStorage.setItem('checkInLocation', JSON.stringify(userLocation))
-        }
-        
-        // 상태 메시지 설정
-        setStatusMessage(`출근 완료: ${formattedTime} (${isLate ? '지각' : '정시'})`)
-        setMessageType('success')
     }
 
     // 퇴근 체크아웃 함수
-    const handleCheckOut = () => {
-        // 위치 유효성 검사
-        if (!isLocationValid) {
-            setStatusMessage('인증된 위치에서만 퇴근 체크가 가능합니다')
+    const handleCheckOut = async () => {
+        if (!window.confirm('퇴근 처리하시겠습니까?')) {
+            return
+        }
+
+        // 개발 단계에서는 위치 검증 우회
+        // if (!isLocationValid) {
+        //     setStatusMessage('인증된 위치에서만 퇴근 체크가 가능합니다')
+        //     setMessageType('error')
+        //     return
+        // }
+
+        if (!canCheckOut) {
+            setStatusMessage('출근 기록이 없거나 이미 퇴근 처리되었습니다')
             setMessageType('error')
             return
         }
 
-        const now = new Date()
-        const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-        const checkInTime = localStorage.getItem('checkInTime')
-        const checkInDate = localStorage.getItem('checkInDate')
+        setLoading(true)
         
-        if (!checkInTime || !checkInDate) {
-            setStatusMessage('출근 기록이 없습니다')
+        try {
+            const response = await api.post(`/attendance/check-out?userId=${userId}`, {
+                location: userLocation || { latitude: 0, longitude: 0 },
+                method: 'manual'
+            })
+            
+            const data = response.data
+            setStatusMessage(`${data.message} (근무시간: ${data.workHoursFormatted})`)
+            setMessageType('success')
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            
+        } catch (error) {
+            console.error('퇴근 처리 실패:', error)
+            setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
+            setMessageType('error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // 출퇴근 시간 수정
+    const handleEditTime = async () => {
+        if (!editTime) {
+            setStatusMessage('수정할 시간을 입력해주세요')
             setMessageType('error')
             return
         }
+
+        const today = new Date()
+        const [hours, minutes] = editTime.split(':')
         
-        // 출근 시간 기준으로 지각 여부 확인
-        const isLate = checkInTime > '09:00'
+        // 로컬 시간대로 날짜 객체 생성 (한국 시간 적용)
+        const datetime = new Date(
+            today.getFullYear(), 
+            today.getMonth(), 
+            today.getDate(), 
+            parseInt(hours), 
+            parseInt(minutes), 
+            0, 
+            0
+        )
+
+        setLoading(true)
         
-        // 새로운 출퇴근 기록 추가
-        const newRecord = {
-            date: checkInDate,
-            checkIn: checkInTime,
-            checkOut: formattedTime,
-            status: isLate ? '지각' : '정상'
+        try {
+            const response = await api.patch(`/attendance/update/${userId}`, {
+                date: editMode.date,
+                recordIndex: editMode.recordIndex,
+                time: datetime.toISOString()
+            })
+            
+            setStatusMessage('출석 기록이 수정되었습니다')
+            setMessageType('success')
+            setEditMode({ active: false, recordIndex: -1, date: '' })
+            setEditTime('')
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            
+        } catch (error) {
+            console.error('출석 기록 수정 실패:', error)
+            setStatusMessage(error.response?.data?.message || '출석 기록 수정 중 오류가 발생했습니다')
+            setMessageType('error')
+        } finally {
+            setLoading(false)
         }
+    }
+
+    // 출퇴근 기록 삭제
+    const handleDeleteRecord = async (recordIndex) => {
+        if (!window.confirm('이 기록을 삭제하시겠습니까?')) {
+            return
+        }
+
+        const today = new Date().toISOString().split('T')[0]
+
+        setLoading(true)
         
-        setAttendanceHistory([newRecord, ...attendanceHistory])
-        setAttendanceStatus('퇴근')
-        
-        // 로컬 스토리지 초기화
-        localStorage.removeItem('checkInTime')
-        localStorage.removeItem('checkInDate')
-        localStorage.removeItem('checkInLocation')
-        
-        // 상태 메시지 설정
-        setStatusMessage(`퇴근 완료: ${formattedTime}`)
-        setMessageType('success')
+        try {
+            await api.delete(`/attendance/delete/${userId}`, {
+                data: {
+                    date: today,
+                    recordIndex: recordIndex
+                }
+            })
+            
+            setStatusMessage('출석 기록이 삭제되었습니다')
+            setMessageType('success')
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            
+        } catch (error) {
+            console.error('출석 기록 삭제 실패:', error)
+            setStatusMessage(error.response?.data?.message || '출석 기록 삭제 중 오류가 발생했습니다')
+            setMessageType('error')
+        } finally {
+            setLoading(false)
+        }
     }
 
     // 모달 열기 함수
@@ -317,24 +451,91 @@ const Attendance = () => {
                     </div>
                     
                     <div className={ss.attendance_action}>
-                        {attendanceStatus !== '출근' ? (
-                            <button 
-                                className={ss.check_in_button} 
-                                onClick={handleCheckIn}
-                                disabled={attendanceStatus === '출근' || !isLocationValid}
-                            >
-                                Check In
-                            </button>
+                        {editMode.active ? (
+                            <div className={ss.edit_mode}>
+                                <h4>시간 수정</h4>
+                                <input 
+                                    type="time" 
+                                    value={editTime}
+                                    onChange={(e) => setEditTime(e.target.value)}
+                                    className={ss.time_input}
+                                />
+                                <div className={ss.edit_buttons}>
+                                    <button 
+                                        className={ss.save_button}
+                                        onClick={handleEditTime}
+                                        disabled={loading}
+                                    >
+                                        저장
+                                    </button>
+                                    <button 
+                                        className={ss.cancel_button}
+                                        onClick={() => {
+                                            setEditMode({ active: false, recordIndex: -1, date: '' })
+                                            setEditTime('')
+                                        }}
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            </div>
                         ) : (
-                            <button 
-                                className={ss.check_out_button} 
-                                onClick={handleCheckOut}
-                                disabled={!isLocationValid}
-                            >
-                                Check Out
-                            </button>
+                            <div className={ss.attendance_buttons}>
+                                <button 
+                                    className={canCheckOut ? ss.check_out_button : ss.check_in_button} 
+                                    onClick={canCheckOut ? handleCheckOut : handleCheckIn}
+                                    disabled={loading}
+                                >
+                                    {loading ? '처리 중...' : canCheckOut ? 'Check Out' : 'Check In'}
+                                </button>
+                            </div>
                         )}
                     </div>
+
+                    {/* 오늘 출퇴근 기록 표시 및 수정/삭제 버튼 */}
+                    {todayRecords && todayRecords.length > 0 && (
+                        <div className={ss.today_record}>
+                            <h4>오늘의 기록</h4>
+                            
+                            {todayRecords.map((record, index) => (
+                                <div key={index} className={ss.record_item}>
+                                    <div className={ss.record_info}>
+                                        <span className={ss.record_label}>
+                                            {record.type === 'checkIn' ? '출근:' : '퇴근:'}
+                                        </span>
+                                        <span className={ss.record_time}>
+                                            {new Date(record.time).toLocaleTimeString('ko-KR', { 
+                                                hour: '2-digit', 
+                                                minute: '2-digit' 
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className={ss.record_actions}>
+                                        <button 
+                                            className={ss.edit_btn}
+                                            onClick={() => {
+                                                const today = new Date().toISOString().split('T')[0]
+                                                const time = new Date(record.time)
+                                                const timeString = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
+                                                setEditMode({ active: true, recordIndex: index, date: today })
+                                                setEditTime(timeString)
+                                            }}
+                                            title="시간 수정"
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button 
+                                            className={ss.delete_btn}
+                                            onClick={() => handleDeleteRecord(index)}
+                                            title="기록 삭제"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     
                     {/* 상태 메시지 표시 */}
                     {statusMessage && (
@@ -356,4 +557,4 @@ const Attendance = () => {
     )
 }
 
-export default Attendance 
+export default Attendance

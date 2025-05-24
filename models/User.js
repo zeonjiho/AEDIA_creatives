@@ -7,11 +7,9 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
     },
     name: {
         type: String,
-        required: true,
     },
     userType: {
         type: String,
@@ -20,15 +18,16 @@ const userSchema = new Schema({
     },
     phone: {
         type: String,
-        required: false,
     },
     email: {
         type: String,
-        required: false,
     },
     createdAt: {
         type: Date,
         default: Date.now,
+    },
+    address: {
+        type: String,
     },
     roles: {
         type: Array,
@@ -46,6 +45,28 @@ const userSchema = new Schema({
     projects: [{
         type: Schema.Types.ObjectId,
         ref: 'Project',
+    }],
+    attendance: [{
+        date: {
+            type: String, // 'YYYY-MM-DD' 형식
+            required: true
+        },
+        records: [{
+            type: {
+                type: String,
+                enum: ['checkIn', 'checkOut'],
+                required: true
+            },
+            time: {
+                type: Date,
+                required: true
+            },
+            method: {
+                type: String,
+                default: 'manual'
+            }
+        }],
+        memo: String,      // 비고 사항
     }],
 
     mainLayout: {
