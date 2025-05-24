@@ -16,6 +16,7 @@ const Login = () => {
     // 회원가입 폼 데이터
     const [signupData, setSignupData] = useState({
         name: '',
+        slackId: '',
         position: '',
         phone: '',
         email: '',
@@ -219,6 +220,16 @@ const Login = () => {
         setOtherPosition('');
         setShowPassword(false);
         setShowConfirmPassword(false);
+        // 회원가입 데이터 초기화
+        setSignupData({
+            name: '',
+            slackId: '',
+            position: '',
+            phone: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+        });
     };
 
     // 로그인 페이지로 이동 (회원가입 완료 후)
@@ -296,6 +307,19 @@ const Login = () => {
                                                 value={signupData.name}
                                                 onChange={handleSignupChange}
                                                 placeholder="이름을 입력하세요"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className={styles.input_group}>
+                                            <label htmlFor="slackId">슬랙 아이디</label>
+                                            <input
+                                                type="text"
+                                                id="slackId"
+                                                name="slackId"
+                                                value={signupData.slackId}
+                                                onChange={handleSignupChange}
+                                                placeholder="슬랙 사용자명을 입력하세요 (예: john.doe)"
                                                 required
                                             />
                                         </div>

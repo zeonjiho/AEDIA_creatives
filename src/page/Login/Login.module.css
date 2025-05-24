@@ -476,6 +476,9 @@
     .login_footer {
         color: #c2c2c2;
     }
+    .center_text {
+        display: none;
+    }
 }
 
 @media (max-width: 480px) {

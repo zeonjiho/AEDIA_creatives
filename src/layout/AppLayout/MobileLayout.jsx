@@ -3,18 +3,16 @@ import ss from './MobileLayout.module.css'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FaUserCircle,
-    FaSun,
-    FaMoon,
     FaBell,
     FaSearch,
     FaHome,
     FaCalendarAlt,
-    FaListUl,
+    FaTasks,
     FaDoorOpen,
     FaProjectDiagram,
-    FaReceipt,
+    FaFileInvoiceDollar,
+    FaEllipsisH,
     FaUserClock,
-    FaEllipsisH
 } from 'react-icons/fa'
 import { users, notifications, currentUser } from '../../data/mockDatabase'
 import AediaLogo from '../../components/AediaLogo/AediaLogo'
@@ -25,31 +23,44 @@ const MobileLayout = ({ user }) => {
     const navigate = useNavigate()
     const location = useLocation()
 
-    // 테마 상태 관리
+    // 테마 상태 관리 (읽기 전용)
     const [theme, setTheme] = useState(() => {
-        // 로컬 스토리지에서 테마 설정 불러오기
         const savedTheme = localStorage.getItem('theme')
         return savedTheme || 'light'
     })
 
-    // 테마 변경 함수
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light'
-        setTheme(newTheme)
-        localStorage.setItem('theme', newTheme)
-    }
-
-    // 테마 변경 시 HTML 속성 업데이트
+    // 테마 변경 감지
     useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme)
-    }, [theme])
+        const handleStorageChange = () => {
+            const savedTheme = localStorage.getItem('theme') || 'light'
+            setTheme(savedTheme)
+            document.documentElement.setAttribute('data-theme', savedTheme)
+        }
 
-    // 사용자 정보 (mockDatabase에서 가져옴)
-    // const [user, setUser] = useState({
-    //     ...currentUser,
-    //     isLoggedIn: true,
-    //     notifications: notifications.filter(n => !n.read).length
-    // })
+        // 초기 테마 설정
+        document.documentElement.setAttribute('data-theme', theme)
+
+        // 로컬스토리지 변경 감지
+        window.addEventListener('storage', handleStorageChange)
+        
+        // 페이지 포커스 시에도 확인 (같은 탭에서 변경된 경우)
+        const checkTheme = () => {
+            const currentTheme = localStorage.getItem('theme') || 'light'
+            if (currentTheme !== theme) {
+                setTheme(currentTheme)
+                document.documentElement.setAttribute('data-theme', currentTheme)
+            }
+        }
+        
+        window.addEventListener('focus', checkTheme)
+        const interval = setInterval(checkTheme, 1000)
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+            window.removeEventListener('focus', checkTheme)
+            clearInterval(interval)
+        }
+    }, [theme])
 
     // 프로필 메뉴 토글
     const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -64,9 +75,9 @@ const MobileLayout = ({ user }) => {
     const menuItems = [
         { path: '/', label: '홈', icon: <FaHome /> },
         { path: '/attendance', label: '출석', icon: <FaUserClock /> },
-        { path: '/todo', label: '할일', icon: <FaListUl /> },
+        { path: '/todo', label: '할일', icon: <FaTasks /> },
         { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
-        { path: '/receipts', label: '영수증', icon: <FaReceipt /> },
+        { path: '/receipts', label: '영수증', icon: <FaFileInvoiceDollar /> },
     ]
 
     // 더보기 메뉴 아이템
@@ -242,11 +253,6 @@ const MobileLayout = ({ user }) => {
                         )}
                     </div>
 
-                    {/* 테마 토글 버튼 */}
-                    <div className={ss.theme_toggle} onClick={toggleTheme}>
-                        {theme === 'light' ? <FaMoon /> : <FaSun />}
-                    </div>
-
                     {/* 프로필 영역 */}
                     <div className={ss.profile_menu_container}>
                         <div
@@ -258,19 +264,39 @@ const MobileLayout = ({ user }) => {
                             ) : (
                                 <FaUserCircle className={ss.avatar_icon} />
                             )}
+                            <span className={ss.user_name}>{user?.name}</span>
                         </div>
 
                         {/* 프로필 드롭다운 */}
                         {showProfileMenu && (
                             <div className={ss.profile_dropdown}>
+                                <div className={ss.profile_header}>
+                                    <div className={ss.profile_avatar_section}>
+                                        {user?.avatar ? (
+                                            <img src={user?.avatar} alt={user?.name} className={ss.profile_avatar} />
+                                        ) : (
+                                            <FaUserCircle className={ss.profile_avatar_placeholder} />
+                                        )}
+                                    </div>
+                                    <div className={ss.profile_info}>
+                                        <h3 className={ss.profile_name}>{user?.name}</h3>
+                                        <p className={ss.profile_role}>{user?.role}</p>
+                                        <p className={ss.profile_email}>{user?.email}</p>
+                                    </div>
+                                </div>
+                                <div className={ss.profile_divider}></div>
                                 <div className={ss.profile_menu}>
                                     {profileMenuItems.map((item, index) => (
                                         <div
                                             key={index}
                                             className={ss.profile_menu_item}
-                                            onClick={item.action}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                item.action();
+                                                setShowProfileMenu(false);
+                                            }}
                                         >
-                                            {item.label}
+                                            <span className={ss.menu_item_text}>{item.label}</span>
                                         </div>
                                     ))}
                                 </div>

@@ -15,12 +15,12 @@ const port = 8181;
 const tokenSecretKey = 'temp_key';
 
 const User = require('./models/User')
-// const Category = require('./models/Category')
-// const Review = require('./models/Review')
-// const Product = require('./models/Product')
-// const Order = require('./models/Order')
-// const MainBanner = require('./models/MainBanner')
-// const FreeDesign = require('./models/FreeDesign')
+    // const Category = require('./models/Category')
+    // const Review = require('./models/Review')
+    // const Product = require('./models/Product')
+    // const Order = require('./models/Order')
+    // const MainBanner = require('./models/MainBanner')
+    // const FreeDesign = require('./models/FreeDesign')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -56,8 +56,7 @@ app.use('/uploads', express.static('uploads'));
 // 목업 데이터
 // ----------------------------------------------------------
 
-const mockUsers = [
-    {
+const mockUsers = [{
         loginId: 'kim.minsu',
         password: 'password123',
         name: '김민수',
@@ -288,7 +287,7 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/get-user-list', async (req, res) => {
+app.get('/get-user-list', async(req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
@@ -307,8 +306,8 @@ app.get('/get-user-list', async (req, res) => {
     }
 })
 
-app.post('/signup', async (req, res) => {
-    const { password, name, phone, email, position } = req.body;
+app.post('/signup', async(req, res) => {
+    const { password, name, slackId, phone, email, position } = req.body;
     try {
         const alreadyExists = await User.findOne({ email: email });
         if (alreadyExists) {
@@ -318,6 +317,7 @@ app.post('/signup', async (req, res) => {
         const newUser = new User({
             password,
             name,
+            loginId: slackId,
             userType: 'internal',
             phone,
             email,
@@ -333,7 +333,7 @@ app.post('/signup', async (req, res) => {
     }
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', async(req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email: email });
@@ -350,8 +350,7 @@ app.post('/login', async (req, res) => {
             return;
         }
         // JWT 토큰 생성 - userId만 포함 (시크릿 키 없이)
-        const token = jwt.sign(
-            { userId: user._id },
+        const token = jwt.sign({ userId: user._id },
             tokenSecretKey,
             // { expiresIn: '1d' } // 유효기간 따로 없음
         );
@@ -363,13 +362,11 @@ app.post('/login', async (req, res) => {
 })
 
 // 유저 승인 API
-app.get('/admin/approve-user/:userId', async (req, res) => {
+app.get('/admin/approve-user/:userId', async(req, res) => {
     const { userId } = req.params;
     try {
         const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { status: 'active' },
-            { new: true }
+            userId, { status: 'active' }, { new: true }
         ).select('-password');
 
         if (!updatedUser) {
@@ -384,7 +381,7 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
 })
 
 // 사용자 정보 불러오기 (메인 등에서 사용)
-app.get('/get-user-info', async (req, res) => {
+app.get('/get-user-info', async(req, res) => {
     const { userId } = req.query;
     try {
         const user = await User.findById(userId).select('-password');

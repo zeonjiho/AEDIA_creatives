@@ -12,6 +12,7 @@ import TeamNotifications from './page/TeamNotifications/TeamNotifications';
 import Receipts from './page/Receipts/Receipts';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
+import Settings from './page/Settings/Settings';
 import AdminLayout from './layout/AdminLayout/AdminLayout';
 import AdminMain from './page/Admin/AdminMain/AdminMain';
 import AdminProject from './page/Admin/AdminProject/AdminProject';
@@ -43,6 +44,7 @@ function App() {
           <Route path='notifications' element={<TeamNotifications />} />
           <Route path='receipts' element={<Receipts />} />
           <Route path='profile' element={<Profile />} />
+          <Route path='settings' element={<Settings />} />
         </Route>
 
         <Route path='/admin' element={<AdminLayout />}>

@@ -384,6 +384,8 @@
     border-radius: var(--border-radius-round);
     border: 2px solid var(--border-color);
     transition: all 0.3s ease;
+    flex-shrink: 0;
+    object-fit: cover;
 }
 
 .profile_button:hover .avatar,
@@ -464,6 +466,7 @@
     border: 3px solid var(--bg-primary);
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
 }
 
 .profile_avatar_placeholder {
@@ -471,6 +474,7 @@
     height: 60px;
     color: var(--bg-primary);
     opacity: 0.9;
+    flex-shrink: 0;
 }
 
 
@@ -519,6 +523,7 @@
 
 .profile_menu {
     padding: 10px 0;
+    background-color: var(--bg-secondary);
 }
 
 .profile_menu_item {
@@ -534,7 +539,7 @@
 }
 
 .profile_menu_item:hover {
-    background: linear-gradient(90deg, transparent 0%, var(--bg-tertiary) 50%, transparent 100%);
+    /* background-color: var(--bg-tertiary); */
     color: var(--accent-color);
     transform: translateX(5px);
 }
