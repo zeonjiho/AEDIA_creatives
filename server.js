@@ -252,7 +252,7 @@ const mockUsers = [
         phone: '010-8146-9257',
         email: 'nam.jihoon@makeup.com',
         roles: ['makeup_artist'],
-        status: 'active',
+        status: 'waiting',
         projects: []
     },
     {
@@ -291,23 +291,14 @@ app.get('/', (req, res) => {
 app.get('/get-user-list', async (req, res) => {
     const { userType } = req.query;
     try {
-        // if (userType === 'all' || !userType) {
-        //     const userList = await User.find({}).select('-password');
-        //     res.status(200).json(userList);
-        // } else if (userType === 'internal') {
-        //     const userList = await User.find({ userType: 'internal' }).select('-password');
-        //     res.status(200).json(userList);
-        // } else if (userType === 'external') {
-        //     const userList = await User.find({ userType: 'external' }).select('-password');
-        //     res.status(200).json(userList);
-        // }
-        if (userType === 'all' || !userType) {
-            res.status(200).json(mockUsers);
+        if (userType === 'all') {
+            const userList = await User.find({}).select('-password');
+            res.status(200).json(userList);
         } else if (userType === 'internal') {
-            const userList = mockUsers.filter(user => user.userType === 'internal');
+            const userList = await User.find({ userType: 'internal' }).select('-password');
             res.status(200).json(userList);
         } else if (userType === 'external') {
-            const userList = mockUsers.filter(user => user.userType === 'external');
+            const userList = await User.find({ userType: 'external' }).select('-password');
             res.status(200).json(userList);
         }
     } catch (err) {
@@ -368,5 +359,26 @@ app.post('/login', async (req, res) => {
     } catch (err) {
         console.log(err)
         res.status(500).json({ message: '로그인 실패' });
+    }
+})
+
+// 유저 승인 API
+app.get('/admin/approve-user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { status: 'active' },
+            { new: true }
+        ).select('-password');
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        res.status(200).json({ message: '사용자가 승인되었습니다.', user: updatedUser });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '승인 처리 중 오류가 발생했습니다.' });
     }
 })
