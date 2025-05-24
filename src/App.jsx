@@ -28,7 +28,7 @@ function App() {
         <Route path='login' element={<Login />} />
         <Route path='signup' element={<Signup />} />
         <Route path='forgot-password' element={<ForgotPassword />} />
-        
+
         <Route path='/' element={<AppLayout />}>
           <Route index element={<Home />} />
           <Route path='attendance' element={<Attendance />} />
@@ -44,12 +44,12 @@ function App() {
         <Route path='/admin' element={<AdminLayout />}>
           <Route index element={<AdminMain />} />
           <Route path='user-list' element={<AdminUser />} />
-          <Route path='project' element={<AdminProject />} />
           <Route path='staff-list' element={<AdminStaff />} />
           <Route path='finance'>
             <Route path='meal' element={<AdminFinanceMeal />} />
             <Route path='taxi' element={<AdminFinanceTaxi />} />
           </Route>
+          <Route path='project' element={<AdminProject />} />
         </Route>
       </Routes>
     </div>
