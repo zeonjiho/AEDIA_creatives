@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ss from './TodoList.module.css'
-import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaClipboardCheck, FaRegClock, FaInfoCircle, FaProjectDiagram, FaFilter, FaShare } from 'react-icons/fa'
-import { todos as initialTodos, addTodo, updateTodo, deleteTodo, currentUser, projects as initialProjects } from '../../data/mockDatabase'
+import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaClipboardCheck, FaRegClock, FaInfoCircle, FaProjectDiagram, FaFilter, FaShare, FaUser } from 'react-icons/fa'
+import { todos as initialTodos, addTodo, updateTodo, deleteTodo, currentUser, projects as initialProjects, users } from '../../data/mockDatabase'
 import { parseNaturalLanguageTodo, formatParsedTodo } from '../../utils/naturalLanguageUtils'
 
 const TodoList = () => {
@@ -63,7 +63,7 @@ const TodoList = () => {
     // 초기 데이터 로드
     useEffect(() => {
         // 현재 사용자의 할 일만 필터링
-        const userTodos = initialTodos.filter(todo => todo.userId === currentUser.id)
+        const userTodos = initialTodos.filter(todo => todo.poster === currentUser.id)
         setTodos(userTodos)
         
         // 프로젝트 데이터 로드
@@ -98,7 +98,7 @@ const TodoList = () => {
         const todoInfo = parsedTodo || parseNaturalLanguageTodo(newTodoText);
         
         const newTodo = addTodo({
-            userId: currentUser.id,
+            poster: currentUser.id,
             text: todoInfo.text,
             dueDate: todoInfo.dueDate || new Date().toISOString().split('T')[0],
             dueTime: todoInfo.dueTime || null,
@@ -310,6 +310,12 @@ const TodoList = () => {
             projectId: selectedProject,
             sharedWith: projectMembers
         });
+    };
+    
+    // 작성자 이름 가져오기
+    const getAuthorName = (posterId) => {
+        const user = users.find(u => u.id === posterId);
+        return user ? user.name : 'Unknown';
     };
     
     return (
@@ -614,6 +620,12 @@ const TodoList = () => {
                                             >
                                                 <FaRegClock />
                                                 {formatDateTime(todo.dueDate, todo.dueTime)}
+                                            </div>
+                                            
+                                            {/* 작성자 정보 */}
+                                            <div className={ss.todoAuthor}>
+                                                <FaUser />
+                                                {getAuthorName(todo.poster)}
                                             </div>
                                             
                                             {/* 프로젝트 태그 */}
