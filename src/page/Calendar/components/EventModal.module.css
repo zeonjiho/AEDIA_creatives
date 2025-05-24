@@ -1,0 +1,226 @@
+/* EventModal.module.css */
+
+.modal_backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal_content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e5e5;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal_title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 400px;
+}
+
+.close_btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.close_btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal_body {
+    padding: 1.5rem;
+}
+
+.event_detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail_item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.detail_item>div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.detail_icon {
+    color: #667eea;
+    font-size: 1rem;
+    margin-top: 0.25rem;
+    min-width: 16px;
+}
+
+.detail_label {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.detail_value {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.type_badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    align-self: flex-start;
+}
+
+.type_meeting {
+    background-color: #ff9800;
+}
+
+.type_deadline {
+    background-color: #f44336;
+}
+
+.type_holiday {
+    background-color: #4caf50;
+}
+
+.type_client {
+    background-color: #9c27b0;
+}
+
+.type_user {
+    background-color: #2196f3;
+}
+
+.type_personal {
+    background-color: #00bcd4;
+}
+
+.source_info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+.source_icon {
+    color: #4285f4;
+}
+
+.modal_footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.close_modal_btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.close_modal_btn:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+}
+
+
+/* 모바일 대응 */
+
+@media (max-width: 768px) {
+    .modal_backdrop {
+        padding: 0.5rem;
+    }
+    .modal_content {
+        margin: 0;
+        border-radius: 8px;
+    }
+    .modal_header {
+        padding: 1rem;
+        border-radius: 8px 8px 0 0;
+    }
+    .modal_title {
+        font-size: 1.125rem;
+        max-width: 250px;
+    }
+    .modal_body {
+        padding: 1rem;
+    }
+    .detail_item {
+        gap: 0.5rem;
+    }
+    .detail_value {
+        font-size: 0.9rem;
+    }
+}

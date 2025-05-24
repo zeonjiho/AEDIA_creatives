@@ -5,6 +5,8 @@ import 'react-big-calendar/lib/css/react-big-calendar.css'
 import ss from './Calendar.module.css'
 import { FaSync, FaPlus, FaCalendarAlt, FaGoogle } from 'react-icons/fa'
 import PublicCalendarService from '../../utils/publicCalendarService'
+import EventModal from './components/EventModal'
+import AddEventModal from './components/AddEventModal'
 
 // moment 한국어 설정
 moment.locale('ko')
@@ -16,6 +18,12 @@ const CalendarPage = () => {
     const [currentDate, setCurrentDate] = useState(new Date())
     const [isLoading, setIsLoading] = useState(false)
     const [calendarStatus, setCalendarStatus] = useState(null)
+    
+    // 모달 상태
+    const [selectedEvent, setSelectedEvent] = useState(null)
+    const [isEventModalOpen, setIsEventModalOpen] = useState(false)
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [selectedSlot, setSelectedSlot] = useState(null)
 
     // 컴포넌트 마운트 시 이벤트 로드
     useEffect(() => {
@@ -91,43 +99,30 @@ const CalendarPage = () => {
 
     // 이벤트 클릭 핸들러
     const handleSelectEvent = (event) => {
-        const startTime = moment(event.start).format('YYYY-MM-DD HH:mm')
-        const endTime = moment(event.end).format('YYYY-MM-DD HH:mm')
-        const timeInfo = event.allDay ? '종일' : `${startTime} - ${endTime}`
-        
-        let eventDetails = `📅 ${event.title}\n⏰ ${timeInfo}`
-        
-        if (event.location) {
-            eventDetails += `\n📍 ${event.location}`
-        }
-        
-        if (event.description) {
-            eventDetails += `\n📝 ${event.description}`
-        }
-        
-        if (event.source === 'google') {
-            eventDetails += `\n\n🔗 구글 캘린더에서 동기화됨`
-        }
-        
-        alert(eventDetails)
+        setSelectedEvent(event)
+        setIsEventModalOpen(true)
     }
 
     // 날짜 클릭 핸들러 (새 이벤트 생성)
     const handleSelectSlot = (slotInfo) => {
-        const title = window.prompt('새 일정 제목을 입력하세요:')
-        if (title) {
-            const newEvent = {
-                id: `user-${Date.now()}`,
-                title: `📝 ${title}`,
-                start: slotInfo.start,
-                end: slotInfo.end,
-                allDay: slotInfo.slots.length === 1,
-                type: 'user',
-                source: 'user'
-            }
-            setEvents([...events, newEvent])
-            alert('일정이 추가되었습니다! (로컬 저장)')
-        }
+        setSelectedSlot(slotInfo)
+        setIsAddModalOpen(true)
+    }
+
+    // 새 일정 저장 핸들러
+    const handleSaveNewEvent = (newEvent) => {
+        setEvents([...events, newEvent])
+        console.log('새 일정이 추가되었습니다:', newEvent.title)
+    }
+
+    // 새 일정 버튼 클릭 핸들러
+    const handleAddEventClick = () => {
+        setSelectedSlot({ 
+            start: new Date(), 
+            end: new Date(Date.now() + 60*60*1000),
+            slots: [new Date()]
+        })
+        setIsAddModalOpen(true)
     }
 
     // 새로고침 핸들러
@@ -232,11 +227,7 @@ const CalendarPage = () => {
                     
                     <button 
                         className={ss.add_btn}
-                        onClick={() => handleSelectSlot({ 
-                            start: new Date(), 
-                            end: new Date(Date.now() + 60*60*1000),
-                            slots: [new Date()]
-                        })}
+                        onClick={handleAddEventClick}
                     >
                         <FaPlus />
                         새 일정
@@ -336,6 +327,25 @@ const CalendarPage = () => {
                         <p>구글 캘린더에서 데이터를 불러오는 중...</p>
                     </div>
                 </div>
+            )}
+
+            {/* 이벤트 모달 */}
+            {selectedEvent && (
+                <EventModal
+                    event={selectedEvent}
+                    isOpen={isEventModalOpen}
+                    onClose={() => setIsEventModalOpen(false)}
+                />
+            )}
+
+            {/* 새 일정 모달 */}
+            {selectedSlot && (
+                <AddEventModal
+                    initialDate={selectedSlot.start}
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSave={handleSaveNewEvent}
+                />
             )}
         </div>
     )
