@@ -257,14 +257,33 @@ const PCLayout = () => {
                         {/* 프로필 드롭다운 */}
                         {showProfileMenu && (
                             <div className={ss.profile_dropdown}>
+                                <div className={ss.profile_header}>
+                                    <div className={ss.profile_avatar_section}>
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt={user.name} className={ss.profile_avatar} />
+                                        ) : (
+                                            <FaUserCircle className={ss.profile_avatar_placeholder} />
+                                        )}
+                                    </div>
+                                    <div className={ss.profile_info}>
+                                        <h3 className={ss.profile_name}>{user.name}</h3>
+                                        <p className={ss.profile_role}>{user.role}</p>
+                                        <p className={ss.profile_email}>{user.email}</p>
+                                    </div>
+                                </div>
+                                <div className={ss.profile_divider}></div>
                                 <div className={ss.profile_menu}>
                                     {profileMenuItems.map((item, index) => (
                                         <div 
                                             key={index} 
                                             className={ss.profile_menu_item}
-                                            onClick={item.action}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                item.action();
+                                                setShowProfileMenu(false);
+                                            }}
                                         >
-                                            {item.label}
+                                            <span className={ss.menu_item_text}>{item.label}</span>
                                         </div>
                                     ))}
                                 </div>

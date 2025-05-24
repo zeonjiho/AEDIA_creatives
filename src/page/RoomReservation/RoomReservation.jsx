@@ -427,7 +427,7 @@ const RoomReservation = () => {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h1>회의실 예약</h1>
+                <h1>Room Reservation</h1>
                 <div className={styles.date_navigation}>
                     <button 
                         className={styles.today_button} 

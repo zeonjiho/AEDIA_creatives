@@ -1,174 +1,184 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap');
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
-
-
 * {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-collapse: collapse;
-  text-decoration: none;
-  font-family: var(--font-secondary);
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-collapse: collapse;
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    box-sizing: border-box;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  margin: 0;
-  padding: 0;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  -ms-touch-action: pan-y;
-  -webkit-text-size-adjust: none;
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    -ms-touch-action: pan-y;
+    -webkit-text-size-adjust: none;
 }
 
 :root {
-  /* 라이트 모드 (기본) */
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f3f5;
-  --text-primary: #212529;
-  --text-primary-inverse: #ffffff;
-  --text-secondary: #495057;
-  --text-tertiary: #868e96;
-  --border-color: #e9ecef;
-  --accent-color: #000000;
-  --accent-hover: #333333;
-  --success-color: #40c057;
-  --danger-color: #fa5252;
-  --warning-color: #fd7e14;
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  --header-bg: #f8f9fa;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --input-bg: #ffffff;
-  --input-border: #ced4da;
-  --button-color-hover: rgba(0, 0, 0, 0.05);
-  --button-color: rgba(0, 0, 0, 0.05);
-  --border-color-resize: rgba(0, 0, 0, 0.2);
-  --inRange-color: #ff0000;
-  
-  /* RGB 값 변수 */
-  --bg-primary-rgb: 248, 249, 250;
-  --bg-secondary-rgb: 255, 255, 255;
-  --bg-tertiary-rgb: 241, 243, 245;
-  --text-primary-rgb: 33, 37, 41;
-  --text-secondary-rgb: 73, 80, 87;
-  --text-tertiary-rgb: 134, 142, 150;
-  --accent-color-rgb: 0, 0, 0;
-  --success-color-rgb: 64, 192, 87;
-  --danger-color-rgb: 250, 82, 82;
-  --warning-color-rgb: 253, 126, 20;
-  
-  /* 보더 레디우스 변수 */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
-  --border-radius-round: 50%;
-  
-  /* 반투명 효과 */
-  --glass-effect: rgba(255, 255, 255, 0.8);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.18);
-  --glass-backdrop: blur(10px);
-
-  --main-back-dark: #1A1A1A;
-  --empty-dark: #3D3D3D;
-  --font-mono: 'SFMono-Regular', Menlo, Consolas, Liberation Mono, monospace;
-  --font-primary: 'Syne', sans-serif;
-  --font-secondary: 'PretendardVariable', sans-serif;
-  --font-sans: 'PretendardVariable', sans-serif;
-
-  /* 스크롤바 색상 변수 */
-  --scroll-color-before: rgba(0, 0, 0, 0.1);
-  --scroll-color-active: rgba(0, 0, 0, 0.3);
-  --scroll-color-hover: rgba(0, 0, 0, 0.5);
-  
-  /* 이벤트 컬러 태그 */
-  --color-tag-1: rgba(66, 133, 244, 0.2); /* 파랑 */
-  --color-tag-2: rgba(234, 67, 53, 0.2); /* 빨강 */
-  --color-tag-3: rgba(251, 188, 5, 0.2); /* 노랑 */
-  --color-tag-4: rgba(52, 168, 83, 0.2); /* 초록 */
-  --color-tag-5: rgba(156, 39, 176, 0.2); /* 보라 */
-  --color-tag-6: rgba(255, 152, 0, 0.2); /* 주황 */
-  --color-tag-7: rgba(0, 188, 212, 0.2); /* 청록 */
-  --color-tag-8: rgba(121, 85, 72, 0.2); /* 갈색 */
-  --color-tag-9: rgba(96, 125, 139, 0.2); /* 청회색 */
-  --color-tag-10: rgba(233, 30, 99, 0.2); /* 분홍 */
-  
-  /* 프로젝트 상태 색상 */
-  --status-kickoff: #4285F4; /* 파랑 - 킥오프 */
-  --status-pre-production: #EA4335; /* 빨강 - 프리프로덕션 */
-  --status-production: #FBBC05; /* 노랑 - 프로덕션 */
-  --status-post-production: #34A853; /* 초록 - 포스트프로덕션 */
-  --status-delivery: #9C27B0; /* 보라 - 납품 */
-  --status-review: #FF9800; /* 주황 - 검토 */
-  --status-in-progress: #00BCD4; /* 청록 - 진행중 */
-  --status-completed: #795548; /* 갈색 - 완료 */
-  --status-on-hold: #607D8B; /* 청회색 - 보류 */
-  --status-cancelled: #E91E63; /* 분홍 - 취소 */
+    /* 라이트 모드 (기본) */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f3f5;
+    --text-primary: #212529;
+    --text-primary-inverse: #ffffff;
+    --text-secondary: #495057;
+    --text-tertiary: #868e96;
+    --border-color: #e9ecef;
+    --accent-color: #000000;
+    --accent-hover: #333333;
+    --success-color: #40c057;
+    --danger-color: #fa5252;
+    --warning-color: #fd7e14;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --header-bg: #f8f9fa;
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --button-color-hover: rgba(0, 0, 0, 0.05);
+    --button-color: rgba(0, 0, 0, 0.05);
+    --border-color-resize: rgba(0, 0, 0, 0.2);
+    --inRange-color: #ff0000;
+    /* RGB 값 변수 */
+    --bg-primary-rgb: 248, 249, 250;
+    --bg-secondary-rgb: 255, 255, 255;
+    --bg-tertiary-rgb: 241, 243, 245;
+    --text-primary-rgb: 33, 37, 41;
+    --text-secondary-rgb: 73, 80, 87;
+    --text-tertiary-rgb: 134, 142, 150;
+    --accent-color-rgb: 0, 0, 0;
+    --success-color-rgb: 64, 192, 87;
+    --danger-color-rgb: 250, 82, 82;
+    --warning-color-rgb: 253, 126, 20;
+    /* 보더 레디우스 변수 */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+    --border-radius-round: 50%;
+    /* 반투명 효과 */
+    --glass-effect: rgba(255, 255, 255, 0.8);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.18);
+    --glass-backdrop: blur(10px);
+    --main-back-dark: #1A1A1A;
+    --empty-dark: #3D3D3D;
+    --font-mono: 'SFMono-Regular', Menlo, Consolas, Liberation Mono, monospace;
+    --font-primary: 'Syne', sans-serif;
+    --font-secondary: 'PretendardVariable', sans-serif;
+    --font-sans: 'PretendardVariable', sans-serif;
+    /* 스크롤바 색상 변수 */
+    --scroll-color-before: rgba(0, 0, 0, 0.1);
+    --scroll-color-active: rgba(0, 0, 0, 0.3);
+    --scroll-color-hover: rgba(0, 0, 0, 0.5);
+    /* 이벤트 컬러 태그 */
+    --color-tag-1: rgba(66, 133, 244, 0.2);
+    /* 파랑 */
+    --color-tag-2: rgba(234, 67, 53, 0.2);
+    /* 빨강 */
+    --color-tag-3: rgba(251, 188, 5, 0.2);
+    /* 노랑 */
+    --color-tag-4: rgba(52, 168, 83, 0.2);
+    /* 초록 */
+    --color-tag-5: rgba(156, 39, 176, 0.2);
+    /* 보라 */
+    --color-tag-6: rgba(255, 152, 0, 0.2);
+    /* 주황 */
+    --color-tag-7: rgba(0, 188, 212, 0.2);
+    /* 청록 */
+    --color-tag-8: rgba(121, 85, 72, 0.2);
+    /* 갈색 */
+    --color-tag-9: rgba(96, 125, 139, 0.2);
+    /* 청회색 */
+    --color-tag-10: rgba(233, 30, 99, 0.2);
+    /* 분홍 */
+    /* 프로젝트 상태 색상 */
+    --status-kickoff: #4285F4;
+    /* 파랑 - 킥오프 */
+    --status-pre-production: #EA4335;
+    /* 빨강 - 프리프로덕션 */
+    --status-production: #FBBC05;
+    /* 노랑 - 프로덕션 */
+    --status-post-production: #34A853;
+    /* 초록 - 포스트프로덕션 */
+    --status-delivery: #9C27B0;
+    /* 보라 - 납품 */
+    --status-review: #FF9800;
+    /* 주황 - 검토 */
+    --status-in-progress: #00BCD4;
+    /* 청록 - 진행중 */
+    --status-completed: #795548;
+    /* 갈색 - 완료 */
+    --status-on-hold: #607D8B;
+    /* 청회색 - 보류 */
+    --status-cancelled: #E91E63;
+    /* 분홍 - 취소 */
 }
 
 [data-theme="dark"] {
-  /* 다크 모드 */
-  --bg-primary: #000000;
-  --bg-secondary: #141414;
-  --bg-tertiary: #1d1d1d;
-  --text-primary: #e9ecef;
-  --text-primary-inverse: #000000;
-  --text-secondary: #ced4da;
-  --text-tertiary: #adb5bd;
-  --border-color: #444;
-  --accent-color: #ffffff;
-  --accent-hover: #e0e0e0;
-  --success-color: #51cf66;
-  --danger-color: #ff6b6b;
-  --warning-color: #ffa94d;
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  --header-bg: #121212;
-  --card-bg: rgba(30, 30, 30, 0.85);
-  --input-bg: #2d2d2d;
-  --input-border: #444;
-  --button-color-hover: rgba(255, 255, 255, 0.08);
-  --button-color: rgba(255, 255, 255, 0.1);
-  --border-color-resize: rgba(255, 255, 255, 0.2);
-  /* RGB 값 변수 */
-  --bg-primary-rgb: 18, 18, 18;
-  --bg-secondary-rgb: 30, 30, 30;
-  --bg-tertiary-rgb: 45, 45, 45;
-  --text-primary-rgb: 233, 236, 239;
-  --text-secondary-rgb: 206, 212, 218;
-  --text-tertiary-rgb: 173, 181, 189;
-  --accent-color-rgb: 255, 255, 255;
-  --success-color-rgb: 81, 207, 102;
-  --danger-color-rgb: 255, 107, 107;
-  --warning-color-rgb: 255, 169, 77;
-  
-  /* 반투명 효과 */
-  --glass-effect: rgba(30, 30, 30, 0.8);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-
-  /* 스크롤바 색상 변수 (다크 모드) */
-  --scroll-color-before: rgba(255, 255, 255, 0.1);
-  --scroll-color-active: rgba(255, 255, 255, 0.3);
-  --scroll-color-hover: rgba(255, 255, 255, 0.5);
+    /* 다크 모드 */
+    --bg-primary: #000000;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1d1d1d;
+    --text-primary: #e9ecef;
+    --text-primary-inverse: #000000;
+    --text-secondary: #ced4da;
+    --text-tertiary: #adb5bd;
+    --border-color: #444;
+    --accent-color: #ffffff;
+    --accent-hover: #e0e0e0;
+    --success-color: #51cf66;
+    --danger-color: #ff6b6b;
+    --warning-color: #ffa94d;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    --header-bg: #121212;
+    --card-bg: rgba(30, 30, 30, 0.85);
+    --input-bg: #2d2d2d;
+    --input-border: #444;
+    --button-color-hover: rgba(255, 255, 255, 0.08);
+    --button-color: rgba(255, 255, 255, 0.1);
+    --border-color-resize: rgba(255, 255, 255, 0.2);
+    /* RGB 값 변수 */
+    --bg-primary-rgb: 18, 18, 18;
+    --bg-secondary-rgb: 30, 30, 30;
+    --bg-tertiary-rgb: 45, 45, 45;
+    --text-primary-rgb: 233, 236, 239;
+    --text-secondary-rgb: 206, 212, 218;
+    --text-tertiary-rgb: 173, 181, 189;
+    --accent-color-rgb: 255, 255, 255;
+    --success-color-rgb: 81, 207, 102;
+    --danger-color-rgb: 255, 107, 107;
+    --warning-color-rgb: 255, 169, 77;
+    /* 반투명 효과 */
+    --glass-effect: rgba(30, 30, 30, 0.8);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    /* 스크롤바 색상 변수 (다크 모드) */
+    --scroll-color-before: rgba(255, 255, 255, 0.1);
+    --scroll-color-active: rgba(255, 255, 255, 0.3);
+    --scroll-color-hover: rgba(255, 255, 255, 0.5);
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  overflow-y: auto;
-  overscroll-behavior: none;
-  /* 아래 두 속성은 attendance.module.css에서 전역으로 적용되어 있던 것에서 빼 온 것. */
-  display: flex;
-  flex-direction: column;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    /* 아래 두 속성은 attendance.module.css에서 전역으로 적용되어 있던 것에서 빼 온 것. */
+    display: flex;
+    flex-direction: column;
 }
