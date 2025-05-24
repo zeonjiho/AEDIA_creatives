@@ -10,7 +10,6 @@ import RoomReservation from './page/RoomReservation/RoomReservation';
 import ProjectStatus from './page/ProjectStatus/ProjectStatus';
 import TeamNotifications from './page/TeamNotifications/TeamNotifications';
 import Receipts from './page/Receipts/Receipts';
-import Signup from './page/Signup/Signup';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
 import AdminLayout from './layout/AdminLayout/AdminLayout';
@@ -32,7 +31,6 @@ function App() {
     <div>
       <Routes>
         <Route path='login' element={<Login />} />
-        <Route path='signup' element={<Signup />} />
         <Route path='forgot-password' element={<ForgotPassword />} />
 
         <Route path='/' element={<AppLayout />}>
