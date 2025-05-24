@@ -67,7 +67,6 @@ const AdminLayout = () => {
             submenus: [
                 { id: 'user-list', name: '직원 목록', path: '/admin/user-list' },
                 { id: 'staff-list', name: '스태프 목록', path: '/admin/staff-list' },
-                { id: 'add-user', name: '인력 추가', path: '/admin/add-user' },
             ]
         },
         {
