@@ -20,6 +20,7 @@ import AdminUser from './page/Admin/AdminUser/AdminUser';
 import AdminStaff from './page/Admin/AdminStaff/AdminStaff';
 import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
 import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
+import AdminAddUser from './page/Admin/AdminAddUser/AdminAddUser';
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
         <Route path='login' element={<Login />} />
         <Route path='signup' element={<Signup />} />
         <Route path='forgot-password' element={<ForgotPassword />} />
-        
+
         <Route path='/' element={<AppLayout />}>
           <Route index element={<Home />} />
           <Route path='attendance' element={<Attendance />} />
@@ -44,12 +45,13 @@ function App() {
         <Route path='/admin' element={<AdminLayout />}>
           <Route index element={<AdminMain />} />
           <Route path='user-list' element={<AdminUser />} />
-          <Route path='project' element={<AdminProject />} />
           <Route path='staff-list' element={<AdminStaff />} />
+          <Route path='add-user' element={<AdminAddUser />} />
           <Route path='finance'>
             <Route path='meal' element={<AdminFinanceMeal />} />
             <Route path='taxi' element={<AdminFinanceTaxi />} />
           </Route>
+          <Route path='project' element={<AdminProject />} />
         </Route>
       </Routes>
     </div>
