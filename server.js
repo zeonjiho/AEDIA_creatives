@@ -14,7 +14,7 @@ const app = express()
 const port = 8181;
 const tokenSecretKey = 'temp_key';
 
-// const User = require('./models/User')
+const User = require('./models/User')
 // const Category = require('./models/Category')
 // const Review = require('./models/Review')
 // const Product = require('./models/Product')
@@ -61,3 +61,22 @@ app.use('/uploads', express.static('uploads'));
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
+
+app.get('/get-user-list', async (req, res) => {
+    const { userType } = req.query;
+    try {
+        if (userType === 'all') {
+            const userList = await User.find({}).select('-password');
+            res.status(200).json(userList);
+        } else if (userType === 'internal') {
+            const userList = await User.find({ userType: 'internal' }).select('-password');
+            res.status(200).json(userList);
+        } else if (userType === 'external') {
+            const userList = await User.find({ userType: 'external' }).select('-password');
+            res.status(200).json(userList);
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).json()
+    }
+})
