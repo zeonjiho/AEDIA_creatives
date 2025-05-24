@@ -675,3 +675,50 @@ app.delete('/todos/:id', async (req, res) => {
         res.status(500).json({ message: '할 일 삭제 실패' });
     }
 });
+
+// 대시보드 레이아웃 관련 API
+// 레이아웃 저장
+app.patch('/dashboard/layout', async (req, res) => {
+    const { userId } = req.query;
+    const { layouts } = req.body;
+    
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { mainLayout: layouts },
+            { new: true }
+        ).select('-password');
+        
+        res.status(200).json({ 
+            message: '레이아웃이 저장되었습니다.',
+            mainLayout: updatedUser.mainLayout
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '레이아웃 저장 실패' });
+    }
+});
+
+// 레이아웃 불러오기
+app.get('/dashboard/layout', async (req, res) => {
+    const { userId } = req.query;
+    
+    try {
+        const user = await User.findById(userId).select('mainLayout');
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+        
+        res.status(200).json({ 
+            mainLayout: user.mainLayout || {}
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '레이아웃 불러오기 실패' });
+    }
+});

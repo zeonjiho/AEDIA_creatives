@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import ss from './Home.module.css'
 import { useNavigate } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
+import api from '../../utils/api'
 import { 
     FaSun,
     FaMoon
@@ -29,6 +31,9 @@ import NotificationWidget from '../../common/widgets/NotificationWidget'
 
 const Home = () => {
     const navigate = useNavigate()
+    
+    // 사용자 ID 상태 추가
+    const [userId, setUserId] = useState(null)
     
     // 화면 크기 감지를 위한 상태 추가
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
@@ -91,20 +96,53 @@ const Home = () => {
         return savedTheme || 'light'
     })
     
-    // 위젯 레이아웃 상태 관리
-    const [layouts, setLayouts] = useState(() => {
-        // 로컬 스토리지에서 레이아웃 설정 불러오기
-        const savedLayouts = localStorage.getItem('dashboard_layouts')
-        
-        // 저장된 레이아웃이 없으면 기본 레이아웃 사용
-        if (!savedLayouts) {
-            // 초기 실행 시 기본 레이아웃을 로컬 스토리지에 저장
-            localStorage.setItem('dashboard_layouts', JSON.stringify(defaultLayouts))
-            return defaultLayouts
+    // 위젯 레이아웃 상태 관리 - 초기값을 null로 설정
+    const [layouts, setLayouts] = useState(null)
+    
+    // JWT 토큰에서 사용자 ID 추출
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            navigate('/login') // 토큰이 없으면 로그인 페이지로
+            return
         }
         
-        return JSON.parse(savedLayouts)
-    })
+        try {
+            const decoded = jwtDecode(token)
+            setUserId(decoded.userId)
+        } catch (error) {
+            console.error('토큰 디코딩 실패:', error)
+            navigate('/login')
+        }
+    }, [navigate])
+    
+    // 서버에서 레이아웃 불러오기
+    const loadLayoutFromServer = async () => {
+        if (!userId) return
+        
+        try {
+            const response = await api.get(`dashboard/layout?userId=${userId}`)
+            const savedLayouts = response.data.mainLayout
+            
+            // 저장된 레이아웃이 있고 비어있지 않으면 사용, 그렇지 않으면 기본 레이아웃 사용
+            if (savedLayouts && Object.keys(savedLayouts).length > 0) {
+                setLayouts(savedLayouts)
+            } else {
+                setLayouts(defaultLayouts)
+            }
+        } catch (error) {
+            console.error('레이아웃 불러오기 실패:', error)
+            // 에러 발생 시 기본 레이아웃 사용
+            setLayouts(defaultLayouts)
+        }
+    }
+    
+    // 사용자 ID가 설정되면 레이아웃 로드
+    useEffect(() => {
+        if (userId) {
+            loadLayoutFromServer()
+        }
+    }, [userId])
     
     // 커스터마이징 모드 상태 관리
     const [isCustomizeMode, setIsCustomizeMode] = useState(false);
@@ -113,12 +151,19 @@ const Home = () => {
     const [tempLayouts, setTempLayouts] = useState(null);
     
     // 레이아웃 초기화 함수
-    const resetLayout = () => {
+    const resetLayout = async () => {
         if (isCustomizeMode) {
             setTempLayouts(defaultLayouts);
         } else {
             setLayouts(defaultLayouts);
-            localStorage.setItem('dashboard_layouts', JSON.stringify(defaultLayouts));
+            // 서버에 기본 레이아웃 저장
+            if (userId) {
+                try {
+                    await api.patch(`dashboard/layout?userId=${userId}`, { layouts: defaultLayouts });
+                } catch (error) {
+                    console.error('레이아웃 초기화 저장 실패:', error);
+                }
+            }
         }
     }
     
@@ -131,11 +176,22 @@ const Home = () => {
         setIsCustomizeMode(mode);
     }
     
-    // 커스터마이징 모드 저장 함수
-    const saveCustomization = () => {
-        if (tempLayouts) {
-            setLayouts(tempLayouts);
-            localStorage.setItem('dashboard_layouts', JSON.stringify(tempLayouts));
+    // 커스터마이징 모드 저장 함수 - 서버에 저장
+    const saveCustomization = async () => {
+        if (tempLayouts && userId) {
+            try {
+                // 서버에 레이아웃 저장
+                await api.patch(`dashboard/layout?userId=${userId}`, { layouts: tempLayouts });
+                
+                // 성공 시 로컬 상태 업데이트
+                setLayouts(tempLayouts);
+                
+                alert('레이아웃이 저장되었습니다.');
+            } catch (error) {
+                console.error('레이아웃 저장 실패:', error);
+                alert('레이아웃 저장에 실패했습니다.');
+                return; // 저장 실패 시 모드 종료하지 않음
+            }
         }
         setIsCustomizeMode(false);
         setTempLayouts(null);
@@ -152,8 +208,8 @@ const Home = () => {
         if (isCustomizeMode) {
             setTempLayouts(newLayouts);
         } else {
+            // 실시간 변경은 서버에 저장하지 않고 로컬 상태만 업데이트
             setLayouts(newLayouts);
-            localStorage.setItem('dashboard_layouts', JSON.stringify(newLayouts));
         }
     }
     
@@ -302,90 +358,103 @@ const Home = () => {
             
             {/* 위젯 그리드 레이아웃 */}
             <main className={ss.dashboard_content}>
-                <WidgetGrid 
-                    columns={3} 
-                    gap="15px" 
-                    className={ss.dashboard_grid}
-                    layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
-                    onLayoutChange={handleLayoutChange}
-                    isCustomizeMode={isCustomizeMode}
-                    onCustomizeModeChange={handleCustomizeModeChange}
-                >
-                    {/* 투두 리스트 위젯 */}
-                    <WidgetGridItem 
-                        key="todo-widget"
+                {layouts ? (
+                    <WidgetGrid 
+                        columns={3} 
+                        gap="15px" 
+                        className={ss.dashboard_grid}
+                        layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
+                        onLayoutChange={handleLayoutChange}
+                        isCustomizeMode={isCustomizeMode}
                         onCustomizeModeChange={handleCustomizeModeChange}
                     >
-                        <TodoWidget 
-                            todos={todoList}
-                            onToggleTodo={toggleTodo}
-                            onAddTodo={handleAddTodo}
-                            newTodo={newTodo}
-                            onNewTodoChange={(e) => setNewTodo(e.target.value)}
-                            onViewAllClick={() => navigate('/todo')}
-                            formatDate={formatDate}
-                        />
-                    </WidgetGridItem>
+                        {/* 투두 리스트 위젯 */}
+                        <WidgetGridItem 
+                            key="todo-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <TodoWidget 
+                                todos={todoList}
+                                onToggleTodo={toggleTodo}
+                                onAddTodo={handleAddTodo}
+                                newTodo={newTodo}
+                                onNewTodoChange={(e) => setNewTodo(e.target.value)}
+                                onViewAllClick={() => navigate('/todo')}
+                                formatDate={formatDate}
+                            />
+                        </WidgetGridItem>
 
-                    {/* 오늘의 일정 위젯 */}
-                    <WidgetGridItem 
-                        key="schedule-widget"
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        <ScheduleWidget 
-                            events={todayEvents}
-                            onViewAllClick={() => navigate('/todo')}
-                        />
-                    </WidgetGridItem>
+                        {/* 오늘의 일정 위젯 */}
+                        <WidgetGridItem 
+                            key="schedule-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <ScheduleWidget 
+                                events={todayEvents}
+                                onViewAllClick={() => navigate('/todo')}
+                            />
+                        </WidgetGridItem>
 
-                    {/* 스튜디오 현황 위젯 */}
-                    <WidgetGridItem 
-                        key="studio-widget"
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        <StudioWidget 
-                            rooms={rooms.slice(0, 4)}
-                            reservations={roomReservations}
-                            onReservationClick={() => navigate('/room-reservation')}
-                        />
-                    </WidgetGridItem>
+                        {/* 스튜디오 현황 위젯 */}
+                        <WidgetGridItem 
+                            key="studio-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <StudioWidget 
+                                rooms={rooms.slice(0, 4)}
+                                reservations={roomReservations}
+                                onReservationClick={() => navigate('/room-reservation')}
+                            />
+                        </WidgetGridItem>
 
-                    {/* 프로젝트 현황 위젯 */}
-                    <WidgetGridItem 
-                        key="project-widget"
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        <ProjectWidget 
-                            projects={upcomingProjects}
-                            calculateProgress={calculateProgress}
-                            calculateRemainingDays={calculateRemainingDays}
-                            formatDate={formatDate}
-                            onViewAllClick={() => navigate('/projects')}
-                        />
-                    </WidgetGridItem>
+                        {/* 프로젝트 현황 위젯 */}
+                        <WidgetGridItem 
+                            key="project-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <ProjectWidget 
+                                projects={upcomingProjects}
+                                calculateProgress={calculateProgress}
+                                calculateRemainingDays={calculateRemainingDays}
+                                formatDate={formatDate}
+                                onViewAllClick={() => navigate('/projects')}
+                            />
+                        </WidgetGridItem>
 
-                    {/* 팀 멤버 위젯 */}
-                    <WidgetGridItem 
-                        key="team-widget"
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        <TeamWidget 
-                            members={users.slice(0, 4)}
-                            onViewAllClick={() => navigate('/team')}
-                        />
-                    </WidgetGridItem>
+                        {/* 팀 멤버 위젯 */}
+                        <WidgetGridItem 
+                            key="team-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <TeamWidget 
+                                members={users.slice(0, 4)}
+                                onViewAllClick={() => navigate('/team')}
+                            />
+                        </WidgetGridItem>
 
-                    {/* 알림 위젯 */}
-                    <WidgetGridItem 
-                        key="notification-widget"
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        <NotificationWidget 
-                            notifications={notifications.slice(0, 3)}
-                            onViewAllClick={() => navigate('/notifications')}
-                        />
-                    </WidgetGridItem>
-                </WidgetGrid>
+                        {/* 알림 위젯 */}
+                        <WidgetGridItem 
+                            key="notification-widget"
+                            onCustomizeModeChange={handleCustomizeModeChange}
+                        >
+                            <NotificationWidget 
+                                notifications={notifications.slice(0, 3)}
+                                onViewAllClick={() => navigate('/notifications')}
+                            />
+                        </WidgetGridItem>
+                    </WidgetGrid>
+                ) : (
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        height: '400px',
+                        fontSize: '1.2rem',
+                        color: '#6b7280'
+                    }}>
+                        대시보드 레이아웃을 불러오는 중...
+                    </div>
+                )}
             </main>
         </div>
     )
