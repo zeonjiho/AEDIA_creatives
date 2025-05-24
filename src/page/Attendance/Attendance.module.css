@@ -27,17 +27,26 @@
     pointer-events: none;
 }
 
+
 /* 헤더 스타일 */
-.attendance_header {
+
+.dashboard_header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 20px;
     position: relative;
     z-index: 1;
+    flex-shrink: 0;
+    width: 100%;
 }
 
-.attendance_title {
+.header_content {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard_title {
     font-size: 50px;
     font-weight: 700;
     margin-bottom: 10px;
@@ -49,7 +58,7 @@
     font-family: var(--font-primary);
 }
 
-.attendance_date {
+.dashboard_date {
     font-size: 16px;
     color: var(--text-secondary);
     text-align: left;
@@ -59,14 +68,13 @@
     font-family: var(--font-mono);
 }
 
-/* 버튼 스타일 */
-.attendance_controls {
+.header_controls {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 10px;
 }
 
-.attendance_btn {
+.customize_btn {
     padding: 10px 20px;
     border-radius: var(--border-radius-md);
     background-color: transparent;
@@ -78,20 +86,29 @@
     outline: none;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-}
-
-.record_btn {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
-.record_btn:hover {
+.customize_btn:hover {
     background-color: var(--bg-tertiary);
 }
 
+.save_btn {
+    background-color: var(--accent-color);
+    color: var(--bg-secondary);
+}
+
+.save_btn:hover {
+    background-color: var(--accent-hover);
+}
+
+
 /* 중앙 상태 카드 스타일 */
+
 .attendance_center {
     display: flex;
     justify-content: center;
@@ -293,7 +310,9 @@
     gap: 15px;
 }
 
+
 /* 이번 주 출근 현황 카드 스타일 */
+
 .week_summary {
     display: flex;
     justify-content: space-between;
@@ -372,7 +391,9 @@
     transition: color 0.3s ease;
 }
 
+
 /* 출근 기록 테이블 스타일 */
+
 .attendance_table {
     width: 100%;
     border-collapse: collapse;
@@ -414,7 +435,9 @@
     color: white;
 }
 
+
 /* 상태 메시지 스타일 */
+
 .status_message {
     margin-top: 20px;
     padding: 12px 20px;
@@ -433,7 +456,6 @@
         opacity: 0;
         transform: translateY(10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -452,51 +474,44 @@
     border: 1px solid var(--danger-color);
 }
 
+
 /* 반응형 스타일 */
+
 @media (max-width: 1024px) {
     .attendance_wrap {
         padding: 15px;
         max-width: 100%;
     }
-
     .attendance_title {
         font-size: 36px;
         margin-bottom: 8px;
     }
-
     .attendance_date {
         font-size: 14px;
     }
-
     .attendance_center {
         margin: 5px auto 15px;
     }
-
     .status_card {
         padding: 30px;
         max-width: 450px;
         margin: -5px auto 0;
     }
-
     .status_icon {
         font-size: 50px;
     }
-
     .attendance_header {
         flex-direction: column;
         gap: 15px;
     }
-
     .attendance_btn {
         width: 100%;
         justify-content: center;
     }
-
     .attendance_grid {
         grid-template-columns: 1fr;
         max-width: 600px;
     }
-
     .attendance_card_full {
         grid-column: auto;
     }
@@ -506,50 +521,43 @@
     .attendance_wrap {
         padding: 10px;
     }
-
     .attendance_title {
         font-size: 28px;
     }
-
     .attendance_date {
         font-size: 12px;
     }
-
     .attendance_header {
         margin-bottom: 15px;
     }
-
     .attendance_center {
         margin: 5px auto 250px;
     }
-
     .status_card {
         padding: 20px;
         max-width: 100%;
         border-radius: 2rem;
         margin: 0 auto;
     }
-
     .status_icon {
         font-size: 40px;
     }
-
     .current_time {
         font-size: 28px;
     }
-
     .check_in_button,
     .check_out_button {
         padding: 12px 30px;
         font-size: 14px;
     }
-
     .attendance_grid {
         gap: 15px;
     }
 }
 
+
 /* 위치 정보 관련 스타일 */
+
 .location_status {
     display: flex;
     align-items: center;

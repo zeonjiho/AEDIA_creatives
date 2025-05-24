@@ -782,3 +782,82 @@
         width: 100%;
     }
 }
+
+
+/* 헤더 스타일 */
+
+.dashboard_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.header_content {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard_title {
+    font-size: 50px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    text-align: left;
+    transition: color 0.3s ease;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-primary);
+}
+
+.dashboard_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+}
+
+.header_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.customize_btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-md);
+    background-color: transparent;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.customize_btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.save_btn {
+    background-color: var(--accent-color);
+    color: var(--bg-secondary);
+}
+
+.save_btn:hover {
+    background-color: var(--accent-hover);
+}

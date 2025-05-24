@@ -31,10 +31,17 @@
 .dashboard_header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 20px;
     position: relative;
     z-index: 1;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.header_content {
+    display: flex;
+    flex-direction: column;
 }
 
 .dashboard_title {
@@ -59,82 +66,10 @@
     font-family: var(--font-mono);
 }
 
-
-/* 프로젝트 필터 스타일 */
-
-.projectFilterContainer {
-    position: relative;
-    z-index: 10;
-}
-
-.projectFilterButton {
+.header_controls {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.projectFilterButton:hover {
-    background-color: var(--bg-tertiary);
-    transform: translateY(-2px);
-}
-
-.projectDropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 220px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--card-shadow);
-    z-index: 100;
-    overflow: hidden;
-    animation: fadeIn 0.2s ease;
-}
-
-.projectOption {
-    padding: 12px 16px;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.projectOption:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.projectOption.selected {
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-    color: var(--accent-color);
-    font-weight: 500;
-}
-
-.projectColor {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-
-/* 커스터마이징 모드 컨트롤 스타일 */
-
-.customize_controls {
-    display: flex;
     gap: 10px;
-    align-items: center;
 }
 
 .customize_btn {
@@ -147,6 +82,17 @@
     transition: all 0.2s ease;
     border: none;
     outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.customize_btn:hover {
+    background-color: var(--bg-tertiary);
 }
 
 .save_btn {
@@ -1178,4 +1124,59 @@
         padding: 0.8rem;
         min-width: auto;
     }
+}
+
+
+/* 프로젝트 필터 스타일 */
+
+.projectFilterContainer {
+    position: relative;
+    z-index: 10;
+}
+
+.projectFilterButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    z-index: 100;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+}
+
+.projectOption {
+    padding: 12px 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectOption:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.projectOption.selected {
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.projectColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
 }

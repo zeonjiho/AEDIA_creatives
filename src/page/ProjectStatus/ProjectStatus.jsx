@@ -118,12 +118,22 @@ const ProjectStatus = () => {
     status: 'concept',
     deadline: new Date().toISOString().split('T')[0]
   });
-
+  const [currentTime, setCurrentTime] = useState(new Date())
+  
   useEffect(() => {
     // 실제 앱에서는 API 호출로 대체
     setProjects(sampleProjects);
     setAllProjects(sampleProjects);
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => clearInterval(timer)
+  }, [])
 
   const handleProjectClick = (project) => {
     setSelectedProject(project);
@@ -320,39 +330,51 @@ const ProjectStatus = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>프로젝트 현황</h1>
-        <div className={styles.filters}>
-          <button 
-            className={`${styles.filter_tab} ${statusFilter === 'all' ? styles.active : ''}`}
-            onClick={() => handleStatusFilterChange('all')}
-          >
-            ALL
-          </button>
-          <button 
-            className={`${styles.filter_tab} ${(statusFilter === 'pre_production_category') ? styles.active : ''}`}
-            onClick={() => handleStatusFilterChange('pre_production_category', 'pre_production')}
-          >
-            PRE
-          </button>
-          <button 
-            className={`${styles.filter_tab} ${statusFilter === 'production_category' ? styles.active : ''}`}
-            onClick={() => handleStatusFilterChange('production_category', 'production')}
-          >
-            PRODUCTION
-          </button>
-          <button 
-            className={`${styles.filter_tab} ${statusFilter === 'post_production_category' ? styles.active : ''}`}
-            onClick={() => handleStatusFilterChange('post_production_category', 'post_production')}
-          >
-            POST
+      <header className={styles.dashboard_header}>
+        <div className={styles.header_content}>
+          <h1 className={styles.dashboard_title}>Project Status</h1>
+          <p className={styles.dashboard_date}>
+            {currentTime.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })} {currentTime.toLocaleTimeString('en-US')}
+          </p>
+        </div>
+        
+        <div className={styles.header_controls}>
+          <div className={styles.filters}>
+            <button 
+              className={`${styles.filter_tab} ${statusFilter === 'all' ? styles.active : ''}`}
+              onClick={() => handleStatusFilterChange('all')}
+            >
+              ALL
+            </button>
+            <button 
+              className={`${styles.filter_tab} ${(statusFilter === 'pre_production_category') ? styles.active : ''}`}
+              onClick={() => handleStatusFilterChange('pre_production_category', 'pre_production')}
+            >
+              PRE
+            </button>
+            <button 
+              className={`${styles.filter_tab} ${statusFilter === 'production_category' ? styles.active : ''}`}
+              onClick={() => handleStatusFilterChange('production_category', 'production')}
+            >
+              PRODUCTION
+            </button>
+            <button 
+              className={`${styles.filter_tab} ${statusFilter === 'post_production_category' ? styles.active : ''}`}
+              onClick={() => handleStatusFilterChange('post_production_category', 'post_production')}
+            >
+              POST
+            </button>
+          </div>
+          
+          <button className={`${styles.customize_btn} ${styles.save_btn}`} onClick={handleShowAddForm}>
+            <HiPlus /> 새 프로젝트
           </button>
         </div>
-      </div>
-
-      <button className={styles.add_button} onClick={handleShowAddForm}>
-        <HiPlus /> 새 프로젝트
-      </button>
+      </header>
 
       <div className={styles.projects_grid}>
         {filteredProjects.length === 0 ? (

@@ -259,20 +259,24 @@ const Attendance = () => {
     return (
         <div className={ss.attendance_wrap}>
             {/* 출근 인증 헤더 */}
-            <div className={ss.attendance_header}>
-                <div>
-                    <h1 className={ss.attendance_title}>Attendance</h1>
+            <header className={ss.dashboard_header}>
+                <div className={ss.header_content}>
+                    <h1 className={ss.dashboard_title}>Attendance</h1>
+                    <p className={ss.dashboard_date}>
+                        {formattedDate} {formattedTime}
+                    </p>
                 </div>
                 
-                {/* 출근 기록 버튼 */}
-                <button 
-                    className={`${ss.attendance_btn} ${ss.record_btn}`} 
-                    onClick={openModal}
-                >
-                    <FaRegListAlt />
-                    Attendance Records
-                </button>
-            </div>
+                <div className={ss.header_controls}>
+                    <button 
+                        className={`${ss.customize_btn} ${ss.save_btn}`} 
+                        onClick={openModal}
+                    >
+                        <FaRegListAlt />
+                        Attendance Records
+                    </button>
+                </div>
+            </header>
             
             {/* 중앙 상태 표시 및 버튼 */}
             <div className={ss.attendance_center}>

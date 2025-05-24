@@ -25,6 +25,19 @@ const CalendarPage = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [selectedSlot, setSelectedSlot] = useState(null)
 
+    // 현재 시간을 표시하기 위한 상태 추가
+    const [currentTime, setCurrentTime] = useState(new Date())
+    
+    // 1초마다 시간 업데이트
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date())
+        }, 1000)
+        
+        // 컴포넌트 언마운트 시 타이머 정리
+        return () => clearInterval(timer)
+    }, [])
+
     // 컴포넌트 마운트 시 이벤트 로드
     useEffect(() => {
         loadEvents()
@@ -190,14 +203,17 @@ const CalendarPage = () => {
     return (
         <div className={ss.calendar_container}>
             {/* 헤더 */}
-            <div className={ss.calendar_header}>
-                <div className={ss.header_left}>
-                    <h1 className={ss.page_title}>
-                        <FaCalendarAlt className={ss.title_icon} />
-                        캘린더
+            <header className={ss.dashboard_header}>
+                <div className={ss.header_content}>
+                    <h1 className={ss.dashboard_title}>
+                        Calendar
                     </h1>
-                    <p className={ss.page_subtitle}>
-                        팀 일정을 확인하고 새로운 일정을 추가하세요
+                    <p className={ss.dashboard_date}>
+                        {currentTime.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })} {currentTime.toLocaleTimeString('en-US')}
                         {calendarStatus && (
                             <span style={{ marginLeft: '0.5rem' }}>
                                 {calendarStatus.isEnabled ? (
@@ -215,9 +231,9 @@ const CalendarPage = () => {
                     </p>
                 </div>
                 
-                <div className={ss.header_actions}>
+                <div className={ss.header_controls}>
                     <button 
-                        className={ss.refresh_btn}
+                        className={ss.customize_btn}
                         onClick={handleRefresh}
                         disabled={isLoading}
                     >
@@ -226,12 +242,87 @@ const CalendarPage = () => {
                     </button>
                     
                     <button 
-                        className={ss.add_btn}
+                        className={`${ss.customize_btn} ${ss.save_btn}`}
                         onClick={handleAddEventClick}
                     >
                         <FaPlus />
                         새 일정
                     </button>
+                </div>
+            </header>
+
+            {/* 커스텀 캘린더 네비게이션 */}
+            <div className={ss.calendar_navigation}>
+                <div className={ss.nav_left}>
+                    <button 
+                        className={ss.today_btn}
+                        onClick={() => setCurrentDate(new Date())}
+                    >
+                        오늘
+                    </button>
+                    
+                    <div className={ss.nav_arrows}>
+                        <button 
+                            className={ss.nav_btn}
+                            onClick={() => {
+                                const newDate = new Date(currentDate);
+                                if (currentView === 'month') {
+                                    newDate.setMonth(newDate.getMonth() - 1);
+                                } else if (currentView === 'week') {
+                                    newDate.setDate(newDate.getDate() - 7);
+                                } else {
+                                    newDate.setDate(newDate.getDate() - 1);
+                                }
+                                setCurrentDate(newDate);
+                            }}
+                        >
+                            ←
+                        </button>
+                        
+                        <span className={ss.current_period}>
+                            {currentView === 'month' && 
+                                currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+                            }
+                            {currentView === 'week' && 
+                                `${currentDate.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} 주`
+                            }
+                            {currentView === 'day' && 
+                                currentDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })
+                            }
+                        </span>
+                        
+                        <button 
+                            className={ss.nav_btn}
+                            onClick={() => {
+                                const newDate = new Date(currentDate);
+                                if (currentView === 'month') {
+                                    newDate.setMonth(newDate.getMonth() + 1);
+                                } else if (currentView === 'week') {
+                                    newDate.setDate(newDate.getDate() + 7);
+                                } else {
+                                    newDate.setDate(newDate.getDate() + 1);
+                                }
+                                setCurrentDate(newDate);
+                            }}
+                        >
+                            →
+                        </button>
+                    </div>
+                </div>
+                
+                <div className={ss.view_buttons}>
+                    {['month', 'week', 'day', 'agenda'].map((view) => (
+                        <button
+                            key={view}
+                            className={`${ss.view_btn} ${currentView === view ? ss.active : ''}`}
+                            onClick={() => setCurrentView(view)}
+                        >
+                            {view === 'month' && '월'}
+                            {view === 'week' && '주'}
+                            {view === 'day' && '일'}
+                            {view === 'agenda' && '목록'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -242,7 +333,12 @@ const CalendarPage = () => {
                     events={events}
                     startAccessor="start"
                     endAccessor="end"
-                    style={{ height: 'calc(100vh - 220px)' }}
+                    style={{ 
+                        height: window.innerWidth <= 768 
+                            ? 'calc(100vh - 280px)' 
+                            : 'calc(100vh - 320px)',
+                        minHeight: '400px'
+                    }}
                     onSelectEvent={handleSelectEvent}
                     onSelectSlot={handleSelectSlot}
                     selectable={true}
@@ -256,6 +352,7 @@ const CalendarPage = () => {
                     popup={true}
                     step={30}
                     showMultiDayTimes={true}
+                    toolbar={false}
                     formats={{
                         timeGutterFormat: 'HH:mm',
                         eventTimeRangeFormat: ({ start, end }, culture, localizer) =>

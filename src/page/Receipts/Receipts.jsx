@@ -29,6 +29,7 @@ const Receipts = () => {
   const [typeStats, setTypeStats] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   
   // 새 영수증 또는 편집할 영수증 데이터
   const [formData, setFormData] = useState({
@@ -60,6 +61,16 @@ const Receipts = () => {
     loadReceipts();
     loadStats();
   }, [activeTab]);
+
+  // 1초마다 시간 업데이트
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => clearInterval(timer)
+  }, [])
 
   // 영수증 데이터 로드
   const loadReceipts = () => {
@@ -217,12 +228,21 @@ const Receipts = () => {
 
   return (
     <div className={styles.receipts_container}>
-      <div className={styles.receipts_header}>
-        <h1 className={styles.page_title}>
-          <FaReceipt className={styles.title_icon} />
-          영수증 관리
-        </h1>
-        <div className={styles.actions}>
+      <header className={styles.dashboard_header}>
+        <div className={styles.header_content}>
+          <h1 className={styles.dashboard_title}>
+            Receipts
+          </h1>
+          <p className={styles.dashboard_date}>
+            {currentTime.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })} {currentTime.toLocaleTimeString('en-US')}
+          </p>
+        </div>
+        
+        <div className={styles.header_controls}>
           <div className={styles.search_container}>
             <FaSearch className={styles.search_icon} />
             <input
@@ -233,11 +253,11 @@ const Receipts = () => {
               className={styles.search_input}
             />
           </div>
-          <button className={styles.add_button} onClick={openAddModal}>
+          <button className={`${styles.customize_btn} ${styles.save_btn}`} onClick={openAddModal}>
             <FaPlus /> 영수증 추가
           </button>
         </div>
-      </div>
+      </header>
 
       {/* 탭 네비게이션 */}
       <div className={styles.tabs_container}>

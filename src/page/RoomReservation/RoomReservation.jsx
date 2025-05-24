@@ -84,6 +84,7 @@ const RoomReservation = () => {
     const [projectSearchTerm, setProjectSearchTerm] = useState('')
     const [showFilters, setShowFilters] = useState(false)
     const [editingRoomDetails, setEditingRoomDetails] = useState(false)
+    const [currentTime, setCurrentTime] = useState(new Date())
     
     // 초기 데이터 로드
     useEffect(() => {
@@ -103,6 +104,16 @@ const RoomReservation = () => {
             return () => clearTimeout(timer)
         }
     }, [statusMessage])
+    
+    // 1초마다 시간 업데이트
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date())
+        }, 1000)
+        
+        // 컴포넌트 언마운트 시 타이머 정리
+        return () => clearInterval(timer)
+    }, [])
     
     // 필터링된 회의실 목록
     const filteredRooms = rooms.filter(room => {
@@ -426,34 +437,46 @@ const RoomReservation = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <h1>Room Reservation</h1>
-                <div className={styles.date_navigation}>
-                    <button 
-                        className={styles.today_button} 
-                        onClick={goToToday}
-                    >
-                        오늘
-                    </button>
-                    <div className={styles.date_controls}>
+            <header className={styles.dashboard_header}>
+                <div className={styles.header_content}>
+                    <h1 className={styles.dashboard_title}>Room Reservation</h1>
+                    <p className={styles.dashboard_date}>
+                        {currentTime.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })} {currentTime.toLocaleTimeString('en-US')}
+                    </p>
+                </div>
+                
+                <div className={styles.header_controls}>
+                    <div className={styles.date_navigation}>
                         <button 
-                            className={styles.nav_button} 
-                            onClick={goToPreviousDay}
+                            className={styles.customize_btn} 
+                            onClick={goToToday}
                         >
-                            <HiChevronLeft />
+                            오늘
                         </button>
-                        <span className={styles.current_date}>
-                            {formatDate(currentDate)}
-                        </span>
-                        <button 
-                            className={styles.nav_button} 
-                            onClick={goToNextDay}
-                        >
-                            <HiChevronRight />
-                        </button>
+                        <div className={styles.date_controls}>
+                            <button 
+                                className={styles.nav_button} 
+                                onClick={goToPreviousDay}
+                            >
+                                <HiChevronLeft />
+                            </button>
+                            <span className={styles.current_date}>
+                                {formatDate(currentDate)}
+                            </span>
+                            <button 
+                                className={styles.nav_button} 
+                                onClick={goToNextDay}
+                            >
+                                <HiChevronRight />
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {statusMessage && (
                 <div className={`${styles.status_message} ${styles[messageType]}`}>

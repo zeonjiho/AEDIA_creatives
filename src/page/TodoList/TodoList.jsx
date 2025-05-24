@@ -315,64 +315,66 @@ const TodoList = () => {
     return (
         <div className={ss.todoListContainer}>
             {/* 대시보드 헤더 */}
-            <div className={ss.dashboard_header}>
-                <div>
+            <header className={ss.dashboard_header}>
+                <div className={ss.header_content}>
                     <h1 className={ss.dashboard_title}>My Todo List</h1>
                     <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>
                 
-                {/* 프로젝트 필터 드롭다운 */}
-                <div className={ss.projectFilterContainer}>
-                    <button 
-                        className={ss.projectFilterButton}
-                        onClick={toggleProjectDropdown}
-                    >
-                        <FaFilter />
-                        <span>{projectFilter === 'all' ? '모든 프로젝트' : 
-                               projectFilter === 'no-project' ? '프로젝트 없음' : 
-                               getProjectName(projectFilter)}</span>
-                    </button>
-                    
-                    {showProjectDropdown && (
-                        <div className={ss.projectDropdown}>
-                            <div 
-                                className={`${ss.projectOption} ${projectFilter === 'all' ? ss.selected : ''}`}
-                                onClick={() => {
-                                    setProjectFilter('all');
-                                    setShowProjectDropdown(false);
-                                }}
-                            >
-                                모든 프로젝트
-                            </div>
-                            <div 
-                                className={`${ss.projectOption} ${projectFilter === 'no-project' ? ss.selected : ''}`}
-                                onClick={() => {
-                                    setProjectFilter('no-project');
-                                    setShowProjectDropdown(false);
-                                }}
-                            >
-                                프로젝트 없음
-                            </div>
-                            {projects.map(project => (
+                <div className={ss.header_controls}>
+                    {/* 프로젝트 필터 드롭다운 */}
+                    <div className={ss.projectFilterContainer}>
+                        <button 
+                            className={`${ss.customize_btn} ${ss.projectFilterButton}`}
+                            onClick={toggleProjectDropdown}
+                        >
+                            <FaFilter />
+                            <span>{projectFilter === 'all' ? '모든 프로젝트' : 
+                                   projectFilter === 'no-project' ? '프로젝트 없음' : 
+                                   getProjectName(projectFilter)}</span>
+                        </button>
+                        
+                        {showProjectDropdown && (
+                            <div className={ss.projectDropdown}>
                                 <div 
-                                    key={project.id}
-                                    className={`${ss.projectOption} ${projectFilter === project.id ? ss.selected : ''}`}
+                                    className={`${ss.projectOption} ${projectFilter === 'all' ? ss.selected : ''}`}
                                     onClick={() => {
-                                        setProjectFilter(project.id);
+                                        setProjectFilter('all');
                                         setShowProjectDropdown(false);
                                     }}
                                 >
-                                    <span 
-                                        className={ss.projectColor} 
-                                        style={{ backgroundColor: project.color }}
-                                    ></span>
-                                    {project.name}
+                                    모든 프로젝트
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                                <div 
+                                    className={`${ss.projectOption} ${projectFilter === 'no-project' ? ss.selected : ''}`}
+                                    onClick={() => {
+                                        setProjectFilter('no-project');
+                                        setShowProjectDropdown(false);
+                                    }}
+                                >
+                                    프로젝트 없음
+                                </div>
+                                {projects.map(project => (
+                                    <div 
+                                        key={project.id}
+                                        className={`${ss.projectOption} ${projectFilter === project.id ? ss.selected : ''}`}
+                                        onClick={() => {
+                                            setProjectFilter(project.id);
+                                            setShowProjectDropdown(false);
+                                        }}
+                                    >
+                                        <span 
+                                            className={ss.projectColor} 
+                                            style={{ backgroundColor: project.color }}
+                                        ></span>
+                                        {project.name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </header>
             
             {/* 할 일 추가 폼 */}
             <form className={ss.addTodoForm} onSubmit={handleAddTodo}>
