@@ -55,15 +55,21 @@ const StaffSearchModal = ({
     if (isOpen) {
       setLocalSelected(selectedPeople);
       setFilterType(initialFilterType);
+      console.log('모달 열림 - initialFilterType:', initialFilterType);
     }
   }, [isOpen, selectedPeople, initialFilterType]);
 
   useEffect(() => {
+    // 모달이 열려있을 때만 필터링 실행
+    if (!isOpen) return;
+    
+    console.log('필터링 시작 - filterType:', filterType, 'searchTerm:', searchTerm);
     let filtered = allPeople;
 
     // 타입 필터링
     if (filterType !== 'all') {
       filtered = filtered.filter(person => person.type === filterType);
+      console.log(`${filterType} 필터 적용 후:`, filtered.length, '명');
     }
 
     // 검색어 필터링
@@ -73,10 +79,19 @@ const StaffSearchModal = ({
         person.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
         person.department.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      console.log(`검색어 "${searchTerm}" 적용 후:`, filtered.length, '명');
     }
 
+    console.log('최종 필터링 결과:', filtered.length, '명');
     setFilteredPeople(filtered);
-  }, [searchTerm, filterType, allPeople]);
+  }, [searchTerm, filterType, allPeople, isOpen]);
+
+  // 컴포넌트 언마운트 감지를 위한 useEffect
+  useEffect(() => {
+    return () => {
+      console.log('StaffSearchModal 언마운트됨');
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -99,10 +114,12 @@ const StaffSearchModal = ({
   };
 
   const handleClose = () => {
+    console.log('모달 닫기 시작');
     setSearchTerm('');
     setFilterType(initialFilterType);
     setLocalSelected([]);
     setShowAddForm(false);
+    setFilteredPeople([]); // 필터링 결과도 초기화
     setNewStaff({
       name: '',
       position: '',
@@ -111,6 +128,7 @@ const StaffSearchModal = ({
       phone: '',
       email: ''
     });
+    console.log('모달 상태 초기화 완료');
     onClose();
   };
 
@@ -209,26 +227,65 @@ const StaffSearchModal = ({
             <div className={styles.filter_tabs}>
               <button
                 className={`${styles.filter_tab} ${filterType === 'all' ? styles.active : ''}`}
-                onClick={() => setFilterType('all')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('전체 버튼 클릭됨 - 현재 filterType:', filterType);
+                  if (filterType !== 'all') {
+                    setFilterType('all');
+                    console.log('전체 필터로 변경');
+                  } else {
+                    console.log('이미 전체 필터 상태');
+                  }
+                }}
+                type="button"
               >
                 전체
               </button>
               <button
                 className={`${styles.filter_tab} ${filterType === 'staff' ? styles.active : ''}`}
-                onClick={() => setFilterType('staff')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('스탭 버튼 클릭됨 - 현재 filterType:', filterType);
+                  if (filterType !== 'staff') {
+                    setFilterType('staff');
+                    console.log('스탭 필터로 변경');
+                  } else {
+                    console.log('이미 스탭 필터 상태');
+                  }
+                }}
+                type="button"
               >
                 <HiUser /> 스탭
               </button>
               <button
                 className={`${styles.filter_tab} ${filterType === 'employee' ? styles.active : ''}`}
-                onClick={() => setFilterType('employee')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('직원 버튼 클릭됨 - 현재 filterType:', filterType);
+                  if (filterType !== 'employee') {
+                    setFilterType('employee');
+                    console.log('직원 필터로 변경');
+                  } else {
+                    console.log('이미 직원 필터 상태');
+                  }
+                }}
+                type="button"
               >
                 <HiUserGroup /> 직원
               </button>
               {showAddStaffButton && (
                 <button
                   className={`${styles.add_staff_tab}`}
-                  onClick={() => setShowAddForm(!showAddForm)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('새 스탭 추가 버튼 클릭됨');
+                    setShowAddForm(!showAddForm);
+                  }}
+                  type="button"
                 >
                   <HiPlus /> 새 스탭 추가
                 </button>

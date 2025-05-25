@@ -139,6 +139,8 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .filter_tab,
@@ -154,12 +156,25 @@
     align-items: center;
     gap: 6px;
     transition: all 0.2s ease;
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .filter_tab:hover,
 .add_staff_tab:hover {
     background-color: var(--button-color-hover);
     border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.filter_tab:active,
+.add_staff_tab:active {
+    transform: translateY(0);
 }
 
 .filter_tab.active {
@@ -174,12 +189,23 @@
     color: var(--text-primary-inverse);
     border-color: var(--accent-color);
     font-weight: 500;
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .add_staff_tab:hover {
     background-color: var(--accent-hover);
     opacity: 1;
     transform: translateY(-1px);
+}
+
+.add_staff_tab:active {
+    transform: translateY(0);
 }
 
 

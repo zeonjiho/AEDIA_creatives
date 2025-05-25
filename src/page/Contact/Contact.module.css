@@ -814,6 +814,13 @@
     background-color: var(--primary-color);
 }
 
+.no_edit {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+    opacity: 0.7;
+}
+
 
 /* 모바일 연락처 정보 */
 
@@ -869,5 +876,173 @@
         max-width: 200px;
         font-size: 0.85rem;
         padding: 8px 12px;
+    }
+}
+
+
+/* 편집 기능 스타일 */
+
+.card_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.action_btn {
+    padding: 8px;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    height: 32px;
+}
+
+.edit_btn {
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+}
+
+.edit_btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+}
+
+.save_btn {
+    color: #10b981;
+    border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.save_btn:hover {
+    background-color: #10b981;
+    color: white;
+}
+
+.cancel_btn {
+    color: #ef4444;
+    border-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.cancel_btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+.edit_input {
+    padding: 6px 8px;
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.edit_input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.list_edit_input {
+    padding: 4px 8px;
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 120px;
+}
+
+.list_edit_input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.list_actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.success_message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #10b981;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    animation: slideInRight 0.3s ease;
+}
+
+.success_icon {
+    font-size: 1.1rem;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+/* 모바일에서 편집 기능 최적화 */
+
+@media (max-width: 768px) {
+    .card_actions {
+        margin-left: 0;
+        margin-top: 8px;
+        align-self: flex-start;
+    }
+    .action_btn {
+        font-size: 0.9rem;
+        padding: 6px;
+        min-width: 28px;
+        height: 28px;
+    }
+    .edit_input {
+        font-size: 0.85rem;
+        padding: 5px 6px;
+    }
+    .list_edit_input {
+        font-size: 0.8rem;
+        padding: 3px 6px;
+        min-width: 100px;
+    }
+    .success_message {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        font-size: 0.85rem;
+        padding: 10px 12px;
     }
 }
