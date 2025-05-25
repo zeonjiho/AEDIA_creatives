@@ -22,6 +22,7 @@ const tokenSecretKey = 'temp_key';
 
 const User = require('./models/User')
 const Todo = require('./models/Todo')
+const Calendar = require('./models/Calendar')
 // const Category = require('./models/Category')
 // const Review = require('./models/Review')
 // const Product = require('./models/Product')
