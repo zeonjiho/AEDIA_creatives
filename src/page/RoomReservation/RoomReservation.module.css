@@ -535,6 +535,19 @@
     margin-right: 12px;
 }
 
+.reservation_datetime {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.reservation_date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
 .reservation_time {
     font-size: 0.85rem;
     color: var(--text-secondary);
@@ -843,11 +856,63 @@
     .modal_panel {
         width: 700px;
     }
+    .dashboard_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .header_controls {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .date_navigation {
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: none;
+    }
 }
 
 @media (max-width: 768px) {
     .container {
         padding: 24px;
+    }
+    .dashboard_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    .dashboard_title {
+        font-size: 36px;
+    }
+    .header_controls {
+        width: 100%;
+        justify-content: center;
+    }
+    .date_navigation {
+        width: 100%;
+        justify-content: center;
+        padding: 8px;
+        gap: 8px;
+    }
+    .date_controls {
+        gap: 8px;
+    }
+    .current_date {
+        font-size: 0.9rem;
+        padding: 0 8px;
+        text-align: center;
+        min-width: 120px;
+    }
+    .nav_button {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+    .today_button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        flex-shrink: 0;
     }
     .header {
         flex-direction: column;
@@ -880,18 +945,68 @@
     .container {
         padding: 16px;
     }
+    .dashboard_title {
+        font-size: 28px;
+        text-align: center;
+        width: 100%;
+    }
+    .dashboard_date {
+        text-align: center;
+        width: 100%;
+    }
+    .header_content {
+        width: 100%;
+        align-items: center;
+    }
+    .date_navigation {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+    .date_controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+    .today_button {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+    .current_date {
+        font-size: 0.85rem;
+        min-width: 140px;
+    }
     .filters_panel {
         flex-direction: column;
         padding: 16px;
-    }
-    .date_navigation {
-        width: 100%;
     }
     .search_box,
     .filter_group {
         width: 100%;
     }
+    .content_grid {
+        gap: 16px;
+    }
+    .rooms_grid {
+        max-height: 250px;
+    }
+    .reservations_list {
+        max-height: 300px;
+    }
+    .reservation_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .reservation_title {
+        margin-right: 0;
+    }
+    .reservation_datetime {
+        align-self: flex-end;
+    }
 }
+
 
 /* 빈 상태 및 로딩 상태 */
 
@@ -902,7 +1017,8 @@
     justify-content: center;
     padding: 60px 40px;
     color: var(--text-secondary);
-    grid-column: 1 / -1; /* 그리드 전체 영역 차지 */
+    grid-column: 1 / -1;
+    /* 그리드 전체 영역 차지 */
 }
 
 .loading_state p {
