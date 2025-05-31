@@ -514,6 +514,29 @@
 .participant_role {
     font-size: 0.8rem;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.user_type_badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user_type_badge.internal {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+.user_type_badge.external {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
 }
 
 
@@ -628,4 +651,16 @@
     .submit_button {
         width: 100%;
     }
+}
+
+.no_users {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.no_users p {
+    margin: 0;
+    font-size: 0.9rem;
 }

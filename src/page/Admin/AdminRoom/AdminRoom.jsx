@@ -5,6 +5,7 @@ import api from '../../../utils/api'
 
 const AdminRoom = () => {
     const [rooms, setRooms] = useState([])
+    const [reservations, setReservations] = useState([]) // 모든 예약 데이터
     const [showAddModal, setShowAddModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
     const [editingRoom, setEditingRoom] = useState(null)
@@ -16,6 +17,7 @@ const AdminRoom = () => {
     const [newTool, setNewTool] = useState('')
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
     const [loading, setLoading] = useState(false)
+    const [reservationsLoading, setReservationsLoading] = useState(false)
 
     // 회의실 목록 로드
     const fetchRooms = async () => {
@@ -31,10 +33,50 @@ const AdminRoom = () => {
         }
     }
 
+    // 모든 회의실의 예약 데이터 로드
+    const fetchAllReservations = async () => {
+        if (rooms.length === 0) return
+        
+        setReservationsLoading(true)
+        try {
+            const allReservations = []
+            
+            // 각 회의실별로 예약 데이터 가져오기
+            for (const room of rooms) {
+                try {
+                    const response = await api.get(`/rooms/${room._id}/reservations`)
+                    const roomReservations = response.data.map(reservation => ({
+                        ...reservation,
+                        roomId: room._id,
+                        roomName: room.roomName,
+                        roomLocation: room.location
+                    }))
+                    allReservations.push(...roomReservations)
+                } catch (error) {
+                    console.error(`회의실 ${room.roomName} 예약 조회 실패:`, error)
+                    // 개별 회의실 예약 조회 실패는 전체를 막지 않음
+                }
+            }
+            
+            setReservations(allReservations)
+        } catch (error) {
+            console.error('예약 목록 조회 실패:', error)
+        } finally {
+            setReservationsLoading(false)
+        }
+    }
+
     // 컴포넌트 마운트 시 회의실 목록 로드
     useEffect(() => {
         fetchRooms()
     }, [])
+
+    // 회의실 목록이 로드된 후 예약 데이터 로드
+    useEffect(() => {
+        if (rooms.length > 0) {
+            fetchAllReservations()
+        }
+    }, [rooms])
 
     // 새 회의실 추가
     const handleAddRoom = async () => {
@@ -49,6 +91,7 @@ const AdminRoom = () => {
             setRooms([response.data, ...rooms])
             setNewRoom({ roomName: '', location: '', tools: [] })
             setShowAddModal(false)
+            // 새 회의실은 예약이 없으므로 예약 데이터 재로드 불필요
         } catch (error) {
             console.error('회의실 추가 실패:', error)
             alert('회의실 추가에 실패했습니다.')
@@ -74,6 +117,14 @@ const AdminRoom = () => {
             setRooms(rooms.map(room => 
                 room._id === editingRoom._id ? response.data : room
             ))
+            
+            // 회의실 정보가 변경되었으므로 예약 데이터의 회의실 정보도 업데이트
+            setReservations(reservations.map(reservation => 
+                reservation.roomId === editingRoom._id 
+                    ? { ...reservation, roomName: response.data.roomName, roomLocation: response.data.location }
+                    : reservation
+            ))
+            
             setShowEditModal(false)
             setEditingRoom(null)
         } catch (error) {
@@ -94,6 +145,8 @@ const AdminRoom = () => {
         try {
             await api.post(`/rooms/${roomId}/delete`)
             setRooms(rooms.filter(room => room._id !== roomId))
+            // 삭제된 회의실의 예약도 제거
+            setReservations(reservations.filter(reservation => reservation.roomId !== roomId))
         } catch (error) {
             console.error('회의실 삭제 실패:', error)
             alert(error.response?.data?.message || '회의실 삭제에 실패했습니다.')
@@ -138,63 +191,34 @@ const AdminRoom = () => {
     // 오늘의 예약 가져오기
     const getTodayReservations = () => {
         const today = new Date().toDateString()
-        const todayReservations = []
-        
-        rooms.forEach(room => {
-            room.reservations.forEach(reservation => {
-                if (new Date(reservation.startTime).toDateString() === today && 
-                    reservation.status === '예약됨') {
-                    todayReservations.push({
-                        ...reservation,
-                        roomName: room.roomName
-                    })
-                }
-            })
-        })
-        
-        return todayReservations.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+        return reservations.filter(reservation => {
+            const reservationDate = new Date(reservation.startTime).toDateString()
+            return reservationDate === today
+        }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
     }
 
     // 선택된 날짜의 예약 가져오기
     const getSelectedDateReservations = () => {
         const selectedDateObj = new Date(selectedDate).toDateString()
-        const dateReservations = []
-        
-        rooms.forEach(room => {
-            room.reservations.forEach(reservation => {
-                if (new Date(reservation.startTime).toDateString() === selectedDateObj && 
-                    reservation.status === '예약됨') {
-                    dateReservations.push({
-                        ...reservation,
-                        roomName: room.roomName
-                    })
-                }
-            })
-        })
-        
-        return dateReservations.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+        return reservations.filter(reservation => {
+            const reservationDate = new Date(reservation.startTime).toDateString()
+            return reservationDate === selectedDateObj
+        }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
     }
 
     // 현재 진행 중인 회의 확인
     const getCurrentMeetings = () => {
         const now = new Date()
-        const currentMeetings = []
-        
-        rooms.forEach(room => {
-            room.reservations.forEach(reservation => {
-                const startTime = new Date(reservation.startTime)
-                const endTime = new Date(reservation.endTime)
-                
-                if (now >= startTime && now <= endTime && reservation.status === '예약됨') {
-                    currentMeetings.push({
-                        ...reservation,
-                        roomName: room.roomName
-                    })
-                }
-            })
+        return reservations.filter(reservation => {
+            const startTime = new Date(reservation.startTime)
+            const endTime = new Date(reservation.endTime)
+            return now >= startTime && now <= endTime
         })
-        
-        return currentMeetings
+    }
+
+    // 각 회의실별 예약 개수 계산
+    const getRoomReservationCount = (roomId) => {
+        return reservations.filter(reservation => reservation.roomId === roomId).length
     }
 
     // 시간 포맷팅
@@ -227,7 +251,14 @@ const AdminRoom = () => {
             </div>
 
             {/* 현재 진행 중인 회의 */}
-            {currentMeetings.length > 0 && (
+            {reservationsLoading ? (
+                <div className={ss.currentMeetings}>
+                    <h3><FaClock /> 현재 진행 중인 회의</h3>
+                    <div className={ss.loadingState}>
+                        <p>회의 정보를 불러오는 중...</p>
+                    </div>
+                </div>
+            ) : currentMeetings.length > 0 && (
                 <div className={ss.currentMeetings}>
                     <h3><FaClock /> 현재 진행 중인 회의</h3>
                     <div className={ss.meetingCards}>
@@ -242,7 +273,12 @@ const AdminRoom = () => {
                                 </div>
                                 <div className={ss.participants}>
                                     <FaUsers />
-                                    <span>{meeting.participants.length}명</span>
+                                    <span>
+                                        {meeting.participants && meeting.participants.length > 0 
+                                            ? `${meeting.participants.length}명`
+                                            : '0명'
+                                        }
+                                    </span>
                                 </div>
                             </div>
                         ))}
@@ -294,7 +330,7 @@ const AdminRoom = () => {
                                     </div>
                                     
                                     <div className={ss.reservationCount}>
-                                        <span>예약: {room.reservations.filter(r => r.status === '예약됨').length}건</span>
+                                        <span>예약: {getRoomReservationCount(room._id)}건</span>
                                     </div>
                                 </div>
                             ))}
@@ -320,7 +356,11 @@ const AdminRoom = () => {
                         </div>
                     </div>
                     
-                    {selectedDateReservations.length > 0 ? (
+                    {reservationsLoading ? (
+                        <div className={ss.loadingState}>
+                            <p>예약 정보를 불러오는 중...</p>
+                        </div>
+                    ) : selectedDateReservations.length > 0 ? (
                         <div className={ss.reservationList}>
                             {selectedDateReservations.map(reservation => (
                                 <div key={reservation._id} className={ss.reservationCard}>
@@ -337,7 +377,12 @@ const AdminRoom = () => {
                                         
                                         <p className={ss.participants}>
                                             <FaUsers />
-                                            {reservation.participants.map(p => p.userId.name).join(', ')}
+                                            {reservation.participants && reservation.participants.length > 0 
+                                                ? reservation.participants.map(p => 
+                                                    typeof p.userId === 'object' ? p.userId.name : p.userId
+                                                  ).join(', ')
+                                                : '참여자 정보 없음'
+                                            }
                                         </p>
                                         
                                         {reservation.meetingDescription && (
@@ -346,7 +391,9 @@ const AdminRoom = () => {
                                         
                                         {reservation.project && (
                                             <p className={ss.project}>
-                                                프로젝트: {typeof reservation.project === 'object' ? reservation.project.name : reservation.project}
+                                                프로젝트: {typeof reservation.project === 'object' 
+                                                    ? reservation.project.title || reservation.project.name
+                                                    : reservation.project}
                                             </p>
                                         )}
                                     </div>

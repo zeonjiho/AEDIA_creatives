@@ -24,6 +24,7 @@ const User = require('./models/User')
 const Todo = require('./models/Todo')
 const Calendar = require('./models/Calendar')
 const Room = require('./models/Room')
+const Project = require('./models/Project')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -239,7 +240,7 @@ app.post('/attendance/check-out', async (req, res) => {
 
         // 가장 최근 기록이 체크인인지 확인
         const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
-        
+
         if (sortedAttendance.length === 0 || sortedAttendance[0].type !== 'checkIn') {
             return res.status(400).json({ message: '출근 기록이 없거나 이미 퇴근 처리되었습니다.' });
         }
@@ -355,14 +356,14 @@ app.get('/attendance/today', async (req, res) => {
         }
 
         const today = new Date().toISOString().split('T')[0];
-        
+
         // 출석 기록을 시간 순으로 정렬 (최신순)
         const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
-        
+
         // 현재 상태 결정
         let status = '미출근';
         let canCheckOut = false;
-        
+
         if (sortedAttendance.length > 0) {
             const lastRecord = sortedAttendance[0];
             if (lastRecord.type === 'checkIn') {
@@ -671,6 +672,7 @@ app.get('/rooms', async (req, res) => {
     try {
         const rooms = await Room.find({})
             .populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title')
             .sort({ createdAt: -1 });
 
         res.status(200).json(rooms);
@@ -696,7 +698,8 @@ app.post('/rooms', async (req, res) => {
 
         // populate해서 응답
         const populatedRoom = await Room.findById(newRoom._id)
-            .populate('reservations.participants.userId', 'name email');
+            .populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title');
 
         res.status(201).json(populatedRoom);
     } catch (err) {
@@ -724,7 +727,8 @@ app.post('/rooms/:id/update', async (req, res) => {
                 tools: tools || []
             },
             { new: true }
-        ).populate('reservations.participants.userId', 'name email');
+        ).populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title');
 
         res.status(200).json(updatedRoom);
     } catch (err) {
@@ -749,8 +753,8 @@ app.post('/rooms/:id/delete', async (req, res) => {
         );
 
         if (activeReservations.length > 0) {
-            return res.status(400).json({ 
-                message: '예약이 있는 회의실은 삭제할 수 없습니다. 먼저 예약을 취소해주세요.' 
+            return res.status(400).json({
+                message: '예약이 있는 회의실은 삭제할 수 없습니다. 먼저 예약을 취소해주세요.'
             });
         }
 
@@ -762,7 +766,292 @@ app.post('/rooms/:id/delete', async (req, res) => {
     }
 });
 
+// 예약 관련 API
 
+// 예약 생성
+app.post('/rooms/:roomId/reservations', async (req, res) => {
+    const { roomId } = req.params;
+    const {
+        meetingName,
+        meetingDescription,
+        startTime,
+        endTime,
+        participants,
+        project
+    } = req.body;
+
+    try {
+        // 필수 필드 검증
+        if (!meetingName || !startTime || !endTime || !participants || participants.length === 0) {
+            return res.status(400).json({
+                message: '회의 제목, 시작 시간, 종료 시간, 참여인원(최소 1명)은 필수입니다.'
+            });
+        }
+
+        // 시간 유효성 검증
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+
+        if (start >= end) {
+            return res.status(400).json({
+                message: '종료 시간은 시작 시간보다 나중이어야 합니다.'
+            });
+        }
+
+        // 과거 시간 예약 방지
+        if (start < new Date()) {
+            return res.status(400).json({
+                message: '과거 시간으로는 예약할 수 없습니다.'
+            });
+        }
+
+        const room = await Room.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        // 시간 충돌 확인
+        const conflictingReservation = room.reservations.find(reservation => {
+            if (reservation.status === '취소됨') return false;
+
+            const existingStart = new Date(reservation.startTime);
+            const existingEnd = new Date(reservation.endTime);
+
+            // 시간 충돌 조건: 새 예약의 시작이 기존 예약 끝나기 전이고, 새 예약의 끝이 기존 예약 시작 후인 경우
+            return (start < existingEnd && end > existingStart);
+        });
+
+        if (conflictingReservation) {
+            const conflictStart = new Date(conflictingReservation.startTime);
+            const conflictEnd = new Date(conflictingReservation.endTime);
+
+            const formatTime = (date) => {
+                return date.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            };
+
+            const formatDate = (date) => {
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            };
+
+            return res.status(400).json({
+                message: `예약 시간이 겹칩니다.\n기존 예약: "${conflictingReservation.meetingName}"\n시간: ${formatDate(conflictStart)} ${formatTime(conflictStart)} - ${formatTime(conflictEnd)}\n\n다른 시간을 선택해주세요.`,
+                conflictingReservation: {
+                    meetingName: conflictingReservation.meetingName,
+                    startTime: conflictingReservation.startTime,
+                    endTime: conflictingReservation.endTime,
+                    status: conflictingReservation.status
+                }
+            });
+        }
+
+        // 새 예약 생성
+        const newReservation = {
+            participants: participants.map(userId => ({ userId })),
+            meetingName,
+            meetingDescription: meetingDescription || '',
+            startTime: start,
+            endTime: end,
+            status: '예약됨',
+            project: project || null
+        };
+
+        room.reservations.push(newReservation);
+        await room.save();
+
+        // 생성된 예약 정보를 populate해서 반환
+        const populatedRoom = await Room.findById(roomId)
+            .populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title');
+
+        const createdReservation = populatedRoom.reservations[populatedRoom.reservations.length - 1];
+
+        res.status(201).json(createdReservation);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '예약 생성 실패' });
+    }
+});
+
+// 예약 수정
+app.put('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
+    const { roomId, reservationId } = req.params;
+    const {
+        meetingName,
+        meetingDescription,
+        startTime,
+        endTime,
+        participants,
+        project
+    } = req.body;
+
+    try {
+        // 필수 필드 검증
+        if (!meetingName || !startTime || !endTime || !participants || participants.length === 0) {
+            return res.status(400).json({
+                message: '회의 제목, 시작 시간, 종료 시간, 참여인원(최소 1명)은 필수입니다.'
+            });
+        }
+
+        // 시간 유효성 검증
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+
+        if (start >= end) {
+            return res.status(400).json({
+                message: '종료 시간은 시작 시간보다 나중이어야 합니다.'
+            });
+        }
+
+        const room = await Room.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        const reservationIndex = room.reservations.findIndex(
+            r => r._id.toString() === reservationId
+        );
+
+        if (reservationIndex === -1) {
+            return res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
+        }
+
+        // 시간 충돌 확인 (자기 자신 제외)
+        const conflictingReservation = room.reservations.find((reservation, index) => {
+            if (index === reservationIndex || reservation.status === '취소됨') return false;
+
+            const existingStart = new Date(reservation.startTime);
+            const existingEnd = new Date(reservation.endTime);
+
+            // 시간 충돌 조건: 새 예약의 시작이 기존 예약 끝나기 전이고, 새 예약의 끝이 기존 예약 시작 후인 경우
+            return (start < existingEnd && end > existingStart);
+        });
+
+        if (conflictingReservation) {
+            const conflictStart = new Date(conflictingReservation.startTime);
+            const conflictEnd = new Date(conflictingReservation.endTime);
+
+            const formatTime = (date) => {
+                return date.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            };
+
+            const formatDate = (date) => {
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            };
+
+            return res.status(400).json({
+                message: `예약 시간이 겹칩니다.\n기존 예약: "${conflictingReservation.meetingName}"\n시간: ${formatDate(conflictStart)} ${formatTime(conflictStart)} - ${formatTime(conflictEnd)}\n\n다른 시간을 선택해주세요.`,
+                conflictingReservation: {
+                    meetingName: conflictingReservation.meetingName,
+                    startTime: conflictingReservation.startTime,
+                    endTime: conflictingReservation.endTime,
+                    status: conflictingReservation.status
+                }
+            });
+        }
+
+        // 예약 정보 업데이트
+        room.reservations[reservationIndex] = {
+            ...room.reservations[reservationIndex],
+            participants: participants.map(userId => ({ userId })),
+            meetingName,
+            meetingDescription: meetingDescription || '',
+            startTime: start,
+            endTime: end,
+            project: project || null
+        };
+
+        await room.save();
+
+        // 업데이트된 예약 정보를 populate해서 반환
+        const populatedRoom = await Room.findById(roomId)
+            .populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title');
+
+        const updatedReservation = populatedRoom.reservations[reservationIndex];
+
+        res.status(200).json(updatedReservation);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '예약 수정 실패' });
+    }
+});
+
+// 예약 삭제 (상태를 '취소됨'으로 변경)
+app.delete('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
+    const { roomId, reservationId } = req.params;
+
+    try {
+        const room = await Room.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        const reservation = room.reservations.find(
+            r => r._id.toString() === reservationId
+        );
+
+        if (!reservation) {
+            return res.status(404).json({ message: '예약을 찾을 수 없습니다.' });
+        }
+
+        // 예약 상태를 '취소됨'으로 변경
+        reservation.status = '취소됨';
+        await room.save();
+
+        res.status(200).json({ message: '예약이 취소되었습니다.' });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '예약 취소 실패' });
+    }
+});
+
+// 특정 회의실의 예약 목록 조회
+app.get('/rooms/:roomId/reservations', async (req, res) => {
+    const { roomId } = req.params;
+    const { date } = req.query; // YYYY-MM-DD 형식
+
+    try {
+        const room = await Room.findById(roomId)
+            .populate('reservations.participants.userId', 'name email')
+            .populate('reservations.project', 'title');
+
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        let reservations = room.reservations.filter(r => r.status !== '취소됨');
+
+        // 날짜 필터링 (옵션)
+        if (date) {
+            const targetDate = new Date(date);
+            reservations = reservations.filter(reservation => {
+                const startDate = new Date(reservation.startTime);
+                return startDate.toDateString() === targetDate.toDateString();
+            });
+        }
+
+        res.status(200).json(reservations);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '예약 목록 조회 실패' });
+    }
+});
 
 // // TEST API
 // const devTest_slack = async () => {

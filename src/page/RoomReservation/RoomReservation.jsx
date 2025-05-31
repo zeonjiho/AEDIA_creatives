@@ -8,7 +8,6 @@ import {
     HiDocumentText, HiCheckCircle, HiSave, HiBookmark
 } from 'react-icons/hi'
 import { 
-    users, 
     currentUser,
     projects
 } from '../../data/mockDatabase'
@@ -22,6 +21,7 @@ const RoomReservation = () => {
     const [currentUserState] = useState(currentUser) // 현재 로그인한 사용자 (임시)
     const [rooms, setRooms] = useState([])
     const [reservations, setReservations] = useState([])
+    const [users, setUsers] = useState([]) // 실제 사용자 목록
     const [selectedRoom, setSelectedRoom] = useState(null)
     const [currentDate, setCurrentDate] = useState(new Date('2023-03-06')) // 2023년 3월 6일로 설정
     const [showReservationForm, setShowReservationForm] = useState(false)
@@ -59,13 +59,64 @@ const RoomReservation = () => {
         }
     }
     
-    // 예약 목록 불러오기 (필요시 추가 구현)
+    // 사용자 목록 불러오기
+    const loadUsers = async () => {
+        try {
+            const response = await api.get('/get-user-list?userType=all')
+            
+            // status가 'active'인 사용자만 필터링하고 userType별로 정렬
+            const activeUsers = response.data.filter(user => user.status === 'active')
+            
+            // internal 사용자를 먼저, external 사용자를 나중에 정렬
+            const sortedUsers = activeUsers.sort((a, b) => {
+                // userType별 우선순위 (internal이 먼저)
+                const typeOrder = { 'internal': 0, 'external': 1 }
+                if (typeOrder[a.userType] !== typeOrder[b.userType]) {
+                    return typeOrder[a.userType] - typeOrder[b.userType]
+                }
+                
+                // 같은 userType 내에서는 이름순 정렬
+                return a.name.localeCompare(b.name)
+            })
+            
+            // ReservationModal에서 사용할 수 있도록 데이터 구조 변환
+            const formattedUsers = sortedUsers.map(user => ({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar || '/default-avatar.png',
+                role: user.roles && user.roles.length > 0 ? user.roles[0] : '직책 없음',
+                userType: user.userType
+            }))
+            
+            setUsers(formattedUsers)
+        } catch (error) {
+            console.error('사용자 목록을 불러오는데 실패했습니다:', error)
+            setStatusMessage('사용자 목록을 불러오는데 실패했습니다.')
+            setMessageType('error')
+        }
+    }
+    
+    // 예약 목록 불러오기
     const loadReservations = async () => {
         try {
-            // TODO: 예약 API가 구현되면 실제 API 호출로 변경
-            // const response = await api.get('/reservations')
-            // setReservations(response.data)
-            setReservations([]) // 임시로 빈 배열
+            // 모든 회의실의 예약을 가져와서 통합
+            const allReservations = [];
+            for (const room of rooms) {
+                const response = await api.get(`/rooms/${room._id}/reservations`);
+                const roomReservations = response.data.map(reservation => ({
+                    ...reservation,
+                    roomId: room._id,
+                    start: reservation.startTime,
+                    end: reservation.endTime,
+                    title: reservation.meetingName,
+                    description: reservation.meetingDescription || '',
+                    project: reservation.project?.title || '',
+                    participants: reservation.participants.map(p => p.userId._id)
+                }));
+                allReservations.push(...roomReservations);
+            }
+            setReservations(allReservations);
         } catch (error) {
             console.error('예약 목록을 불러오는데 실패했습니다:', error)
             setStatusMessage('예약 목록을 불러오는데 실패했습니다.')
@@ -78,10 +129,8 @@ const RoomReservation = () => {
         const loadData = async () => {
             setLoading(true)
             try {
-                await Promise.all([
-                    loadRooms(),
-                    loadReservations()
-                ])
+                await loadRooms()
+                await loadUsers()
                 setProjectsList(projects) // 프로젝트는 임시로 목업 데이터 사용
             } catch (error) {
                 console.error('데이터 로딩 중 오류:', error)
@@ -92,6 +141,13 @@ const RoomReservation = () => {
         
         loadData()
     }, [])
+    
+    // rooms가 로드된 후에 예약 목록 로드
+    useEffect(() => {
+        if (rooms.length > 0) {
+            loadReservations()
+        }
+    }, [rooms])
 
     // 상태 메시지 자동 제거
     useEffect(() => {
@@ -204,8 +260,6 @@ const RoomReservation = () => {
         
         // 오늘 날짜로 기본 설정
         const today = new Date()
-        const tomorrow = new Date(today)
-        tomorrow.setDate(today.getDate() + 1)
         
         setReservationFormData({
             title: '',
@@ -213,7 +267,7 @@ const RoomReservation = () => {
             endDate: today.toISOString().split('T')[0],
             startTime: '09:00',
             endTime: '10:00',
-            participants: [currentUserState.id],
+            participants: [], // 빈 배열로 시작하여 사용자가 직접 선택하도록 함
             project: '',
             description: ''
         })
@@ -226,27 +280,36 @@ const RoomReservation = () => {
         setSelectedRoom(rooms.find(room => room._id === reservation.roomId))
         setShowReservationForm(true)
         
-        const startDate = new Date(reservation.start)
-        const endDate = new Date(reservation.end)
+        const startDate = new Date(reservation.startTime)
+        const endDate = new Date(reservation.endTime)
         
         setReservationFormData({
-            title: reservation.title,
+            title: reservation.meetingName,
             startDate: startDate.toISOString().split('T')[0],
-            endDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
             startTime: startDate.toTimeString().slice(0, 5),
             endTime: endDate.toTimeString().slice(0, 5),
-            participants: reservation.participants || [currentUserState.id],
+            participants: reservation.participants || [],
             project: reservation.project || '',
-            description: reservation.description || ''
+            description: reservation.meetingDescription || ''
         })
     }
     
     const handleFormChange = (e) => {
         const { name, value } = e.target
-        setReservationFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
+        setReservationFormData(prev => {
+            const updated = {
+                ...prev,
+                [name]: value
+            }
+            
+            // startDate가 변경되면 endDate도 같은 날짜로 설정
+            if (name === 'startDate') {
+                updated.endDate = value
+            }
+            
+            return updated
+        })
     }
     
     const handleParticipantChange = (userId) => {
@@ -290,69 +353,150 @@ const RoomReservation = () => {
           )
         : []
     
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault()
         
-        // 날짜와 시간을 조합하여 DateTime 생성
-        const startDateTime = new Date(`${reservationFormData.startDate}T${reservationFormData.startTime}:00`)
-        const endDateTime = new Date(`${reservationFormData.endDate}T${reservationFormData.endTime}:00`)
-        
-        const newReservation = {
-            id: selectedReservation ? selectedReservation.id : `res${Date.now()}`,
-            roomId: selectedRoom._id,
-            title: reservationFormData.title,
-            description: reservationFormData.description,
-            start: startDateTime.toISOString(),
-            end: endDateTime.toISOString(),
-            participants: reservationFormData.participants,
-            project: reservationFormData.project,
-            color: getProjectColor(reservationFormData.project),
-            createdBy: currentUserState.id
+        if (!selectedRoom) {
+            alert('⚠️ 회의실을 선택해주세요.')
+            return
         }
         
-        // 기존 예약 업데이트
-        if (selectedReservation) {
-            const updated = {
-                ...selectedReservation,
-                title: reservationFormData.title,
-                start: startDateTime.toISOString(),
-                end: endDateTime.toISOString(),
-                participants: reservationFormData.participants,
-                project: reservationFormData.project,
-                description: reservationFormData.description
+        try {
+            // 날짜와 시간을 정확하게 결합
+            const startDateTimeString = `${reservationFormData.startDate} ${reservationFormData.startTime}:00`
+            const endDateTimeString = `${reservationFormData.endDate} ${reservationFormData.endTime}:00`
+            
+            const startDateTime = new Date(startDateTimeString)
+            const endDateTime = new Date(endDateTimeString)
+            
+            // 유효한 날짜인지 확인
+            if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+                alert('⚠️ 날짜나 시간 형식이 올바르지 않습니다.')
+                return
             }
             
-            // 예약 목록 업데이트
-            setReservations(prev => 
-                prev.map(res => res.id === selectedReservation.id ? updated : res)
-            )
+            const reservationData = {
+                meetingName: reservationFormData.title,
+                meetingDescription: reservationFormData.description || '',
+                startTime: startDateTime.toISOString(),
+                endTime: endDateTime.toISOString(),
+                participants: reservationFormData.participants,
+                project: null // TODO: 프로젝트 연동 후 수정
+            }
             
-            setStatusMessage('예약이 성공적으로 업데이트되었습니다.')
-            setMessageType('success')
-        } 
-        // 새 예약 추가
-        else {
-            // 예약 목록 업데이트
-            setReservations(prev => [...prev, newReservation])
+            // 기존 예약 수정
+            if (selectedReservation) {
+                await api.put(`/rooms/${selectedRoom._id}/reservations/${selectedReservation._id}`, reservationData)
+                alert('✅ 예약이 성공적으로 업데이트되었습니다.')
+            } 
+            // 새 예약 생성
+            else {
+                await api.post(`/rooms/${selectedRoom._id}/reservations`, reservationData)
+                alert('✅ 새 예약이 성공적으로 추가되었습니다.')
+            }
             
-            setStatusMessage('새 예약이 성공적으로 추가되었습니다.')
-            setMessageType('success')
+            // 예약 목록 새로고침
+            await loadReservations()
+            setShowReservationForm(false)
+            
+        } catch (error) {
+            console.error('예약 처리 중 오류:', error)
+            console.error('Error response:', error.response)
+            
+            let errorMessage = '예약 처리 중 오류가 발생했습니다.';
+            
+            if (error.response) {
+                // 서버에서 응답을 받은 경우
+                if (error.response.status === 400 && error.response.data?.conflictingReservation) {
+                    // 시간 충돌 에러인 경우 특별 처리
+                    const conflictData = error.response.data.conflictingReservation
+                    const conflictStart = new Date(conflictData.startTime)
+                    const conflictEnd = new Date(conflictData.endTime)
+                    
+                    const formatTime = (date) => {
+                        return date.toLocaleTimeString('ko-KR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: false 
+                        })
+                    }
+                    
+                    const formatDate = (date) => {
+                        return date.toLocaleDateString('ko-KR', {
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                    }
+                    
+                    errorMessage = `⚠️ 예약 시간이 겹칩니다!\n\n기존 예약: "${conflictData.meetingName}"\n시간: ${formatDate(conflictStart)} ${formatTime(conflictStart)} - ${formatTime(conflictEnd)}\n\n다른 시간을 선택해주세요.`
+                } else if (error.response.data?.message) {
+                    // 서버에서 보낸 구체적인 에러 메시지
+                    errorMessage = `❌ ${error.response.data.message}`
+                } else if (error.response.status === 400) {
+                    errorMessage = '❌ 입력한 정보에 문제가 있습니다. 다시 확인해주세요.'
+                } else if (error.response.status === 404) {
+                    errorMessage = '❌ 회의실을 찾을 수 없습니다.'
+                } else if (error.response.status === 500) {
+                    errorMessage = '❌ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                } else {
+                    errorMessage = `❌ 오류가 발생했습니다. (상태 코드: ${error.response.status})`
+                }
+            } else if (error.request) {
+                // 네트워크 오류
+                errorMessage = '❌ 네트워크 연결을 확인해주세요.'
+            } else {
+                // 기타 오류
+                errorMessage = `❌ 알 수 없는 오류가 발생했습니다: ${error.message}`
+            }
+            
+            alert(errorMessage)
         }
-        
-        setShowReservationForm(false)
     }
     
-    const handleDeleteReservation = () => {
-        if (!selectedReservation) return
+    const handleDeleteReservation = async () => {
+        if (!selectedReservation || !selectedRoom) return
         
-        // 예약 목록 업데이트
-        setReservations(prev => 
-            prev.filter(res => res.id !== selectedReservation.id)
-        )
+        // 삭제 확인
+        if (!window.confirm('정말로 이 예약을 취소하시겠습니까?')) {
+            return
+        }
         
-        setStatusMessage('예약이 삭제되었습니다.')
-        setMessageType('success')
-        setShowReservationForm(false)
+        try {
+            await api.delete(`/rooms/${selectedRoom._id}/reservations/${selectedReservation._id}`)
+            
+            // 성공 메시지 표시
+            alert('✅ 예약이 취소되었습니다.')
+            
+            // 예약 목록 새로고침
+            await loadReservations()
+            setShowReservationForm(false)
+            
+        } catch (error) {
+            console.error('예약 삭제 중 오류:', error)
+            console.error('Delete error response:', error.response)
+            
+            let errorMessage = '예약 삭제 중 오류가 발생했습니다.';
+            
+            if (error.response) {
+                if (error.response.data?.message) {
+                    errorMessage = `❌ ${error.response.data.message}`
+                } else if (error.response.status === 404) {
+                    errorMessage = '❌ 예약을 찾을 수 없습니다.'
+                } else if (error.response.status === 403) {
+                    errorMessage = '❌ 이 예약을 삭제할 권한이 없습니다.'
+                } else if (error.response.status === 500) {
+                    errorMessage = '❌ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                } else {
+                    errorMessage = `❌ 삭제 중 오류가 발생했습니다. (상태 코드: ${error.response.status})`
+                }
+            } else if (error.request) {
+                errorMessage = '❌ 네트워크 연결을 확인해주세요.'
+            } else {
+                errorMessage = `❌ 알 수 없는 오류가 발생했습니다: ${error.message}`
+            }
+            
+            alert(errorMessage)
+        }
     }
     
     const handleCancelForm = () => {

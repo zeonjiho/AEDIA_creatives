@@ -31,12 +31,45 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
             return;
         }
         
-        // 시작 시간이 종료 시간보다 이후인지 확인
-        const startDateTime = new Date(`${reservationFormData.startDate}T${reservationFormData.startTime}:00`);
-        const endDateTime = new Date(`${reservationFormData.endDate}T${reservationFormData.endTime}:00`);
+        if (!reservationFormData.participants || reservationFormData.participants.length === 0) {
+            console.log('참여인원 검증 실행:', {
+                participants: reservationFormData.participants,
+                length: reservationFormData.participants?.length
+            });
+            alert('참여인원을 최소 1명 이상 선택해주세요.');
+            return;
+        }
         
+        // 날짜와 시간을 정확하게 결합하여 DateTime 객체 생성
+        const startDateTimeString = `${reservationFormData.startDate} ${reservationFormData.startTime}:00`;
+        const endDateTimeString = `${reservationFormData.endDate} ${reservationFormData.endTime}:00`;
+        
+        const startDateTime = new Date(startDateTimeString);
+        const endDateTime = new Date(endDateTimeString);
+        
+        // 유효한 날짜인지 확인
+        if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+            alert('날짜나 시간 형식이 올바르지 않습니다.');
+            return;
+        }
+        
+        // 시작 시간이 종료 시간보다 이후인지 확인
         if (startDateTime >= endDateTime) {
             alert('종료 시간은 시작 시간보다 나중이어야 합니다.');
+            return;
+        }
+        
+        // 과거 시간 예약 방지
+        const now = new Date();
+        if (startDateTime < now) {
+            alert('과거 시간으로는 예약할 수 없습니다.');
+            return;
+        }
+        
+        // 최소 예약 시간 확인 (예: 30분 이상)
+        const durationMinutes = (endDateTime - startDateTime) / (1000 * 60);
+        if (durationMinutes < 30) {
+            alert('예약은 최소 30분 이상이어야 합니다.');
             return;
         }
         
@@ -271,25 +304,38 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
                                     <div className={styles.available_participants}>
                                         <label>팀 멤버</label>
                                         <div className={styles.participants_grid}>
-                                            {users.map(user => (
-                                                <div
-                                                    key={user.id}
-                                                    className={`${styles.participant_option} ${
-                                                        reservationFormData.participants.includes(user.id) ? styles.selected : ''
-                                                    }`}
-                                                    onClick={() => handleParticipantToggle(user.id)}
-                                                >
-                                                    <img 
-                                                        src={user.avatar || '/default-avatar.png'} 
-                                                        alt={user.name}
-                                                        className={styles.participant_avatar}
-                                                    />
-                                                    <div className={styles.participant_info}>
-                                                        <span className={styles.participant_name}>{user.name}</span>
-                                                        <span className={styles.participant_role}>{user.role}</span>
-                                                    </div>
+                                            {users.length === 0 ? (
+                                                <div className={styles.no_users}>
+                                                    <p>사용자 목록을 불러오는 중...</p>
                                                 </div>
-                                            ))}
+                                            ) : (
+                                                users.map(user => (
+                                                    <div
+                                                        key={user.id}
+                                                        className={`${styles.participant_option} ${
+                                                            reservationFormData.participants.includes(user.id) ? styles.selected : ''
+                                                        }`}
+                                                        onClick={() => handleParticipantToggle(user.id)}
+                                                    >
+                                                        <img 
+                                                            src={user.avatar || '/default-avatar.png'} 
+                                                            alt={user.name}
+                                                            className={styles.participant_avatar}
+                                                        />
+                                                        <div className={styles.participant_info}>
+                                                            <span className={styles.participant_name}>{user.name}</span>
+                                                            <span className={styles.participant_role}>
+                                                                {user.role}
+                                                                {user.userType && (
+                                                                    <span className={`${styles.user_type_badge} ${styles[user.userType]}`}>
+                                                                        {user.userType === 'internal' ? '내부' : '외부'}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </div>
