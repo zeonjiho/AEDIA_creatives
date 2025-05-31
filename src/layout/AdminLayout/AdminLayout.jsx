@@ -11,6 +11,7 @@ import {
     faChevronRight,
     faTachometerAlt,
     faCoins,
+    faCog,
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminLayout = () => {
@@ -78,6 +79,14 @@ const AdminLayout = () => {
                 { id: 'finance-taxi', name: '택시비 영수증 관리', path: '/admin/finance/taxi' }
             ]
         },
+        {
+            id: 'etc',
+            name: '기타',
+            icon: faCog,
+            submenus: [
+                { id: 'room', name: '회의실 관리', path: '/admin/room' },
+            ]
+        }
         // {
         //     id: 'products',
         //     name: '상품 관리',

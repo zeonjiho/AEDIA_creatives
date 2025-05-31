@@ -13,53 +13,10 @@ import {
     projects
 } from '../../data/mockDatabase'
 import ReservationModal from './ReservationModal'
+import api from '../../utils/api'
 
 const RoomReservation = () => {
     const navigate = useNavigate()
-    
-    // 샘플 회의실 데이터
-    const initialRooms = [
-        { id: 'room1', name: '회의실 A', location: '2층', facilities: ['프로젝터', 'TV', '화이트보드'] },
-        { id: 'room2', name: '회의실 B', location: '3층', facilities: ['TV', '화이트보드'] },
-        { id: 'room3', name: '회의실 C', location: '3층', facilities: ['프로젝터', '화이트보드'] }
-    ]
-
-    // 샘플 예약 데이터
-    const initialReservations = [
-        {
-            id: 'res1',
-            roomId: 'room1',
-            title: '프로젝트 킥오프 미팅',
-            startTime: new Date('2023-03-06T10:00:00').toISOString(),
-            endTime: new Date('2023-03-06T11:30:00').toISOString(),
-            projectId: 'project1',
-            projectName: 'AEDIA 웹사이트 리뉴얼',
-            createdBy: 'user1',
-            color: '#4CAF50'
-        },
-        {
-            id: 'res2',
-            roomId: 'room2',
-            title: '주간 팀 회의',
-            startTime: new Date('2023-03-06T14:00:00').toISOString(),
-            endTime: new Date('2023-03-06T15:00:00').toISOString(),
-            projectId: 'project2',
-            projectName: '모바일 앱 개발',
-            createdBy: 'user2',
-            color: '#2196F3'
-        },
-        {
-            id: 'res3',
-            roomId: 'room3',
-            title: '디자인 리뷰',
-            startTime: new Date('2023-03-06T16:00:00').toISOString(),
-            endTime: new Date('2023-03-06T17:30:00').toISOString(),
-            projectId: 'project3',
-            projectName: '신규 브랜딩',
-            createdBy: 'user3',
-            color: '#9C27B0'
-        }
-    ]
     
     // 상태 관리
     const [currentUserState] = useState(currentUser) // 현재 로그인한 사용자 (임시)
@@ -88,12 +45,52 @@ const RoomReservation = () => {
     const [showFilters, setShowFilters] = useState(false)
     const [editingRoomDetails, setEditingRoomDetails] = useState(false)
     const [currentTime, setCurrentTime] = useState(new Date())
+    const [loading, setLoading] = useState(true)
+    
+    // 회의실 목록 불러오기
+    const loadRooms = async () => {
+        try {
+            const response = await api.get('/rooms')
+            setRooms(response.data)
+        } catch (error) {
+            console.error('회의실 목록을 불러오는데 실패했습니다:', error)
+            setStatusMessage('회의실 목록을 불러오는데 실패했습니다.')
+            setMessageType('error')
+        }
+    }
+    
+    // 예약 목록 불러오기 (필요시 추가 구현)
+    const loadReservations = async () => {
+        try {
+            // TODO: 예약 API가 구현되면 실제 API 호출로 변경
+            // const response = await api.get('/reservations')
+            // setReservations(response.data)
+            setReservations([]) // 임시로 빈 배열
+        } catch (error) {
+            console.error('예약 목록을 불러오는데 실패했습니다:', error)
+            setStatusMessage('예약 목록을 불러오는데 실패했습니다.')
+            setMessageType('error')
+        }
+    }
     
     // 초기 데이터 로드
     useEffect(() => {
-        setRooms(initialRooms)
-        setReservations(initialReservations)
-        setProjectsList(projects)
+        const loadData = async () => {
+            setLoading(true)
+            try {
+                await Promise.all([
+                    loadRooms(),
+                    loadReservations()
+                ])
+                setProjectsList(projects) // 프로젝트는 임시로 목업 데이터 사용
+            } catch (error) {
+                console.error('데이터 로딩 중 오류:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        
+        loadData()
     }, [])
 
     // 상태 메시지 자동 제거
@@ -122,12 +119,12 @@ const RoomReservation = () => {
     const filteredRooms = rooms.filter(room => {
         // 검색어 필터링
         const matchesSearch = searchTerm === '' || 
-            room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            room.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             room.location.toLowerCase().includes(searchTerm.toLowerCase())
         
         // 시설 필터링
         const matchesFacility = filterFacility === '' || 
-            room.facilities.some(facility => facility.toLowerCase().includes(filterFacility.toLowerCase()))
+            (room.tools && room.tools.some(tool => tool.toLowerCase().includes(filterFacility.toLowerCase())))
         
         return matchesSearch && matchesFacility
     })
@@ -226,7 +223,7 @@ const RoomReservation = () => {
     
     const handleReservationClick = (reservation) => {
         setSelectedReservation(reservation)
-        setSelectedRoom(rooms.find(room => room.id === reservation.roomId))
+        setSelectedRoom(rooms.find(room => room._id === reservation.roomId))
         setShowReservationForm(true)
         
         const startDate = new Date(reservation.start)
@@ -300,6 +297,19 @@ const RoomReservation = () => {
         const startDateTime = new Date(`${reservationFormData.startDate}T${reservationFormData.startTime}:00`)
         const endDateTime = new Date(`${reservationFormData.endDate}T${reservationFormData.endTime}:00`)
         
+        const newReservation = {
+            id: selectedReservation ? selectedReservation.id : `res${Date.now()}`,
+            roomId: selectedRoom._id,
+            title: reservationFormData.title,
+            description: reservationFormData.description,
+            start: startDateTime.toISOString(),
+            end: endDateTime.toISOString(),
+            participants: reservationFormData.participants,
+            project: reservationFormData.project,
+            color: getProjectColor(reservationFormData.project),
+            createdBy: currentUserState.id
+        }
+        
         // 기존 예약 업데이트
         if (selectedReservation) {
             const updated = {
@@ -322,19 +332,6 @@ const RoomReservation = () => {
         } 
         // 새 예약 추가
         else {
-            const newReservation = {
-                id: Date.now(),
-                roomId: selectedRoom.id,
-                title: reservationFormData.title,
-                start: startDateTime.toISOString(),
-                end: endDateTime.toISOString(),
-                userId: currentUserState.id,
-                participants: reservationFormData.participants,
-                project: reservationFormData.project,
-                description: reservationFormData.description,
-                color: getProjectColor(reservationFormData.project)
-            }
-            
             // 예약 목록 업데이트
             setReservations(prev => [...prev, newReservation])
             
@@ -555,28 +552,37 @@ const RoomReservation = () => {
                     </div>
 
                     <div className={styles.rooms_grid}>
-                        {filteredRooms.length === 0 ? (
+                        {loading ? (
+                            <div className={styles.loading_state}>
+                                <p>회의실 목록을 불러오는 중...</p>
+                            </div>
+                        ) : rooms.length === 0 ? (
+                            <div className={styles.no_rooms}>
+                                <HiOfficeBuilding />
+                                <p>등록된 회의실이 없습니다.</p>
+                            </div>
+                        ) : filteredRooms.length === 0 ? (
                             <div className={styles.no_rooms}>
                                 <HiOfficeBuilding />
                                 <p>검색 조건에 맞는 회의실이 없습니다.</p>
                             </div>
                         ) : (
-                            filteredRooms.map(room => (
+                            filteredRooms.map((room) => (
                                 <div 
-                                    key={room.id}
-                                    className={`${styles.room_card} ${selectedRoom && selectedRoom.id === room.id ? styles.selected : ''}`}
+                                    key={room._id}
+                                    className={`${styles.room_card} ${selectedRoom && selectedRoom._id === room._id ? styles.selected : ''}`}
                                     onClick={() => handleRoomSelect(room)}
                                 >
                                     <div className={styles.room_content}>
-                                        <h3 className={styles.room_title}>{room.name}</h3>
+                                        <h3 className={styles.room_title}>{room.roomName}</h3>
                                         <div className={styles.room_meta}>
                                             <span className={styles.room_utilization}>
                                                 <HiClock />
-                                                {getRoomReservations(room.id).length}건의 예약
+                                                {getRoomReservations(room._id).length}건의 예약
                                             </span>
                                         </div>
                                         <div className={styles.room_facilities}>
-                                            {room.facilities.map((facility, index) => (
+                                            {room.tools && room.tools.map((facility, index) => (
                                                 <span key={index} className={styles.facility_tag}>
                                                     {facility}
                                                 </span>
@@ -599,10 +605,10 @@ const RoomReservation = () => {
                         <div className={styles.schedule_content}>
                             <div className={styles.selected_room_header}>
                                 <div className={styles.room_detail}>
-                                    <h3>{selectedRoom.name}</h3>
+                                    <h3>{selectedRoom.roomName}</h3>
                                     <div className={styles.room_info}>
                                         <span><HiOfficeBuilding /> {selectedRoom.location}</span>
-                                        <span><HiDocumentText /> {getRoomReservations(selectedRoom.id).length}건의 예약</span>
+                                        <span><HiDocumentText /> {getRoomReservations(selectedRoom._id).length}건의 예약</span>
                                     </div>
                                 </div>
                                 <div className={styles.room_actions}>
@@ -620,8 +626,8 @@ const RoomReservation = () => {
                             </div>
 
                             <div className={styles.reservations_list}>
-                                {getRoomReservations(selectedRoom.id).length > 0 ? (
-                                    getRoomReservations(selectedRoom.id).map(reservation => (
+                                {getRoomReservations(selectedRoom._id).length > 0 ? (
+                                    getRoomReservations(selectedRoom._id).map(reservation => (
                                         <div 
                                             key={reservation.id}
                                             className={styles.reservation_card}

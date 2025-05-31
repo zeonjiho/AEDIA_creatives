@@ -21,6 +21,7 @@ import AdminUser from './page/Admin/AdminUser/AdminUser';
 import AdminStaff from './page/Admin/AdminStaff/AdminStaff';
 import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
 import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
+import AdminRoom from './page/Admin/AdminRoom/AdminRoom';
 
 
 function App() {
@@ -59,6 +60,7 @@ function App() {
             <Route path='taxi' element={<AdminFinanceTaxi />} />
           </Route>
           <Route path='project' element={<AdminProject />} />
+          <Route path='room' element={<AdminRoom />} />
         </Route>
       </Routes>
     </div>

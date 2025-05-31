@@ -10,16 +10,18 @@ const reservationSchema = new Schema({
             ref: 'User'
         },
     }],
+    meetingName: {
+        type: String,
+    },
+    meetingDescription: {
+        type: String,
+    },
     startTime: {
         type: Date,
         required: true
     },
     endTime: {
         type: Date,
-        required: true
-    },
-    purpose: {
-        type: String,
         required: true
     },
     status: {
@@ -42,6 +44,13 @@ const roomSchema = new Schema({
     roomName: {
         type: String,
         required: true,
+    },
+    location: {
+        type: String,
+    },
+    tools: {
+        type: Array,
+        default: [],
     },
     reservations: [reservationSchema]  // 예약 정보 배열
 });

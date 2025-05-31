@@ -388,22 +388,23 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 0;
+    padding: 60px 40px;
     color: var(--text-secondary);
     text-align: center;
     animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .no_rooms svg {
-    font-size: 3rem;
+    width: 48px;
+    height: 48px;
     margin-bottom: 16px;
     opacity: 0.3;
-    animation: float 3s ease-in-out infinite;
-    color: var(--accent-color);
 }
 
 .no_rooms p {
     font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-secondary);
 }
 
 
@@ -890,4 +891,22 @@
     .filter_group {
         width: 100%;
     }
+}
+
+/* 빈 상태 및 로딩 상태 */
+
+.loading_state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    color: var(--text-secondary);
+    grid-column: 1 / -1; /* 그리드 전체 영역 차지 */
+}
+
+.loading_state p {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-secondary);
 }
