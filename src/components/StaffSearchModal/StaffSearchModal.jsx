@@ -1,43 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import styles from './StaffSearchModal.module.css';
 import { HiX, HiSearch, HiUser, HiUserGroup, HiCheck, HiPlus, HiSave } from 'react-icons/hi';
+import api from '../../utils/api';
 
 // 샘플 스탭 데이터
-const initialStaff = [
-  { id: 1, name: '김연출', type: 'staff', position: '연출', department: '연출부', experience: '5년', phone: '010-1234-5678' },
-  { id: 2, name: '이조연출', type: 'staff', position: '조연출', department: '연출부', experience: '3년', phone: '010-2345-6789' },
-  { id: 3, name: '박제작', type: 'staff', position: '제작 PD', department: '제작부', experience: '7년', phone: '010-3456-7890' },
-  { id: 4, name: '최촬감', type: 'staff', position: '촬영감독', department: '촬영부', experience: '8년', phone: '010-4567-8901' },
-  { id: 5, name: '정조명', type: 'staff', position: '조명감독', department: '조명부', experience: '6년', phone: '010-5678-9012' },
-  { id: 6, name: '강미감', type: 'staff', position: '미술감독', department: '미술부', experience: '4년', phone: '010-6789-0123' },
-  { id: 7, name: '윤지미집', type: 'staff', position: '지미집', department: '미술부', experience: '2년', phone: '010-7890-1234' },
-  { id: 8, name: '임CG', type: 'staff', position: 'CG', department: 'VFX부', experience: '5년', phone: '010-8901-2345' },
-  { id: 9, name: '홍클리닝', type: 'staff', position: '클리닝', department: '후반부', experience: '3년', phone: '010-9012-3456' },
-  { id: 10, name: '송DI', type: 'staff', position: 'DI', department: '후반부', experience: '4년', phone: '010-0123-4567' },
-];
+// const initialStaff = [
+//   { id: 1, name: '김연출', userType: 'external', roles: ['연출'], department: '연출부', experience: '5년', phone: '010-1234-5678' },
+//   { id: 2, name: '이조연출', userType: 'external', roles: ['조연출'], department: '연출부', experience: '3년', phone: '010-2345-6789' },
+//   { id: 3, name: '박제작', userType: 'external', roles: ['제작 PD'], department: '제작부', experience: '7년', phone: '010-3456-7890' },
+//   { id: 4, name: '최촬감', userType: 'external', roles: ['촬영감독'], department: '촬영부', experience: '8년', phone: '010-4567-8901' },
+//   { id: 5, name: '정조명', userType: 'external', roles: ['조명감독'], department: '조명부', experience: '6년', phone: '010-5678-9012' },
+//   { id: 6, name: '강미감', userType: 'external', roles: ['미술감독'], department: '미술부', experience: '4년', phone: '010-6789-0123' },
+//   { id: 7, name: '윤지미집', userType: 'external', roles: ['지미집'], department: '미술부', experience: '2년', phone: '010-7890-1234' },
+//   { id: 8, name: '임CG', userType: 'external', roles: ['CG'], department: 'VFX부', experience: '5년', phone: '010-8901-2345' },
+//   { id: 9, name: '홍클리닝', userType: 'external', roles: ['클리닝'], department: '후반부', experience: '3년', phone: '010-9012-3456' },
+//   { id: 10, name: '송DI', userType: 'external', roles: ['DI'], department: '후반부', experience: '4년', phone: '010-0123-4567' },
+// ];
 
 // 샘플 직원 데이터
-const sampleEmployees = [
-  { id: 11, name: '김직원1', type: 'employee', position: '프로듀서', department: '제작팀', email: 'kim@company.com', phone: '010-1111-2222' },
-  { id: 12, name: '이직원2', type: 'employee', position: '매니저', department: '기획팀', email: 'lee@company.com', phone: '010-2222-3333' },
-  { id: 13, name: '박직원3', type: 'employee', position: '디자이너', department: '디자인팀', email: 'park@company.com', phone: '010-3333-4444' },
-  { id: 14, name: '최직원4', type: 'employee', position: '개발자', department: '개발팀', email: 'choi@company.com', phone: '010-4444-5555' },
-  { id: 15, name: '정직원5', type: 'employee', position: '마케터', department: '마케팅팀', email: 'jung@company.com', phone: '010-5555-6666' },
-];
+// const sampleEmployees = [
+//   { id: 11, name: '김직원1', userType: 'internal', roles: ['프로듀서'], department: '제작팀', email: 'kim@company.com', phone: '010-1111-2222' },
+//   { id: 12, name: '이직원2', userType: 'internal', roles: ['매니저'], department: '기획팀', email: 'lee@company.com', phone: '010-2222-3333' },
+//   { id: 13, name: '박직원3', userType: 'internal', roles: ['디자이너'], department: '디자인팀', email: 'park@company.com', phone: '010-3333-4444' },
+//   { id: 14, name: '최직원4', userType: 'internal', roles: ['개발자'], department: '개발팀', email: 'choi@company.com', phone: '010-4444-5555' },
+//   { id: 15, name: '정직원5', userType: 'internal', roles: ['마케터'], department: '마케팅팀', email: 'jung@company.com', phone: '010-5555-6666' },
+// ];
 
-const StaffSearchModal = ({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
-  selectedPeople = [], 
+const StaffSearchModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  selectedPeople = [],
   multiSelect = true,
+  from,
   title = "스탭/직원 검색",
   initialFilterType = 'all'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState(initialFilterType);
-  const [allPeople, setAllPeople] = useState([...initialStaff, ...sampleEmployees]);
-  const [filteredPeople, setFilteredPeople] = useState(allPeople);
+  const [allPeople, setAllPeople] = useState([]);
+  const [filteredPeople, setFilteredPeople] = useState([]);
   const [localSelected, setLocalSelected] = useState(selectedPeople);
 
   // 새 스탭 추가 관련 상태
@@ -51,6 +53,24 @@ const StaffSearchModal = ({
     email: ''
   });
 
+  // 서버에서 스탭/직원 데이터 가져오기
+  const fetchAllStaffData = async () => {
+    try {
+      const response = await api.get('/get-user-list?userType=all');
+      if (response.status === 200) {
+        setAllPeople(response.data);
+      }
+    } catch (err) {
+      console.log('스탭 데이터 로딩 실패:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAllStaffData();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       setLocalSelected(selectedPeople);
@@ -62,22 +82,22 @@ const StaffSearchModal = ({
   useEffect(() => {
     // 모달이 열려있을 때만 필터링 실행
     if (!isOpen) return;
-    
+
     console.log('필터링 시작 - filterType:', filterType, 'searchTerm:', searchTerm);
     let filtered = allPeople;
 
     // 타입 필터링
     if (filterType !== 'all') {
-      filtered = filtered.filter(person => person.type === filterType);
+      filtered = filtered.filter(person => person.userType === filterType);
       console.log(`${filterType} 필터 적용 후:`, filtered.length, '명');
     }
 
     // 검색어 필터링
     if (searchTerm) {
-      filtered = filtered.filter(person => 
+      filtered = filtered.filter(person =>
         person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        person.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        person.department.toLowerCase().includes(searchTerm.toLowerCase())
+        (person.roles && person.roles.length > 0 && person.roles[0].toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (person.department && person.department.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       console.log(`검색어 "${searchTerm}" 적용 후:`, filtered.length, '명');
     }
@@ -144,58 +164,80 @@ const StaffSearchModal = ({
     }));
   };
 
-  const handleAddNewStaff = (e) => {
+  const handleAddNewStaff = async (e) => {
     e.preventDefault();
-    
+
     if (!newStaff.name.trim() || !newStaff.position.trim()) {
       alert('이름과 직책은 필수 입력사항입니다.');
       return;
     }
 
-    // 새 ID 생성 (기존 최대 ID + 1)
-    const newId = Math.max(...allPeople.map(p => p.id)) + 1;
-    
-    const staffToAdd = {
-      id: newId,
-      name: newStaff.name.trim(),
-      type: 'staff',
-      position: newStaff.position.trim(),
-      department: newStaff.department.trim() || '외부',
-      experience: newStaff.experience.trim() || '정보없음',
-      phone: newStaff.phone.trim(),
-      email: newStaff.email.trim(),
-      isExternal: true // 외부 인력 표시
-    };
+    try {
+      const staffData = {
+        name: newStaff.name.trim(),
+        email: newStaff.email.trim(),
+        phone: newStaff.phone.trim(),
+        roles: [newStaff.position.trim()],
+        department: newStaff.department.trim() || '외부',
+        experience: newStaff.experience.trim() || '정보없음'
+      };
 
-    // 새 스탭을 전체 목록에 추가
-    setAllPeople(prev => [...prev, staffToAdd]);
-    
-    // 새로 추가된 스탭을 바로 선택
-    setLocalSelected(prev => [...prev, staffToAdd]);
-    
-    // 폼 초기화
-    setNewStaff({
-      name: '',
-      position: '',
-      department: '',
-      experience: '',
-      phone: '',
-      email: ''
-    });
-    setShowAddForm(false);
-    
-    // 스탭 필터로 변경하여 새로 추가된 스탭이 보이도록
-    setFilterType('staff');
+      const response = await api.post('/add-staff', staffData);
+      
+      if (response.status === 200) {
+        // 서버에서 생성된 스탭 정보
+        const createdStaff = response.data.staff;
+        
+        // 로컬 ID 추가 (프론트엔드 호환성을 위해)
+        const staffToAdd = {
+          ...createdStaff,
+          id: createdStaff._id, // MongoDB의 _id를 id로도 사용
+          isExternal: true // 외부 인력 표시
+        };
+
+        // 전체 목록에 추가
+        setAllPeople(prev => [...prev, staffToAdd]);
+
+        // 새로 추가된 스탭을 바로 선택
+        setLocalSelected(prev => [...prev, staffToAdd]);
+
+        // 폼 초기화
+        setNewStaff({
+          name: '',
+          position: '',
+          department: '',
+          experience: '',
+          phone: '',
+          email: ''
+        });
+        setShowAddForm(false);
+
+        // 스탭 필터로 변경하여 새로 추가된 스탭이 보이도록
+        setFilterType('external');
+
+        alert('새 스탭이 성공적으로 추가되었습니다.');
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('스탭 추가 실패:', error);
+      let errorMessage = '스탭 추가 중 오류가 발생했습니다.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      alert(errorMessage);
+    }
   };
 
   const staffPositions = [
-    '연출', '조연출', '제작 PD', '촬영감독', '조명감독', 
-    '미술감독', '지미집', 'CG', '클리닝', 'DI', 
+    '연출', '조연출', '제작 PD', '촬영감독', '조명감독',
+    '미술감독', '지미집', 'CG', '클리닝', 'DI',
     '음향감독', '편집감독', '스크립터', '가수', '배우', '기타'
   ];
 
   // 새 스탭 추가 버튼은 스탭 필터가 활성화되거나 전체일 때만 표시
-  const showAddStaffButton = filterType === 'all' || filterType === 'staff';
+  const showAddStaffButton = filterType === 'all' || filterType === 'external';
 
   return (
     <div className={styles.modal_wrapper}>
@@ -213,43 +255,47 @@ const StaffSearchModal = ({
         <div className={styles.panel_content}>
           {/* 검색 및 필터 */}
           <div className={styles.search_section}>
-            <div className={styles.search_bar}>
-              <HiSearch className={styles.search_icon} />
-              <input
-                type="text"
-                placeholder="이름, 직책, 부서로 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.search_input}
-              />
-            </div>
-            
+            {from !== 'contact' && (
+              <div className={styles.search_bar}>
+                <HiSearch className={styles.search_icon} />
+                <input
+                  type="text"
+                  placeholder="이름, 직책, 부서로 검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles.search_input}
+                />
+              </div>
+            )}
+
             <div className={styles.filter_tabs}>
+              {from !== 'contact' && (
+                <button
+                  className={`${styles.filter_tab} ${filterType === 'all' ? styles.active : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('전체 버튼 클릭됨 - 현재 filterType:', filterType);
+                    if (filterType !== 'all') {
+                      setFilterType('all');
+                      console.log('전체 필터로 변경');
+                    } else {
+                      console.log('이미 전체 필터 상태');
+                    }
+                  }}
+                  type="button"
+                >
+                  전체
+                </button>
+              )}
               <button
-                className={`${styles.filter_tab} ${filterType === 'all' ? styles.active : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('전체 버튼 클릭됨 - 현재 filterType:', filterType);
-                  if (filterType !== 'all') {
-                    setFilterType('all');
-                    console.log('전체 필터로 변경');
-                  } else {
-                    console.log('이미 전체 필터 상태');
-                  }
-                }}
-                type="button"
-              >
-                전체
-              </button>
-              <button
-                className={`${styles.filter_tab} ${filterType === 'staff' ? styles.active : ''}`}
+                className={`${styles.filter_tab} ${filterType === 'external' ? styles.active : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   console.log('스탭 버튼 클릭됨 - 현재 filterType:', filterType);
-                  if (filterType !== 'staff') {
-                    setFilterType('staff');
+                  if (filterType !== 'external') {
+                    setFilterType('external');
                     console.log('스탭 필터로 변경');
                   } else {
                     console.log('이미 스탭 필터 상태');
@@ -259,23 +305,26 @@ const StaffSearchModal = ({
               >
                 <HiUser /> 스탭
               </button>
-              <button
-                className={`${styles.filter_tab} ${filterType === 'employee' ? styles.active : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('직원 버튼 클릭됨 - 현재 filterType:', filterType);
-                  if (filterType !== 'employee') {
-                    setFilterType('employee');
-                    console.log('직원 필터로 변경');
-                  } else {
-                    console.log('이미 직원 필터 상태');
-                  }
-                }}
-                type="button"
-              >
-                <HiUserGroup /> 직원
-              </button>
+              {from !== 'contact' && (
+                <button
+                  className={`${styles.filter_tab} ${filterType === 'internal' ? styles.active : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('직원 버튼 클릭됨 - 현재 filterType:', filterType);
+                    if (filterType !== 'internal') {
+                      setFilterType('internal');
+                      console.log('직원 필터로 변경');
+                    } else {
+                      console.log('이미 직원 필터 상태');
+                    }
+                  }}
+                  type="button"
+                >
+                  <HiUserGroup /> 직원
+                </button>
+              )}
+
               {showAddStaffButton && (
                 <button
                   className={`${styles.add_staff_tab}`}
@@ -336,7 +385,7 @@ const StaffSearchModal = ({
                       placeholder="소속 회사/부서"
                     />
                   </div>
-                  <div className={styles.form_group}>
+                  {/* <div className={styles.form_group}>
                     <label>경력</label>
                     <input
                       type="text"
@@ -345,7 +394,7 @@ const StaffSearchModal = ({
                       onChange={handleNewStaffChange}
                       placeholder="예: 5년, 신입 등"
                     />
-                  </div>
+                  </div> */}
                 </div>
                 <div className={styles.form_row}>
                   <div className={styles.form_group}>
@@ -370,15 +419,15 @@ const StaffSearchModal = ({
                   </div>
                 </div>
                 <div className={styles.form_actions}>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className={styles.cancel_form_button}
                     onClick={() => setShowAddForm(false)}
                   >
                     취소
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className={styles.save_form_button}
                   >
                     <HiSave /> 스탭 추가
@@ -399,7 +448,9 @@ const StaffSearchModal = ({
                       {person.name.charAt(0)}
                     </div>
                     <span className={styles.selected_name}>{person.name}</span>
-                    <span className={styles.selected_position}>({person.position})</span>
+                    <span className={styles.selected_position}>
+                      ({person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'})
+                    </span>
                     {person.isExternal && <span className={styles.external_badge}>외부</span>}
                     <button
                       className={styles.remove_selected}
@@ -434,8 +485,8 @@ const StaffSearchModal = ({
                       <div className={styles.person_main}>
                         <span className={styles.person_name}>{person.name}</span>
                         <div className={styles.person_badges}>
-                          <span className={`${styles.person_type} ${styles[person.type]}`}>
-                            {person.type === 'staff' ? '스탭' : '직원'}
+                          <span className={`${styles.person_type} ${styles[person.userType]}`}>
+                            {person.userType === 'external' ? '스탭' : '직원'}
                           </span>
                           {person.isExternal && (
                             <span className={styles.external_badge}>외부</span>
@@ -443,8 +494,12 @@ const StaffSearchModal = ({
                         </div>
                       </div>
                       <div className={styles.person_details}>
-                        <span className={styles.person_position}>{person.position}</span>
-                        <span className={styles.person_department}>{person.department}</span>
+                        <span className={styles.person_position}>
+                          {person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'}
+                        </span>
+                        <span className={styles.person_department}>
+                          {person.department || '부서 없음'}
+                        </span>
                         {person.phone && (
                           <span className={styles.person_phone}>{person.phone}</span>
                         )}
@@ -469,8 +524,8 @@ const StaffSearchModal = ({
           <button className={styles.cancel_button} onClick={handleClose}>
             취소
           </button>
-          <button 
-            className={styles.confirm_button} 
+          <button
+            className={styles.confirm_button}
             onClick={handleConfirm}
             disabled={localSelected.length === 0}
           >

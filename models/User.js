@@ -36,6 +36,12 @@ const userSchema = new Schema({
         type: Array,
         default: [],
     },
+    department: {
+        type: String,
+    },
+    experience: {
+        type: String,
+    },
     avatar: {
         type: String,
         default: '',

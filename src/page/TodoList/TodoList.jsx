@@ -481,7 +481,7 @@ const TodoList = () => {
                         </button>
                         
                         {/* 공유 버튼 - 프로젝트가 선택된 경우에만 활성화 */}
-                        <button 
+                        {/* <button 
                             type="button" 
                             className={`${ss.shareButton} ${!selectedProject ? ss.disabled : ''}`}
                             onClick={handleShareTodo}
@@ -489,7 +489,7 @@ const TodoList = () => {
                         >
                             <FaShare />
                             <span className={ss.shareButtonText}>공유</span>
-                        </button>
+                        </button> */}
                     </div>
                 </div>
                 

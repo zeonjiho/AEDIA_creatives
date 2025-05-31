@@ -69,13 +69,13 @@ app.get('/get-user-list', async (req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
-            const userList = await User.find({}).select('-password');
+            const userList = await User.find({ status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
         } else if (userType === 'internal') {
-            const userList = await User.find({ userType: 'internal' }).select('-password');
+            const userList = await User.find({ userType: 'internal', status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
         } else if (userType === 'external') {
-            const userList = await User.find({ userType: 'external' }).select('-password');
+            const userList = await User.find({ userType: 'external', status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
         }
     } catch (err) {
@@ -1133,6 +1133,53 @@ app.get('/rooms/:roomId/reservations', async (req, res) => {
         res.status(500).json({ message: '예약 목록 조회 실패' });
     }
 });
+
+// 스태프 추가 API
+app.post('/add-staff', async (req, res) => {
+    const { name, email, phone, roles, department } = req.body;
+    try {
+        const newStaff = new User({
+            name,
+            email,
+            phone,
+            roles,
+            department,
+            userType: 'external'
+        });
+        await newStaff.save();
+        res.status(200).json({ message: '스태프 추가 성공', staff: newStaff });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: '스태프 추가 실패' });
+    }
+})
+
+app.post('/modify-staff', async (req, res) => {
+    const { staffId, name, email, phone, roles, department } = req.body;
+    try {
+        const updatedStaff = await User.findByIdAndUpdate(staffId, { name, email, phone, roles, department }, { new: true });
+        res.status(200).json({ message: '스태프 수정 성공', staff: updatedStaff });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: '스태프 수정 실패' });
+    }
+})
+
+app.post('/delete-staff', async (req, res) => {
+    const { staffId } = req.body;
+    try {
+        const user = await User.findById(staffId);
+        if (!user) {
+            return res.status(404).json({ message: '스태프를 찾을 수 없습니다.' });
+        }
+        user.status = 'deleted';
+        await user.save();
+        res.status(200).json({ message: '스태프 삭제 성공' });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: '스태프 삭제 실패' });
+    }
+})
 
 // // TEST API
 // const devTest_slack = async () => {
