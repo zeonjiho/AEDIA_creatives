@@ -82,6 +82,11 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    // signupStep 상태 변경 추적
+    useEffect(() => {
+        console.log('signupStep 상태 변경됨:', signupStep);
+    }, [signupStep]);
+
     // 전화번호 포맷팅 함수
     const formatPhoneNumber = (value) => {
         // 숫자만 추출
@@ -264,6 +269,7 @@ const Login = () => {
 
     // OTP 검증 및 다음 단계
     const handleOtpSubmit = (e) => {
+        console.log('handleOtpSubmit 호출됨, OTP 길이:', otpCode.length);
         e.preventDefault();
         
         if (otpCode.length !== 6) {
@@ -273,6 +279,7 @@ const Login = () => {
         
         // 실제로는 서버에서 OTP 검증
         // 임시로 모든 6자리 숫자를 허용
+        console.log('OTP 검증 완료, 3단계로 이동');
         setSignupStep(3);
         setShowOtpInput(false);
         setOtpCode('');
@@ -308,10 +315,33 @@ const Login = () => {
     };
 
     // 이전 단계로 이동
-    const goToPreviousStep = () => {
-        if (signupStep > 1) {
-            setSignupStep(signupStep - 1);
+    const goToPreviousStep = (e) => {
+        console.log('goToPreviousStep 호출됨, 현재 단계:', signupStep);
+        
+        // 이벤트 전파 방지
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+        
+        // OTP 관련 상태 초기화
+        if (signupStep === 2) {
+            console.log('OTP 상태 초기화 중...');
+            setShowOtpInput(false);
+            setOtpCode('');
+            setOtpDigits(['', '', '', '', '', '']);
+        }
+        
+        // 단계 감소
+        if (signupStep === 2) {
+            console.log('2단계에서 1단계로 이동 시도');
+            setSignupStep(1);
+        } else if (signupStep === 3) {
+            console.log('3단계에서 2단계로 이동 시도');
+            setSignupStep(2);
+        }
+        
+        console.log('이전 단계로 이동 완료');
     };
 
     // 회원가입 처리
@@ -354,6 +384,10 @@ const Login = () => {
         setIsSignupMode(true);
         setSignupStep(1);
         setRegistrationComplete(false);
+        // OTP 관련 상태 초기화
+        setShowOtpInput(false);
+        setOtpCode('');
+        setOtpDigits(['', '', '', '', '', '']);
     };
 
     const switchToLogin = () => {
@@ -364,6 +398,10 @@ const Login = () => {
         setOtherPosition('');
         setShowPassword(false);
         setShowConfirmPassword(false);
+        // OTP 관련 상태 초기화
+        setShowOtpInput(false);
+        setOtpCode('');
+        setOtpDigits(['', '', '', '', '', '']);
         // 회원가입 데이터 초기화
         setSignupData({
             name: '',
