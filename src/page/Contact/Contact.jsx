@@ -160,7 +160,8 @@ const Contact = () => {
         name: editingData.name.trim(),
         email: editingData.email || '',
         phone: editingData.phone || '',
-        roles: roles
+        roles: roles,
+        department: editingData.department || ''
       };
 
       const response = await api.post('/modify-staff', updateData);
@@ -241,7 +242,7 @@ const Contact = () => {
   // 편집 가능한 필드 확인 (외부스탭만 편집 가능)
   const getEditableFields = (type) => {
     if (type === 'external') {
-      return ['roles', 'phone', 'email'];
+      return ['name', 'roles', 'department', 'phone', 'email'];
     } else {
       return []; // 내부직원은 편집 불가
     }
@@ -347,7 +348,17 @@ const Contact = () => {
                   {person.name.charAt(0)}
                 </div>
                 <div className={styles.person_basic}>
-                  <h3 className={styles.person_name}>{person.name}</h3>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editingData.name || ''}
+                      onChange={(e) => handleEditChange('name', e.target.value)}
+                      className={styles.edit_input}
+                      placeholder="이름을 입력하세요"
+                    />
+                  ) : (
+                    <h3 className={styles.person_name}>{person.name}</h3>
+                  )}
                   <span className={`${styles.person_type} ${getTypeClass(person.userType)}`}>
                     {getTypeText(person.userType)}
                   </span>
@@ -454,7 +465,17 @@ const Contact = () => {
                         {person.name.charAt(0)}
                       </div>
                       <div className={styles.list_name_section}>
-                        <span className={styles.list_person_name}>{person.name}</span>
+                        {isEditing && editableFields.includes('name') ? (
+                          <input
+                            type="text"
+                            value={editingData.name || ''}
+                            onChange={(e) => handleEditChange('name', e.target.value)}
+                            className={styles.list_edit_input}
+                            placeholder="이름 입력"
+                          />
+                        ) : (
+                          <span className={styles.list_person_name}>{person.name}</span>
+                        )}
                         <span className={`${styles.list_person_type} ${getTypeClass(person.userType)}`}>
                           {getTypeText(person.userType)}
                         </span>
