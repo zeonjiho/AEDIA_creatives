@@ -88,17 +88,17 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
                         {selectedRoom && (
                             <div className={styles.room_preview}>
                                 <div className={styles.room_preview_content}>
-                                    <h3>{selectedRoom.name}</h3>
+                                    <h3>{selectedRoom.roomName}</h3>
                                     <div className={styles.room_preview_info}>
                                         <span>
                                             <HiOfficeBuilding size={16} />
                                             {selectedRoom.location}
                                         </span>
-                                        {selectedRoom.facilities && (
+                                        {selectedRoom.tools && selectedRoom.tools.length > 0 && (
                                             <div className={styles.room_facilities}>
-                                                {selectedRoom.facilities.map((facility, index) => (
+                                                {selectedRoom.tools.map((tool, index) => (
                                                     <span key={index} className={styles.facility_tag}>
-                                                        {facility}
+                                                        {tool}
                                                     </span>
                                                 ))}
                                             </div>
