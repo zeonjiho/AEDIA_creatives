@@ -23,12 +23,7 @@ const tokenSecretKey = 'temp_key';
 const User = require('./models/User')
 const Todo = require('./models/Todo')
 const Calendar = require('./models/Calendar')
-// const Category = require('./models/Category')
-// const Review = require('./models/Review')
-// const Product = require('./models/Product')
-// const Order = require('./models/Order')
-// const MainBanner = require('./models/MainBanner')
-// const FreeDesign = require('./models/FreeDesign')
+const Room = require('./models/Room')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -669,7 +664,103 @@ app.get('/dashboard/layout', async (req, res) => {
     }
 });
 
+// 회의실 관리 관련 API
 
+// 회의실 목록 조회
+app.get('/rooms', async (req, res) => {
+    try {
+        const rooms = await Room.find({})
+            .populate('reservations.participants.userId', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(rooms);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '회의실 목록 조회 실패' });
+    }
+});
+
+// 회의실 추가
+app.post('/rooms', async (req, res) => {
+    const { roomName, location, tools } = req.body;
+
+    try {
+        const newRoom = new Room({
+            roomName,
+            location: location || '',
+            tools: tools || [],
+            reservations: []
+        });
+
+        await newRoom.save();
+
+        // populate해서 응답
+        const populatedRoom = await Room.findById(newRoom._id)
+            .populate('reservations.participants.userId', 'name email');
+
+        res.status(201).json(populatedRoom);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '회의실 추가 실패' });
+    }
+});
+
+// 회의실 수정
+app.post('/rooms/:id/update', async (req, res) => {
+    const { id } = req.params;
+    const { roomName, location, tools } = req.body;
+
+    try {
+        const room = await Room.findById(id);
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        const updatedRoom = await Room.findByIdAndUpdate(
+            id,
+            {
+                roomName,
+                location: location || '',
+                tools: tools || []
+            },
+            { new: true }
+        ).populate('reservations.participants.userId', 'name email');
+
+        res.status(200).json(updatedRoom);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '회의실 수정 실패' });
+    }
+});
+
+// 회의실 삭제
+app.post('/rooms/:id/delete', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const room = await Room.findById(id);
+        if (!room) {
+            return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
+        }
+
+        // 예약이 있는지 확인
+        const activeReservations = room.reservations.filter(
+            reservation => reservation.status === '예약됨'
+        );
+
+        if (activeReservations.length > 0) {
+            return res.status(400).json({ 
+                message: '예약이 있는 회의실은 삭제할 수 없습니다. 먼저 예약을 취소해주세요.' 
+            });
+        }
+
+        await Room.findByIdAndDelete(id);
+        res.status(200).json({ message: '회의실이 삭제되었습니다.' });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '회의실 삭제 실패' });
+    }
+});
 
 
 
