@@ -36,13 +36,10 @@ const RoomReservation = () => {
         project: '',
         description: ''
     })
-    const [searchTerm, setSearchTerm] = useState('')
-    const [filterFacility, setFilterFacility] = useState('')
     const [statusMessage, setStatusMessage] = useState('')
     const [messageType, setMessageType] = useState('') // 'success' 또는 'error'
     const [projectsList, setProjectsList] = useState([])
     const [projectSearchTerm, setProjectSearchTerm] = useState('')
-    const [showFilters, setShowFilters] = useState(false)
     const [editingRoomDetails, setEditingRoomDetails] = useState(false)
     const [currentTime, setCurrentTime] = useState(new Date())
     const [loading, setLoading] = useState(true)
@@ -171,19 +168,8 @@ const RoomReservation = () => {
         return () => clearInterval(timer)
     }, [])
     
-    // 필터링된 회의실 목록
-    const filteredRooms = rooms.filter(room => {
-        // 검색어 필터링
-        const matchesSearch = searchTerm === '' || 
-            room.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            room.location.toLowerCase().includes(searchTerm.toLowerCase())
-        
-        // 시설 필터링
-        const matchesFacility = filterFacility === '' || 
-            (room.tools && room.tools.some(tool => tool.toLowerCase().includes(filterFacility.toLowerCase())))
-        
-        return matchesSearch && matchesFacility
-    })
+    // 필터링된 회의실 목록 - 필터 제거로 모든 회의실 반환
+    const filteredRooms = rooms
     
     // 날짜 관련 함수들
     const formatDate = (date) => {
@@ -638,41 +624,6 @@ const RoomReservation = () => {
                 </div>
             )}
 
-            <button 
-                className={styles.filter_toggle} 
-                onClick={() => setShowFilters(!showFilters)}
-            >
-                <HiFilter />
-                필터
-            </button>
-
-            {showFilters && (
-                <div className={styles.filters_panel}>
-                    <div className={styles.search_box}>
-                        <HiSearch className={styles.search_icon} />
-                        <input
-                            type="text"
-                            placeholder="회의실 이름 또는 위치 검색"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-
-                    <div className={styles.filter_group}>
-                        <label>시설:</label>
-                        <select
-                            value={filterFacility}
-                            onChange={(e) => setFilterFacility(e.target.value)}
-                        >
-                            <option value="">모든 시설</option>
-                            <option value="프로젝터">프로젝터</option>
-                            <option value="TV">TV</option>
-                            <option value="화이트보드">화이트보드</option>
-                        </select>
-                    </div>
-                </div>
-            )}
-
             <div className={styles.content_grid}>
                 <div className={styles.rooms_card}>
                     <div className={styles.card_header}>
@@ -704,11 +655,6 @@ const RoomReservation = () => {
                             <div className={styles.no_rooms}>
                                 <HiOfficeBuilding />
                                 <p>등록된 회의실이 없습니다.</p>
-                            </div>
-                        ) : filteredRooms.length === 0 ? (
-                            <div className={styles.no_rooms}>
-                                <HiOfficeBuilding />
-                                <p>검색 조건에 맞는 회의실이 없습니다.</p>
                             </div>
                         ) : (
                             filteredRooms.map((room) => (

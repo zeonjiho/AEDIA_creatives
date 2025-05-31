@@ -39,11 +39,12 @@ const Receipts = () => {
     category: '',
     paymentMethod: 'CORPORATE_CARD',
     status: 'PENDING',
-    attachmentUrl: null,
+    attachmentUrls: [], // 배열로 변경
     type: 'OTHER',
     description: '',
-    userId: currentUser.id,
-    projectId: null
+    project: '',
+    projectId: null,
+    userId: currentUser.id
   });
 
   // 화면 크기 변경 감지
@@ -109,11 +110,12 @@ const Receipts = () => {
       category: '',
       paymentMethod: 'CORPORATE_CARD',
       status: 'PENDING',
-      attachmentUrl: null,
+      attachmentUrls: [],
       type: activeTab === 'all' ? 'OTHER' : activeTab,
       description: '',
-      userId: currentUser.id,
-      projectId: null
+      project: '',
+      projectId: null,
+      userId: currentUser.id
     });
     setIsModalOpen(true);
   };
@@ -318,6 +320,7 @@ const Receipts = () => {
                 <>
                   <th>카테고리</th>
                   <th>결제방법</th>
+                  <th>프로젝트</th>
                 </>
               )}
               <th>상태</th>
@@ -338,6 +341,15 @@ const Receipts = () => {
                     <>
                       <td>{getCategoryName(receipt.category)}</td>
                       <td>{getPaymentMethodName(receipt.paymentMethod)}</td>
+                      <td className={styles.project_cell}>
+                        {receipt.project ? (
+                          <span className={styles.project_tag}>
+                            {receipt.project}
+                          </span>
+                        ) : (
+                          <span className={styles.no_project}>-</span>
+                        )}
+                      </td>
                     </>
                   )}
                   <td>
@@ -349,7 +361,7 @@ const Receipts = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={isMobile ? "3" : "6"} className={styles.no_data}>
+                <td colSpan={isMobile ? "3" : "7"} className={styles.no_data}>
                   검색 결과가 없습니다.
                 </td>
               </tr>
@@ -401,6 +413,18 @@ const Receipts = () => {
                     {getStatusName(selectedReceipt.status)}
                   </span>
                 </div>
+                <div className={styles.info_row}>
+                  <span>프로젝트:</span>
+                  <span>
+                    {selectedReceipt.project ? (
+                      <span className={styles.project_tag_modal}>
+                        {selectedReceipt.project}
+                      </span>
+                    ) : (
+                      <span className={styles.no_project_modal}>선택되지 않음</span>
+                    )}
+                  </span>
+                </div>
                 {selectedReceipt.description && (
                   <div className={styles.info_description}>
                     <span>메모:</span>
@@ -421,7 +445,7 @@ const Receipts = () => {
                 >
                   <FaTrash /> 삭제
                 </button>
-                {selectedReceipt.attachmentUrl && (
+                {selectedReceipt.attachmentUrls.length > 0 && (
                   <button className={styles.download_button}>
                     <FaFileDownload /> 첨부파일 다운로드
                   </button>

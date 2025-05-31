@@ -10,12 +10,55 @@ const ReceiptModal = ({
   formData, 
   handleInputChange, 
   handleSubmit, 
-  modalMode 
+  modalMode,
+  editingReceipt
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [ocrError, setOcrError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+
+  // 편집 모드일 때 기존 데이터로 폼 초기화
+  React.useEffect(() => {
+    if (modalMode === 'edit' && editingReceipt && isOpen) {
+      // 각 필드별로 기존 데이터를 폼에 설정
+      const fieldsToUpdate = [
+        'date', 'title', 'amount', 'category', 'type', 
+        'paymentMethod', 'description', 'status'
+      ];
+      
+      fieldsToUpdate.forEach(field => {
+        if (editingReceipt[field] !== undefined) {
+          const fakeEvent = {
+            target: {
+              name: field,
+              value: editingReceipt[field]
+            }
+          };
+          handleInputChange(fakeEvent);
+        }
+      });
+
+      // 기존 첨부파일이 있으면 미리보기 설정
+      if (editingReceipt.attachment) {
+        setPreviewUrl(editingReceipt.attachment);
+      }
+    }
+  }, [modalMode, editingReceipt, isOpen, handleInputChange]);
+
+  // 모달이 닫힐 때 상태 초기화
+  React.useEffect(() => {
+    if (!isOpen) {
+      setOcrError(null);
+      setFormErrors({});
+      setIsProcessing(false);
+      if (previewUrl && modalMode === 'add') {
+        // 추가 모드일 때만 미리보기 URL 정리 (편집 모드에서는 기존 이미지일 수 있음)
+        revokeImagePreview(previewUrl);
+        setPreviewUrl(null);
+      }
+    }
+  }, [isOpen, modalMode, previewUrl]);
 
   // 파일 업로드 처리 + OCR 실행
   const handleFileChange = useCallback(async (event) => {
@@ -92,15 +135,6 @@ const ReceiptModal = ({
     handleSubmit(formData);
     onClose();
   };
-
-  // 컴포넌트 언마운트 시 리소스 정리
-  React.useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        revokeImagePreview(previewUrl);
-      }
-    };
-  }, [previewUrl]);
 
   if (!isOpen) return null;
 

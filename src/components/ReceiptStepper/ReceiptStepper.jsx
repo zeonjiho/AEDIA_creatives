@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaCamera, FaFileUpload, FaKeyboard, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCamera, FaFileUpload, FaKeyboard, FaCheck, FaExclamationTriangle, FaTrash } from 'react-icons/fa';
+import { HiBookmark } from 'react-icons/hi';
 import StepperModal from '../StepperModal/StepperModal';
+import ProjectSelectModal from '../ProjectSelectModal/ProjectSelectModal';
 import styles from './ReceiptStepper.module.css';
-import { receiptCategories, receiptTypes, receiptStatuses, paymentMethods } from '../../data/mockDatabase';
+import { receiptCategories, receiptTypes, receiptStatuses, paymentMethods, projects } from '../../data/mockDatabase';
 import { takePicture, extractReceiptData, createImagePreview, revokeImagePreview, terminateWorker } from '../../utils/ocrUtils';
 
 /**
@@ -17,7 +19,7 @@ import { takePicture, extractReceiptData, createImagePreview, revokeImagePreview
  */
 const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData = {} }) => {
   // 상태 관리
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(mode === 'edit' ? 2 : 1); // 편집 모드일 때는 바로 2단계로
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     title: '',
@@ -26,13 +28,15 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     paymentMethod: 'CORPORATE_CARD',
     status: 'PENDING',
     type: 'OTHER',
-    attachmentUrl: null,
+    attachmentUrls: [], // 배열로 변경
     description: '',
+    project: '',
+    projectId: null,
     ...initialData
   });
   
-  const [receiptImage, setReceiptImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [receiptImages, setReceiptImages] = useState([]); // 배열로 변경
+  const [imagePreviews, setImagePreviews] = useState([]); // 배열로 변경
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
@@ -40,17 +44,74 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   // 처리 상태 메시지를 위한 상태 추가
   const [processingStatus, setProcessingStatus] = useState('');
   
+  // 프로젝트 선택 모달 관련 상태
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  
   const totalSteps = 4;
+  
+  // 편집 모드일 때 초기 데이터 로드
+  useEffect(() => {
+    if (mode === 'edit' && initialData && Object.keys(initialData).length > 0) {
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        title: '',
+        amount: '',
+        category: '',
+        paymentMethod: 'CORPORATE_CARD',
+        status: 'PENDING',
+        type: 'OTHER',
+        attachmentUrls: [],
+        description: '',
+        project: '',
+        projectId: null,
+        ...initialData,
+        // amount는 문자열로 변환
+        amount: initialData.amount ? initialData.amount.toString() : ''
+      });
+      setCurrentStep(2); // 편집 모드에서는 폼 입력 단계부터 시작
+      
+      // 기존 프로젝트 설정
+      if (initialData.project) {
+        setSelectedProject(initialData.project);
+      }
+      
+      // 기존 첨부 이미지가 있으면 미리보기 설정
+      if (initialData.attachmentUrls && initialData.attachmentUrls.length > 0) {
+        setImagePreviews(initialData.attachmentUrls);
+      }
+    } else if (mode === 'add') {
+      // 추가 모드일 때는 초기값으로 설정
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        title: '',
+        amount: '',
+        category: '',
+        paymentMethod: 'CORPORATE_CARD',
+        status: 'PENDING',
+        type: 'OTHER',
+        attachmentUrls: [],
+        description: '',
+        project: '',
+        projectId: null
+      });
+      setCurrentStep(1); // 이미지 업로드 단계부터 시작
+      setSelectedProject(null); // 프로젝트 선택 초기화
+    }
+  }, [mode, initialData, isOpen]);
   
   // 모달이 닫힐 때 상태 초기화
   useEffect(() => {
     if (!isOpen) {
-      setCurrentStep(1);
-      if (imagePreview) {
-        revokeImagePreview(imagePreview);
+      setCurrentStep(mode === 'edit' ? 2 : 1);
+      if (imagePreviews && mode === 'add') {
+        // 추가 모드일 때만 이미지 미리보기 정리 (편집 모드에서는 기존 이미지일 수 있음)
+        revokeImagePreview(imagePreviews[0]);
       }
-      setImagePreview(null);
-      setReceiptImage(null);
+      if (mode === 'add') {
+        setImagePreviews([]);
+        setReceiptImages([]);
+      }
       setIsProcessing(false);
       setProcessingError(null);
       setProcessingStatus('');
@@ -59,18 +120,81 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       // Tesseract 워커 정리
       terminateWorker().catch(e => console.error('워커 정리 실패:', e));
     }
-  }, [isOpen]);
+  }, [isOpen, mode]);
   
   // 파일 변경 처리
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      setReceiptImage(file);
-      const preview = createImagePreview(file);
-      setImagePreview(preview);
+      // 기존 이미지에 추가
+      const newImage = file;
+      const newPreview = createImagePreview(file);
       
-      // OCR 처리
-      handleOcrProcessing(file);
+      setReceiptImages(prev => [...prev, newImage]);
+      setImagePreviews(prev => [...prev, newPreview]);
+      
+      // OCR 처리 (첫 번째 이미지가 없었을 때만)
+      if (receiptImages.length === 0) {
+        handleOcrProcessing(file);
+      }
+    }
+    
+    // 파일 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+    event.target.value = '';
+  };
+  
+  // 개별 이미지 제거
+  const handleRemoveImage = (index) => {
+    if (mode === 'add' && imagePreviews[index]) {
+      revokeImagePreview(imagePreviews[index]);
+    }
+    
+    setReceiptImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    
+    if (index === 0) {
+      setProcessingError(null);
+    }
+  };
+  
+  // 모든 이미지 제거
+  const handleRemoveAllImages = () => {
+    if (mode === 'add') {
+      imagePreviews.forEach(preview => {
+        revokeImagePreview(preview);
+      });
+    }
+    setImagePreviews([]);
+    setReceiptImages([]);
+    setProcessingError(null);
+  };
+  
+  // 프로젝트 선택 모달 열기
+  const handleOpenProjectModal = () => {
+    setIsProjectModalOpen(true);
+  };
+  
+  // 프로젝트 선택 모달 닫기
+  const handleCloseProjectModal = () => {
+    setIsProjectModalOpen(false);
+  };
+  
+  // 프로젝트 선택 처리
+  const handleProjectSelect = (project) => {
+    if (project) {
+      setSelectedProject(project.title);
+      setFormData(prev => ({
+        ...prev,
+        project: project.title,
+        projectId: project.id
+      }));
+    } else {
+      setSelectedProject(null);
+      setFormData(prev => ({
+        ...prev,
+        project: '',
+        projectId: null
+      }));
     }
   };
   
@@ -79,12 +203,15 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     try {
       const file = await takePicture();
       if (file) {
-        setReceiptImage(file);
-        const preview = createImagePreview(file);
-        setImagePreview(preview);
+        const newPreview = createImagePreview(file);
         
-        // OCR 처리
-        handleOcrProcessing(file);
+        setReceiptImages(prev => [...prev, file]);
+        setImagePreviews(prev => [...prev, newPreview]);
+        
+        // OCR 처리 (첫 번째 이미지가 없었을 때만)
+        if (receiptImages.length === 0) {
+          handleOcrProcessing(file);
+        }
       }
     } catch (error) {
       setProcessingError(error.message);
@@ -219,7 +346,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 이전 단계 이동
   const handlePrevStep = () => {
-    if (currentStep > 1) {
+    const minStep = mode === 'edit' ? 2 : 1; // 편집 모드에서는 2단계가 최소
+    if (currentStep > minStep) {
       setCurrentStep(prev => prev - 1);
     }
   };
@@ -236,7 +364,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     const submittedData = {
       ...formData,
       amount: parseInt(formData.amount, 10) || 0,
-      attachmentUrl: imagePreview
+      attachmentUrls: imagePreviews
     };
     
     onSubmit(submittedData);
@@ -280,10 +408,10 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
               </div>
             ) : (
               <>
-                {imagePreview ? (
+                {imagePreviews.length > 0 ? (
                   <div className={styles.preview_container}>
                     <img 
-                      src={imagePreview} 
+                      src={imagePreviews[0]} 
                       alt="Receipt preview" 
                       className={styles.image_preview} 
                     />
@@ -292,9 +420,9 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                         type="button" 
                         className={styles.action_button}
                         onClick={() => {
-                          revokeImagePreview(imagePreview);
-                          setImagePreview(null);
-                          setReceiptImage(null);
+                          revokeImagePreview(imagePreviews[0]);
+                          setImagePreviews([]);
+                          setReceiptImages([]);
                           setProcessingError(null);
                         }}
                       >
@@ -305,7 +433,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                         <button
                           type="button"
                           className={styles.retry_button}
-                          onClick={() => handleOcrProcessing(receiptImage)}
+                          onClick={() => handleOcrProcessing(receiptImages[0])}
                         >
                           인식 재시도
                         </button>
@@ -360,6 +488,104 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
         return (
           <div className={styles.step_content}>
             <h3 className={styles.step_title}>영수증 정보 입력</h3>
+            
+            {/* 이미지 관리 섹션 */}
+            <div className={styles.image_management_section}>
+              <div className={styles.section_header}>
+                <h4 className={styles.section_title}>영수증 이미지</h4>
+                {imagePreviews.length > 0 && (
+                  <div className={styles.section_actions}>
+                    <span className={styles.image_count}>
+                      {imagePreviews.length}개 이미지
+                    </span>
+                    <button 
+                      type="button" 
+                      className={styles.remove_all_btn}
+                      onClick={handleRemoveAllImages}
+                      title="모든 이미지 제거"
+                    >
+                      <FaTrash /> 전체 삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {imagePreviews.length > 0 ? (
+                <div className={styles.images_grid}>
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className={styles.image_item}>
+                      <div className={styles.image_preview_wrapper}>
+                        <img 
+                          src={preview} 
+                          alt={`영수증 이미지 ${index + 1}`} 
+                          className={styles.current_image_preview} 
+                        />
+                        <button 
+                          type="button" 
+                          className={styles.remove_single_btn}
+                          onClick={() => handleRemoveImage(index)}
+                          title="이미지 제거"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                      <p className={styles.image_number}>이미지 {index + 1}</p>
+                    </div>
+                  ))}
+                  
+                  {/* 이미지 추가 카드 */}
+                  <div className={styles.add_image_card}>
+                    <label className={styles.add_image_btn} htmlFor="add-more-images">
+                      <FaFileUpload size={24} />
+                      <span>이미지 추가</span>
+                    </label>
+                    <input
+                      type="file"
+                      id="add-more-images"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className={styles.file_input}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.no_image_container}>
+                  <div className={styles.upload_placeholder}>
+                    <FaFileUpload size={30} className={styles.upload_icon} />
+                    <p>영수증 이미지가 없습니다</p>
+                    <label className={styles.upload_image_btn} htmlFor="add-receipt-file">
+                      첫 번째 이미지 업로드
+                    </label>
+                    <input
+                      type="file"
+                      id="add-receipt-file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className={styles.file_input}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                  <p className={styles.image_note}>
+                    💡 이미지를 업로드하면 금액과 날짜가 자동으로 인식됩니다
+                  </p>
+                </div>
+              )}
+              
+              {/* OCR 처리 상태 표시 */}
+              {isProcessing && (
+                <div className={styles.processing_indicator}>
+                  <div className={styles.spinner}></div>
+                  <span>{processingStatus || '이미지 처리 중...'}</span>
+                </div>
+              )}
+              
+              {processingError && (
+                <div className={styles.error_message}>
+                  <FaExclamationTriangle /> {processingError}
+                </div>
+              )}
+            </div>
             
             <form className={styles.form}>
               <div className={styles.form_grid}>
@@ -463,6 +689,39 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                       ))}
                     </select>
                   </div>
+                  <div className={styles.form_group}>
+                    <label htmlFor="project">프로젝트</label>
+                    <div className={styles.project_select_wrapper}>
+                      <div className={styles.project_display}>
+                        {selectedProject ? (
+                          <div className={styles.selected_project}>
+                            <HiBookmark className={styles.project_icon} />
+                            <span>{selectedProject}</span>
+                            <button
+                              type="button"
+                              className={styles.clear_project_btn}
+                              onClick={() => handleProjectSelect(null)}
+                              title="프로젝트 선택 해제"
+                            >
+                              <FaTrash size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className={styles.no_project}>
+                            프로젝트가 선택되지 않았습니다
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.select_project_btn}
+                        onClick={handleOpenProjectModal}
+                      >
+                        <HiBookmark />
+                        프로젝트 선택
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -500,14 +759,21 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
             <h3 className={styles.step_title}>정보 확인</h3>
             
             <div className={styles.preview_container}>
-              {imagePreview && (
+              {imagePreviews.length > 0 && (
                 <div className={styles.receipt_preview}>
-                  <h4>영수증 이미지</h4>
-                  <img 
-                    src={imagePreview} 
-                    alt="Receipt" 
-                    className={styles.receipt_image} 
-                  />
+                  <h4>영수증 이미지 ({imagePreviews.length}개)</h4>
+                  <div className={styles.receipt_images_grid}>
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className={styles.receipt_image_item}>
+                        <img 
+                          src={preview} 
+                          alt={`영수증 ${index + 1}`} 
+                          className={styles.receipt_image} 
+                        />
+                        <p className={styles.receipt_image_label}>이미지 {index + 1}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               
@@ -537,6 +803,11 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                   <div className={styles.info_item}>
                     <strong>결제 방법:</strong> {
                       paymentMethods.find(m => m.id === formData.paymentMethod)?.name || '선택되지 않음'
+                    }
+                  </div>
+                  <div className={styles.info_item}>
+                    <strong>프로젝트:</strong> {
+                      selectedProject || '선택되지 않음'
                     }
                   </div>
                 </div>
@@ -582,24 +853,28 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
 
   // 단계별 버튼 및 액션 설정
   const getStepActions = () => {
+    const minStep = mode === 'edit' ? 2 : 1;
+    
     switch (currentStep) {
       case 1:
         return {
           showPrevButton: false,
-          showNextButton: !!imagePreview,
+          showNextButton: !!imagePreviews.length,
           nextButtonText: '계속',
         };
         
       case 2:
         return {
+          showPrevButton: currentStep > minStep, // 편집 모드에서는 2단계에서 이전 버튼 숨김
           prevButtonText: '이전',
           nextButtonText: '계속',
         };
         
       case 3:
         return {
+          showPrevButton: true,
           prevButtonText: '수정',
-          nextButtonText: '제출',
+          nextButtonText: mode === 'add' ? '추가' : '저장',
           onNextStep: handleSubmit,
         };
         
@@ -615,21 +890,32 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   };
 
   return (
-    <StepperModal
-      isOpen={isOpen}
-      onClose={handleCloseConfirm}
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onPrevStep={handlePrevStep}
-      onNextStep={getStepActions().onNextStep || handleNextStep}
-      title={mode === 'add' ? 'Add Receipt' : 'Edit Receipt'}
-      showPrevButton={getStepActions().showPrevButton !== false}
-      showNextButton={getStepActions().showNextButton !== false}
-      prevButtonText={getStepActions().prevButtonText || 'Previous'}
-      nextButtonText={getStepActions().nextButtonText || 'Next'}
-    >
-      {renderStepContent()}
-    </StepperModal>
+    <>
+      <StepperModal
+        isOpen={isOpen}
+        onClose={handleCloseConfirm}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onPrevStep={handlePrevStep}
+        onNextStep={getStepActions().onNextStep || handleNextStep}
+        title={mode === 'add' ? '영수증 추가' : '영수증 편집'}
+        showPrevButton={getStepActions().showPrevButton !== false}
+        showNextButton={getStepActions().showNextButton !== false}
+        prevButtonText={getStepActions().prevButtonText || '이전'}
+        nextButtonText={getStepActions().nextButtonText || '다음'}
+      >
+        {renderStepContent()}
+      </StepperModal>
+      
+      {/* 프로젝트 선택 모달 */}
+      <ProjectSelectModal
+        isOpen={isProjectModalOpen}
+        projects={projects}
+        selectedProject={selectedProject}
+        onSelect={handleProjectSelect}
+        onClose={handleCloseProjectModal}
+      />
+    </>
   );
 };
 

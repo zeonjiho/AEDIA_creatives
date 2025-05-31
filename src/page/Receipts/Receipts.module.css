@@ -291,8 +291,9 @@
 
 .no_data {
     text-align: center;
+    padding: 40px;
     color: var(--text-secondary);
-    padding: 40px 0;
+    font-style: italic;
 }
 
 
@@ -765,194 +766,280 @@
 }
 
 
-/* 반응형 스타일 */
+/* 모바일 반응형 스타일 */
 
 @media (max-width: 768px) {
-    .receipts_header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+    .receipts_container {
+        padding: 16px;
     }
-    .actions {
-        width: 100%;
+    .dashboard_header {
         flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .header_content {
+        text-align: center;
+    }
+    .dashboard_title {
+        font-size: 24px;
+    }
+    .dashboard_date {
+        font-size: 13px;
+    }
+    .header_controls {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
     }
     .search_container {
         width: 100%;
+        order: 1;
     }
-    .add_button {
+    .customize_btn {
         width: 100%;
         justify-content: center;
+        padding: 12px 16px;
+        order: 2;
     }
     .tabs_container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        flex-direction: column;
         gap: 8px;
-        width: 100%;
-        padding-bottom: 15px;
-        margin-bottom: 15px;
-        overflow-x: hidden;
+        margin-bottom: 16px;
     }
     .tab_button {
-        padding: 0 8px;
-        min-width: auto;
-        justify-content: center;
-        text-align: center;
-        height: 40px;
+        width: 100%;
+        height: 44px;
+        padding: 0 16px;
+        justify-content: flex-start;
         border-radius: 8px;
     }
     .tab_icon {
-        margin-right: 4px;
-        font-size: 1rem;
+        margin-right: 10px;
+        font-size: 1.2rem;
     }
     .tab_text {
-        font-size: 0.75rem;
+        font-size: 16px;
+        flex: 1;
+        text-align: left;
+    }
+    .tab_badge {
+        margin-left: auto;
+        margin-right: 0;
     }
     .filters {
         flex-direction: column;
         gap: 12px;
+        margin-bottom: 16px;
     }
     .filter_group {
         flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .filter_group label {
+        font-weight: 500;
     }
     .filter_select {
         width: 100%;
+        padding: 10px 12px;
     }
     .receipts_table {
-        display: table;
-        /* 테이블로 유지 */
-        width: 100%;
-        table-layout: fixed;
-        /* 테이블 넓이 고정 */
+        font-size: 14px;
     }
     .receipts_table th,
     .receipts_table td {
-        padding: 12px 8px;
-        font-size: 12px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        padding: 10px 8px;
+        vertical-align: middle;
     }
     .receipts_table th:nth-child(1),
     .receipts_table td:nth-child(1) {
-        width: 50%;
-        /* 제목 */
+        width: 40%;
     }
     .receipts_table th:nth-child(2),
     .receipts_table td:nth-child(2) {
-        width: 25%;
-        /* 금액 */
+        width: 30%;
+        text-align: right;
     }
     .receipts_table th:nth-child(3),
     .receipts_table td:nth-child(3) {
-        width: 25%;
-        /* 상태 */
+        width: 30%;
+        text-align: center;
     }
     .action_modal {
-        width: 95%;
+        margin: 20px;
+        border-radius: 16px;
+        max-height: calc(100vh - 40px);
+        width: calc(100% - 40px);
         max-width: none;
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 12px 12px 0 0;
-        max-height: 80vh;
-        overflow-y: auto;
-        animation: slideUp 0.3s ease;
     }
-    @keyframes slideUp {
-        from {
-            transform: translate(-50%, 100%);
-        }
-        to {
-            transform: translate(-50%, 0);
-        }
+    .action_modal_header {
+        padding: 16px 20px;
+    }
+    .action_modal_body {
+        padding: 0 20px 20px;
     }
     .action_modal_header h3 {
-        max-width: 250px;
+        font-size: 18px;
     }
     .action_buttons {
-        gap: 8px;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .edit_button,
+    .delete_button,
+    .download_button {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px;
     }
 }
 
 
-/* 헤더 스타일 */
+/* 더 작은 모바일 화면 */
+
+@media (max-width: 480px) {
+    .receipts_container {
+        padding: 12px;
+    }
+    .dashboard_title {
+        font-size: 20px;
+    }
+    .tabs_container {
+        gap: 6px;
+    }
+    .tab_button {
+        height: 40px;
+        padding: 0 12px;
+    }
+    .tab_text {
+        font-size: 14px;
+    }
+    .tab_icon {
+        font-size: 1rem;
+        margin-right: 8px;
+    }
+    .receipts_table th,
+    .receipts_table td {
+        padding: 8px 6px;
+        font-size: 13px;
+    }
+    .action_modal {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+}
+
+
+/* 대시보드 헤더 스타일 */
 
 .dashboard_header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-    width: 100%;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .header_content {
-    display: flex;
-    flex-direction: column;
+    flex: 1;
+    min-width: 0;
 }
 
 .dashboard_title {
-    font-size: 50px;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 10px;
     color: var(--text-primary);
-    text-align: left;
-    transition: color 0.3s ease;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-primary);
+    margin: 0;
+    margin-bottom: 4px;
+    line-height: 1.2;
 }
 
 .dashboard_date {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--text-secondary);
-    text-align: left;
-    margin-bottom: 0;
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-mono);
+    margin: 0;
+    line-height: 1.4;
 }
 
 .header_controls {
     display: flex;
+    gap: 12px;
     align-items: center;
-    gap: 10px;
+    flex-shrink: 0;
 }
 
 .customize_btn {
-    padding: 10px 20px;
-    border-radius: var(--border-radius-md);
-    background-color: transparent;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    outline: none;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
 .customize_btn:hover {
+    border-color: var(--accent-color);
     background-color: var(--bg-tertiary);
+    transform: translateY(-2px);
 }
 
 .save_btn {
     background-color: var(--accent-color);
-    color: var(--bg-secondary);
+    color: var(--text-primary-inverse);
+    border-color: var(--accent-color);
 }
 
 .save_btn:hover {
     background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+
+/* 프로젝트 관련 스타일 */
+
+.project_cell {
+    min-width: 120px;
+}
+
+.project_tag {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.project_tag_modal {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.no_project,
+.no_project_modal {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 13px;
+}
+
+.no_project_modal {
+    font-size: 14px;
 }
