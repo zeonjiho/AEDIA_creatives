@@ -25,6 +25,7 @@ const Todo = require('./models/Todo')
 const Calendar = require('./models/Calendar')
 const Room = require('./models/Room')
 const Project = require('./models/Project')
+const SlackCode = require('./models/SlackCode')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -83,6 +84,86 @@ app.get('/get-user-list', async (req, res) => {
     }
 })
 
+app.post('/slack/code', async (req, res) => {
+    const { slackId } = req.body;
+    try {
+        // 기존 코드가 있으면 삭제
+        const alreadyExists = await SlackCode.findOne({ slackId });
+        if (alreadyExists) {
+            await SlackCode.findByIdAndDelete(alreadyExists._id);
+        }
+
+        // 6자리 인증코드 생성
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        // 데이터베이스에 저장
+        const newSlackCode = new SlackCode({
+            slackId,
+            code
+        });
+        await newSlackCode.save();
+
+        try {
+            // 슬랙으로 인증코드 DM 전송
+            await slackBot.chat.postMessage({
+                channel: slackId, // 사용자 ID로 DM 전송
+                text: `🔐 AEDIA 회원가입 인증코드: ${code}\n\n이 코드를 회원가입 페이지에 입력해주세요.\n(유효시간: 10분)`
+            });
+
+            console.log(`슬랙 인증코드 전송 성공: ${slackId} -> ${code}`);
+            res.status(200).json({ message: '인증코드가 전송되었습니다.' });
+        } catch (slackError) {
+            console.error('슬랙 메시지 전송 실패:', slackError);
+            // 슬랙 전송 실패 시 생성된 코드 삭제
+            await SlackCode.findByIdAndDelete(newSlackCode._id);
+
+            if (slackError.data?.error === 'channel_not_found' || slackError.data?.error === 'user_not_found') {
+                res.status(404).json({ message: '해당 슬랙 멤버 ID를 찾을 수 없습니다.' });
+            } else {
+                res.status(500).json({ message: '슬랙 메시지 전송에 실패했습니다.' });
+            }
+        }
+    } catch (err) {
+        console.error('슬랙 코드 생성 실패:', err);
+        res.status(500).json({ message: '인증코드 생성에 실패했습니다.' });
+    }
+});
+
+app.post('/slack/code/verify', async (req, res) => {
+    const { slackId, code } = req.body;
+    try {
+        const slackCode = await SlackCode.findOne({ slackId });
+
+        if (!slackCode) {
+            return res.status(404).json({ message: '인증코드를 찾을 수 없습니다. 다시 요청해주세요.' });
+        }
+
+        // 코드 유효시간 확인 (10분)
+        const now = new Date();
+        const codeCreatedAt = new Date(slackCode.createdAt);
+        const timeDiff = (now - codeCreatedAt) / (1000 * 60); // 분 단위
+
+        if (timeDiff > 10) {
+            // 만료된 코드 삭제
+            await SlackCode.findByIdAndDelete(slackCode._id);
+            return res.status(400).json({ message: '인증코드가 만료되었습니다. 다시 요청해주세요.' });
+        }
+
+        // 코드 일치 확인
+        if (slackCode.code.toString() !== code.toString()) {
+            return res.status(400).json({ message: '인증코드가 일치하지 않습니다.' });
+        }
+
+        // 검증 성공 - 코드 삭제
+        await SlackCode.findByIdAndDelete(slackCode._id);
+
+        res.status(200).json({ message: '인증이 완료되었습니다.' });
+    } catch (err) {
+        console.error('슬랙 코드 검증 실패:', err);
+        res.status(500).json({ message: '인증코드 검증에 실패했습니다.' });
+    }
+});
+
 app.post('/signup', async (req, res) => {
     const { password, name, slackId, phone, email, position } = req.body;
     try {
@@ -94,7 +175,7 @@ app.post('/signup', async (req, res) => {
         const newUser = new User({
             password,
             name,
-            loginId: slackId,
+            slackId,
             userType: 'internal',
             phone,
             email,

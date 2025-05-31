@@ -23,7 +23,7 @@ const RoomReservation = () => {
     const [reservations, setReservations] = useState([])
     const [users, setUsers] = useState([]) // 실제 사용자 목록
     const [selectedRoom, setSelectedRoom] = useState(null)
-    const [currentDate, setCurrentDate] = useState(new Date()) // 실제 오늘 날짜로 설정
+    const [currentDate, setCurrentDate] = useState(new Date('2023-03-06')) // 2023년 3월 6일로 설정
     const [showReservationForm, setShowReservationForm] = useState(false)
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [reservationFormData, setReservationFormData] = useState({
@@ -36,10 +36,13 @@ const RoomReservation = () => {
         project: '',
         description: ''
     })
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filterFacility, setFilterFacility] = useState('')
     const [statusMessage, setStatusMessage] = useState('')
     const [messageType, setMessageType] = useState('') // 'success' 또는 'error'
     const [projectsList, setProjectsList] = useState([])
     const [projectSearchTerm, setProjectSearchTerm] = useState('')
+    const [showFilters, setShowFilters] = useState(false)
     const [editingRoomDetails, setEditingRoomDetails] = useState(false)
     const [currentTime, setCurrentTime] = useState(new Date())
     const [loading, setLoading] = useState(true)
@@ -168,8 +171,19 @@ const RoomReservation = () => {
         return () => clearInterval(timer)
     }, [])
     
-    // 필터링된 회의실 목록 - 필터 제거로 모든 회의실 반환
-    const filteredRooms = rooms
+    // 필터링된 회의실 목록
+    const filteredRooms = rooms.filter(room => {
+        // 검색어 필터링
+        const matchesSearch = searchTerm === '' || 
+            room.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            room.location.toLowerCase().includes(searchTerm.toLowerCase())
+        
+        // 시설 필터링
+        const matchesFacility = filterFacility === '' || 
+            (room.tools && room.tools.some(tool => tool.toLowerCase().includes(filterFacility.toLowerCase())))
+        
+        return matchesSearch && matchesFacility
+    })
     
     // 날짜 관련 함수들
     const formatDate = (date) => {
@@ -229,18 +243,15 @@ const RoomReservation = () => {
     }
     
     const getRoomReservations = (roomId) => {
-        const selectedDate = new Date(currentDate)
-        selectedDate.setHours(0, 0, 0, 0) // 선택된 날짜의 시작 시간으로 설정
-        
-        return reservations
-            .filter(reservation => {
-                const reservationDate = new Date(reservation.start)
-                return (
-                    reservation.roomId === roomId &&
-                    reservationDate >= selectedDate // 선택된 날짜부터 이후 예약만
-                )
-            })
-            .sort((a, b) => new Date(a.start) - new Date(b.start)) // 시간순으로 정렬
+        return reservations.filter(reservation => {
+            const reservationDate = new Date(reservation.start)
+            return (
+                reservation.roomId === roomId &&
+                reservationDate.getFullYear() === currentDate.getFullYear() &&
+                reservationDate.getMonth() === currentDate.getMonth() &&
+                reservationDate.getDate() === currentDate.getDate()
+            )
+        })
     }
     
     // 예약 관련 함수들
@@ -627,6 +638,41 @@ const RoomReservation = () => {
                 </div>
             )}
 
+            <button 
+                className={styles.filter_toggle} 
+                onClick={() => setShowFilters(!showFilters)}
+            >
+                <HiFilter />
+                필터
+            </button>
+
+            {showFilters && (
+                <div className={styles.filters_panel}>
+                    <div className={styles.search_box}>
+                        <HiSearch className={styles.search_icon} />
+                        <input
+                            type="text"
+                            placeholder="회의실 이름 또는 위치 검색"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className={styles.filter_group}>
+                        <label>시설:</label>
+                        <select
+                            value={filterFacility}
+                            onChange={(e) => setFilterFacility(e.target.value)}
+                        >
+                            <option value="">모든 시설</option>
+                            <option value="프로젝터">프로젝터</option>
+                            <option value="TV">TV</option>
+                            <option value="화이트보드">화이트보드</option>
+                        </select>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.content_grid}>
                 <div className={styles.rooms_card}>
                     <div className={styles.card_header}>
@@ -659,6 +705,11 @@ const RoomReservation = () => {
                                 <HiOfficeBuilding />
                                 <p>등록된 회의실이 없습니다.</p>
                             </div>
+                        ) : filteredRooms.length === 0 ? (
+                            <div className={styles.no_rooms}>
+                                <HiOfficeBuilding />
+                                <p>검색 조건에 맞는 회의실이 없습니다.</p>
+                            </div>
                         ) : (
                             filteredRooms.map((room) => (
                                 <div 
@@ -671,7 +722,7 @@ const RoomReservation = () => {
                                         <div className={styles.room_meta}>
                                             <span className={styles.room_utilization}>
                                                 <HiClock />
-                                                {getRoomReservations(room._id).length}건의 예정된 예약
+                                                {getRoomReservations(room._id).length}건의 예약
                                             </span>
                                         </div>
                                         <div className={styles.room_facilities}>
@@ -691,7 +742,7 @@ const RoomReservation = () => {
                 <div className={styles.schedule_card}>
                     <div className={styles.card_header}>
                         <HiCalendar className={styles.header_icon} />
-                        <h2>예정된 예약</h2>
+                        <h2>예약 현황</h2>
                     </div>
 
                     {selectedRoom ? (
@@ -701,7 +752,7 @@ const RoomReservation = () => {
                                     <h3>{selectedRoom.roomName}</h3>
                                     <div className={styles.room_info}>
                                         <span><HiOfficeBuilding /> {selectedRoom.location}</span>
-                                        <span><HiDocumentText /> {getRoomReservations(selectedRoom._id).length}건의 예정된 예약</span>
+                                        <span><HiDocumentText /> {getRoomReservations(selectedRoom._id).length}건의 예약</span>
                                     </div>
                                 </div>
                                 <div className={styles.room_actions}>
@@ -720,60 +771,45 @@ const RoomReservation = () => {
 
                             <div className={styles.reservations_list}>
                                 {getRoomReservations(selectedRoom._id).length > 0 ? (
-                                    getRoomReservations(selectedRoom._id).map(reservation => {
-                                        const startDate = new Date(reservation.start)
-                                        const endDate = new Date(reservation.end)
-                                        const isToday = startDate.toDateString() === currentDate.toDateString()
-                                        
-                                        return (
-                                            <div 
-                                                key={reservation.id}
-                                                className={styles.reservation_card}
-                                                onClick={() => handleReservationClick(reservation)}
-                                                style={{
-                                                    borderLeft: `4px solid ${getProjectColor(reservation.project)}`
-                                                }}
-                                            >
-                                                <div className={styles.reservation_header}>
-                                                    <h4 className={styles.reservation_title}>{reservation.title}</h4>
-                                                    <div className={styles.reservation_datetime}>
-                                                        <div className={styles.reservation_date}>
-                                                            {isToday ? '오늘' : startDate.toLocaleDateString('ko-KR', { 
-                                                                month: 'short', 
-                                                                day: 'numeric',
-                                                                weekday: 'short'
-                                                            })}
-                                                        </div>
-                                                        <span className={styles.reservation_time}>
-                                                            {formatTime(reservation.start)} - {formatTime(reservation.end)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                {reservation.project && (
-                                                    <div className={styles.reservation_project}>
-                                                        <HiBookmark />
-                                                        {reservation.project}
-                                                    </div>
-                                                )}
-                                                <div className={styles.reservation_meta}>
-                                                    <span className={styles.reservation_duration}>
-                                                        <HiClock />
-                                                        {Math.round((new Date(reservation.end) - new Date(reservation.start)) / (1000 * 60))}분
-                                                    </span>
-                                                    {reservation.participants && (
-                                                        <span className={styles.reservation_participants}>
-                                                            <HiUserGroup />
-                                                            {reservation.participants.length}명
-                                                        </span>
-                                                    )}
-                                                </div>
+                                    getRoomReservations(selectedRoom._id).map(reservation => (
+                                        <div 
+                                            key={reservation.id}
+                                            className={styles.reservation_card}
+                                            onClick={() => handleReservationClick(reservation)}
+                                            style={{
+                                                borderLeft: `4px solid ${getProjectColor(reservation.project)}`
+                                            }}
+                                        >
+                                            <div className={styles.reservation_header}>
+                                                <h4 className={styles.reservation_title}>{reservation.title}</h4>
+                                                <span className={styles.reservation_time}>
+                                                    {formatTime(reservation.start)} - {formatTime(reservation.end)}
+                                                </span>
                                             </div>
-                                        )
-                                    })
+                                            {reservation.project && (
+                                                <div className={styles.reservation_project}>
+                                                    <HiBookmark />
+                                                    {reservation.project}
+                                                </div>
+                                            )}
+                                            <div className={styles.reservation_meta}>
+                                                <span className={styles.reservation_duration}>
+                                                    <HiClock />
+                                                    {Math.round((new Date(reservation.end) - new Date(reservation.start)) / (1000 * 60))}분
+                                                </span>
+                                                {reservation.participants && (
+                                                    <span className={styles.reservation_participants}>
+                                                        <HiUserGroup />
+                                                        {reservation.participants.length}명
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
                                 ) : (
                                     <div className={styles.no_reservations}>
                                         <HiCalendar className={styles.no_reservations_icon} />
-                                        <p>예정된 예약이 없습니다.</p>
+                                        <p>오늘 예약된 회의가 없습니다.</p>
                                         <button 
                                             className={styles.add_first_reservation}
                                             onClick={handleAddReservation}
@@ -788,7 +824,7 @@ const RoomReservation = () => {
                     ) : (
                         <div className={styles.no_selection}>
                             <HiOfficeBuilding className={styles.no_selection_icon} />
-                            <p>회의실을 선택하면 예정된 예약이 표시됩니다.</p>
+                            <p>회의실을 선택하면 예약 현황이 표시됩니다.</p>
                         </div>
                     )}
                 </div>

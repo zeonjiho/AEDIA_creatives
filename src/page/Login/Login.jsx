@@ -195,7 +195,7 @@ const Login = () => {
     };
 
     // 슬랙 연결 처리
-    const handleSlackConnect = (e) => {
+    const handleSlackConnect = async (e) => {
         e.preventDefault();
         
         if (!signupData.slackId) {
@@ -208,8 +208,27 @@ const Login = () => {
             return;
         }
         
-        // OTP 입력창 표시
-        setShowOtpInput(true);
+        try {
+            // 서버에 슬랙 ID 전송하여 인증코드 생성 요청
+            const response = await api.post('/slack/code', {
+                slackId: signupData.slackId
+            });
+            
+            if (response.status === 200) {
+                // 성공하면 OTP 입력창 표시
+                setShowOtpInput(true);
+                // alert('슬랙으로 인증코드가 전송되었습니다. 확인해주세요.');
+            }
+        } catch (error) {
+            console.error('슬랙 연결 실패:', error);
+            if (error.response?.status === 404) {
+                alert('해당 슬랙 멤버 ID를 찾을 수 없습니다. 올바른 ID인지 확인해주세요.');
+            } else if (error.response?.status === 500) {
+                alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+                alert('슬랙 연결 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
     };
 
     // OTP 입력 처리
@@ -268,7 +287,7 @@ const Login = () => {
     };
 
     // OTP 검증 및 다음 단계
-    const handleOtpSubmit = (e) => {
+    const handleOtpSubmit = async (e) => {
         console.log('handleOtpSubmit 호출됨, OTP 길이:', otpCode.length);
         e.preventDefault();
         
@@ -277,12 +296,41 @@ const Login = () => {
             return;
         }
         
-        // 실제로는 서버에서 OTP 검증
-        // 임시로 모든 6자리 숫자를 허용
-        console.log('OTP 검증 완료, 3단계로 이동');
-        setSignupStep(3);
-        setShowOtpInput(false);
-        setOtpCode('');
+        try {
+            // 서버에서 OTP 검증
+            const response = await api.post('/slack/code/verify', {
+                slackId: signupData.slackId,
+                code: otpCode
+            });
+            
+            if (response.status === 200) {
+                console.log('OTP 검증 완료, 3단계로 이동');
+                // alert('슬랙 인증이 완료되었습니다!');
+                setSignupStep(3);
+                setShowOtpInput(false);
+                setOtpCode('');
+                setOtpDigits(['', '', '', '', '', '']);
+            }
+        } catch (error) {
+            console.error('OTP 검증 실패:', error);
+            if (error.response?.status === 404) {
+                alert('인증코드를 찾을 수 없습니다. 다시 요청해주세요.');
+                setShowOtpInput(false);
+            } else if (error.response?.status === 400) {
+                if (error.response.data?.message?.includes('만료')) {
+                    alert('인증코드가 만료되었습니다. 다시 요청해주세요.');
+                    setShowOtpInput(false);
+                } else {
+                    alert(error.response.data?.message || '인증코드가 일치하지 않습니다.');
+                }
+            } else {
+                alert('인증 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+            
+            // 오류 시 OTP 입력 초기화
+            setOtpCode('');
+            setOtpDigits(['', '', '', '', '', '']);
+        }
     };
 
     // 다음 단계로 이동
