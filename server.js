@@ -555,8 +555,6 @@ app.post('/attendance/new-check-in', async (req, res) => {
     }
 });
 
-// devTest_slack()
-
 // Todo 관련 API
 // 할 일 목록 조회
 app.get('/todos', async (req, res) => {
@@ -565,7 +563,7 @@ app.get('/todos', async (req, res) => {
         const todos = await Todo.find({ poster: userId })
             .populate('poster', 'name email')
             .sort({ createdAt: -1 });
-        
+
         res.status(200).json(todos);
     } catch (err) {
         console.log(err);
@@ -577,7 +575,7 @@ app.get('/todos', async (req, res) => {
 app.post('/todos', async (req, res) => {
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
-    
+
     try {
         const newTodo = new Todo({
             text,
@@ -586,13 +584,13 @@ app.post('/todos', async (req, res) => {
             poster: userId,
             projectId: projectId || null
         });
-        
+
         await newTodo.save();
-        
+
         // populate해서 응답 (projectId 제외)
         const populatedTodo = await Todo.findById(newTodo._id)
             .populate('poster', 'name email');
-        
+
         res.status(201).json(populatedTodo);
     } catch (err) {
         console.log(err);
@@ -605,13 +603,13 @@ app.put('/todos/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
-    
+
     try {
         const todo = await Todo.findOne({ _id: id, poster: userId });
         if (!todo) {
             return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
         }
-        
+
         const updatedTodo = await Todo.findByIdAndUpdate(
             id,
             {
@@ -623,7 +621,7 @@ app.put('/todos/:id', async (req, res) => {
             },
             { new: true }
         ).populate('poster', 'name email');
-        
+
         res.status(200).json(updatedTodo);
     } catch (err) {
         console.log(err);
@@ -635,13 +633,13 @@ app.put('/todos/:id', async (req, res) => {
 app.patch('/todos/:id/toggle', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
-    
+
     try {
         const todo = await Todo.findOne({ _id: id, poster: userId });
         if (!todo) {
             return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
         }
-        
+
         const updatedTodo = await Todo.findByIdAndUpdate(
             id,
             {
@@ -650,7 +648,7 @@ app.patch('/todos/:id/toggle', async (req, res) => {
             },
             { new: true }
         ).populate('poster', 'name email');
-        
+
         res.status(200).json(updatedTodo);
     } catch (err) {
         console.log(err);
@@ -662,13 +660,13 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 app.delete('/todos/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
-    
+
     try {
         const todo = await Todo.findOne({ _id: id, poster: userId });
         if (!todo) {
             return res.status(404).json({ message: '할 일을 찾을 수 없습니다.' });
         }
-        
+
         await Todo.findByIdAndDelete(id);
         res.status(200).json({ message: '할 일이 삭제되었습니다.' });
     } catch (err) {
@@ -682,20 +680,20 @@ app.delete('/todos/:id', async (req, res) => {
 app.patch('/dashboard/layout', async (req, res) => {
     const { userId } = req.query;
     const { layouts } = req.body;
-    
+
     try {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { mainLayout: layouts },
             { new: true }
         ).select('-password');
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             message: '레이아웃이 저장되었습니다.',
             mainLayout: updatedUser.mainLayout
         });
@@ -708,14 +706,14 @@ app.patch('/dashboard/layout', async (req, res) => {
 // 레이아웃 불러오기
 app.get('/dashboard/layout', async (req, res) => {
     const { userId } = req.query;
-    
+
     try {
         const user = await User.findById(userId).select('mainLayout');
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             mainLayout: user.mainLayout || {}
         });
     } catch (err) {
@@ -723,3 +721,26 @@ app.get('/dashboard/layout', async (req, res) => {
         res.status(500).json({ message: '레이아웃 불러오기 실패' });
     }
 });
+
+
+
+
+
+// // TEST API
+// const devTest_slack = async () => {
+//     try {
+//         const message = '안녕하세요. 테스트 메시지입니다.'
+
+//         // 방법 1: 테스트 채널 사용 (권장)
+//         await slackBot.chat.postMessage({
+//             channel: 'U062BR8GUTW', // @빼면 안 되는 듯.
+//             // channel: '@zeonjiho', // @빼면 안 되는 듯.
+//             text: message
+//         })
+
+//         console.log('슬랙 메시지 전송 성공')
+//     } catch (err) {
+//         console.log('슬랙 메시지 전송 실패:', err)
+//     }
+// }
+// devTest_slack()
