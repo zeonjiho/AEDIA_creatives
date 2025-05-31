@@ -22,6 +22,9 @@ const userSchema = new Schema({
     email: {
         type: String,
     },
+    slackId: {
+        type: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
@@ -47,26 +50,24 @@ const userSchema = new Schema({
         ref: 'Project',
     }],
     attendance: [{
+        type: {
+            type: String,
+            enum: ['checkIn', 'checkOut'],
+            required: true
+        },
+        time: {
+            type: Date,
+            required: true
+        },
         date: {
             type: String, // 'YYYY-MM-DD' 형식
             required: true
         },
-        records: [{
-            type: {
-                type: String,
-                enum: ['checkIn', 'checkOut'],
-                required: true
-            },
-            time: {
-                type: Date,
-                required: true
-            },
-            method: {
-                type: String,
-                default: 'manual'
-            }
-        }],
-        memo: String,      // 비고 사항
+        method: {
+            type: String,
+            default: 'manual'
+        },
+        memo: String      // 비고 사항
     }],
 
     mainLayout: {

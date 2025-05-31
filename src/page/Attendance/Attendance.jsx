@@ -26,7 +26,7 @@ const Attendance = () => {
     const [canCheckOut, setCanCheckOut] = useState(false)
 
     // 수정 모드 상태
-    const [editMode, setEditMode] = useState({ active: false, recordIndex: -1, date: '' })
+    const [editMode, setEditMode] = useState({ active: false, recordId: null })
     const [editTime, setEditTime] = useState('')
 
     // 허용된 위치 좌표 (예: 회사 위치)
@@ -296,14 +296,13 @@ const Attendance = () => {
         
         try {
             const response = await api.patch(`/attendance/update/${userId}`, {
-                date: editMode.date,
-                recordIndex: editMode.recordIndex,
+                recordId: editMode.recordId,
                 time: datetime.toISOString()
             })
             
             setStatusMessage('출석 기록이 수정되었습니다')
             setMessageType('success')
-            setEditMode({ active: false, recordIndex: -1, date: '' })
+            setEditMode({ active: false, recordId: null })
             setEditTime('')
             
             // 상태를 즉시 업데이트하기 위해 await 사용
@@ -320,20 +319,17 @@ const Attendance = () => {
     }
 
     // 출퇴근 기록 삭제
-    const handleDeleteRecord = async (recordIndex) => {
+    const handleDeleteRecord = async (recordId) => {
         if (!window.confirm('이 기록을 삭제하시겠습니까?')) {
             return
         }
-
-        const today = new Date().toISOString().split('T')[0]
 
         setLoading(true)
         
         try {
             await api.delete(`/attendance/delete/${userId}`, {
                 data: {
-                    date: today,
-                    recordIndex: recordIndex
+                    recordId: recordId
                 }
             })
             
@@ -471,7 +467,7 @@ const Attendance = () => {
                                     <button 
                                         className={ss.cancel_button}
                                         onClick={() => {
-                                            setEditMode({ active: false, recordIndex: -1, date: '' })
+                                            setEditMode({ active: false, recordId: null })
                                             setEditTime('')
                                         }}
                                     >
@@ -514,10 +510,9 @@ const Attendance = () => {
                                         <button 
                                             className={ss.edit_btn}
                                             onClick={() => {
-                                                const today = new Date().toISOString().split('T')[0]
                                                 const time = new Date(record.time)
                                                 const timeString = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
-                                                setEditMode({ active: true, recordIndex: index, date: today })
+                                                setEditMode({ active: true, recordId: record._id })
                                                 setEditTime(timeString)
                                             }}
                                             title="시간 수정"
@@ -526,7 +521,7 @@ const Attendance = () => {
                                         </button>
                                         <button 
                                             className={ss.delete_btn}
-                                            onClick={() => handleDeleteRecord(index)}
+                                            onClick={() => handleDeleteRecord(record._id)}
                                             title="기록 삭제"
                                         >
                                             <FaTrash />

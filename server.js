@@ -195,39 +195,20 @@ app.post('/attendance/check-in', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
         const now = new Date();
+        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 
-        // 오늘 출석 기록 찾기
-        let todayAttendance = user.attendance.find(att => att.date === today);
-
+        // 새로운 체크인 기록 추가
         const newRecord = {
             type: 'checkIn',
             time: now,
+            date: today,
             method: method
         };
 
-        if (!todayAttendance) {
-            // 새로운 출석 기록 생성 - MongoDB $push 사용
-            await User.findByIdAndUpdate(userId, {
-                $push: {
-                    attendance: {
-                        date: today,
-                        records: [newRecord]
-                    }
-                }
-            });
-        } else {
-            // 기존 출석 기록에 새로운 출근 기록 추가 - MongoDB $push 사용
-            await User.findOneAndUpdate(
-                { _id: userId, 'attendance.date': today },
-                {
-                    $push: {
-                        'attendance.$.records': newRecord
-                    }
-                }
-            );
-        }
+        await User.findByIdAndUpdate(userId, {
+            $push: { attendance: newRecord }
+        });
 
         // 9시 이후면 지각
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
@@ -258,45 +239,31 @@ app.post('/attendance/check-out', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        const today = new Date().toISOString().split('T')[0];
         const now = new Date();
+        const today = now.toISOString().split('T')[0];
 
-        // 오늘 출석 기록 찾기
-        let todayAttendance = user.attendance.find(att => att.date === today);
-        if (!todayAttendance) {
-            return res.status(400).json({ message: '출근 기록이 없습니다.' });
+        // 가장 최근 기록이 체크인인지 확인
+        const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        if (sortedAttendance.length === 0 || sortedAttendance[0].type !== 'checkIn') {
+            return res.status(400).json({ message: '출근 기록이 없거나 이미 퇴근 처리되었습니다.' });
         }
 
-        // 가장 최근 출근 기록 중에서 퇴근하지 않은 기록 찾기
-        const checkInRecords = todayAttendance.records.filter(r => r.type === 'checkIn');
-        const checkOutRecords = todayAttendance.records.filter(r => r.type === 'checkOut');
+        const lastCheckIn = sortedAttendance[0];
 
-        if (checkInRecords.length === 0) {
-            return res.status(400).json({ message: '출근 기록이 없습니다.' });
-        }
-
-        if (checkInRecords.length <= checkOutRecords.length) {
-            return res.status(400).json({ message: '이미 퇴근 처리되었습니다.' });
-        }
-
-        // 퇴근 기록 추가 - MongoDB $push 사용
+        // 새로운 체크아웃 기록 추가
         const newRecord = {
             type: 'checkOut',
             time: now,
+            date: today,
             method: method
         };
 
-        await User.findOneAndUpdate(
-            { _id: userId, 'attendance.date': today },
-            {
-                $push: {
-                    'attendance.$.records': newRecord
-                }
-            }
-        );
+        await User.findByIdAndUpdate(userId, {
+            $push: { attendance: newRecord }
+        });
 
-        // 가장 최근 출근과 퇴근 시간으로 근무 시간 계산
-        const lastCheckIn = checkInRecords[checkInRecords.length - 1];
+        // 근무 시간 계산
         const workMinutes = Math.floor((now - new Date(lastCheckIn.time)) / (1000 * 60));
 
         res.status(200).json({
@@ -323,13 +290,23 @@ app.get('/attendance/history', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        // 최신 순으로 정렬하고 제한
-        const attendanceHistory = user.attendance
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
+        // 날짜별로 그룹화
+        const attendanceByDate = {};
+        user.attendance.forEach(record => {
+            if (!attendanceByDate[record.date]) {
+                attendanceByDate[record.date] = [];
+            }
+            attendanceByDate[record.date].push(record);
+        });
+
+        // 날짜별로 정리하여 최신순으로 정렬
+        const attendanceHistory = Object.keys(attendanceByDate)
+            .sort((a, b) => new Date(b) - new Date(a))
             .slice(0, limit)
-            .map(att => {
-                const checkInRecords = att.records.filter(r => r.type === 'checkIn');
-                const checkOutRecords = att.records.filter(r => r.type === 'checkOut');
+            .map(date => {
+                const records = attendanceByDate[date].sort((a, b) => new Date(a.time) - new Date(b.time));
+                const checkInRecords = records.filter(r => r.type === 'checkIn');
+                const checkOutRecords = records.filter(r => r.type === 'checkOut');
 
                 // 첫 번째 출근과 마지막 퇴근 시간
                 const firstCheckIn = checkInRecords.length > 0 ? checkInRecords[0] : null;
@@ -353,14 +330,14 @@ app.get('/attendance/history', async (req, res) => {
                 }
 
                 return {
-                    date: att.date,
+                    date: date,
                     checkIn: firstCheckIn ? new Date(firstCheckIn.time).toTimeString().slice(0, 5) : '-',
                     checkOut: lastCheckOut ? new Date(lastCheckOut.time).toTimeString().slice(0, 5) : '-',
                     workHours: totalWorkMinutes,
                     workHoursFormatted: totalWorkMinutes > 0 ? `${Math.floor(totalWorkMinutes / 60)}시간 ${totalWorkMinutes % 60}분` : '-',
                     status: status,
-                    memo: att.memo || '',
-                    recordCount: checkInRecords.length + checkOutRecords.length
+                    memo: '',
+                    recordCount: records.length
                 };
             });
 
@@ -383,26 +360,17 @@ app.get('/attendance/today', async (req, res) => {
         }
 
         const today = new Date().toISOString().split('T')[0];
-        const todayAttendance = user.attendance.find(att => att.date === today);
-
-        if (!todayAttendance || todayAttendance.records.length === 0) {
-            const response = {
-                status: '미출근',
-                records: [],
-                canCheckIn: true,
-                canCheckOut: false
-            };
-            return res.status(200).json(response);
-        }
-
-        const checkInRecords = todayAttendance.records.filter(r => r.type === 'checkIn');
-        const checkOutRecords = todayAttendance.records.filter(r => r.type === 'checkOut');
-
+        
+        // 출석 기록을 시간 순으로 정렬 (최신순)
+        const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        // 현재 상태 결정
         let status = '미출근';
         let canCheckOut = false;
-
-        if (checkInRecords.length > 0) {
-            if (checkInRecords.length > checkOutRecords.length) {
+        
+        if (sortedAttendance.length > 0) {
+            const lastRecord = sortedAttendance[0];
+            if (lastRecord.type === 'checkIn') {
                 status = '출근';
                 canCheckOut = true;
             } else {
@@ -410,12 +378,15 @@ app.get('/attendance/today', async (req, res) => {
             }
         }
 
+        // 오늘 기록만 필터링
+        const todayRecords = user.attendance.filter(record => record.date === today);
+
         const response = {
             status: status,
-            records: todayAttendance.records,
+            records: todayRecords,
             canCheckIn: true, // 언제든 출근 가능
             canCheckOut: canCheckOut,
-            attendanceRecord: todayAttendance
+            attendanceRecord: todayRecords.length > 0 ? { date: today, records: todayRecords } : null
         };
 
         res.status(200).json(response);
@@ -429,7 +400,7 @@ app.get('/attendance/today', async (req, res) => {
 // 출퇴근 기록 수정 API
 app.patch('/attendance/update/:userId', async (req, res) => {
     const { userId } = req.params;
-    const { date, recordIndex, time } = req.body;
+    const { recordId, time } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -437,24 +408,20 @@ app.patch('/attendance/update/:userId', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        const targetAttendance = user.attendance.find(att => att.date === date);
-        if (!targetAttendance) {
-            return res.status(404).json({ message: '해당 날짜의 출석 기록이 없습니다.' });
-        }
-
-        if (recordIndex >= targetAttendance.records.length) {
+        const recordIndex = user.attendance.findIndex(record => record._id.toString() === recordId);
+        if (recordIndex === -1) {
             return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
         }
 
         const newTime = new Date(time);
-        targetAttendance.records[recordIndex].time = newTime;
-        targetAttendance.records[recordIndex].method = 'manual_edit';
+        user.attendance[recordIndex].time = newTime;
+        user.attendance[recordIndex].method = 'manual_edit';
 
         await user.save();
 
         res.status(200).json({
             message: '출석 기록이 수정되었습니다.',
-            updatedRecord: targetAttendance
+            updatedRecord: user.attendance[recordIndex]
         });
 
     } catch (err) {
@@ -466,7 +433,7 @@ app.patch('/attendance/update/:userId', async (req, res) => {
 // 출퇴근 기록 삭제 API
 app.delete('/attendance/delete/:userId', async (req, res) => {
     const { userId } = req.params;
-    const { date, recordIndex } = req.body;
+    const { recordId } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -474,27 +441,16 @@ app.delete('/attendance/delete/:userId', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        const targetAttendance = user.attendance.find(att => att.date === date);
-        if (!targetAttendance) {
-            return res.status(404).json({ message: '해당 날짜의 출석 기록이 없습니다.' });
-        }
-
-        if (recordIndex >= targetAttendance.records.length) {
+        const recordIndex = user.attendance.findIndex(record => record._id.toString() === recordId);
+        if (recordIndex === -1) {
             return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
         }
 
-        targetAttendance.records.splice(recordIndex, 1);
-
-        // 기록이 모두 삭제되면 날짜 자체도 삭제
-        if (targetAttendance.records.length === 0) {
-            user.attendance = user.attendance.filter(att => att.date !== date);
-        }
-
+        user.attendance.splice(recordIndex, 1);
         await user.save();
 
         res.status(200).json({
-            message: '출석 기록이 삭제되었습니다.',
-            updatedRecord: targetAttendance.records.length > 0 ? targetAttendance : null
+            message: '출석 기록이 삭제되었습니다.'
         });
 
     } catch (err) {
@@ -515,29 +471,20 @@ app.post('/attendance/new-check-in', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        const today = new Date().toISOString().split('T')[0];
         const now = new Date();
+        const today = now.toISOString().split('T')[0];
 
-        // 오늘 출석 기록 찾기
-        let todayAttendance = user.attendance.find(att => att.date === today);
-
-        if (!todayAttendance) {
-            // 새로운 출석 기록 생성
-            todayAttendance = {
-                date: today,
-                records: []
-            };
-            user.attendance.push(todayAttendance);
-        }
-
-        // 새로운 출근 기록 추가
-        todayAttendance.records.push({
+        // 새로운 체크인 기록 추가
+        const newRecord = {
             type: 'checkIn',
             time: now,
+            date: today,
             method: method
-        });
+        };
 
-        await user.save();
+        await User.findByIdAndUpdate(userId, {
+            $push: { attendance: newRecord }
+        });
 
         // 9시 이후면 지각
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
