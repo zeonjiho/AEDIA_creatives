@@ -9,6 +9,7 @@ const sharp = require('sharp')
 const path = require('path')
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
+const cron = require('node-cron')
 
 // 슬랙 관련
 const { WebClient } = require('@slack/web-api')
@@ -48,6 +49,60 @@ mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mon
     })
     .catch((err => console.log(err)))
 
+
+// 회의실 예약 정리 스케줄러 (매일 자정 실행)
+cron.schedule('0 0 * * *', async () => {
+    try {
+        console.log(`\x1b[33m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 시작\x1b[0m`);
+        
+        // 7일 전 날짜 계산
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        // 1. 회의실 예약 정리
+        console.log(`\x1b[34m[회의실 예약 정리 시작]\x1b[0m`);
+        const rooms = await Room.find({});
+        let totalDeletedReservations = 0;
+        
+        for (const room of rooms) {
+            // 7일 이상 경과한 예약 필터링
+            const reservationsToDelete = room.reservations.filter(reservation => {
+                const endTime = new Date(reservation.endTime);
+                return endTime < sevenDaysAgo;
+            });
+            
+            if (reservationsToDelete.length > 0) {
+                // 7일 이상 경과한 예약들을 제거
+                room.reservations = room.reservations.filter(reservation => {
+                    const endTime = new Date(reservation.endTime);
+                    return endTime >= sevenDaysAgo;
+                });
+                
+                await room.save();
+                totalDeletedReservations += reservationsToDelete.length;
+                
+                console.log(`\x1b[36m회의실 "${room.roomName}": ${reservationsToDelete.length}개 예약 삭제\x1b[0m`);
+            }
+        }
+        
+        console.log(`\x1b[32m회의실 예약 정리 완료 - 총 ${totalDeletedReservations}개 예약 삭제\x1b[0m`);
+        
+        // 2. SlackCode 정리
+        console.log(`\x1b[34m[SlackCode 정리 시작]\x1b[0m`);
+        const deleteResult = await SlackCode.deleteMany({
+            createdAt: { $lt: sevenDaysAgo }
+        });
+        
+        console.log(`\x1b[32mSlackCode 정리 완료 - 총 ${deleteResult.deletedCount}개 인증코드 삭제\x1b[0m`);
+        
+        console.log(`\x1b[32m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 완료 - 예약 ${totalDeletedReservations}개, 인증코드 ${deleteResult.deletedCount}개 삭제\x1b[0m`);
+        
+    } catch (error) {
+        console.error(`\x1b[31m[${new Date().toLocaleString()}] 데이터 정리 중 오류:`, error, '\x1b[0m');
+    }
+}, {
+    timezone: "Asia/Seoul"
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
