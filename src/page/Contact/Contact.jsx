@@ -3,8 +3,9 @@ import styles from './Contact.module.css';
 import { 
   HiSearch, HiUser, HiUserGroup, HiPhone, HiMail, 
   HiOfficeBuilding, HiClock, HiTag, HiDocument,
-  HiViewGrid, HiViewList, HiPencil, HiCheck, HiX
+  HiViewGrid, HiViewList, HiPencil, HiCheck, HiX, HiPlus
 } from 'react-icons/hi';
+import StaffSearchModal from '../../components/StaffSearchModal/StaffSearchModal';
 
 // 스탭 데이터 (StaffSearchModal에서 가져온 데이터)
 const allStaffData = [
@@ -36,6 +37,9 @@ const Contact = () => {
   const [editingId, setEditingId] = useState(null); // 현재 편집 중인 항목 ID
   const [editingData, setEditingData] = useState({}); // 편집 중인 데이터
   const [successMessage, setSuccessMessage] = useState(''); // 성공 메시지
+  
+  // 스탭 검색 모달 관련 상태
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -119,6 +123,31 @@ const Contact = () => {
       return ['position', 'phone', 'email'];
     } else {
       return []; // 내부직원은 편집 불가
+    }
+  };
+
+  // 스탭 추가 모달 열기
+  const handleAddStaffClick = () => {
+    setIsStaffModalOpen(true);
+  };
+
+  // 스탭 추가 모달 닫기
+  const handleStaffModalClose = () => {
+    setIsStaffModalOpen(false);
+  };
+
+  // 스탭 선택 완료 핸들러
+  const handleStaffSelect = (selectedStaff) => {
+    if (selectedStaff.length > 0) {
+      const newStaff = selectedStaff.filter(staff => 
+        !staffData.some(existing => existing.id === staff.id)
+      );
+      
+      if (newStaff.length > 0) {
+        setStaffData(prevData => [...prevData, ...newStaff]);
+        setSuccessMessage(`${newStaff.length}명의 스탭이 연락처에 추가되었습니다.`);
+        setTimeout(() => setSuccessMessage(''), 3000);
+      }
     }
   };
 
@@ -442,17 +471,28 @@ const Contact = () => {
                 <HiViewList />
               </button>
             </div>
-          </div>
-          <div className={styles.stats_info}>
-            <span className={styles.stats_item}>
-              <HiUser /> {staffData.filter(p => p.type === 'staff').length}명 외부 스탭
-            </span>
-            <span className={styles.stats_item}>
-              <HiUserGroup /> {staffData.filter(p => p.type === 'employee').length}명 내부 직원
-            </span>
+            <button 
+              className={styles.add_staff_btn}
+              onClick={handleAddStaffClick}
+              title="외부 스탭 추가"
+            >
+              <HiPlus /> 스탭 추가
+            </button>
           </div>
         </div>
       </header>
+
+      {/* 통계 정보 */}
+      <div className={styles.stats_section}>
+        <div className={styles.stats_info}>
+          <span className={styles.stats_item}>
+            <HiUser /> {staffData.filter(p => p.type === 'staff').length}명 외부 스탭
+          </span>
+          <span className={styles.stats_item}>
+            <HiUserGroup /> {staffData.filter(p => p.type === 'employee').length}명 내부 직원
+          </span>
+        </div>
+      </div>
 
       {/* 검색 및 필터 */}
       <div className={styles.search_controls}>
@@ -515,6 +555,17 @@ const Contact = () => {
           총 {filteredStaff.length}명의 연락처가 표시되고 있습니다.
         </div>
       )}
+
+      {/* 스탭 검색 모달 */}
+      <StaffSearchModal
+        isOpen={isStaffModalOpen}
+        onClose={handleStaffModalClose}
+        onSelect={handleStaffSelect}
+        selectedPeople={[]}
+        multiSelect={true}
+        title="외부 스탭 추가"
+        initialFilterType="staff"
+      />
     </div>
   );
 };

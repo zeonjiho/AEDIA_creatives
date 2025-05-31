@@ -59,10 +59,19 @@
 .header_controls {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+
+/* 통계 정보 섹션 */
+
+.stats_section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
 }
 
 .stats_info {
@@ -201,55 +210,52 @@
 }
 
 
-/* 스탭 그리드 */
+/* 스탭 그리드 - 카드뷰 개선 */
 
 .staff_grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
     margin-bottom: 32px;
 }
 
 .staff_card {
     background-color: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .staff_card:hover {
     border-color: var(--accent-color);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card_header {
-    padding: 20px 20px 16px 20px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
-    color: var(--text-primary-inverse);
+    gap: 12px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .person_avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background-color: var(--accent-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: white;
     flex-shrink: 0;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .person_basic {
@@ -258,46 +264,45 @@
 }
 
 .person_name {
-    margin: 0 0 8px 0;
-    font-size: 1.3rem;
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     word-break: break-word;
 }
 
 .person_type {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: 500;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--accent-color);
     color: white;
-    backdrop-filter: blur(10px);
 }
 
 .type_staff {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: #10b981;
 }
 
 .type_employee {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: #3b82f6;
 }
 
 .card_content {
-    padding: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
 }
 
 .info_item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+    padding: 6px 0;
+    min-height: 24px;
 }
 
 .info_item:last-child {
@@ -305,23 +310,24 @@
 }
 
 .info_icon {
-    font-size: 1.1rem;
-    color: var(--accent-color);
+    font-size: 1rem;
+    color: var(--text-tertiary);
     flex-shrink: 0;
+    width: 16px;
 }
 
 .info_label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-tertiary);
     font-weight: 500;
-    min-width: 50px;
+    min-width: 40px;
     flex-shrink: 0;
 }
 
 .info_value {
     font-size: 0.9rem;
     color: var(--text-primary);
-    font-weight: 500;
+    font-weight: 400;
     flex: 1;
     word-break: break-word;
 }
@@ -462,25 +468,32 @@
         padding: 16px;
     }
     .header_controls {
-        flex-direction: row;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         flex-wrap: wrap;
+        width: 100%;
     }
     .view_controls {
+        display: flex;
+        justify-content: center;
         margin-bottom: 0;
+    }
+    .stats_section {
+        margin-bottom: 16px;
     }
     .stats_info {
         flex-direction: row;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
+        justify-content: center;
     }
     .stats_item {
-        min-width: 120px;
+        min-width: 100px;
         justify-content: center;
-        font-size: 0.85rem;
-        padding: 6px 12px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
     }
     /* 태블릿에서 리스트뷰를 간소화 */
     .list_header,
@@ -551,8 +564,8 @@
     }
     /* 모바일 헤더 컨트롤 개선 */
     .header_controls {
-        flex-direction: row;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
@@ -560,14 +573,14 @@
     }
     .view_controls {
         display: flex;
-        justify-content: flex-start;
+        justify-content: center;
         margin-bottom: 0;
     }
     .stats_info {
         flex-direction: row;
         gap: 6px;
         flex-wrap: wrap;
-        justify-content: flex-end;
+        justify-content: center;
     }
     .stats_item {
         min-width: 100px;
@@ -667,6 +680,7 @@
 .view_controls {
     display: flex;
     align-items: center;
+    gap: 12px;
 }
 
 .view_toggle_group {
@@ -702,8 +716,31 @@
     font-weight: 600;
 }
 
+.add_staff_btn {
+    padding: 10px 16px;
+    background-color: var(--accent-color);
+    color: var(--text-primary-inverse);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-/* 리스트뷰 스타일 */
+.add_staff_btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+/* 리스트뷰 스타일 - 엑셀 스타일로 개선 */
 
 .staff_list {
     margin-bottom: 32px;
@@ -711,26 +748,31 @@
 
 .list_container {
     background-color: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .list_header {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 2fr;
-    gap: 16px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
-    color: var(--text-primary-inverse);
+    grid-template-columns: 200px 120px 120px 80px 140px 180px 80px;
+    gap: 0;
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    color: var(--text-primary);
     font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 0.85rem;
 }
 
 .list_header_cell {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
 }
 
 .list_body {
@@ -740,12 +782,13 @@
 
 .list_item {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 2fr;
-    gap: 16px;
-    padding: 16px 20px;
+    grid-template-columns: 200px 120px 120px 80px 140px 180px 80px;
+    gap: 0;
+    padding: 8px 16px;
     border-bottom: 1px solid var(--border-color);
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
     align-items: center;
+    min-height: 56px;
 }
 
 .list_item:last-child {
@@ -753,33 +796,35 @@
 }
 
 .list_item:hover {
-    background-color: var(--bg-tertiary);
+    background-color: #f8fafc;
 }
 
 .list_cell {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
     word-break: break-word;
     display: flex;
     align-items: center;
+    padding: 4px 8px;
+    min-height: 40px;
 }
 
 .list_person_info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .list_avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: var(--accent-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: white;
     flex-shrink: 0;
 }
@@ -787,11 +832,11 @@
 .list_name_section {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .list_person_name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--text-primary);
     line-height: 1.2;
@@ -799,26 +844,39 @@
 
 .list_person_type {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.65rem;
     font-weight: 500;
     color: white;
 }
 
 .list_person_type.type_staff {
-    background-color: var(--success-color);
+    background-color: #10b981;
 }
 
 .list_person_type.type_employee {
-    background-color: var(--primary-color);
+    background-color: #3b82f6;
 }
 
 .no_edit {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-tertiary);
     font-style: italic;
     opacity: 0.7;
+}
+
+.contact_link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.contact_link:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
 }
 
 
@@ -865,6 +923,17 @@
     }
     .view_controls {
         align-self: center;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .add_staff_btn {
+        font-size: 0.85rem;
+        padding: 10px 14px;
+        width: 100%;
+        justify-content: center;
+    }
+    .stats_section {
+        margin-bottom: 16px;
     }
     .stats_info {
         flex-direction: column;

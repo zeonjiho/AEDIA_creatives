@@ -4,7 +4,7 @@ import {
   HiX, HiPencil, HiSave, HiPlus,
   HiInformationCircle, HiTag, HiChartBar, HiCalendar, 
   HiUserGroup, HiLightBulb, HiDocumentText, HiUsers,
-  HiPhotograph, HiTrash
+  HiPhotograph, HiTrash, HiCheck, HiClock, HiUser
 } from 'react-icons/hi';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
 
@@ -32,6 +32,41 @@ const ProjectDetailModal = ({
 
   // 프로젝트 개요 편집 상태
   const [tempDescription, setTempDescription] = useState('');
+
+  // Todo 관련 상태
+  const [todos, setTodos] = useState([
+    {
+      _id: 'todo1',
+      text: '프로젝트 기획서 작성',
+      completed: false,
+      dueDate: '2024-01-15',
+      dueTime: '14:00',
+      projectId: selectedProject?.id,
+      poster: { name: '김민수' }
+    },
+    {
+      _id: 'todo2', 
+      text: '스토리보드 제작',
+      completed: true,
+      dueDate: '2024-01-12',
+      dueTime: '10:00',
+      projectId: selectedProject?.id,
+      poster: { name: '이영희' }
+    },
+    {
+      _id: 'todo3',
+      text: '촬영 장비 준비',
+      completed: false,
+      dueDate: '2024-01-18',
+      dueTime: '09:30',
+      projectId: selectedProject?.id,
+      poster: { name: '박정호' }
+    }
+  ]);
+  const [newTodoText, setNewTodoText] = useState('');
+  const [newTodoDueDate, setNewTodoDueDate] = useState('');
+  const [newTodoDueTime, setNewTodoDueTime] = useState('');
+  const [showAddTodo, setShowAddTodo] = useState(false);
 
   if (!selectedProject) return null;
 
@@ -207,6 +242,107 @@ const ProjectDetailModal = ({
   const handleDescriptionCancel = () => {
     setEditingDescription(false);
     setTempDescription('');
+  };
+
+  // Todo 관련 함수들
+  const handleAddTodo = (e) => {
+    e.preventDefault();
+    if (!newTodoText.trim()) return;
+
+    const newTodo = {
+      _id: `todo${Date.now()}`,
+      text: newTodoText,
+      completed: false,
+      dueDate: newTodoDueDate || new Date().toISOString().split('T')[0],
+      dueTime: newTodoDueTime || null,
+      projectId: selectedProject.id,
+      poster: { name: '현재 사용자' } // 실제로는 로그인한 사용자 정보
+    };
+
+    setTodos([newTodo, ...todos]);
+    setNewTodoText('');
+    setNewTodoDueDate('');
+    setNewTodoDueTime('');
+    setShowAddTodo(false);
+  };
+
+  const handleToggleTodo = (todoId) => {
+    setTodos(todos.map(todo => 
+      todo._id === todoId ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const handleDeleteTodo = (todoId) => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      setTodos(todos.filter(todo => todo._id !== todoId));
+    }
+  };
+
+  // 날짜 포맷팅 함수 (TodoList와 동일)
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return '오늘';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return '내일';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return '어제';
+    } else {
+      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
+    }
+  };
+
+  const formatDateTime = (dateString, timeString) => {
+    const formattedDate = formatDate(dateString);
+    
+    if (!timeString) return formattedDate;
+    
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const minute = parseInt(minutes);
+    
+    let timeFormat = '';
+    if (hour < 12) {
+      timeFormat = `오전 ${hour}시`;
+    } else if (hour === 12) {
+      timeFormat = `오후 12시`;
+    } else {
+      timeFormat = `오후 ${hour - 12}시`;
+    }
+    
+    if (minute > 0) {
+      timeFormat += ` ${minute}분`;
+    }
+    
+    return `${formattedDate} ${timeFormat}`;
+  };
+
+  const isToday = (dateString) => {
+    if (!dateString) return false;
+    const today = new Date();
+    const date = new Date(dateString);
+    return date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
+  };
+
+  const isOverdue = (dateString) => {
+    if (!dateString) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateString);
+    return date < today;
   };
 
   const getStatusText = (status) => {
@@ -638,14 +774,128 @@ const ProjectDetailModal = ({
             </div>
           </div>
 
-          {/* 작업 수 카드 */}
-          <div className={styles.info_card}>
-            <div className={styles.info_card_header}>
-              <HiDocumentText className={styles.info_card_icon} />
-              <h4>작업 개수</h4>
+          {/* 진행 중인 할 일 섹션 */}
+          <div className={styles.todos_section}>
+            <div className={styles.todos_header}>
+              <h3><HiDocumentText /> 진행 중인 할 일</h3>
+              <div className={styles.todos_actions}>
+                <div className={styles.todos_stats}>
+                  <span className={styles.todos_count}>{todos.filter(t => !t.completed).length}개 진행 중</span>
+                  <span className={styles.todos_completed}>{todos.filter(t => t.completed).length}개 완료</span>
+                </div>
+                <button 
+                  className={styles.add_todo_button}
+                  onClick={() => setShowAddTodo(!showAddTodo)}
+                >
+                  <HiPlus /> 할 일 추가
+                </button>
+              </div>
             </div>
-            <div className={styles.task_count}>
-              <span>{selectedProject.tasks.length}개</span>
+
+            {/* 할 일 추가 폼 */}
+            {showAddTodo && (
+              <form onSubmit={handleAddTodo} className={styles.add_todo_form}>
+                <div className={styles.todo_input_group}>
+                  <input
+                    type="text"
+                    value={newTodoText}
+                    onChange={(e) => setNewTodoText(e.target.value)}
+                    placeholder="새로운 할 일을 입력하세요..."
+                    className={styles.todo_text_input}
+                    required
+                  />
+                </div>
+                <div className={styles.todo_options}>
+                  <div className={styles.todo_date_time}>
+                    <input
+                      type="date"
+                      value={newTodoDueDate}
+                      onChange={(e) => setNewTodoDueDate(e.target.value)}
+                      className={styles.todo_date_input}
+                    />
+                    <input
+                      type="time"
+                      value={newTodoDueTime}
+                      onChange={(e) => setNewTodoDueTime(e.target.value)}
+                      className={styles.todo_time_input}
+                    />
+                  </div>
+                  <div className={styles.todo_form_actions}>
+                    <button 
+                      type="button"
+                      className={styles.cancel_todo_button}
+                      onClick={() => {
+                        setShowAddTodo(false);
+                        setNewTodoText('');
+                        setNewTodoDueDate('');
+                        setNewTodoDueTime('');
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button 
+                      type="submit"
+                      className={styles.save_todo_button}
+                      disabled={!newTodoText.trim()}
+                    >
+                      <HiSave /> 추가
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* 할 일 목록 */}
+            <div className={styles.todos_list}>
+              {todos.length === 0 ? (
+                <div className={styles.no_todos}>
+                  <HiLightBulb />
+                  <p>할 일이 없습니다</p>
+                </div>
+              ) : (
+                todos.map(todo => (
+                  <div 
+                    key={todo._id} 
+                    className={`${styles.todo_item} ${todo.completed ? styles.completed : ''}`}
+                  >
+                    <div className={styles.todo_checkbox}>
+                      <input
+                        type="checkbox"
+                        id={`todo-${todo._id}`}
+                        checked={todo.completed}
+                        onChange={() => handleToggleTodo(todo._id)}
+                      />
+                      <label htmlFor={`todo-${todo._id}`}></label>
+                    </div>
+                    
+                    <div className={styles.todo_content}>
+                      <div className={styles.todo_text}>{todo.text}</div>
+                      <div className={styles.todo_meta}>
+                        <div 
+                          className={`${styles.todo_due_date} ${isToday(todo.dueDate) ? styles.today : ''} ${isOverdue(todo.dueDate) && !todo.completed ? styles.overdue : ''}`}
+                        >
+                          <HiClock />
+                          {formatDateTime(todo.dueDate, todo.dueTime)}
+                        </div>
+                        <div className={styles.todo_author}>
+                          <HiUser />
+                          {todo.poster?.name || 'Unknown'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.todo_actions}>
+                      <button 
+                        className={styles.delete_todo_button}
+                        onClick={() => handleDeleteTodo(todo._id)}
+                        title="삭제"
+                      >
+                        <HiTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
