@@ -22,6 +22,7 @@ const AdminLayout = () => {
     const [expandedMenus, setExpandedMenus] = useState({});
     const [refreshKey, setRefreshKey] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminPasswordOk')) {
@@ -29,6 +30,20 @@ const AdminLayout = () => {
         } else {
             setIsAdmin(true);
         }
+
+        // 모바일 여부 체크
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+            // 모바일에서는 사이드바를 자동으로 접기
+            if (window.innerWidth <= 768) {
+                setMenuCollapsed(true);
+            }
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
     }, [])
 
     // 로그아웃 처리
@@ -109,6 +124,15 @@ const AdminLayout = () => {
         // }
     ];
 
+    // 모바일 네비게이션용 메뉴 데이터 (평면화)
+    const mobileMenuData = [
+        { id: 'dashboard', name: '대시보드', icon: faTachometerAlt, path: '/admin' },
+        { id: 'user-list', name: '직원', icon: faUsers, path: '/admin/user-list' },
+        { id: 'staff-list', name: '스태프', icon: faUsers, path: '/admin/staff-list' },
+        { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal' },
+        { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi' },
+    ];
+
     // 현재 활성화된 대메뉴 확인
     const isActiveMainMenu = (menuId) => {
         const menu = menuData.find(m => m.id === menuId);
@@ -157,122 +181,171 @@ const AdminLayout = () => {
         // 다른 경로면 기본 링크 동작 수행 (navigate는 자동으로 진행됨)
     };
 
+    // 관리자 인증이 안 된 경우
+    // if (!isAdmin) {
+    //     return (
+    //         <div className={ss.authError}>
+    //             <h2>접근 권한이 없습니다</h2>
+    //             <p>관리자 인증이 필요합니다.</p>
+    //             <button onClick={() => window.location.href = '/admin-login'}>
+    //                 로그인 페이지로 이동
+    //             </button>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className={ss.adminContainer}>
-            {/* 좌측 메뉴 사이드바 */}
-            <div className={`${ss.sidebar} ${menuCollapsed ? ss.collapsed : ''}`}>
-                <div className={ss.sidebarHeader}>
-                    {!menuCollapsed && (
-                        <>
-                            <h2 className={ss.title}>AEDIA Studio</h2>
-                            <h3 className={ss.subtitle}>관리자 페이지</h3>
-                        </>
-                    )}
-                    <button
-                        className={ss.toggleBtn}
-                        onClick={toggleSidebar}
-                        aria-label="메뉴 접기/펼치기"
-                    >
-                        <FontAwesomeIcon icon={faBars} />
-                    </button>
-                </div>
+            {/* 데스크톱 좌측 메뉴 사이드바 */}
+            {!isMobile && (
+                <div className={`${ss.sidebar} ${menuCollapsed ? ss.collapsed : ''}`}>
+                    <div className={ss.sidebarHeader}>
+                        {!menuCollapsed && (
+                            <>
+                                <h2 className={ss.title}>AEDIA Studio</h2>
+                                <h3 className={ss.subtitle}>관리자 페이지</h3>
+                            </>
+                        )}
+                        <button
+                            className={ss.toggleBtn}
+                            onClick={toggleSidebar}
+                            aria-label="메뉴 접기/펼치기"
+                        >
+                            <FontAwesomeIcon icon={faBars} />
+                        </button>
+                    </div>
 
-                <nav className={ss.navigation}>
-                    <ul className={ss.mainMenu}>
-                        <li className={`${location.pathname === '/admin' ? ss.active : ''} ${ss.menuLi}`}>
-                            <Link
-                                to="/admin"
-                                className={ss.menuItem}
-                                onClick={(e) => handleMenuClick('/admin', e)}
-                            >
-                                <div className={ss.iconWrapper}>
-                                    <FontAwesomeIcon icon={faTachometerAlt} />
-                                </div>
-                                {!menuCollapsed && <span className={ss.menuText}>대시보드</span>}
-                            </Link>
-                        </li>
-
-                        {menuData.map((menu) => (
-                            <li
-                                key={menu.id}
-                                className={`${isActiveMainMenu(menu.id) ? ss.active : ''} ${expandedMenus[menu.id] ? ss.expanded : ''} ${ss.menuLi}`}
-                            >
-                                <div
+                    <nav className={ss.navigation}>
+                        <ul className={ss.mainMenu}>
+                            <li className={`${location.pathname === '/admin' ? ss.active : ''} ${ss.menuLi}`}>
+                                <Link
+                                    to="/admin"
                                     className={ss.menuItem}
-                                    onClick={() => menuCollapsed ? navigate(menu.submenus[0].path) : toggleMenu(menu.id)}
+                                    onClick={(e) => handleMenuClick('/admin', e)}
                                 >
                                     <div className={ss.iconWrapper}>
-                                        <FontAwesomeIcon icon={menu.icon} />
+                                        <FontAwesomeIcon icon={faTachometerAlt} />
                                     </div>
-                                    {!menuCollapsed && (
-                                        <>
-                                            <span className={ss.menuText}>{menu.name}</span>
-                                            <FontAwesomeIcon
-                                                className={ss.chevron}
-                                                icon={expandedMenus[menu.id] ? faChevronDown : faChevronRight}
-                                            />
-                                        </>
-                                    )}
-                                </div>
-
-                                {!menuCollapsed && expandedMenus[menu.id] && (
-                                    <ul className={ss.submenu}>
-                                        {menu.submenus.map(submenu => (
-                                            <li
-                                                key={submenu.id}
-                                                className={`${location.pathname === submenu.path ? ss.active : ''} ${ss.submenuItem}`}
-                                            >
-                                                <Link
-                                                    to={submenu.path}
-                                                    className={ss.submenuLink}
-                                                    onClick={(e) => handleMenuClick(submenu.path, e)}
-                                                >
-                                                    <span>{submenu.name}</span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                    {!menuCollapsed && <span className={ss.menuText}>대시보드</span>}
+                                </Link>
                             </li>
-                        ))}
-                    </ul>
-                </nav>
 
-                <div className={ss.sidebarFooter}>
-                    <button className={`${ss.homeBtn} ${ss.footerBtn}`} onClick={() => navigate('/')}>
-                        <div className={ss.iconWrapper}>
-                            <FontAwesomeIcon icon={faHome} className={ss.footerIcon} />
-                        </div>
-                        {!menuCollapsed && <span className={ss.menuText}>메인 사이트</span>}
-                    </button>
-                    <button className={`${ss.logoutBtn} ${ss.footerBtn}`} onClick={handleLogout}>
-                        <div className={ss.iconWrapper}>
-                            <FontAwesomeIcon icon={faSignOutAlt} className={ss.footerIcon} />
-                        </div>
-                        {!menuCollapsed && <span className={ss.menuText}>로그아웃</span>}
-                    </button>
+                            {menuData.map((menu) => (
+                                <li
+                                    key={menu.id}
+                                    className={`${isActiveMainMenu(menu.id) ? ss.active : ''} ${expandedMenus[menu.id] ? ss.expanded : ''} ${ss.menuLi}`}
+                                >
+                                    <div
+                                        className={ss.menuItem}
+                                        onClick={() => menuCollapsed ? navigate(menu.submenus[0].path) : toggleMenu(menu.id)}
+                                    >
+                                        <div className={ss.iconWrapper}>
+                                            <FontAwesomeIcon icon={menu.icon} />
+                                        </div>
+                                        {!menuCollapsed && (
+                                            <>
+                                                <span className={ss.menuText}>{menu.name}</span>
+                                                <FontAwesomeIcon
+                                                    className={ss.chevron}
+                                                    icon={expandedMenus[menu.id] ? faChevronDown : faChevronRight}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {!menuCollapsed && expandedMenus[menu.id] && (
+                                        <ul className={ss.submenu}>
+                                            {menu.submenus.map(submenu => (
+                                                <li
+                                                    key={submenu.id}
+                                                    className={`${location.pathname === submenu.path ? ss.active : ''} ${ss.submenuItem}`}
+                                                >
+                                                    <Link
+                                                        to={submenu.path}
+                                                        className={ss.submenuLink}
+                                                        onClick={(e) => handleMenuClick(submenu.path, e)}
+                                                    >
+                                                        <span>{submenu.name}</span>
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    <div className={ss.sidebarFooter}>
+                        <button className={`${ss.homeBtn} ${ss.footerBtn}`} onClick={() => navigate('/')}>
+                            <div className={ss.iconWrapper}>
+                                <FontAwesomeIcon icon={faHome} className={ss.footerIcon} />
+                            </div>
+                            {!menuCollapsed && <span className={ss.menuText}>메인 사이트</span>}
+                        </button>
+                        <button className={`${ss.logoutBtn} ${ss.footerBtn}`} onClick={handleLogout}>
+                            <div className={ss.iconWrapper}>
+                                <FontAwesomeIcon icon={faSignOutAlt} className={ss.footerIcon} />
+                            </div>
+                            {!menuCollapsed && <span className={ss.menuText}>로그아웃</span>}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* 메인 컨텐츠 영역 - refreshKey를 Outlet의 컨텍스트로 전달 */}
-            <div className={`${ss.mainContent} ${menuCollapsed ? ss.expanded : ''}`}>
-                <header className={ss.header}>
-                    <div className={ss.headerLeft}>
-                        <h2>{getCurrentMenuName()}</h2>
-                    </div>
-                    <div className={ss.headerRight}>
-                        <div className={ss.adminInfo}>
-                            <span className={ss.adminName}>관리자</span>
+            {/* 메인 컨텐츠 영역 */}
+            <div className={`${ss.mainContent} ${menuCollapsed ? ss.expanded : ''} ${isMobile ? ss.mobile : ''}`}>
+                {/* 모바일 헤더 */}
+                {isMobile && (
+                    <header className={ss.mobileHeader}>
+                        <div className={ss.mobileHeaderContent}>
+                            <h2 className={ss.mobileTitle}>AEDIA Studio</h2>
+                            <div className={ss.mobileSubtitle}>{getCurrentMenuName()}</div>
                         </div>
-                    </div>
-                </header>
+                        <button className={ss.mobileLogoutBtn} onClick={handleLogout}>
+                            <FontAwesomeIcon icon={faSignOutAlt} />
+                        </button>
+                    </header>
+                )}
+
+                {/* 데스크톱 헤더 */}
+                {!isMobile && (
+                    <header className={ss.header}>
+                        <div className={ss.headerLeft}>
+                            <h2>{getCurrentMenuName()}</h2>
+                        </div>
+                        <div className={ss.headerRight}>
+                            <div className={ss.adminInfo}>
+                                <span className={ss.adminName}>관리자</span>
+                            </div>
+                        </div>
+                    </header>
+                )}
 
                 <main className={ss.content}>
                     {/* refreshKey를 key로 사용하여 Outlet 컴포넌트 다시 마운트 */}
                     <Outlet key={refreshKey} context={{ refreshKey, setRefreshKey }} />
                 </main>
             </div>
+
+            {/* 모바일 하단 네비게이션 */}
+            {isMobile && (
+                <nav className={ss.mobileNav}>
+                    <div className={ss.mobileNavContent}>
+                        {mobileMenuData.map((item) => (
+                            <Link
+                                key={item.id}
+                                to={item.path}
+                                className={`${ss.mobileNavItem} ${location.pathname === item.path ? ss.active : ''}`}
+                                onClick={(e) => handleMenuClick(item.path, e)}
+                            >
+                                <FontAwesomeIcon icon={item.icon} className={ss.mobileNavIcon} />
+                                <span className={ss.mobileNavText}>{item.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }

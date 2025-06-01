@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import ss from './AdminUser.module.css'
+import ss from '../CSS/AdminChart.module.css'
 import api from '../../../utils/api'
+import ExportButton from '../../../components/ExportButton/ExportButton'
+import UserModal from './UserModal'
+import { generateTableCSV } from '../../../utils/exportUtils'
 
 const AdminUser = () => {
 
   const [userList, setUserList] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUserList();
@@ -28,7 +33,10 @@ const AdminUser = () => {
   }
 
   // 유저 승인 처리
-  const handleApproveUser = async (userId) => {
+  const handleApproveUser = async (userId, event) => {
+    // 이벤트 버블링 방지
+    event.stopPropagation();
+    
     // 승인 확인 다이얼로그
     const isConfirmed = window.confirm('이 사용자를 승인하시겠습니까?');
     if (!isConfirmed) {
@@ -47,13 +55,36 @@ const AdminUser = () => {
     }
   }
 
+  // 모달 열기
+  const handleRowClick = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  // 사용자 정보 업데이트 처리
+  const handleUserUpdate = (updatedUser) => {
+    setUserList(prevList => 
+      prevList.map(user => 
+        user._id === updatedUser._id ? updatedUser : user
+      )
+    );
+    // 사용자가 삭제되거나 상태가 변경된 경우 전체 목록 새로고침
+    fetchUserList();
+  };
+
   // 상태에 따른 스타일 클래스 반환
   const getStatusClass = (status) => {
     switch (status) {
-      case 'waiting': return ss.status_waiting;
+      case 'waiting': return ss.status_warning;
       case 'active': return ss.status_active;
-      case 'inactive': return ss.status_inactive;
-      case 'deleted': return ss.status_deleted;
+      case 'inactive': return ss.status_info;
+      case 'deleted': return ss.status_danger;
       default: return '';
     }
   }
@@ -92,23 +123,110 @@ const AdminUser = () => {
     }
     return phone;
   }
+
+  // 상태별 카운트 계산
+  const getStatusCounts = () => {
+    const counts = {
+      total: userList.length,
+      active: userList.filter(user => user.status === 'active').length,
+      waiting: userList.filter(user => user.status === 'waiting').length,
+      inactive: userList.filter(user => user.status === 'inactive').length,
+      internal: userList.filter(user => user.userType === 'internal').length,
+      external: userList.filter(user => user.userType === 'external').length
+    };
+    return counts;
+  }
+
+  const statusCounts = getStatusCounts();
   
   return (
-    <div className={ss.admin_user_container}>
+    <div className={ss.admin_chart_container}>
       <div className={ss.header}>
-        {/* <h1>유저 관리</h1> */}
-        <div className={ss.user_count}>
-          총 <span className={ss.count_number}>{userList.length}</span>명
-          {userList.filter(user => user.status === 'waiting').length > 0 && (
-            <span className={ss.waiting_count}>
-              (대기중: {userList.filter(user => user.status === 'waiting').length}명)
-            </span>
-          )}
+        <h1>유저 관리</h1>
+        <div className={ss.summary_stats}>
+          <div className={`${ss.stat_item} ${ss.stat_user}`}>
+            <span className={ss.stat_number}>{statusCounts.total}</span>
+            <div className={ss.stat_label}>총 유저</div>
+          </div>
+          <div className={ss.stat_item}>
+            <span className={ss.stat_number} style={{color: 'var(--warning-color)'}}>{statusCounts.waiting}</span>
+            <div className={ss.stat_label}>승인 대기</div>
+          </div>
+          <div className={ss.stat_item}>
+            <span className={ss.stat_number} style={{color: 'var(--success-color)'}}>{statusCounts.active}</span>
+            <div className={ss.stat_label}>활성 유저</div>
+          </div>
         </div>
       </div>
 
-      <div className={ss.table_container}>
-        <table className={ss.user_table}>
+      {/* 메트릭 카드 */}
+      <div className={ss.metrics_row}>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{statusCounts.internal}</div>
+          <div className={ss.metric_label}>내부 직원</div>
+          <div className={`${ss.metric_change} ${ss.positive}`}>
+            {Math.round((statusCounts.internal / statusCounts.total) * 100)}%
+          </div>
+        </div>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>{statusCounts.external}</div>
+          <div className={ss.metric_label}>외부 스태프</div>
+          <div className={`${ss.metric_change} ${ss.neutral}`}>
+            {Math.round((statusCounts.external / statusCounts.total) * 100)}%
+          </div>
+        </div>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{statusCounts.waiting}</div>
+          <div className={ss.metric_label}>승인 대기</div>
+          <div className={`${ss.metric_change} ${statusCounts.waiting > 0 ? ss.negative : ss.positive}`}>
+            {statusCounts.waiting > 0 ? '처리 필요' : '대기 없음'}
+          </div>
+        </div>
+      </div>
+
+      {/* 차트 영역 */}
+      <div className={ss.chart_grid}>
+        <div className={ss.chart_card}>
+          <div className={ss.chart_title}>
+            <div className={`${ss.chart_icon} ${ss.user}`}></div>
+            유저 현황 차트
+          </div>
+          <div className={ss.chart_content}>
+            <div className={ss.chart_placeholder}>
+              유저 가입 추이 및 활동 현황을 시각화할 수 있습니다
+            </div>
+          </div>
+          <div className={ss.chart_legend}>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--success-color)'}}></div>
+              내부 직원 ({statusCounts.internal})
+            </div>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
+              외부 스태프 ({statusCounts.external})
+            </div>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--warning-color)'}}></div>
+              승인 대기 ({statusCounts.waiting})
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 데이터 테이블 */}
+      <div className={ss.data_table_container}>
+        <div className={ss.table_header}>
+          <div className={ss.table_title}>
+            <div className={`${ss.chart_icon} ${ss.user}`}></div>
+            유저 목록
+          </div>
+          <ExportButton 
+            chartRef={{ current: null }}
+            chartTitle="유저_목록"
+            csvData={generateTableCSV(userList, ['이름', '전화번호', '이메일', '상태', '사용자 유형', '역할', '가입일'])}
+          />
+        </div>
+        <table className={ss.data_table}>
           <thead>
             <tr>
               <th>이름</th>
@@ -123,10 +241,15 @@ const AdminUser = () => {
           </thead>
           <tbody>
             {userList && userList.length > 0 ? userList.map((user, idx) => (
-              <tr key={user._id || idx} className={user.status === 'waiting' ? ss.waiting_row : ''}>
-                <td className={ss.name_cell}>
+              <tr 
+                key={user._id || idx} 
+                className={user.status === 'waiting' ? ss.waiting_row : ''}
+                onClick={() => handleRowClick(user)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td style={{fontWeight: '600', color: 'var(--text-primary)', position: 'relative', display: 'flex', alignItems: 'center', gap: '8px'}}>
                   {user.name}
-                  {user.status === 'waiting' && <span className={ss.new_badge}>NEW</span>}
+                  {user.status === 'waiting' && <span style={{backgroundColor: 'var(--warning-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px'}}>NEW</span>}
                 </td>
                 <td>{formatPhoneNumber(user.phone)}</td>
                 <td>{user.email || '-'}</td>
@@ -136,18 +259,40 @@ const AdminUser = () => {
                   </span>
                 </td>
                 <td>{getUserTypeText(user.userType)}</td>
-                <td className={ss.roles_cell}>
+                <td style={{maxWidth: '200px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
                   {user.roles && user.roles.length > 0 
                     ? user.roles.join(', ') 
                     : '-'
                   }
                 </td>
                 <td>{formatDate(user.createdAt)}</td>
-                <td className={ss.action_cell}>
+                <td style={{textAlign: 'center', padding: '12px', verticalAlign: 'middle', width: '120px'}}>
                   {user.status === 'waiting' && (
                     <button 
-                      className={ss.approve_button}
-                      onClick={() => handleApproveUser(user._id)}
+                      style={{
+                        backgroundColor: 'var(--success-color)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-block',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={(e) => handleApproveUser(user._id, e)}
+                      onMouseOver={(e) => {
+                        e.target.style.backgroundColor = '#2d8f47';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 4px rgba(64, 192, 87, 0.3)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.backgroundColor = 'var(--success-color)';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
                       승인하기
                     </button>
@@ -156,7 +301,7 @@ const AdminUser = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" className={ss.no_data}>
+                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 유저가 없습니다.
                 </td>
               </tr>
@@ -164,6 +309,14 @@ const AdminUser = () => {
           </tbody>
         </table>
       </div>
+
+      {/* User Modal */}
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        user={selectedUser}
+        onUpdate={handleUserUpdate}
+      />
     </div>
   )
 }
