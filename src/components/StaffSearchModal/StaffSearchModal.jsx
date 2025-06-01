@@ -58,7 +58,12 @@ const StaffSearchModal = ({
     try {
       const response = await api.get('/get-user-list?userType=all');
       if (response.status === 200) {
-        setAllPeople(response.data);
+        // MongoDB _id를 id로 통일화
+        const peopleWithIds = response.data.map(person => ({
+          ...person,
+          id: person._id || person.id // _id가 있으면 _id를 사용, 없으면 기존 id 사용
+        }));
+        setAllPeople(peopleWithIds);
       }
     } catch (err) {
       console.log('스탭 데이터 로딩 실패:', err);
@@ -73,11 +78,20 @@ const StaffSearchModal = ({
 
   useEffect(() => {
     if (isOpen) {
+      // 모달이 처음 열릴 때만 초기 설정
       setLocalSelected(selectedPeople);
       setFilterType(initialFilterType);
       console.log('모달 열림 - initialFilterType:', initialFilterType);
+      console.log('초기 선택된 인원:', selectedPeople);
+    } else {
+      // 모달이 닫힐 때만 상태 초기화
+      console.log('모달 닫힘 - 상태 초기화');
+      setLocalSelected([]);
+      setSearchTerm('');
+      setShowAddForm(false);
+      setFilteredPeople([]);
     }
-  }, [isOpen, selectedPeople, initialFilterType]);
+  }, [isOpen]); // selectedPeople과 initialFilterType 의존성 제거
 
   useEffect(() => {
     // 모달이 열려있을 때만 필터링 실행
@@ -113,16 +127,59 @@ const StaffSearchModal = ({
     };
   }, []);
 
+  // 안전한 ID 비교 함수
+  const getPersonId = (person) => {
+    return person._id || person.id;
+  };
+
+  // 선택 상태 변화 추적
+  useEffect(() => {
+    if (localSelected.length > 0) {
+      console.log('👥 선택 상태 변화:', localSelected.map(p => ({ 
+        name: p.name, 
+        id: p._id || p.id 
+      })));
+    } else {
+      console.log('👥 선택 상태 변화: 빈 배열');
+    }
+  }, [localSelected]);
+
   if (!isOpen) return null;
 
-  const handlePersonToggle = (person) => {
+  const handlePersonToggle = (person, event) => {
+    // 이벤트 버블링 방지
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    console.log('=== 선택/해제 시도 ===');
+    console.log('대상:', person.name, 'ID:', getPersonId(person));
+    console.log('멀티선택 모드:', multiSelect);
+    
     if (multiSelect) {
-      const isSelected = localSelected.some(p => p.id === person.id);
-      if (isSelected) {
-        setLocalSelected(localSelected.filter(p => p.id !== person.id));
-      } else {
-        setLocalSelected([...localSelected, person]);
-      }
+      const personId = getPersonId(person);
+      
+      // 현재 선택된 상태를 안전하게 확인
+      setLocalSelected(prevSelected => {
+        const isSelected = prevSelected.some(p => getPersonId(p) === personId);
+        
+        console.log('현재 선택 상태:', isSelected);
+        console.log('현재 선택된 인원들:', prevSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
+        
+        let newSelected;
+        if (isSelected) {
+          // 선택 해제
+          newSelected = prevSelected.filter(p => getPersonId(p) !== personId);
+          console.log('선택 해제 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
+        } else {
+          // 선택 추가
+          newSelected = [...prevSelected, person];
+          console.log('선택 추가 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
+        }
+        
+        return newSelected;
+      });
     } else {
       setLocalSelected([person]);
     }
@@ -134,12 +191,8 @@ const StaffSearchModal = ({
   };
 
   const handleClose = () => {
-    console.log('모달 닫기 시작');
-    setSearchTerm('');
-    setFilterType(initialFilterType);
-    setLocalSelected([]);
-    setShowAddForm(false);
-    setFilteredPeople([]); // 필터링 결과도 초기화
+    console.log('모달 닫기 요청');
+    // 새 스탭 추가 폼만 초기화
     setNewStaff({
       name: '',
       position: '',
@@ -148,12 +201,13 @@ const StaffSearchModal = ({
       phone: '',
       email: ''
     });
-    console.log('모달 상태 초기화 완료');
+    // 모달 닫기 - useEffect에서 나머지 상태 초기화 처리됨
     onClose();
   };
 
   const isPersonSelected = (person) => {
-    return localSelected.some(p => p.id === person.id);
+    const personId = getPersonId(person);
+    return localSelected.some(p => getPersonId(p) === personId);
   };
 
   const handleNewStaffChange = (e) => {
@@ -188,10 +242,10 @@ const StaffSearchModal = ({
         // 서버에서 생성된 스탭 정보
         const createdStaff = response.data.staff;
         
-        // 로컬 ID 추가 (프론트엔드 호환성을 위해)
+        // ID 통일화 적용
         const staffToAdd = {
           ...createdStaff,
-          id: createdStaff._id, // MongoDB의 _id를 id로도 사용
+          id: createdStaff._id || createdStaff.id, // ID 통일화
           isExternal: true // 외부 인력 표시
         };
 
@@ -239,10 +293,22 @@ const StaffSearchModal = ({
   // 새 스탭 추가 버튼은 스탭 필터가 활성화되거나 전체일 때만 표시
   const showAddStaffButton = filterType === 'all' || filterType === 'external';
 
+  const handleBackgroundClick = (e) => {
+    // 배경만 클릭했을 때만 모달 닫기
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handlePanelClick = (e) => {
+    // 모달 패널 내부 클릭 시 이벤트 버블링 방지
+    e.stopPropagation();
+  };
+
   return (
     <div className={styles.modal_wrapper}>
-      <div className={styles.modal_background} onClick={handleClose}></div>
-      <div className={styles.modal_panel}>
+      <div className={styles.modal_background} onClick={handleBackgroundClick}></div>
+      <div className={styles.modal_panel} onClick={handlePanelClick}>
         <div className={styles.panel_header}>
           <div className={styles.panel_title}>
             <h2>{title}</h2>
@@ -443,7 +509,7 @@ const StaffSearchModal = ({
               <h4>선택된 인원 ({localSelected.length}명)</h4>
               <div className={styles.selected_list}>
                 {localSelected.map(person => (
-                  <div key={person.id} className={styles.selected_item}>
+                  <div key={getPersonId(person)} className={styles.selected_item}>
                     <div className={styles.selected_avatar}>
                       {person.name.charAt(0)}
                     </div>
@@ -454,7 +520,7 @@ const StaffSearchModal = ({
                     {person.isExternal && <span className={styles.external_badge}>외부</span>}
                     <button
                       className={styles.remove_selected}
-                      onClick={() => handlePersonToggle(person)}
+                      onClick={(e) => handlePersonToggle(person, e)}
                     >
                       <HiX />
                     </button>
@@ -474,9 +540,9 @@ const StaffSearchModal = ({
               ) : (
                 filteredPeople.map(person => (
                   <div
-                    key={person.id}
+                    key={getPersonId(person)}
                     className={`${styles.person_card} ${isPersonSelected(person) ? styles.selected : ''}`}
-                    onClick={() => handlePersonToggle(person)}
+                    onClick={(e) => handlePersonToggle(person, e)}
                   >
                     <div className={styles.person_avatar}>
                       {person.name.charAt(0)}

@@ -54,49 +54,49 @@ mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mon
 cron.schedule('0 0 * * *', async () => {
     try {
         console.log(`\x1b[33m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 시작\x1b[0m`);
-        
+
         // 7일 전 날짜 계산
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
+
         // 1. 회의실 예약 정리
         console.log(`\x1b[34m[회의실 예약 정리 시작]\x1b[0m`);
         const rooms = await Room.find({});
         let totalDeletedReservations = 0;
-        
+
         for (const room of rooms) {
             // 7일 이상 경과한 예약 필터링
             const reservationsToDelete = room.reservations.filter(reservation => {
                 const endTime = new Date(reservation.endTime);
                 return endTime < sevenDaysAgo;
             });
-            
+
             if (reservationsToDelete.length > 0) {
                 // 7일 이상 경과한 예약들을 제거
                 room.reservations = room.reservations.filter(reservation => {
                     const endTime = new Date(reservation.endTime);
                     return endTime >= sevenDaysAgo;
                 });
-                
+
                 await room.save();
                 totalDeletedReservations += reservationsToDelete.length;
-                
+
                 console.log(`\x1b[36m회의실 "${room.roomName}": ${reservationsToDelete.length}개 예약 삭제\x1b[0m`);
             }
         }
-        
+
         console.log(`\x1b[32m회의실 예약 정리 완료 - 총 ${totalDeletedReservations}개 예약 삭제\x1b[0m`);
-        
+
         // 2. SlackCode 정리
         console.log(`\x1b[34m[SlackCode 정리 시작]\x1b[0m`);
         const deleteResult = await SlackCode.deleteMany({
             createdAt: { $lt: sevenDaysAgo }
         });
-        
+
         console.log(`\x1b[32mSlackCode 정리 완료 - 총 ${deleteResult.deletedCount}개 인증코드 삭제\x1b[0m`);
-        
+
         console.log(`\x1b[32m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 완료 - 예약 ${totalDeletedReservations}개, 인증코드 ${deleteResult.deletedCount}개 삭제\x1b[0m`);
-        
+
     } catch (error) {
         console.error(`\x1b[31m[${new Date().toLocaleString()}] 데이터 정리 중 오류:`, error, '\x1b[0m');
     }
@@ -110,6 +110,35 @@ app.use(cors());
 
 // 업로드된, 실제 이미지 서빙을 위한 정적 파일 경로 설정
 app.use('/uploads', express.static('uploads'));
+
+// ----------------------------------------------------------
+// Multer 설정
+// ----------------------------------------------------------
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './uploads/product/');
+    },
+    filename: (req, file, cb) => {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000000); // 6자리 랜덤 숫자로 변경
+        const ext = path.extname(file.originalname);
+        cb(null, `${timestamp}-${randomNum}${ext}`);
+    }
+});
+
+// uploads 디렉토리 확인 및 생성
+const uploadDir = './uploads/product';
+if (!fs.existsSync('./uploads')) {
+    fs.mkdirSync('./uploads');
+}
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 25 * 1024 * 1024 } // 25MB 제한
+});
 
 
 // ----------------------------------------------------------
