@@ -9,6 +9,7 @@ import EventModal from './components/EventModal'
 import AddEventModal from './components/AddEventModal'
 import ProjectInfoModal from './components/ProjectInfoModal'
 import ProjectLinkModal from './components/ProjectLinkModal'
+import api from '../../utils/api'
 
 // moment 한국어 설정
 moment.locale('ko')
@@ -374,11 +375,39 @@ const CalendarPage = () => {
     // 프로젝트 데이터 로드 함수
     const loadProjects = async () => {
         try {
-            // 실제 API 호출 (예시)
-            // const response = await fetch('/api/projects')
-            // const projectData = await response.json()
+            console.log('프로젝트 목록 조회 시작')
+            const response = await api.get('/projects')
+            console.log('프로젝트 목록 조회 성공:', response.data.length, '개')
+            console.log('응답 데이터:', response.data)
             
-            // 임시 목업 데이터 (실제 DB 스키마에 맞춤)
+            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환
+            const formattedProjects = response.data.map(project => ({
+                _id: project._id || project.id,
+                title: project.title,
+                description: project.description || '',
+                status: project.status,
+                progress: project.progress || 0,
+                thumbnail: project.thumbnail,
+                deadline: project.deadline,
+                team: project.team || [],
+                staffList: project.staffList || [],
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt
+            }))
+            
+            console.log('포맷된 프로젝트 데이터:', formattedProjects)
+            setProjects(formattedProjects)
+        } catch (error) {
+            console.error('프로젝트 로드 실패:', error)
+            console.error('에러 세부사항:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                statusText: error.response?.statusText
+            })
+            
+            // API 실패 시 목업 데이터로 폴백
+            console.log('API 실패로 목업 데이터 사용')
             const mockProjects = [
                 {
                     _id: '507f1f77bcf86cd799439011',
@@ -392,11 +421,14 @@ const CalendarPage = () => {
                     staffList: [
                         {
                             roleName: '프로젝트 매니저',
-                            members: [{ userId: '507f191e810c19729de860ea' }]
+                            members: [{ userId: '507f191e810c19729de860ea', name: '김민수', userType: 'internal' }]
                         },
                         {
                             roleName: '개발자',
-                            members: [{ userId: '507f191e810c19729de860eb' }, { userId: '507f191e810c19729de860ec' }]
+                            members: [
+                                { userId: '507f191e810c19729de860eb', name: '이지현', userType: 'internal' }, 
+                                { userId: '507f191e810c19729de860ec', name: '박준호', userType: 'internal' }
+                            ]
                         }
                     ],
                     createdAt: new Date('2024-01-15'),
@@ -414,11 +446,11 @@ const CalendarPage = () => {
                     staffList: [
                         {
                             roleName: 'UI/UX 디자이너',
-                            members: [{ userId: '507f191e810c19729de860ed' }]
+                            members: [{ userId: '507f191e810c19729de860ed', name: '정수영', userType: 'internal' }]
                         },
                         {
                             roleName: '프론트엔드 개발자',
-                            members: [{ userId: '507f191e810c19729de860ee' }]
+                            members: [{ userId: '507f191e810c19729de860ee', name: '최원석', userType: 'internal' }]
                         }
                     ],
                     createdAt: new Date('2024-02-01'),
@@ -436,11 +468,18 @@ const CalendarPage = () => {
                     staffList: [
                         {
                             roleName: '브랜드 디자이너',
-                            members: [{ userId: '507f191e810c19729de860ef' }]
+                            members: [{ userId: '507f191e810c19729de860ef', name: '김소연', userType: 'internal' }]
                         },
                         {
                             roleName: '그래픽 디자이너',
-                            members: [{ userId: '507f191e810c19729de860f0' }, { userId: '507f191e810c19729de860f1' }]
+                            members: [
+                                { userId: '507f191e810c19729de860f0', name: '안태현', userType: 'internal' }, 
+                                { userId: '507f191e810c19729de860f1', name: '윤혜진', userType: 'internal' }
+                            ]
+                        },
+                        {
+                            roleName: '외부 컨설턴트',
+                            members: [{ userId: '507f191e810c19729de860f3', name: '브랜딩 전문가 이재훈', userType: 'external' }]
                         }
                     ],
                     createdAt: new Date('2024-03-10'),
@@ -458,7 +497,11 @@ const CalendarPage = () => {
                     staffList: [
                         {
                             roleName: '풀스택 개발자',
-                            members: [{ userId: '507f191e810c19729de860f2' }]
+                            members: [{ userId: '507f191e810c19729de860f2', name: '홍길동', userType: 'internal' }]
+                        },
+                        {
+                            roleName: '클라이언트',
+                            members: [{ userId: '507f191e810c19729de860f4', name: '(주)테크노스 김대표', userType: 'external' }]
                         }
                     ],
                     createdAt: new Date('2024-04-01'),
@@ -467,8 +510,12 @@ const CalendarPage = () => {
             ]
             
             setProjects(mockProjects)
-        } catch (error) {
-            console.error('프로젝트 로드 실패:', error)
+            
+            // 사용자에게 알림 표시
+            setToast({ 
+                type: 'error', 
+                message: 'API 연결 실패 - 임시 데이터를 사용합니다.' 
+            })
         }
     }
 
@@ -502,6 +549,8 @@ const CalendarPage = () => {
 
     // 연동된 프로젝트 찾기 (이제 실제 연동 데이터 사용)
     const getLinkedProjectForEvent = (event) => {
+        if (!event) return null
+        
         const eventId = event.id || event.title
         const link = eventProjectLinks.find(link => link.eventId === eventId)
         return link ? projects.find(p => p._id === link.projectId) : null
@@ -509,6 +558,8 @@ const CalendarPage = () => {
 
     // 기존 getProjectForEvent 함수를 수정 (연동된 프로젝트 우선)
     const getProjectForEvent = (event) => {
+        if (!event) return null
+        
         // 먼저 연동된 프로젝트가 있는지 확인
         const linkedProject = getLinkedProjectForEvent(event)
         if (linkedProject) {
@@ -586,6 +637,15 @@ const CalendarPage = () => {
                                 )}
                             </span>
                         )}
+                        <br />
+                        <span style={{ fontSize: '0.9em', color: 'var(--text-secondary)' }}>
+                            📁 프로젝트: {projects.length}개 로드됨
+                            {projects.length === 0 && (
+                                <span style={{ color: 'var(--warning-color)', marginLeft: '0.5rem' }}>
+                                    ⚠️ 프로젝트 데이터 없음
+                                </span>
+                            )}
+                        </span>
                     </p>
                 </div>
                 
@@ -706,8 +766,7 @@ const CalendarPage = () => {
                         minHeight: '400px'
                     }}
                     onSelectEvent={handleSelectEvent}
-                    onSelectSlot={handleSelectSlot}
-                    selectable={true}
+                    selectable={false}
                     views={['month', 'week', 'day', 'agenda']}
                     view={currentView}
                     onView={setCurrentView}

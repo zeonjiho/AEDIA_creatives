@@ -1,15 +1,15 @@
 import React from 'react'
 import ss from './ProjectInfoModal.module.css'
-import { FaUser, FaClock, FaCalendarAlt, FaTags, FaExternalLinkAlt, FaLink } from 'react-icons/fa'
+import { FaUser, FaClock, FaCalendarAlt, FaTags, FaExternalLinkAlt, FaLink, FaUsers } from 'react-icons/fa'
 
 const ProjectInfoModal = ({ event, position, isVisible, onMouseEnter, onMouseLeave, project }) => {
     if (!isVisible || !event) return null
 
-    // 프로젝트가 연동되지 않은 경우
+    // 프로젝트가 연동되지 않은 경우 - 작은 모달
     if (!project) {
         return (
             <div 
-                className={ss.modal_overlay}
+                className={`${ss.modal_overlay} ${ss.compact}`}
                 style={{
                     left: position.x,
                     top: position.y,
@@ -17,35 +17,23 @@ const ProjectInfoModal = ({ event, position, isVisible, onMouseEnter, onMouseLea
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
             >
-                <div className={ss.modal_content}>
-                    <div className={ss.unlinked_content}>
-                        <FaLink className={ss.unlinked_icon} />
-                        <h3 className={ss.unlinked_title}>프로젝트 연동 필요</h3>
-                        <p className={ss.unlinked_description}>
-                            이 이벤트는 아직 프로젝트와 연동되지 않았습니다.
-                        </p>
-                        <div className={ss.event_info_simple}>
-                            <div className={ss.event_title_simple}>
-                                <strong>{event.title}</strong>
-                            </div>
-                            <div className={ss.event_time_simple}>
-                                <FaClock className={ss.time_icon} />
-                                {event.start?.toLocaleString('ko-KR', { 
-                                    month: 'short', 
-                                    day: 'numeric', 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                })}
-                                {event.end && ` - ${event.end.toLocaleString('ko-KR', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                })}`}
-                            </div>
+                <div className={`${ss.modal_content} ${ss.compact_content}`}>
+                    <div className={ss.unlinked_content_compact}>
+                        <div className={ss.event_title_compact}>
+                            {event.title}
                         </div>
-                        <div className={ss.unlinked_action}>
-                            <span className={ss.action_text}>
-                                상단의 "프로젝트 연동" 버튼을 클릭하여 연동하세요
-                            </span>
+                        <div className={ss.event_time_compact}>
+                            <FaClock className={ss.time_icon_compact} />
+                            {event.start?.toLocaleString('ko-KR', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            })}
+                        </div>
+                        <div className={ss.unlinked_status}>
+                            <FaLink className={ss.unlinked_icon_compact} />
+                            프로젝트 연동 필요
                         </div>
                     </div>
                 </div>
@@ -98,28 +86,89 @@ const ProjectInfoModal = ({ event, position, isVisible, onMouseEnter, onMouseLea
         return priorityMap[status] || '보통'
     }
 
-    // 팀원 수 계산
-    const getTeamMemberCount = () => {
+    // 팀원 수 계산 및 상세 정보
+    const getTeamDetails = () => {
         if (projectInfo.staffList && projectInfo.staffList.length > 0) {
-            return projectInfo.staffList.reduce((total, role) => {
+            const totalMembers = projectInfo.staffList.reduce((total, role) => {
                 return total + (role.members ? role.members.length : 0)
             }, 0)
+            
+            const internalTeam = []
+            const externalTeam = []
+            
+            projectInfo.staffList.forEach(role => {
+                const internalMembers = []
+                const externalMembers = []
+                
+                // 각 역할의 멤버들을 userType에 따라 분류
+                if (role.members) {
+                    role.members.forEach(member => {
+                        // 실제 유저 객체인 경우 (populated)
+                        if (member.userId && member.userId.userType) {
+                            if (member.userId.userType === 'internal') {
+                                internalMembers.push(member)
+                            } else {
+                                externalMembers.push(member)
+                            }
+                        }
+                        // 직접 userType이 있는 경우
+                        else if (member.userType) {
+                            if (member.userType === 'internal') {
+                                internalMembers.push(member)
+                            } else {
+                                externalMembers.push(member)
+                            }
+                        }
+                        // 기본값: external로 처리
+                        else {
+                            externalMembers.push(member)
+                        }
+                    })
+                }
+                
+                // 내부팀에 멤버가 있으면 추가
+                if (internalMembers.length > 0) {
+                    internalTeam.push({
+                        role: role.roleName,
+                        count: internalMembers.length,
+                        members: internalMembers
+                    })
+                }
+                
+                // 외부팀에 멤버가 있으면 추가
+                if (externalMembers.length > 0) {
+                    externalTeam.push({
+                        role: role.roleName,
+                        count: externalMembers.length,
+                        members: externalMembers
+                    })
+                }
+            })
+            
+            const internalCount = internalTeam.reduce((sum, role) => sum + role.count, 0)
+            const externalCount = externalTeam.reduce((sum, role) => sum + role.count, 0)
+            
+            return { 
+                totalMembers, 
+                internalTeam, 
+                externalTeam,
+                internalCount,
+                externalCount
+            }
         }
-        return projectInfo.team ? projectInfo.team.length : 0
-    }
-
-    // 역할별 팀원 정보 가져오기
-    const getRoleInfo = () => {
-        if (projectInfo.staffList && projectInfo.staffList.length > 0) {
-            return projectInfo.staffList.map(role => role.roleName).join(', ')
+        
+        return { 
+            totalMembers: projectInfo.team ? projectInfo.team.length : 0, 
+            internalTeam: [],
+            externalTeam: [],
+            internalCount: 0,
+            externalCount: 0
         }
-        return '팀원 정보 없음'
     }
 
     const koreanStatus = getStatusInKorean(projectInfo.status)
     const priority = getPriorityFromStatus(projectInfo.status)
-    const teamCount = getTeamMemberCount()
-    const roleInfo = getRoleInfo()
+    const { totalMembers, internalTeam, externalTeam, internalCount, externalCount } = getTeamDetails()
 
     return (
         <div 
@@ -132,83 +181,136 @@ const ProjectInfoModal = ({ event, position, isVisible, onMouseEnter, onMouseLea
             onMouseLeave={onMouseLeave}
         >
             <div className={ss.modal_content}>
-                {/* 헤더 */}
+                {/* 헤더 - 간소화 */}
                 <div className={ss.modal_header}>
-                    <div className={ss.project_title}>
-                        <FaExternalLinkAlt className={ss.title_icon} />
-                        {projectInfo.title}
-                    </div>
-                    <div className={ss.client_name}>
-                        <FaUser /> 프로젝트 ID: {projectInfo._id ? projectInfo._id.slice(-6) : 'N/A'}
+                    <div className={ss.project_title}>{projectInfo.title}</div>
+                    <div className={ss.status_badges}>
+                        <span className={ss.status_badge}>{koreanStatus}</span>
+                        <span className={ss.progress_badge}>{projectInfo.progress}%</span>
                     </div>
                 </div>
 
-                {/* 진행률 */}
-                <div className={ss.progress_section}>
-                    <div className={ss.progress_label}>
-                        <span>진행률</span>
-                        <span className={ss.progress_percent}>{projectInfo.progress}%</span>
+                {/* 팀원 정보 - 간소화 */}
+                {(internalTeam.length > 0 || externalTeam.length > 0) && (
+                    <div className={ss.team_section}>
+                        {/* 내부팀 */}
+                        {internalTeam.length > 0 && (
+                            <div className={ss.team_group}>
+                                <div className={ss.team_header}>
+                                    <span className={ss.team_label}>내부팀 {internalCount}명</span>
+                                </div>
+                                {internalTeam.map((role, index) => (
+                                    <div key={index} className={`${ss.role_line} ${ss.internal}`}>
+                                        <span className={ss.role_title}>{role.role}</span>
+                                        <div className={ss.members_inline}>
+                                            {role.members.map((member, memberIndex) => {
+                                                // 안전하게 이름 추출 - userId populated 케이스도 고려
+                                                let memberName = '알 수 없음'
+                                                
+                                                if (typeof member === 'string') {
+                                                    memberName = member
+                                                } else if (member && typeof member === 'object') {
+                                                    // populated userId가 있는 경우
+                                                    if (member.userId && member.userId.name) {
+                                                        memberName = member.userId.name
+                                                    }
+                                                    // 직접 name이 있는 경우
+                                                    else if (member.name) {
+                                                        memberName = member.name
+                                                    }
+                                                    // userId string이 있는 경우 (ID만 있는 경우)
+                                                    else if (member.userId && typeof member.userId === 'string') {
+                                                        memberName = `사용자 ${member.userId.slice(-4)}`
+                                                    }
+                                                    // 다른 식별자들
+                                                    else if (member.email) {
+                                                        memberName = member.email.split('@')[0]
+                                                    }
+                                                    else if (member._id) {
+                                                        memberName = `팀원 ${member._id.slice(-4)}`
+                                                    }
+                                                    else {
+                                                        memberName = `팀원 ${memberIndex + 1}`
+                                                    }
+                                                }
+                                                
+                                                return (
+                                                    <span key={memberIndex} className={ss.member_tag}>
+                                                        {memberName}
+                                                    </span>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        {/* 외부팀 */}
+                        {externalTeam.length > 0 && (
+                            <div className={ss.team_group}>
+                                <div className={ss.team_header}>
+                                    <span className={ss.team_label}>외부팀 {externalCount}명</span>
+                                </div>
+                                {externalTeam.map((role, index) => (
+                                    <div key={index} className={`${ss.role_line} ${ss.external}`}>
+                                        <span className={ss.role_title}>{role.role}</span>
+                                        <div className={ss.members_inline}>
+                                            {role.members.map((member, memberIndex) => {
+                                                // 안전하게 이름 추출 - userId populated 케이스도 고려
+                                                let memberName = '알 수 없음'
+                                                
+                                                if (typeof member === 'string') {
+                                                    memberName = member
+                                                } else if (member && typeof member === 'object') {
+                                                    // populated userId가 있는 경우
+                                                    if (member.userId && member.userId.name) {
+                                                        memberName = member.userId.name
+                                                    }
+                                                    // 직접 name이 있는 경우
+                                                    else if (member.name) {
+                                                        memberName = member.name
+                                                    }
+                                                    // userId string이 있는 경우 (ID만 있는 경우)
+                                                    else if (member.userId && typeof member.userId === 'string') {
+                                                        memberName = `사용자 ${member.userId.slice(-4)}`
+                                                    }
+                                                    // 다른 식별자들
+                                                    else if (member.email) {
+                                                        memberName = member.email.split('@')[0]
+                                                    }
+                                                    else if (member._id) {
+                                                        memberName = `팀원 ${member._id.slice(-4)}`
+                                                    }
+                                                    else {
+                                                        memberName = `팀원 ${memberIndex + 1}`
+                                                    }
+                                                }
+                                                
+                                                return (
+                                                    <span key={memberIndex} className={ss.member_tag}>
+                                                        {memberName}
+                                                    </span>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div className={ss.progress_bar}>
-                        <div 
-                            className={ss.progress_fill}
-                            style={{ width: `${projectInfo.progress}%` }}
-                        />
-                    </div>
-                </div>
+                )}
 
-                {/* 상태 및 우선순위 */}
-                <div className={ss.status_section}>
-                    <div className={ss.status_item}>
-                        <span className={ss.status_badge}>
-                            {koreanStatus}
-                        </span>
-                    </div>
-                    <div className={ss.status_item}>
-                        <span className={ss.priority_badge}>
-                            {priority}
-                        </span>
-                    </div>
-                </div>
-
-                {/* 세부 정보 */}
-                <div className={ss.details_section}>
-                    <div className={ss.detail_item}>
-                        <FaCalendarAlt className={ss.detail_icon} />
-                        <span>마감일: {new Date(projectInfo.deadline).toLocaleDateString('ko-KR')}</span>
-                    </div>
-                    <div className={ss.detail_item}>
-                        <FaTags className={ss.detail_icon} />
-                        <span>팀원: {teamCount}명</span>
-                    </div>
-                    <div className={ss.detail_item}>
-                        <FaUser className={ss.detail_icon} />
-                        <span>역할: {roleInfo}</span>
-                    </div>
-                </div>
-
-                {/* 설명 */}
-                <div className={ss.description_section}>
-                    <p className={ss.description_text}>
-                        {projectInfo.description}
-                    </p>
-                </div>
-
-                {/* 이벤트 정보 */}
-                <div className={ss.event_info}>
-                    <div className={ss.event_time}>
-                        <FaClock className={ss.detail_icon} />
+                {/* 이벤트 정보 - 간소화 */}
+                <div className={ss.event_footer}>
+                    <span className={ss.event_time}>
                         {event.start?.toLocaleString('ko-KR', { 
                             month: 'short', 
                             day: 'numeric', 
                             hour: '2-digit', 
                             minute: '2-digit' 
                         })}
-                        {event.end && ` - ${event.end.toLocaleString('ko-KR', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                        })}`}
-                    </div>
+                    </span>
                 </div>
             </div>
         </div>

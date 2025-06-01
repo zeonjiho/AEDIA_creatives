@@ -6,46 +6,72 @@
     transform: translateX(-50%);
 }
 
+
+/* 작은 모달 오버레이 */
+
+.modal_overlay.compact {
+    transform: translateX(-50%);
+}
+
 .modal_content {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 20px;
-    width: 320px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    padding: 12px;
+    width: 280px;
     max-width: 90vw;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-color);
+}
+
+
+/* 작은 모달 컨텐츠 */
+
+.modal_content.compact_content {
+    width: 220px;
+    padding: 12px;
 }
 
 
 /* 헤더 */
 
 .modal_header {
-    margin-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .project_title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #000;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    margin-right: 8px;
 }
 
-.title_icon {
-    color: #000;
-    font-size: 14px;
+.status_badges {
+    display: flex;
+    gap: 4px;
 }
 
-.client_name {
-    font-size: 14px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.status_badge {
+    background: var(--accent-color);
+    color: var(--text-primary-inverse);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.progress_badge {
+    background: var(--success-color);
+    color: var(--text-primary-inverse);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    font-size: 10px;
+    font-weight: 500;
 }
 
 
@@ -61,25 +87,25 @@
     align-items: center;
     margin-bottom: 6px;
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .progress_percent {
     font-weight: 600;
-    color: #000;
+    color: var(--accent-color);
 }
 
 .progress_bar {
     width: 100%;
     height: 6px;
-    background-color: #f0f0f0;
+    background-color: var(--bg-tertiary);
     border-radius: 3px;
     overflow: hidden;
 }
 
 .progress_fill {
     height: 100%;
-    background: linear-gradient(90deg, #333, #000);
+    background: linear-gradient(90deg, var(--text-secondary), var(--accent-color));
     border-radius: 3px;
     transition: width 0.3s ease;
 }
@@ -97,29 +123,10 @@
     flex: 1;
 }
 
-.status_badge,
 .priority_badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    text-align: center;
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-}
-
-.status_badge {
-    background: #000;
-    color: white;
-    border-color: #000;
-}
-
-.priority_badge {
-    background: white;
-    color: #000;
-    border-color: #000;
+    background: var(--bg-secondary);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 
@@ -135,7 +142,7 @@
     gap: 8px;
     margin-bottom: 8px;
     font-size: 13px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .detail_item:last-child {
@@ -143,9 +150,193 @@
 }
 
 .detail_icon {
-    color: #000;
+    color: var(--accent-color);
     width: 12px;
     flex-shrink: 0;
+}
+
+
+/* 팀원 상세 정보 */
+
+.team_details_section {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.team_title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+
+/* 팀 카테고리 (내부팀/외부팀) */
+
+.team_category {
+    margin-bottom: 12px;
+}
+
+.team_category:last-child {
+    margin-bottom: 0;
+}
+
+.team_category_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.team_category_title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.team_category_count {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    background: var(--accent-color);
+    color: var(--text-primary-inverse);
+}
+
+.team_roles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.role_item {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+
+/* 내부팀 스타일 */
+
+.role_item.internal {
+    border-left: 3px solid var(--success-color);
+    background: rgba(var(--success-color-rgb), 0.05);
+}
+
+.role_item.internal:hover {
+    background: rgba(var(--success-color-rgb), 0.1);
+    transform: translateX(2px);
+}
+
+
+/* 외부팀 스타일 */
+
+.role_item.external {
+    border-left: 3px solid var(--warning-color);
+    background: rgba(var(--warning-color-rgb), 0.05);
+}
+
+.role_item.external:hover {
+    background: rgba(var(--warning-color-rgb), 0.1);
+    transform: translateX(2px);
+}
+
+.role_info {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.role_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.role_name {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.role_count {
+    font-size: 11px;
+    background: var(--accent-color);
+    color: var(--text-primary-inverse);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    min-width: 24px;
+    text-align: center;
+}
+
+
+/* 팀원 이름 표시 */
+
+.role_members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.member_name {
+    font-size: 10px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    font-weight: 400;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+}
+
+.member_name:hover {
+    background: var(--accent-color);
+    color: var(--text-primary-inverse);
+    transform: scale(1.05);
+}
+
+
+/* 내부팀 멤버 스타일 */
+
+.role_item.internal .member_name {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.role_item.internal .member_name:hover {
+    background: var(--success-color);
+    color: var(--text-primary-inverse);
+}
+
+
+/* 외부팀 멤버 스타일 */
+
+.role_item.external .member_name {
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+}
+
+.role_item.external .member_name:hover {
+    background: var(--warning-color);
+    color: var(--text-primary-inverse);
 }
 
 
@@ -157,13 +348,13 @@
 
 .description_text {
     font-size: 13px;
-    color: #555;
+    color: var(--text-secondary);
     line-height: 1.4;
     margin: 0;
-    background-color: #f8f8f8;
+    background-color: var(--bg-tertiary);
     padding: 10px;
-    border-radius: 4px;
-    border-left: 3px solid #000;
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--accent-color);
 }
 
 
@@ -171,7 +362,7 @@
 
 .event_info {
     padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--border-color);
 }
 
 .event_time {
@@ -179,8 +370,56 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
+}
+
+
+/* 작은 모달 - 연동되지 않은 상태 */
+
+.unlinked_content_compact {
+    text-align: center;
+}
+
+.event_title_compact {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.event_time_compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.time_icon_compact {
+    color: var(--accent-color);
+    font-size: 10px;
+}
+
+.unlinked_status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding: 6px 8px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    border: 1px dashed var(--border-color);
+}
+
+.unlinked_icon_compact {
+    font-size: 10px;
+    color: var(--text-tertiary);
 }
 
 
@@ -205,6 +444,10 @@
         width: 280px;
         padding: 16px;
     }
+    .modal_content.compact_content {
+        width: 200px;
+        padding: 10px;
+    }
     .project_title {
         font-size: 15px;
     }
@@ -212,92 +455,16 @@
     .event_time {
         font-size: 12px;
     }
-}
-
-
-/* 다크 모드 대응 */
-
-@media (prefers-color-scheme: dark) {
-    .modal_content {
-        background: #1a1a1a;
-        border-color: #333;
+    .event_title_compact {
+        font-size: 13px;
     }
-    .project_title {
-        color: #fff;
-    }
-    .title_icon,
-    .detail_icon {
-        color: #fff;
-    }
-    .client_name {
-        color: #ccc;
-    }
-    .detail_item {
-        color: #ccc;
-    }
-    .description_text {
-        background-color: #2a2a2a;
-        color: #ddd;
-        border-left-color: #fff;
-    }
-    .event_time {
-        color: #fff;
-    }
-    .modal_header {
-        border-bottom-color: #333;
-    }
-    .event_info {
-        border-top-color: #333;
-    }
-    .progress_bar {
-        background-color: #333;
-    }
-    .progress_fill {
-        background: linear-gradient(90deg, #666, #fff);
-    }
-    .status_badge {
-        background: #fff;
-        color: #000;
-        border-color: #fff;
-    }
-    .priority_badge {
-        background: #000;
-        color: #fff;
-        border-color: #fff;
-    }
-    .action_buttons {
-        border-top-color: #333;
-    }
-    .unlinked_icon {
-        color: #666;
-    }
-    .unlinked_title {
-        color: #fff;
-    }
-    .event_info_simple {
-        background: #2a2a2a;
-        border-left-color: #fff;
-    }
-    .event_title_simple {
-        color: #fff;
-    }
-    .event_time_simple {
-        color: #ccc;
-    }
-    .time_icon {
-        color: #fff;
-    }
-    .unlinked_action {
-        background: #2a2a2a;
-        border-color: #555;
-    }
-    .action_text {
-        color: #ccc;
+    .event_time_compact {
+        font-size: 11px;
     }
 }
 
 
-/* 연동되지 않은 프로젝트 스타일 */
+/* 기존 연동되지 않은 프로젝트 스타일 (하위 호환성) */
 
 .unlinked_content {
     text-align: center;
@@ -306,35 +473,35 @@
 
 .unlinked_icon {
     font-size: 48px;
-    color: #ccc;
+    color: var(--text-tertiary);
     margin-bottom: 15px;
 }
 
 .unlinked_title {
     font-size: 18px;
     font-weight: 700;
-    color: #000;
+    color: var(--text-primary);
     margin: 0 0 10px 0;
 }
 
 .unlinked_description {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin: 0 0 20px 0;
     line-height: 1.4;
 }
 
 .event_info_simple {
-    background: #f8f8f8;
+    background: var(--bg-tertiary);
     padding: 15px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-sm);
     margin-bottom: 20px;
-    border-left: 3px solid #000;
+    border-left: 3px solid var(--accent-color);
 }
 
 .event_title_simple {
     font-size: 16px;
-    color: #000;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
@@ -343,27 +510,128 @@
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .time_icon {
-    color: #000;
+    color: var(--accent-color);
     font-size: 12px;
 }
 
 .unlinked_action {
     padding: 15px;
-    background: #f0f0f0;
-    border-radius: 6px;
-    border: 1px dashed #ccc;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    border: 1px dashed var(--border-color);
 }
 
 .action_text {
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 .action_buttons {
-    border-top-color: #333;
+    border-top-color: var(--border-color);
+}
+
+
+/* 팀 섹션 */
+
+.team_section {
+    margin-bottom: 10px;
+}
+
+.team_group {
+    margin-bottom: 8px;
+}
+
+.team_group:last-child {
+    margin-bottom: 0;
+}
+
+.team_header {
+    margin-bottom: 4px;
+}
+
+.team_label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+}
+
+.role_line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    padding: 4px 6px;
+    border-radius: var(--border-radius-sm);
+    font-size: 11px;
+}
+
+.role_line.internal {
+    background: rgba(var(--success-color-rgb), 0.1);
+    border-left: 2px solid var(--success-color);
+}
+
+.role_line.external {
+    background: rgba(var(--warning-color-rgb), 0.1);
+    border-left: 2px solid var(--warning-color);
+}
+
+.role_title {
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+.members_inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.member_tag {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 1px 4px;
+    border-radius: var(--border-radius-sm);
+    font-size: 9px;
+    font-weight: 400;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.member_tag:hover {
+    background: var(--accent-color);
+    color: var(--text-primary-inverse);
+}
+
+.role_line.internal .member_tag {
+    border-color: var(--success-color);
+}
+
+.role_line.external .member_tag {
+    border-color: var(--warning-color);
+}
+
+
+/* 이벤트 푸터 */
+
+.event_footer {
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.event_time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
