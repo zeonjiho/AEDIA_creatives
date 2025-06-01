@@ -58,15 +58,26 @@ const StaffSearchModal = ({
     try {
       const response = await api.get('/get-user-list?userType=all');
       if (response.status === 200) {
-        // MongoDB _id를 id로 통일화
-        const peopleWithIds = response.data.map(person => ({
-          ...person,
-          id: person._id || person.id // _id가 있으면 _id를 사용, 없으면 기존 id 사용
-        }));
+        // MongoDB _id를 id로 통일화하고 안전성 확보
+        const peopleWithIds = response.data
+          .filter(person => person && person.name) // name이 있는 사람만 필터링
+          .map(person => ({
+            ...person,
+            id: person._id || person.id, // _id가 있으면 _id를 사용, 없으면 기존 id 사용
+            name: person.name || '이름 없음',
+            userType: person.userType || 'external',
+            roles: person.roles || [],
+            department: person.department || '부서 없음',
+            phone: person.phone || '',
+            email: person.email || ''
+          }));
+
+        console.log('스탭 데이터 로딩 성공:', peopleWithIds.length, '명');
         setAllPeople(peopleWithIds);
       }
     } catch (err) {
       console.log('스탭 데이터 로딩 실패:', err);
+      setAllPeople([]); // 에러 시 빈 배열로 설정
     }
   };
 
@@ -108,11 +119,16 @@ const StaffSearchModal = ({
 
     // 검색어 필터링
     if (searchTerm) {
-      filtered = filtered.filter(person =>
-        person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (person.roles && person.roles.length > 0 && person.roles[0].toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (person.department && person.department.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      filtered = filtered.filter(person => {
+        const name = (person.name || '').toLowerCase();
+        const firstRole = (person.roles && person.roles.length > 0 ? person.roles[0] : '').toLowerCase();
+        const department = (person.department || '').toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+
+        return name.includes(searchLower) ||
+          firstRole.includes(searchLower) ||
+          department.includes(searchLower);
+      });
       console.log(`검색어 "${searchTerm}" 적용 후:`, filtered.length, '명');
     }
 
@@ -135,9 +151,9 @@ const StaffSearchModal = ({
   // 선택 상태 변화 추적
   useEffect(() => {
     if (localSelected.length > 0) {
-      console.log('👥 선택 상태 변화:', localSelected.map(p => ({ 
-        name: p.name, 
-        id: p._id || p.id 
+      console.log('👥 선택 상태 변화:', localSelected.map(p => ({
+        name: p.name,
+        id: p._id || p.id
       })));
     } else {
       console.log('👥 선택 상태 변화: 빈 배열');
@@ -152,21 +168,21 @@ const StaffSearchModal = ({
       event.preventDefault();
       event.stopPropagation();
     }
-    
+
     console.log('=== 선택/해제 시도 ===');
     console.log('대상:', person.name, 'ID:', getPersonId(person));
     console.log('멀티선택 모드:', multiSelect);
-    
+
     if (multiSelect) {
       const personId = getPersonId(person);
-      
+
       // 현재 선택된 상태를 안전하게 확인
       setLocalSelected(prevSelected => {
         const isSelected = prevSelected.some(p => getPersonId(p) === personId);
-        
+
         console.log('현재 선택 상태:', isSelected);
         console.log('현재 선택된 인원들:', prevSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
-        
+
         let newSelected;
         if (isSelected) {
           // 선택 해제
@@ -177,7 +193,7 @@ const StaffSearchModal = ({
           newSelected = [...prevSelected, person];
           console.log('선택 추가 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
         }
-        
+
         return newSelected;
       });
     } else {
@@ -237,11 +253,11 @@ const StaffSearchModal = ({
       };
 
       const response = await api.post('/add-staff', staffData);
-      
+
       if (response.status === 200) {
         // 서버에서 생성된 스탭 정보
         const createdStaff = response.data.staff;
-        
+
         // ID 통일화 적용
         const staffToAdd = {
           ...createdStaff,
@@ -275,11 +291,11 @@ const StaffSearchModal = ({
     } catch (error) {
       console.error('스탭 추가 실패:', error);
       let errorMessage = '스탭 추가 중 오류가 발생했습니다.';
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+
       alert(errorMessage);
     }
   };
@@ -335,7 +351,7 @@ const StaffSearchModal = ({
             )}
 
             <div className={styles.filter_tabs}>
-              {from !== 'contact' && (
+              {from !== 'contact' && from !== 'only_internal' && (
                 <button
                   className={`${styles.filter_tab} ${filterType === 'all' ? styles.active : ''}`}
                   onClick={(e) => {
@@ -354,23 +370,25 @@ const StaffSearchModal = ({
                   전체
                 </button>
               )}
-              <button
-                className={`${styles.filter_tab} ${filterType === 'external' ? styles.active : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('스탭 버튼 클릭됨 - 현재 filterType:', filterType);
-                  if (filterType !== 'external') {
-                    setFilterType('external');
-                    console.log('스탭 필터로 변경');
-                  } else {
-                    console.log('이미 스탭 필터 상태');
-                  }
-                }}
-                type="button"
-              >
-                <HiUser /> 스탭
-              </button>
+              {from !== 'only_internal' && (
+                <button
+                  className={`${styles.filter_tab} ${filterType === 'external' ? styles.active : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('스탭 버튼 클릭됨 - 현재 filterType:', filterType);
+                    if (filterType !== 'external') {
+                      setFilterType('external');
+                      console.log('스탭 필터로 변경');
+                    } else {
+                      console.log('이미 스탭 필터 상태');
+                    }
+                  }}
+                  type="button"
+                >
+                  <HiUser /> 스탭
+                </button>
+              )}
               {from !== 'contact' && (
                 <button
                   className={`${styles.filter_tab} ${filterType === 'internal' ? styles.active : ''}`}
@@ -511,9 +529,9 @@ const StaffSearchModal = ({
                 {localSelected.map(person => (
                   <div key={getPersonId(person)} className={styles.selected_item}>
                     <div className={styles.selected_avatar}>
-                      {person.name.charAt(0)}
+                      {(person.name && person.name.length > 0) ? person.name.charAt(0) : '?'}
                     </div>
-                    <span className={styles.selected_name}>{person.name}</span>
+                    <span className={styles.selected_name}>{person.name || '이름 없음'}</span>
                     <span className={styles.selected_position}>
                       ({person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'})
                     </span>
@@ -545,11 +563,11 @@ const StaffSearchModal = ({
                     onClick={(e) => handlePersonToggle(person, e)}
                   >
                     <div className={styles.person_avatar}>
-                      {person.name.charAt(0)}
+                      {(person.name && person.name.length > 0) ? person.name.charAt(0) : '?'}
                     </div>
                     <div className={styles.person_info}>
                       <div className={styles.person_main}>
-                        <span className={styles.person_name}>{person.name}</span>
+                        <span className={styles.person_name}>{person.name || '이름 없음'}</span>
                         <div className={styles.person_badges}>
                           <span className={`${styles.person_type} ${styles[person.userType]}`}>
                             {person.userType === 'external' ? '스탭' : '직원'}

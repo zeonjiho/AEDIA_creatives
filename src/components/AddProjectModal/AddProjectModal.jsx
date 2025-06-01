@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import styles from './AddProjectModal.module.css';
 import { HiX, HiPlus, HiUserGroup, HiPhotograph, HiTrash } from 'react-icons/hi';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
+import api from '../../utils/api';
+import getProjectThumbnail from '../../utils/getProjectThumbnail';
 
 const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
   const [newProject, setNewProject] = useState({
@@ -9,22 +11,11 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
     description: '',
     status: 'concept',
     deadline: new Date().toISOString().split('T')[0],
-    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'
+    thumbnail: 'default_thumbnail.jpeg'
   });
 
-  // 스탭리스트 상태
-  const [staffList, setStaffList] = useState({
-    '연출': [],
-    '조연출': [],
-    '제작 PD': [],
-    '촬영감독': [],
-    '조명감독': [],
-    '미술감독': [],
-    '지미집': [],
-    'CG': [],
-    '클리닝': [],
-    'DI': []
-  });
+  // 스탭리스트 상태 - 유연한 구조로 변경
+  const [staffList, setStaffList] = useState([]);
 
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [currentStaffCategory, setCurrentStaffCategory] = useState('');
@@ -33,6 +24,10 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+
+  // 로딩 상태
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -44,22 +39,104 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newProject.title) return;
+    if (!newProject.title.trim()) {
+      alert('프로젝트명을 입력해주세요.');
+      return;
+    }
     
-    const projectToAdd = {
-      ...newProject,
-      id: Date.now(),
-      progress: 0,
-      thumbnail: thumbnailPreview || newProject.thumbnail,
-      tasks: [],
-      team: [],
-      staffList: staffList
-    };
+    setIsSubmitting(true);
     
-    onAddProject(projectToAdd);
-    handleClose();
+    try {
+      let thumbnailFileName = null;
+      
+      // 1. 썸네일 파일이 있으면 먼저 업로드
+      if (thumbnailFile) {
+        setIsUploading(true);
+        console.log('썸네일 업로드 시작:', thumbnailFile.name);
+        
+        const formData = new FormData();
+        formData.append('thumbnail', thumbnailFile);
+        
+        const uploadResponse = await api.post('/upload-thumbnail', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        if (uploadResponse.status === 200) {
+          thumbnailFileName = uploadResponse.data.filename; // 파일명만 저장
+          console.log('썸네일 업로드 성공:', thumbnailFileName);
+        }
+        setIsUploading(false);
+      }
+      
+      // 2. 프로젝트 데이터 구성
+      const projectData = {
+        title: newProject.title.trim(),
+        description: newProject.description.trim(),
+        status: newProject.status,
+        deadline: newProject.deadline,
+        thumbnail: thumbnailFileName || 'default_thumbnail.jpeg', // 파일명만 저장
+        staffList: staffList.map(person => ({
+          roleName: person.roles && person.roles.length > 0 ? person.roles[0] : '기타',
+          members: [{
+            userId: person._id || person.id,
+            name: person.name,
+            department: person.department,
+            phone: person.phone,
+            email: person.email
+          }]
+        })),
+        team: [], // 초기에는 빈 배열
+        tasks: [] // 초기에는 빈 배열
+      };
+      
+      console.log('프로젝트 생성 요청:', projectData);
+      
+      // 3. 프로젝트 생성 API 호출
+      const response = await api.post('/add-project', projectData);
+      
+      if (response.status === 200) {
+        console.log('프로젝트 생성 성공:', response.data);
+        alert('프로젝트가 성공적으로 생성되었습니다.');
+        
+        // 부모 컴포넌트에 새 프로젝트 전달
+        if (onAddProject) {
+          onAddProject(response.data.project);
+        }
+        
+        // 폼 초기화
+        setNewProject({
+          title: '',
+          description: '',
+          status: 'concept',
+          deadline: new Date().toISOString().split('T')[0],
+          thumbnail: 'default_thumbnail.jpeg'
+        });
+        setStaffList([]);
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
+      }
+    } catch (error) {
+      console.error('프로젝트 생성 실패:', error);
+      
+      let errorMessage = '프로젝트 생성 중 오류가 발생했습니다.';
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || '입력 정보를 확인해주세요.';
+      } else if (error.response?.status === 500) {
+        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+      setIsUploading(false);
+    }
   };
 
   const handleClose = () => {
@@ -68,20 +145,9 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
       description: '',
       status: 'concept',
       deadline: new Date().toISOString().split('T')[0],
-      thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'
+      thumbnail: 'default_thumbnail.jpeg'
     });
-    setStaffList({
-      '연출': [],
-      '조연출': [],
-      '제작 PD': [],
-      '촬영감독': [],
-      '조명감독': [],
-      '미술감독': [],
-      '지미집': [],
-      'CG': [],
-      '클리닝': [],
-      'DI': []
-    });
+    setStaffList([]);
     // 썸네일 상태 초기화
     setThumbnailFile(null);
     setThumbnailPreview(null);
@@ -97,19 +163,29 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
 
   const handleStaffSelect = (selectedPeople) => {
     console.log('선택된 스탭:', selectedPeople);
-    setStaffList(prev => ({
-      ...prev,
-      [currentStaffCategory]: selectedPeople
-    }));
+    
+    // 기존 스탭리스트와 새로 선택된 스탭들을 합치되, 중복 제거
+    setStaffList(prev => {
+      const existingIds = prev.map(person => person._id || person.id);
+      const newStaff = selectedPeople.filter(person => 
+        !existingIds.includes(person._id || person.id)
+      );
+      return [...prev, ...newStaff];
+    });
+    
     setShowStaffModal(false);
     setCurrentStaffCategory('');
   };
 
-  const handleRemoveStaff = (category, personId) => {
-    setStaffList(prev => ({
-      ...prev,
-      [category]: prev[category].filter(person => person.id !== personId)
-    }));
+  const handleRemoveStaff = (personId) => {
+    setStaffList(prev => prev.filter(person => (person._id || person.id) !== personId));
+  };
+
+  // 스탭 카테고리를 동적으로 관리
+  const getStaffByRole = (role) => {
+    return staffList.filter(person => 
+      person.roles && person.roles.includes(role)
+    );
   };
 
   const staffCategories = [
@@ -180,7 +256,7 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
                   )}
                   
                   <img 
-                    src={thumbnailPreview || newProject.thumbnail} 
+                    src={thumbnailPreview || getProjectThumbnail(newProject.thumbnail)} 
                     alt="썸네일 미리보기"
                     className={`${styles.thumbnail_image} ${thumbnailLoaded || thumbnailPreview ? styles.loaded : styles.loading}`}
                     onLoad={() => setThumbnailLoaded(true)}
@@ -275,19 +351,21 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
                       </button>
                     </div>
                     <div className={styles.staff_members}>
-                      {staffList[category].length === 0 ? (
+                      {getStaffByRole(category).length === 0 ? (
                         <p className={styles.no_staff}>배정된 스탭이 없습니다</p>
                       ) : (
-                        staffList[category].map(person => (
-                          <div key={person.id} className={styles.staff_member}>
+                        getStaffByRole(category).map(person => (
+                          <div key={person._id || person.id} className={styles.staff_member}>
                             <span className={styles.member_name}>{person.name}</span>
-                            <span className={styles.member_info}>({person.position})</span>
+                            <span className={styles.member_info}>
+                              ({person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'})
+                            </span>
                             {person.phone && <span className={styles.member_phone}>📞 {person.phone}</span>}
                             {person.isExternal && <span className={styles.external_badge}>외부</span>}
                             <button
                               type="button"
                               className={styles.remove_staff_button}
-                              onClick={() => handleRemoveStaff(category, person.id)}
+                              onClick={() => handleRemoveStaff(person._id || person.id)}
                             >
                               <HiX />
                             </button>
@@ -301,11 +379,24 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
             </div>
 
             <div className={styles.form_actions}>
-              <button type="button" className={styles.cancel_button} onClick={handleClose}>
+              <button 
+                type="button" 
+                className={styles.cancel_button} 
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
                 취소
               </button>
-              <button type="submit" className={styles.save_button}>
-                저장
+              <button 
+                type="submit" 
+                className={styles.save_button}
+                disabled={isSubmitting || isUploading}
+              >
+                {isSubmitting ? (
+                  isUploading ? '이미지 업로드 중...' : '프로젝트 생성 중...'
+                ) : (
+                  '저장'
+                )}
               </button>
             </div>
           </form>
@@ -322,10 +413,10 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
             setCurrentStaffCategory('');
           }}
           onSelect={handleStaffSelect}
-          selectedPeople={staffList[currentStaffCategory] || []}
+          selectedPeople={staffList}
           title={`${currentStaffCategory} 스탭 선택`}
           multiSelect={true}
-          initialFilterType="staff"
+          initialFilterType="external"
         />
       )}
     </div>

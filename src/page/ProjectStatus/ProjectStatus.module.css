@@ -484,3 +484,27 @@
         font-size: 0.9rem;
     }
 }
+
+/* 로딩 상태 스타일 */
+.loading_state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.loading_state p {
+    margin: 0;
+    font-family: var(--font-primary);
+}
+
+.no_projects {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--text-secondary);
+}

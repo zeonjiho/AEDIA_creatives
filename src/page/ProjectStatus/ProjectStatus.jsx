@@ -2,117 +2,56 @@ import React, { useState, useEffect } from 'react';
 import styles from './ProjectStatus.module.css';
 import ProjectDetailModal from '../../components/ProjectDetailModal/ProjectDetailModal';
 import AddProjectModal from '../../components/AddProjectModal/AddProjectModal';
+import api from '../../utils/api';
 import { 
   HiPlus, HiPencil, HiTrash, HiX, 
   HiCalendar, HiCheckCircle, HiChartBar, HiUserGroup, 
   HiInformationCircle, HiLightBulb, HiSave,
   HiStar, HiDocument, HiDocumentText, HiChevronDown, HiTag
 } from 'react-icons/hi';
-
-// 프로젝트 샘플 데이터
-const sampleProjects = [
-  {
-    id: 1,
-    title: '웹 앱 개발 프로젝트',
-    status: 'production',
-    progress: 65,
-    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-    description: '새로운 소셜 미디어 플랫폼 개발 프로젝트. 프론트엔드와 백엔드 작업 진행 중.',
-    deadline: '2023-12-15',
-    tasks: [
-      { id: 1, title: '로그인 시스템 구현', status: 'completed' },
-      { id: 2, title: '사용자 프로필 페이지', status: 'in_progress' },
-      { id: 3, title: '알림 시스템 개발', status: 'planned' },
-    ],
-    team: ['김개발', '이디자인', '박백엔드']
-  },
-  {
-    id: 2,
-    title: '모바일 앱 리디자인',
-    status: 'post_production',
-    progress: 85,
-    thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3',
-    description: '기존 모바일 앱의 UI/UX 개선 프로젝트. 사용자 피드백 반영 중.',
-    deadline: '2023-11-30',
-    tasks: [
-      { id: 1, title: '와이어프레임 작성', status: 'completed' },
-      { id: 2, title: '디자인 시스템 구축', status: 'completed' },
-      { id: 3, title: '프로토타입 테스트', status: 'in_progress' },
-    ],
-    team: ['최디자이너', '정UX', '강개발']
-  },
-  {
-    id: 3,
-    title: '데이터 분석 대시보드',
-    status: 'delivery',
-    progress: 100,
-    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f',
-    description: '마케팅 데이터 시각화를 위한 대시보드 개발 프로젝트.',
-    deadline: '2023-10-15',
-    tasks: [
-      { id: 1, title: '데이터 소스 연결', status: 'completed' },
-      { id: 2, title: '차트 구현', status: 'completed' },
-      { id: 3, title: '사용자 권한 설정', status: 'completed' },
-    ],
-    team: ['임데이터', '홍분석', '유개발']
-  },
-  {
-    id: 4,
-    title: '블록체인 기반 결제 시스템',
-    status: 'development',
-    progress: 20,
-    thumbnail: 'https://images.unsplash.com/photo-1639322537228-f710d846310a',
-    description: '암호화폐를 활용한 결제 시스템 개발 프로젝트. 기술 검토 중.',
-    deadline: '2024-02-28',
-    tasks: [
-      { id: 1, title: '기술 스택 검토', status: 'completed' },
-      { id: 2, title: '스마트 컨트랙트 개발', status: 'in_progress' },
-      { id: 3, title: '보안 감사', status: 'planned' },
-    ],
-    team: ['강블록', '조개발', '윤보안']
-  },
-  {
-    id: 5,
-    title: 'AI 추천 알고리즘 개발',
-    status: 'pre_production',
-    progress: 45,
-    thumbnail: 'https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1',
-    description: '사용자 행동 기반 AI 추천 시스템 개발 프로젝트.',
-    deadline: '2023-12-30',
-    tasks: [
-      { id: 1, title: '데이터 수집 및 전처리', status: 'completed' },
-      { id: 2, title: '모델 학습', status: 'in_progress' },
-      { id: 3, title: 'A/B 테스트', status: 'planned' },
-    ],
-    team: ['김AI', '이ML', '박데이터']
-  },
-  {
-    id: 6,
-    title: '마케팅 웹사이트 개발',
-    status: 'vfx',
-    progress: 90,
-    thumbnail: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c',
-    description: '신규 제품 출시를 위한 마케팅 웹사이트 개발 프로젝트.',
-    deadline: '2023-11-15',
-    tasks: [
-      { id: 1, title: '콘텐츠 작성', status: 'completed' },
-      { id: 2, title: '디자인 구현', status: 'completed' },
-      { id: 3, title: 'SEO 최적화', status: 'in_progress' },
-    ],
-    team: ['송마케팅', '조디자인', '최개발']
-  }
-];
+import getProjectThumbnail from '../../utils/getProjectThumbnail';
 
 const ProjectStatus = () => {
-  const [projects, setProjects] = useState(sampleProjects);
-  const [allProjects, setAllProjects] = useState(sampleProjects);
+  const [projects, setProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [loading, setLoading] = useState(true);
   
   // 이미지 로딩 상태 관리
   const [imageLoadStates, setImageLoadStates] = useState({});
+
+  // 서버에서 프로젝트 데이터 로드
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/projects');
+      if (response.status === 200) {
+        // 데이터 구조 안전성 확보
+        const projectsWithDefaults = response.data.map(project => ({
+          ...project,
+          id: project._id || project.id,
+          tasks: project.tasks || [],
+          team: project.team || [],
+          staffList: project.staffList || [],
+          progress: project.progress || 0
+        }));
+        
+        setProjects(projectsWithDefaults);
+        setAllProjects(projectsWithDefaults);
+        console.log('프로젝트 데이터 로드 성공:', projectsWithDefaults.length, '개');
+      }
+    } catch (error) {
+      console.error('프로젝트 데이터 로드 실패:', error);
+      // 에러 발생 시 빈 배열로 설정
+      setProjects([]);
+      setAllProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 이미지 로드 완료 핸들러
   const handleImageLoad = (projectId) => {
@@ -123,9 +62,7 @@ const ProjectStatus = () => {
   };
 
   useEffect(() => {
-    // 실제 앱에서는 API 호출로 대체
-    setProjects(sampleProjects);
-    setAllProjects(sampleProjects);
+    fetchProjects();
   }, []);
 
   useEffect(() => {
@@ -218,6 +155,17 @@ const ProjectStatus = () => {
 
   const filteredProjects = projects;
 
+  // 로딩 상태 표시
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading_state}>
+          <p>프로젝트를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <header className={styles.dashboard_header}>
@@ -288,7 +236,7 @@ const ProjectStatus = () => {
               
               {/* 실제 이미지 */}
               <img 
-                src={project.thumbnail} 
+                src={getProjectThumbnail(project.thumbnail)} 
                 alt={project.title} 
                 className={`${styles.project_thumbnail} ${imageLoadStates[project.id] ? styles.loaded : styles.loading}`}
                 onLoad={() => handleImageLoad(project.id)}
@@ -312,7 +260,7 @@ const ProjectStatus = () => {
                     <HiCalendar /> {new Date(project.deadline).toLocaleDateString()}
                   </span>
                   <span className={styles.project_tasks}>
-                    <HiCheckCircle /> {project.tasks.length}개
+                    <HiCheckCircle /> {project.tasks ? project.tasks.length : 0}개
                   </span>
                 </div>
               </div>
@@ -341,8 +289,9 @@ const ProjectStatus = () => {
         isOpen={showAddForm}
         onClose={handleCloseAddForm}
         onAddProject={(newProject) => {
-          setProjects([...projects, newProject]);
-          setAllProjects([...allProjects, newProject]);
+          // 서버에서 최신 데이터 다시 로드
+          fetchProjects();
+          setShowAddForm(false);
         }}
       />
     </div>

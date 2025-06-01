@@ -1265,21 +1265,216 @@ app.post('/delete-staff', async (req, res) => {
     }
 })
 
-// // TEST API
-// const devTest_slack = async () => {
-//     try {
-//         const message = '안녕하세요. 테스트 메시지입니다.'
+// 프로젝트 관련 API
 
-//         // 방법 1: 테스트 채널 사용 (권장)
-//         await slackBot.chat.postMessage({
-//             channel: 'U062BR8GUTW', // @빼면 안 되는 듯.
-//             // channel: '@zeonjiho', // @빼면 안 되는 듯.
-//             text: message
-//         })
+// 썸네일 업로드 API
+app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
 
-//         console.log('슬랙 메시지 전송 성공')
-//     } catch (err) {
-//         console.log('슬랙 메시지 전송 실패:', err)
-//     }
-// }
-// devTest_slack()
+        console.log('썸네일 업로드 요청:', req.file.filename);
+        
+        // 파일 경로 및 새 파일명 생성
+        const originalPath = req.file.path;
+        const fileExtension = path.extname(req.file.originalname);
+        const timestamp = Date.now();
+        const newFilename = `project_thumbnail_${timestamp}${fileExtension}`;
+        const newPath = path.join('./uploads/product/', newFilename);
+
+        // 이미지 리사이징 및 최적화 (선택적)
+        if (req.file.mimetype.startsWith('image/')) {
+            await sharp(originalPath)
+                .resize(800, 600, { 
+                    fit: 'cover',
+                    withoutEnlargement: true 
+                })
+                .jpeg({ quality: 80 })
+                .toFile(newPath);
+            
+            // 원본 파일 삭제
+            fs.unlinkSync(originalPath);
+        } else {
+            // 이미지가 아닌 경우 그대로 이동
+            fs.renameSync(originalPath, newPath);
+        }
+
+        res.status(200).json({ 
+            message: '썸네일 업로드 성공',
+            filename: newFilename 
+        });
+    } catch (err) {
+        console.error('썸네일 업로드 실패:', err);
+        res.status(500).json({ message: '썸네일 업로드 실패' });
+    }
+});
+
+// 프로젝트 생성 API
+app.post('/add-project', async (req, res) => {
+    const { title, description, status, deadline, thumbnail, staffList, team, tasks } = req.body;
+    
+    try {
+        // 필수 필드 검증
+        if (!title || !description || !deadline) {
+            return res.status(400).json({ 
+                message: '프로젝트명, 설명, 마감일은 필수 입력사항입니다.' 
+            });
+        }
+
+        // 마감일 유효성 검증
+        const deadlineDate = new Date(deadline);
+        if (deadlineDate < new Date()) {
+            return res.status(400).json({ 
+                message: '마감일은 현재 날짜보다 이후여야 합니다.' 
+            });
+        }
+
+        console.log('프로젝트 생성 요청:', { title, status, deadline, staffListLength: staffList?.length });
+
+        const newProject = new Project({
+            title: title.trim(),
+            description: description.trim(),
+            status: status || 'concept',
+            deadline: deadlineDate,
+            thumbnail: thumbnail || 'default_thumbnail.jpg',
+            progress: 0,
+            staffList: staffList || [],
+            team: team || []
+        });
+
+        await newProject.save();
+
+        // populate해서 반환
+        const populatedProject = await Project.findById(newProject._id)
+            .populate('team', 'name email department')
+            .populate('staffList.members.userId', 'name email department');
+
+        console.log('프로젝트 생성 성공:', populatedProject._id);
+
+        res.status(200).json({ 
+            message: '프로젝트가 성공적으로 생성되었습니다.',
+            project: populatedProject 
+        });
+    } catch (err) {
+        console.error('프로젝트 생성 실패:', err);
+        res.status(500).json({ message: '프로젝트 생성 실패' });
+    }
+});
+
+// 프로젝트 목록 조회 API
+app.get('/projects', async (req, res) => {
+    try {
+        const projects = await Project.find({})
+            .populate('team', 'name email department')
+            .populate('staffList.members.userId', 'name email department')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(projects);
+    } catch (err) {
+        console.error('프로젝트 목록 조회 실패:', err);
+        res.status(500).json({ message: '프로젝트 목록 조회 실패' });
+    }
+});
+
+// 특정 프로젝트 조회 API
+app.get('/projects/:id', async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id)
+            .populate('team', 'name email department')
+            .populate('staffList.members.userId', 'name email department');
+
+        if (!project) {
+            return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json(project);
+    } catch (err) {
+        console.error('프로젝트 조회 실패:', err);
+        res.status(500).json({ message: '프로젝트 조회 실패' });
+    }
+});
+
+// 프로젝트 수정 API
+app.put('/projects/:id', async (req, res) => {
+    try {
+        const { title, description, status, deadline, thumbnail, progress, team, staffList } = req.body;
+        
+        // 기존 프로젝트 조회 (썸네일 파일 삭제용)
+        const existingProject = await Project.findById(req.params.id);
+        if (!existingProject) {
+            return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
+        }
+
+        // 썸네일이 변경되었고 기존 썸네일이 로컬 파일인 경우 삭제
+        if (thumbnail && thumbnail !== existingProject.thumbnail) {
+            const oldThumbnail = existingProject.thumbnail;
+            // 기존 썸네일이 기본 썸네일이 아니고, 로컬 파일명인 경우 삭제
+            if (oldThumbnail && 
+                oldThumbnail !== 'default_thumbnail.jpg' && 
+                !oldThumbnail.startsWith('http')) {
+                
+                const oldFilePath = path.join('./uploads/product/', oldThumbnail);
+                
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                        console.log('기존 썸네일 파일 삭제:', oldThumbnail);
+                    }
+                } catch (fileError) {
+                    console.error('기존 썸네일 파일 삭제 실패:', fileError);
+                    // 파일 삭제 실패해도 프로젝트 업데이트는 계속 진행
+                }
+            }
+        }
+        
+        const updateData = {
+            title, 
+            description, 
+            status, 
+            deadline, 
+            thumbnail, 
+            progress
+        };
+
+        // team과 staffList는 제공된 경우에만 업데이트
+        if (team !== undefined) {
+            updateData.team = team;
+        }
+        if (staffList !== undefined) {
+            updateData.staffList = staffList;
+        }
+
+        const updatedProject = await Project.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+        )
+        .populate('team', 'name email department position')
+        .populate('staffList.members.userId', 'name email department');
+
+        res.status(200).json({ 
+            message: '프로젝트가 성공적으로 수정되었습니다.',
+            project: updatedProject 
+        });
+    } catch (err) {
+        console.error('프로젝트 수정 실패:', err);
+        res.status(500).json({ message: '프로젝트 수정 실패' });
+    }
+});
+
+// 프로젝트 삭제 API
+app.delete('/projects/:id', async (req, res) => {
+    try {
+        const deletedProject = await Project.findByIdAndDelete(req.params.id);
+
+        if (!deletedProject) {
+            return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({ message: '프로젝트가 성공적으로 삭제되었습니다.' });
+    } catch (err) {
+        console.error('프로젝트 삭제 실패:', err);
+        res.status(500).json({ message: '프로젝트 삭제 실패' });
+    }
+});
