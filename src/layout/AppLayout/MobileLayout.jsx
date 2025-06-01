@@ -204,7 +204,7 @@ const MobileLayout = ({ user }) => {
                     </button>
 
                     {/* 알림 버튼 */}
-                    <div className={ss.notifications_container}>
+                    {/* <div className={ss.notifications_container}>
                         <div
                             className={ss.notification_button}
                             onClick={() => setShowNotifications(!showNotifications)}
@@ -215,7 +215,6 @@ const MobileLayout = ({ user }) => {
                             )}
                         </div>
 
-                        {/* 알림 드롭다운 */}
                         {showNotifications && (
                             <div className={ss.notifications_dropdown}>
                                 <div className={ss.notifications_header}>
@@ -252,7 +251,7 @@ const MobileLayout = ({ user }) => {
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     {/* 프로필 영역 */}
                     <div className={ss.profile_menu_container}>

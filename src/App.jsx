@@ -45,7 +45,7 @@ function App() {
           <Route path='room-reservation' element={<RoomReservation />} />
           <Route path='projects' element={<ProjectStatus />} />
           <Route path='contact' element={<Contact />} />
-          <Route path='notifications' element={<TeamNotifications />} />
+          {/* <Route path='notifications' element={<TeamNotifications />} /> */}
           <Route path='receipts' element={<Receipts />} />
           <Route path='profile' element={<Profile />} />
           <Route path='settings' element={<Settings />} />
