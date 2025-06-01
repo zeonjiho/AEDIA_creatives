@@ -460,6 +460,95 @@ app.get('/get-user-info', async (req, res) => {
     }
 })
 
+// 사용자 프로필 업데이트 API
+app.put('/update-user-profile', async (req, res) => {
+    const { userId } = req.query;
+    const { 
+        name, 
+        email, 
+        phone, 
+        address, 
+        emergencyContact, 
+        department, 
+        bio,
+        roles
+    } = req.body;
+
+    try {
+        // 이메일 중복 체크 (다른 사용자가 같은 이메일 사용하는지)
+        if (email) {
+            const existingUser = await User.findOne({ 
+                email: email, 
+                _id: { $ne: userId } 
+            });
+            
+            if (existingUser) {
+                return res.status(400).json({ 
+                    message: '이미 사용중인 이메일입니다.' 
+                });
+            }
+        }
+
+        const updateData = {};
+        
+        // 제공된 필드만 업데이트
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        if (address !== undefined) updateData.address = address;
+        if (emergencyContact !== undefined) updateData.emergencyContact = emergencyContact;
+        if (department !== undefined) updateData.department = department;
+        if (bio !== undefined) updateData.bio = bio;
+        if (roles !== undefined) updateData.roles = roles;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({
+            message: '프로필이 성공적으로 업데이트되었습니다.',
+            user: updatedUser
+        });
+
+    } catch (err) {
+        console.error('프로필 업데이트 실패:', err);
+        res.status(500).json({ message: '프로필 업데이트 중 오류가 발생했습니다.' });
+    }
+});
+
+// 비밀번호 변경 API
+app.put('/change-password', async (req, res) => {
+    const { userId } = req.query;
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 현재 비밀번호 확인
+        if (user.password !== currentPassword) {
+            return res.status(400).json({ message: '현재 비밀번호가 일치하지 않습니다.' });
+        }
+
+        // 새 비밀번호로 업데이트
+        await User.findByIdAndUpdate(userId, { password: newPassword });
+
+        res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+
+    } catch (err) {
+        console.error('비밀번호 변경 실패:', err);
+        res.status(500).json({ message: '비밀번호 변경 중 오류가 발생했습니다.' });
+    }
+});
+
 // 출근 체크인 API
 app.post('/attendance/check-in', async (req, res) => {
     const { location, method = 'manual' } = req.body;
