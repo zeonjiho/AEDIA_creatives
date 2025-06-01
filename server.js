@@ -51,7 +51,7 @@ mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mon
 
 
 // 회의실 예약 정리 스케줄러 (매일 자정 실행)
-cron.schedule('0 0 * * *', async() => {
+cron.schedule('0 0 * * *', async () => {
     try {
         console.log(`\x1b[33m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 시작\x1b[0m`);
 
@@ -111,7 +111,7 @@ cron.schedule('*/10 * * * *', async () => {
         console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
 
         // 모든 활성 사용자 조회 (slackId 유무와 관계없이)
-        const users = await User.find({ 
+        const users = await User.find({
             status: 'active'
         }).select('_id name slackId attendance');
 
@@ -134,7 +134,7 @@ cron.schedule('*/10 * * * *', async () => {
                 // 12시간 경과 시 자동 퇴근 처리 (모든 사용자 대상)
                 if (elapsedHours >= 12) {
                     console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${elapsedHours.toFixed(1)}시간)\x1b[0m`);
-                    
+
                     // 자동 퇴근 기록 추가
                     const autoCheckoutRecord = {
                         type: 'checkOut',
@@ -151,7 +151,7 @@ cron.schedule('*/10 * * * *', async () => {
                         try {
                             const workHours = Math.floor(elapsedMinutes / 60);
                             const workMinutes = Math.floor(elapsedMinutes % 60);
-                            
+
                             await slackBot.chat.postMessage({
                                 channel: user.slackId,
                                 text: `🏢 **자동 퇴근 처리되었습니다**\n\n출근 시간: ${checkInTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n퇴근 시간: ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n근무 시간: ${workHours}시간 ${workMinutes}분\n\n다음부터는 퇴근 시 꼭 퇴근 버튼을 눌러주세요! 😊`
@@ -169,15 +169,15 @@ cron.schedule('*/10 * * * *', async () => {
                 // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - slackId가 있는 경우만
                 else if (elapsedHours >= 11 && user.slackId) {
                     const remainingMinutes = 12 * 60 - elapsedMinutes; // 자동 퇴근까지 남은 분
-                    
+
                     // 알림 시점들 (60, 30, 20, 10분 전)
                     const notificationPoints = [60, 30, 20, 10];
-                    
+
                     for (const notificationMinutes of notificationPoints) {
                         // 알림 시점에 근접한지 확인 (±5분 오차 허용)
                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
                             console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림)\x1b[0m`);
-                            
+
                             try {
                                 await slackBot.chat.postMessage({
                                     channel: user.slackId,
@@ -188,7 +188,7 @@ cron.schedule('*/10 * * * *', async () => {
                             } catch (slackError) {
                                 console.error(`\x1b[31m퇴근 예정 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
                             }
-                            
+
                             break; // 한 번만 알림 보내기
                         }
                     }
@@ -197,7 +197,7 @@ cron.schedule('*/10 * * * *', async () => {
                 else if (elapsedHours >= 11 && !user.slackId) {
                     const remainingMinutes = 12 * 60 - elapsedMinutes;
                     const notificationPoints = [60, 30, 20, 10];
-                    
+
                     for (const notificationMinutes of notificationPoints) {
                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
                             console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
@@ -264,7 +264,7 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/get-user-list', async(req, res) => {
+app.get('/get-user-list', async (req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
@@ -283,7 +283,7 @@ app.get('/get-user-list', async(req, res) => {
     }
 })
 
-app.post('/slack/code', async(req, res) => {
+app.post('/slack/code', async (req, res) => {
     const { slackId } = req.body;
     try {
         // 기존 코드가 있으면 삭제
@@ -316,7 +316,7 @@ app.post('/slack/code', async(req, res) => {
             // 슬랙 전송 실패 시 생성된 코드 삭제
             await SlackCode.findByIdAndDelete(newSlackCode._id);
 
-            if (slackError.data ? .error === 'channel_not_found' || slackError.data ? .error === 'user_not_found') {
+            if (slackError.data?.error === 'channel_not_found' || slackError.data?.error === 'user_not_found') {
                 res.status(404).json({ message: '해당 슬랙 멤버 ID를 찾을 수 없습니다.' });
             } else {
                 res.status(500).json({ message: '슬랙 메시지 전송에 실패했습니다.' });
@@ -328,7 +328,7 @@ app.post('/slack/code', async(req, res) => {
     }
 });
 
-app.post('/slack/code/verify', async(req, res) => {
+app.post('/slack/code/verify', async (req, res) => {
     const { slackId, code } = req.body;
     try {
         const slackCode = await SlackCode.findOne({ slackId });
@@ -363,7 +363,7 @@ app.post('/slack/code/verify', async(req, res) => {
     }
 });
 
-app.post('/signup', async(req, res) => {
+app.post('/signup', async (req, res) => {
     const { password, name, slackId, phone, email, position } = req.body;
     try {
         const alreadyExists = await User.findOne({ email: email });
@@ -390,7 +390,7 @@ app.post('/signup', async(req, res) => {
     }
 })
 
-app.post('/login', async(req, res) => {
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email: email });
@@ -424,7 +424,7 @@ app.post('/login', async(req, res) => {
 })
 
 // 유저 승인 API
-app.get('/admin/approve-user/:userId', async(req, res) => {
+app.get('/admin/approve-user/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const updatedUser = await User.findByIdAndUpdate(
@@ -443,7 +443,7 @@ app.get('/admin/approve-user/:userId', async(req, res) => {
 })
 
 // 사용자 정보 불러오기 (메인 등에서 사용)
-app.get('/get-user-info', async(req, res) => {
+app.get('/get-user-info', async (req, res) => {
     const { userId } = req.query;
     try {
         const user = await User.findById(userId).select('-password');
@@ -461,7 +461,7 @@ app.get('/get-user-info', async(req, res) => {
 })
 
 // 출근 체크인 API
-app.post('/attendance/check-in', async(req, res) => {
+app.post('/attendance/check-in', async (req, res) => {
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
 
@@ -482,7 +482,7 @@ app.post('/attendance/check-in', async(req, res) => {
             method: method
         };
 
-            await User.findByIdAndUpdate(userId, {
+        await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -505,7 +505,7 @@ app.post('/attendance/check-in', async(req, res) => {
 });
 
 // 퇴근 체크아웃 API
-app.post('/attendance/check-out', async(req, res) => {
+app.post('/attendance/check-out', async (req, res) => {
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
 
@@ -556,7 +556,7 @@ app.post('/attendance/check-out', async(req, res) => {
 });
 
 // 출석 기록 조회 API
-app.get('/attendance/history', async(req, res) => {
+app.get('/attendance/history', async (req, res) => {
     const { userId } = req.query;
     const { limit = 30 } = req.query; // 기본 30개 기록
 
@@ -626,7 +626,7 @@ app.get('/attendance/history', async(req, res) => {
 });
 
 // 오늘 출석 상태 조회 API
-app.get('/attendance/today', async(req, res) => {
+app.get('/attendance/today', async (req, res) => {
     const { userId } = req.query;
 
     try {
@@ -674,7 +674,7 @@ app.get('/attendance/today', async(req, res) => {
 });
 
 // 출퇴근 기록 수정 API
-app.patch('/attendance/update/:userId', async(req, res) => {
+app.patch('/attendance/update/:userId', async (req, res) => {
     const { userId } = req.params;
     const { recordId, time } = req.body;
 
@@ -707,7 +707,7 @@ app.patch('/attendance/update/:userId', async(req, res) => {
 });
 
 // 출퇴근 기록 삭제 API
-app.delete('/attendance/delete/:userId', async(req, res) => {
+app.delete('/attendance/delete/:userId', async (req, res) => {
     const { userId } = req.params;
     const { recordId } = req.body;
 
@@ -736,7 +736,7 @@ app.delete('/attendance/delete/:userId', async(req, res) => {
 });
 
 // 새로운 출근 처리 (기존 퇴근 기록이 있어도 가능) - 이제 불필요하므로 기본 check-in과 동일
-app.post('/attendance/new-check-in', async(req, res) => {
+app.post('/attendance/new-check-in', async (req, res) => {
     // 기본 check-in API와 동일한 로직 사용
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
@@ -780,7 +780,7 @@ app.post('/attendance/new-check-in', async(req, res) => {
 
 // Todo 관련 API
 // 할 일 목록 조회
-app.get('/todos', async(req, res) => {
+app.get('/todos', async (req, res) => {
     const { userId } = req.query;
     try {
         const todos = await Todo.find({ poster: userId })
@@ -795,7 +795,7 @@ app.get('/todos', async(req, res) => {
 });
 
 // 할 일 추가
-app.post('/todos', async(req, res) => {
+app.post('/todos', async (req, res) => {
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
 
@@ -822,7 +822,7 @@ app.post('/todos', async(req, res) => {
 });
 
 // 할 일 수정
-app.put('/todos/:id', async(req, res) => {
+app.put('/todos/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
@@ -835,12 +835,12 @@ app.put('/todos/:id', async(req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                text,
-                dueDate,
-                dueTime: dueTime || null,
-                projectId: projectId || null,
-                updatedAt: new Date()
-            }, { new: true }
+            text,
+            dueDate,
+            dueTime: dueTime || null,
+            projectId: projectId || null,
+            updatedAt: new Date()
+        }, { new: true }
         ).populate('poster', 'name email');
 
         res.status(200).json(updatedTodo);
@@ -851,7 +851,7 @@ app.put('/todos/:id', async(req, res) => {
 });
 
 // 할 일 완료/미완료 토글
-app.patch('/todos/:id/toggle', async(req, res) => {
+app.patch('/todos/:id/toggle', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
 
@@ -863,9 +863,9 @@ app.patch('/todos/:id/toggle', async(req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                completed: !todo.completed,
-                updatedAt: new Date()
-            }, { new: true }
+            completed: !todo.completed,
+            updatedAt: new Date()
+        }, { new: true }
         ).populate('poster', 'name email');
 
         res.status(200).json(updatedTodo);
@@ -876,7 +876,7 @@ app.patch('/todos/:id/toggle', async(req, res) => {
 });
 
 // 할 일 삭제
-app.delete('/todos/:id', async(req, res) => {
+app.delete('/todos/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
 
@@ -896,7 +896,7 @@ app.delete('/todos/:id', async(req, res) => {
 
 // 대시보드 레이아웃 관련 API
 // 레이아웃 저장
-app.patch('/dashboard/layout', async(req, res) => {
+app.patch('/dashboard/layout', async (req, res) => {
     const { userId } = req.query;
     const { layouts } = req.body;
 
@@ -921,7 +921,7 @@ app.patch('/dashboard/layout', async(req, res) => {
 });
 
 // 레이아웃 불러오기
-app.get('/dashboard/layout', async(req, res) => {
+app.get('/dashboard/layout', async (req, res) => {
     const { userId } = req.query;
 
     try {
@@ -942,7 +942,7 @@ app.get('/dashboard/layout', async(req, res) => {
 // 회의실 관리 관련 API
 
 // 회의실 목록 조회
-app.get('/rooms', async(req, res) => {
+app.get('/rooms', async (req, res) => {
     try {
         const rooms = await Room.find({})
             .populate('reservations.participants.userId', 'name email')
@@ -957,7 +957,7 @@ app.get('/rooms', async(req, res) => {
 });
 
 // 회의실 추가
-app.post('/rooms', async(req, res) => {
+app.post('/rooms', async (req, res) => {
     const { roomName, location, tools } = req.body;
 
     try {
@@ -983,7 +983,7 @@ app.post('/rooms', async(req, res) => {
 });
 
 // 회의실 수정
-app.post('/rooms/:id/update', async(req, res) => {
+app.post('/rooms/:id/update', async (req, res) => {
     const { id } = req.params;
     const { roomName, location, tools } = req.body;
 
@@ -994,12 +994,12 @@ app.post('/rooms/:id/update', async(req, res) => {
         }
 
         const updatedRoom = await Room.findByIdAndUpdate(
-                id, {
-                    roomName,
-                    location: location || '',
-                    tools: tools || []
-                }, { new: true }
-            ).populate('reservations.participants.userId', 'name email')
+            id, {
+            roomName,
+            location: location || '',
+            tools: tools || []
+        }, { new: true }
+        ).populate('reservations.participants.userId', 'name email')
             .populate('reservations.project', 'title');
 
         res.status(200).json(updatedRoom);
@@ -1010,7 +1010,7 @@ app.post('/rooms/:id/update', async(req, res) => {
 });
 
 // 회의실 삭제
-app.post('/rooms/:id/delete', async(req, res) => {
+app.post('/rooms/:id/delete', async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -1041,7 +1041,7 @@ app.post('/rooms/:id/delete', async(req, res) => {
 // 예약 관련 API
 
 // 예약 생성
-app.post('/rooms/:roomId/reservations', async(req, res) => {
+app.post('/rooms/:roomId/reservations', async (req, res) => {
     const { roomId } = req.params;
     const {
         meetingName,
@@ -1153,7 +1153,7 @@ app.post('/rooms/:roomId/reservations', async(req, res) => {
 });
 
 // 예약 수정
-app.put('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
+app.put('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
     const { roomId, reservationId } = req.params;
     const {
         meetingName,
@@ -1265,7 +1265,7 @@ app.put('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
 });
 
 // 예약 삭제 (상태를 '취소됨'으로 변경)
-app.delete('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
+app.delete('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
     const { roomId, reservationId } = req.params;
 
     try {
@@ -1294,7 +1294,7 @@ app.delete('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
 });
 
 // 특정 회의실의 예약 목록 조회
-app.get('/rooms/:roomId/reservations', async(req, res) => {
+app.get('/rooms/:roomId/reservations', async (req, res) => {
     const { roomId } = req.params;
     const { date } = req.query; // YYYY-MM-DD 형식
 
@@ -1326,7 +1326,7 @@ app.get('/rooms/:roomId/reservations', async(req, res) => {
 });
 
 // 스태프 추가 API
-app.post('/add-staff', async(req, res) => {
+app.post('/add-staff', async (req, res) => {
     const { name, email, phone, roles, department } = req.body;
     try {
         const newStaff = new User({
@@ -1345,7 +1345,7 @@ app.post('/add-staff', async(req, res) => {
     }
 })
 
-app.post('/modify-staff', async(req, res) => {
+app.post('/modify-staff', async (req, res) => {
     const { staffId, name, email, phone, roles, department } = req.body;
     try {
         const updatedStaff = await User.findByIdAndUpdate(staffId, { name, email, phone, roles, department }, { new: true });
@@ -1356,7 +1356,7 @@ app.post('/modify-staff', async(req, res) => {
     }
 })
 
-app.post('/delete-staff', async(req, res) => {
+app.post('/delete-staff', async (req, res) => {
     const { staffId } = req.body;
     try {
         const user = await User.findById(staffId);
@@ -1375,7 +1375,7 @@ app.post('/delete-staff', async(req, res) => {
 // 프로젝트 관련 API
 
 // 썸네일 업로드 API
-app.post('/upload-thumbnail', upload.single('thumbnail'), async(req, res) => {
+app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
@@ -1418,7 +1418,7 @@ app.post('/upload-thumbnail', upload.single('thumbnail'), async(req, res) => {
 });
 
 // 프로젝트 생성 API
-app.post('/add-project', async(req, res) => {
+app.post('/add-project', async (req, res) => {
     const { title, description, status, deadline, thumbnail, staffList, team, tasks } = req.body;
 
     try {
@@ -1437,7 +1437,7 @@ app.post('/add-project', async(req, res) => {
             });
         }
 
-        console.log('프로젝트 생성 요청:', { title, status, deadline, staffListLength: staffList ? .length });
+        console.log('프로젝트 생성 요청:', { title, status, deadline, staffListLength: staffList?.length });
 
         const newProject = new Project({
             title: title.trim(),
@@ -1459,7 +1459,6 @@ app.post('/add-project', async(req, res) => {
 
         console.log('프로젝트 생성 성공:', populatedProject._id);
 
-<<<<<<< Updated upstream
         // 팀원들에게 슬랙 알림 보내기
         if (team && team.length > 0) {
             try {
@@ -1467,9 +1466,9 @@ app.post('/add-project', async(req, res) => {
                 const teamMembers = await User.find({
                     _id: { $in: team }
                 }).select('name slackId');
-                
+
                 console.log('새 프로젝트 팀원들:', teamMembers);
-                
+
                 // 각 팀원에게 슬랙 알림 발송
                 for (const member of teamMembers) {
                     if (member.slackId) {
@@ -1492,10 +1491,7 @@ app.post('/add-project', async(req, res) => {
             }
         }
 
-        res.status(200).json({ 
-=======
         res.status(200).json({
->>>>>>> Stashed changes
             message: '프로젝트가 성공적으로 생성되었습니다.',
             project: populatedProject
         });
@@ -1506,7 +1502,7 @@ app.post('/add-project', async(req, res) => {
 });
 
 // 프로젝트 목록 조회 API
-app.get('/projects', async(req, res) => {
+app.get('/projects', async (req, res) => {
     try {
         const projects = await Project.find({})
             .populate('team', 'name email department')
@@ -1521,7 +1517,7 @@ app.get('/projects', async(req, res) => {
 });
 
 // 특정 프로젝트 조회 API
-app.get('/projects/:id', async(req, res) => {
+app.get('/projects/:id', async (req, res) => {
     try {
         const project = await Project.findById(req.params.id)
             .populate('team', 'name email department')
@@ -1539,19 +1535,13 @@ app.get('/projects/:id', async(req, res) => {
 });
 
 // 프로젝트 수정 API
-app.put('/projects/:id', async(req, res) => {
+app.put('/projects/:id', async (req, res) => {
     try {
         const { title, description, status, deadline, thumbnail, progress, team, staffList } = req.body;
-<<<<<<< Updated upstream
-        
+
         // 기존 프로젝트 조회 (썸네일 파일 삭제용 및 팀원 비교용)
         const existingProject = await Project.findById(req.params.id)
             .populate('team', 'name email slackId');
-=======
-
-        // 기존 프로젝트 조회 (썸네일 파일 삭제용)
-        const existingProject = await Project.findById(req.params.id);
->>>>>>> Stashed changes
         if (!existingProject) {
             return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
         }
@@ -1560,13 +1550,8 @@ app.put('/projects/:id', async(req, res) => {
         if (thumbnail && thumbnail !== existingProject.thumbnail) {
             const oldThumbnail = existingProject.thumbnail;
             // 기존 썸네일이 기본 썸네일이 아니고, 로컬 파일명인 경우 삭제
-<<<<<<< Updated upstream
-            if (oldThumbnail && 
-                oldThumbnail !== 'default_thumbnail.jpeg' && 
-=======
             if (oldThumbnail &&
-                oldThumbnail !== 'default_thumbnail.jpg' &&
->>>>>>> Stashed changes
+                oldThumbnail !== 'default_thumbnail.jpeg' &&
                 !oldThumbnail.startsWith('http')) {
 
                 const oldFilePath = path.join('./uploads/product/', oldThumbnail);
@@ -1595,20 +1580,20 @@ app.put('/projects/:id', async(req, res) => {
         // team과 staffList는 제공된 경우에만 업데이트
         if (team !== undefined) {
             updateData.team = team;
-            
+
             // 새로 추가된 팀원 찾기
-            const existingTeamIds = existingProject.team.map(member => 
+            const existingTeamIds = existingProject.team.map(member =>
                 typeof member === 'object' ? member._id.toString() : member.toString()
             );
-            
+
             const newTeamIds = team.filter(newMemberId => {
                 const memberIdStr = typeof newMemberId === 'object' ? newMemberId._id || newMemberId.id : newMemberId;
                 return !existingTeamIds.includes(memberIdStr.toString());
             });
-            
+
             console.log('기존 팀원 IDs:', existingTeamIds);
             console.log('새로운 팀원 IDs:', newTeamIds);
-            
+
             // 새로 추가된 팀원들에게 슬랙 알림 보내기
             if (newTeamIds.length > 0) {
                 try {
@@ -1616,9 +1601,9 @@ app.put('/projects/:id', async(req, res) => {
                     const newMembers = await User.find({
                         _id: { $in: newTeamIds }
                     }).select('name slackId');
-                    
+
                     console.log('새로 추가된 팀원들:', newMembers);
-                    
+
                     // 각 새 팀원에게 슬랙 알림 발송
                     for (const member of newMembers) {
                         if (member.slackId) {
@@ -1646,9 +1631,9 @@ app.put('/projects/:id', async(req, res) => {
         }
 
         const updatedProject = await Project.findByIdAndUpdate(
-                req.params.id,
-                updateData, { new: true }
-            )
+            req.params.id,
+            updateData, { new: true }
+        )
             .populate('team', 'name email department position')
             .populate('staffList.members.userId', 'name email department');
 
@@ -1663,7 +1648,7 @@ app.put('/projects/:id', async(req, res) => {
 });
 
 // 프로젝트 삭제 API
-app.delete('/projects/:id', async(req, res) => {
+app.delete('/projects/:id', async (req, res) => {
     try {
         const deletedProject = await Project.findByIdAndDelete(req.params.id);
 
