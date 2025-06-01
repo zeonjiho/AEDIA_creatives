@@ -33,6 +33,7 @@ const TodoList = () => {
     const [projectFilter, setProjectFilter] = useState('all') // 프로젝트별 필터링
     const [showProjectDropdown, setShowProjectDropdown] = useState(false)
     const [showProjectModal, setShowProjectModal] = useState(false) // 프로젝트 선택 모달
+    const [projectsLoading, setProjectsLoading] = useState(false)
     
     // 현재 날짜 및 시간 상태
     const [currentDate, setCurrentDate] = useState(new Date())
@@ -75,6 +76,7 @@ const TodoList = () => {
     useEffect(() => {
         if (userId) {
             fetchTodos()
+            fetchProjects() // 프로젝트 목록도 함께 로드
         }
     }, [userId])
     
@@ -340,15 +342,30 @@ const TodoList = () => {
     // 프로젝트 이름 가져오기
     const getProjectName = (projectId) => {
         if (!projectId) return null;
-        // 프로젝트 기능이 아직 미개발이므로 일단 ID 반환
-        return `Project ${projectId}`;
+        const project = projects.find(p => p.id === projectId);
+        return project ? project.title : `Project ${projectId}`;
     };
     
     // 프로젝트 색상 가져오기
     const getProjectColor = (projectId) => {
         if (!projectId) return '';
-        // 기본 색상 반환
-        return '#007bff';
+        // 프로젝트 상태에 따른 색상 반환
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return '#007bff';
+        
+        const statusColors = {
+            'concept': '#6c757d',
+            'development': '#17a2b8',
+            'pre_production': '#ffc107',
+            'production': '#fd7e14',
+            'post_production': '#20c997',
+            'vfx': '#e83e8c',
+            'sound_design': '#6f42c1',
+            'quality_check': '#dc3545',
+            'delivery': '#28a745'
+        };
+        
+        return statusColors[project.status] || '#007bff';
     };
     
     // 프로젝트 드롭다운 토글
@@ -384,20 +401,51 @@ const TodoList = () => {
         if (project) {
             setSelectedProject(project.id);
             setSelectedProjectName(project.title);
+            console.log('프로젝트 선택:', project.title, project.id);
         } else {
             setSelectedProject('');
             setSelectedProjectName('');
+            console.log('프로젝트 선택 해제');
         }
         setShowProjectModal(false);
     };
     
     const handleOpenProjectModal = () => {
+        console.log('프로젝트 모달 열기 - 현재 프로젝트 수:', projects.length);
         setShowProjectModal(true);
     };
     
     const handleCloseProjectModal = () => {
         setShowProjectModal(false);
     };
+    
+    // 프로젝트 목록 로드
+    const fetchProjects = async () => {
+        setProjectsLoading(true)
+        try {
+            console.log('프로젝트 목록 조회 시작')
+            const response = await api.get('/projects')
+            console.log('프로젝트 목록 조회 성공:', response.data.length, '개')
+            
+            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환
+            const formattedProjects = response.data.map(project => ({
+                id: project._id || project.id,
+                title: project.title,
+                description: project.description || '',
+                status: project.status,
+                deadline: project.deadline,
+                client: project.client || '', // 클라이언트 정보가 있다면
+                thumbnail: project.thumbnail
+            }))
+            
+            setProjects(formattedProjects)
+        } catch (error) {
+            console.error('프로젝트 목록 조회 실패:', error)
+            alert('프로젝트 목록을 불러오는데 실패했습니다.')
+        } finally {
+            setProjectsLoading(false)
+        }
+    }
     
     return (
         <div className={ss.todoListContainer}>
@@ -441,8 +489,8 @@ const TodoList = () => {
                                 >
                                     프로젝트 없음
                                 </div>
-                                {/* 프로젝트 기능이 개발되면 아래 부분을 다시 활성화 */}
-                                {/* {projects.map(project => (
+                                {/* 실제 프로젝트 목록 표시 */}
+                                {projects.map(project => (
                                     <div 
                                         key={project.id}
                                         className={`${ss.projectOption} ${projectFilter === project.id ? ss.selected : ''}`}
@@ -453,11 +501,12 @@ const TodoList = () => {
                                     >
                                         <span 
                                             className={ss.projectColor} 
-                                            style={{ backgroundColor: project.color }}
+                                            style={{ backgroundColor: getProjectColor(project.id) }}
                                         ></span>
-                                        {project.name}
+                                        {project.title}
+                                        <span className={ss.projectStatus}>({project.status})</span>
                                     </div>
-                                ))} */}
+                                ))}
                             </div>
                         )}
                     </div>
@@ -526,8 +575,10 @@ const TodoList = () => {
                             type="button"
                             className={ss.projectSelectButton}
                             onClick={handleOpenProjectModal}
+                            disabled={projectsLoading}
                         >
-                            {selectedProjectName || '프로젝트 선택 (옵션)'}
+                            {projectsLoading ? '프로젝트 로딩 중...' : 
+                             selectedProjectName || '프로젝트 선택 (옵션)'}
                         </button>
                     </div>
                 </div>
@@ -654,13 +705,18 @@ const TodoList = () => {
                                             />
                                         </div>
                                         <div className={ss.editProjectContainer}>
-                                            <input
-                                                type="text"
+                                            <select
                                                 className={ss.editProjectSelect}
-                                                placeholder="프로젝트 ID (옵션)"
                                                 value={editProject}
                                                 onChange={(e) => setEditProject(e.target.value)}
-                                            />
+                                            >
+                                                <option value="">프로젝트 선택 (옵션)</option>
+                                                {projects.map(project => (
+                                                    <option key={project.id} value={project.id}>
+                                                        {project.title} ({project.status})
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                     <div className={ss.editActions}>

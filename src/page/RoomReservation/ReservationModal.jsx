@@ -3,7 +3,26 @@ import styles from './ReservationModal.module.css';
 import { HiX, HiCalendar, HiClock, HiOfficeBuilding, HiDocumentText, HiBookmark, HiUserGroup, HiPencilAlt } from 'react-icons/hi';
 import ProjectSelectModal from '../../components/ProjectSelectModal';
 
-const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservationFormData, projectSearchTerm, filteredProjects, users, onClose, onFormChange, onProjectSearchChange, onProjectSelect, onParticipantChange, onSubmit, onDelete, onClearProject }) => {
+const ReservationModal = ({ 
+    isOpen, 
+    selectedRoom, 
+    selectedReservation, 
+    reservationFormData, 
+    projectSearchTerm, 
+    filteredProjects, 
+    projects = [], // 전체 프로젝트 목록
+    projectsLoading = false,
+    users, 
+    onClose, 
+    onFormChange, 
+    onProjectSearchChange, 
+    onProjectSelect, 
+    onProjectModalSelect, // 모달 선택 핸들러
+    onParticipantChange, 
+    onSubmit, 
+    onDelete, 
+    onClearProject 
+}) => {
     const [showProjectModal, setShowProjectModal] = useState(false);
     
     if (!isOpen) return null;
@@ -89,17 +108,24 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
 
     // 프로젝트 선택 모달 열기
     const handleOpenProjectModal = () => {
+        console.log('프로젝트 모달 열기 - 프로젝트 수:', projects.length);
         setShowProjectModal(true);
     };
 
     // 프로젝트 선택 처리
     const handleProjectSelect = (project) => {
-        if (project) {
-            onProjectSelect(project.id);
-        } else {
-            onClearProject();
+        console.log('프로젝트 선택:', project);
+        if (onProjectModalSelect) {
+            onProjectModalSelect(project);
         }
         setShowProjectModal(false);
+    };
+
+    // 프로젝트 삭제 처리
+    const handleClearProject = () => {
+        if (onClearProject) {
+            onClearProject();
+        }
     };
     
     return (
@@ -250,7 +276,7 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
                                                     <button
                                                         type="button"
                                                         className={styles.clear_project_btn}
-                                                        onClick={onClearProject}
+                                                        onClick={handleClearProject}
                                                     >
                                                         <HiX size={14} />
                                                     </button>
@@ -263,9 +289,10 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
                                             type="button"
                                             className={styles.select_project_btn}
                                             onClick={handleOpenProjectModal}
+                                            disabled={projectsLoading}
                                         >
                                             <HiBookmark size={16} />
-                                            프로젝트 선택
+                                            {projectsLoading ? '프로젝트 로딩 중...' : '프로젝트 선택'}
                                         </button>
                                     </div>
                                 </div>
@@ -362,7 +389,7 @@ const ReservationModal = ({ isOpen, selectedRoom, selectedReservation, reservati
             {/* 프로젝트 선택 모달 */}
             <ProjectSelectModal
                 isOpen={showProjectModal}
-                projects={filteredProjects}
+                projects={projects}
                 selectedProject={reservationFormData.project}
                 onSelect={handleProjectSelect}
                 onClose={() => setShowProjectModal(false)}

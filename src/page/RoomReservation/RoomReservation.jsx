@@ -7,10 +7,6 @@ import {
     HiChevronLeft, HiChevronRight, HiFilter, HiSearch,
     HiDocumentText, HiCheckCircle, HiSave, HiBookmark
 } from 'react-icons/hi'
-import { 
-    currentUser,
-    projects
-} from '../../data/mockDatabase'
 import ReservationModal from './ReservationModal'
 import api from '../../utils/api'
 
@@ -18,10 +14,10 @@ const RoomReservation = () => {
     const navigate = useNavigate()
     
     // 상태 관리
-    const [currentUserState] = useState(currentUser) // 현재 로그인한 사용자 (임시)
     const [rooms, setRooms] = useState([])
     const [reservations, setReservations] = useState([])
     const [users, setUsers] = useState([]) // 실제 사용자 목록
+    const [projects, setProjects] = useState([]) // 서버에서 가져올 프로젝트 목록
     const [selectedRoom, setSelectedRoom] = useState(null)
     const [currentDate, setCurrentDate] = useState(new Date('2023-03-06')) // 2023년 3월 6일로 설정
     const [showReservationForm, setShowReservationForm] = useState(false)
@@ -34,6 +30,7 @@ const RoomReservation = () => {
         endTime: '',
         participants: [],
         project: '',
+        projectId: '', // 프로젝트 ID 추가
         description: ''
     })
     const [statusMessage, setStatusMessage] = useState('')
@@ -43,6 +40,7 @@ const RoomReservation = () => {
     const [editingRoomDetails, setEditingRoomDetails] = useState(false)
     const [currentTime, setCurrentTime] = useState(new Date())
     const [loading, setLoading] = useState(true)
+    const [projectsLoading, setProjectsLoading] = useState(false)
     
     // 회의실 목록 불러오기
     const loadRooms = async () => {
@@ -94,6 +92,36 @@ const RoomReservation = () => {
         }
     }
     
+    // 프로젝트 목록 불러오기
+    const loadProjects = async () => {
+        setProjectsLoading(true)
+        try {
+            console.log('프로젝트 목록 조회 시작')
+            const response = await api.get('/projects')
+            console.log('프로젝트 목록 조회 성공:', response.data.length, '개')
+            
+            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환
+            const formattedProjects = response.data.map(project => ({
+                id: project._id || project.id,
+                title: project.title,
+                description: project.description || '',
+                status: project.status,
+                deadline: project.deadline,
+                client: project.client || '', // 클라이언트 정보가 있다면
+                thumbnail: project.thumbnail
+            }))
+            
+            setProjects(formattedProjects)
+            setProjectsList(formattedProjects) // 검색용 목록도 업데이트
+        } catch (error) {
+            console.error('프로젝트 목록을 불러오는데 실패했습니다:', error)
+            setStatusMessage('프로젝트 목록을 불러오는데 실패했습니다.')
+            setMessageType('error')
+        } finally {
+            setProjectsLoading(false)
+        }
+    }
+    
     // 예약 목록 불러오기
     const loadReservations = async () => {
         try {
@@ -109,6 +137,7 @@ const RoomReservation = () => {
                     title: reservation.meetingName,
                     description: reservation.meetingDescription || '',
                     project: reservation.project?.title || '',
+                    projectId: reservation.project?._id || reservation.project?.id || '',
                     participants: reservation.participants.map(p => p.userId._id)
                 }));
                 allReservations.push(...roomReservations);
@@ -128,11 +157,13 @@ const RoomReservation = () => {
             try {
                 await loadRooms()
                 await loadUsers()
-                setProjectsList(projects) // 프로젝트는 임시로 목업 데이터 사용
+                setProjectsLoading(true)
+                await loadProjects()
             } catch (error) {
                 console.error('데이터 로딩 중 오류:', error)
             } finally {
                 setLoading(false)
+                setProjectsLoading(false)
             }
         }
         
@@ -255,6 +286,7 @@ const RoomReservation = () => {
             endTime: '10:00',
             participants: [], // 빈 배열로 시작하여 사용자가 직접 선택하도록 함
             project: '',
+            projectId: '',
             description: ''
         })
         
@@ -269,6 +301,9 @@ const RoomReservation = () => {
         const startDate = new Date(reservation.startTime)
         const endDate = new Date(reservation.endTime)
         
+        // 프로젝트 정보 찾기
+        const projectInfo = projects.find(p => p.id === reservation.projectId)
+        
         setReservationFormData({
             title: reservation.meetingName,
             startDate: startDate.toISOString().split('T')[0],
@@ -276,7 +311,8 @@ const RoomReservation = () => {
             startTime: startDate.toTimeString().slice(0, 5),
             endTime: endDate.toTimeString().slice(0, 5),
             participants: reservation.participants || [],
-            project: reservation.project || '',
+            project: projectInfo ? projectInfo.title : (reservation.project || ''),
+            projectId: reservation.projectId || '',
             description: reservation.meetingDescription || ''
         })
     }
@@ -324,11 +360,33 @@ const RoomReservation = () => {
     // 프로젝트 선택 처리
     const handleProjectSelect = (projectId) => {
         const selectedProject = projectsList.find(project => project.id === projectId)
-        setReservationFormData(prev => ({
-            ...prev,
-            project: selectedProject.title
-        }))
+        if (selectedProject) {
+            setReservationFormData(prev => ({
+                ...prev,
+                project: selectedProject.title,
+                projectId: selectedProject.id
+            }))
+        }
         setProjectSearchTerm('')
+    }
+    
+    // 프로젝트 모달 선택 처리 (ReservationModal에서 사용)
+    const handleProjectModalSelect = (project) => {
+        if (project) {
+            console.log('프로젝트 선택:', project.title, project.id)
+            setReservationFormData(prev => ({
+                ...prev,
+                project: project.title,
+                projectId: project.id
+            }))
+        } else {
+            console.log('프로젝트 선택 해제')
+            setReservationFormData(prev => ({
+                ...prev,
+                project: '',
+                projectId: ''
+            }))
+        }
     }
     
     // 필터링된 프로젝트 목록
@@ -337,7 +395,7 @@ const RoomReservation = () => {
             project.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
             project.description.toLowerCase().includes(projectSearchTerm.toLowerCase())
           )
-        : []
+        : projectsList
     
     const handleFormSubmit = async (e) => {
         e.preventDefault()
@@ -367,7 +425,7 @@ const RoomReservation = () => {
                 startTime: startDateTime.toISOString(),
                 endTime: endDateTime.toISOString(),
                 participants: reservationFormData.participants,
-                project: null // TODO: 프로젝트 연동 후 수정
+                project: reservationFormData.projectId || null // 프로젝트 ID 전송
             }
             
             // 기존 예약 수정
@@ -784,15 +842,18 @@ const RoomReservation = () => {
                 reservationFormData={reservationFormData}
                 projectSearchTerm={projectSearchTerm}
                 filteredProjects={filteredProjects}
+                projects={projects}
+                projectsLoading={projectsLoading}
                 users={users}
                 onClose={handleCancelForm}
                 onFormChange={handleFormChange}
                 onProjectSearchChange={handleProjectSearchChange}
                 onProjectSelect={handleProjectSelect}
+                onProjectModalSelect={handleProjectModalSelect}
                 onParticipantChange={handleParticipantChange}
                 onSubmit={handleFormSubmit}
                 onDelete={handleDeleteReservation}
-                onClearProject={() => setReservationFormData(prev => ({...prev, project: ''}))}
+                onClearProject={() => setReservationFormData(prev => ({...prev, project: '', projectId: ''}))}
             />
         </div>
     )
