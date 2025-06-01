@@ -35,6 +35,12 @@ const userSchema = new Schema({
     address: {
         type: String,
     },
+    joinYear: {
+        type: String,
+    },
+    adminMemo: {
+        type: String,
+    },
     roles: {
         type: Array,
         default: [],
@@ -52,6 +58,10 @@ const userSchema = new Schema({
     bio: {
         type: String,
         default: '',
+    },
+    // 외부 스태프 SNS
+    sns: {
+        type: String,
     },
     status: {
         type: String,
