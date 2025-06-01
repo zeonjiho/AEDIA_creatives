@@ -11,6 +11,7 @@ const UserModal = ({
   const [status, setStatus] = useState(user?.status || 'active')
   const [userType, setUserType] = useState(user?.userType || 'external')
   const [roles, setRoles] = useState(user?.roles?.join(', ') || '')
+  const [hireYear, setHireYear] = useState(user?.hireYear || '')
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -20,6 +21,7 @@ const UserModal = ({
       setStatus(user.status || 'active')
       setUserType(user.userType || 'external')
       setRoles(user.roles?.join(', ') || '')
+      setHireYear(user.hireYear || '')
       setNote('')
     }
   }, [user])
@@ -79,6 +81,7 @@ const UserModal = ({
         status,
         userType,
         roles: roles ? roles.split(',').map(role => role.trim()).filter(role => role) : [],
+        hireYear: hireYear ? parseInt(hireYear) : null,
         note
       }
 
@@ -203,6 +206,17 @@ const UserModal = ({
                 <div className={ss.info_value}>{formatPhoneNumber(user.phone)}</div>
               </div>
               <div className={ss.info_item}>
+                <label>입사 년도</label>
+                <div className={ss.info_value}>
+                  {user.hireYear ? `${user.hireYear}년` : '-'}
+                  {user.hireYear && (
+                    <span style={{fontSize: '0.8rem', color: 'var(--text-tertiary)', marginLeft: '8px'}}>
+                      (경력 {new Date().getFullYear() - user.hireYear}년)
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className={ss.info_item}>
                 <label>가입일</label>
                 <div className={ss.info_value}>{formatDate(user.createdAt)}</div>
               </div>
@@ -276,6 +290,19 @@ const UserModal = ({
                     <option value="internal">내부 직원</option>
                     <option value="external">외부 스태프</option>
                   </select>
+                </div>
+                <div className={ss.info_item}>
+                  <label>입사 년도</label>
+                  <input
+                    type="number"
+                    value={hireYear}
+                    onChange={(e) => setHireYear(e.target.value)}
+                    placeholder="예: 2020"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    className={ss.text_input}
+                    style={{width: '100%'}}
+                  />
                 </div>
               </div>
 

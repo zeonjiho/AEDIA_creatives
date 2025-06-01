@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import ss from './AdminRoom.module.css'
-import { FaPlus, FaEdit, FaTrash, FaClock, FaUsers, FaMapMarkerAlt, FaTools, FaCalendarAlt } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash, FaClock, FaUsers, FaMapMarkerAlt, FaTools, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import api from '../../../utils/api'
 
 const AdminRoom = () => {
@@ -15,9 +15,10 @@ const AdminRoom = () => {
         tools: []
     })
     const [newTool, setNewTool] = useState('')
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+    const [currentDate, setCurrentDate] = useState(new Date()) // selectedDate를 currentDate로 변경
     const [loading, setLoading] = useState(false)
     const [reservationsLoading, setReservationsLoading] = useState(false)
+    const [currentTime, setCurrentTime] = useState(new Date()) // 현재 시간 추가
 
     // 회의실 목록 로드
     const fetchRooms = async () => {
@@ -199,7 +200,7 @@ const AdminRoom = () => {
 
     // 선택된 날짜의 예약 가져오기
     const getSelectedDateReservations = () => {
-        const selectedDateObj = new Date(selectedDate).toDateString()
+        const selectedDateObj = new Date(currentDate).toDateString()
         return reservations.filter(reservation => {
             const reservationDate = new Date(reservation.startTime).toDateString()
             return reservationDate === selectedDateObj
@@ -229,6 +230,46 @@ const AdminRoom = () => {
         })
     }
 
+    // 날짜 포맷팅 함수 추가
+    const formatDate = (date) => {
+        return date.toLocaleDateString('ko-KR', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            weekday: 'long'
+        })
+    }
+
+    // 날짜 네비게이션 함수들 추가
+    const goToPreviousDay = () => {
+        setCurrentDate(prev => {
+            const newDate = new Date(prev)
+            newDate.setDate(prev.getDate() - 1)
+            return newDate
+        })
+    }
+    
+    const goToNextDay = () => {
+        setCurrentDate(prev => {
+            const newDate = new Date(prev)
+            newDate.setDate(prev.getDate() + 1)
+            return newDate
+        })
+    }
+    
+    const goToToday = () => {
+        setCurrentDate(new Date())
+    }
+
+    // 현재 시간 업데이트 useEffect 추가
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date())
+        }, 1000)
+        
+        return () => clearInterval(timer)
+    }, [])
+
     const todayReservations = getTodayReservations()
     const selectedDateReservations = getSelectedDateReservations()
     const currentMeetings = getCurrentMeetings()
@@ -239,15 +280,48 @@ const AdminRoom = () => {
             <div className={ss.header}>
                 <div className={ss.headerLeft}>
                     <h2>회의실 관리</h2>
-                    <p>회의실 정보와 예약 현황을 관리합니다</p>
+                    <p className={ss.dashboard_date}>
+                        {currentTime.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })} {currentTime.toLocaleTimeString('en-US')}
+                    </p>
                 </div>
-                <button 
-                    className={ss.addBtn}
-                    onClick={() => setShowAddModal(true)}
-                    disabled={loading}
-                >
-                    <FaPlus /> {loading ? '로딩 중...' : '회의실 추가'}
-                </button>
+                <div className={ss.headerRight}>
+                    <div className={ss.date_navigation}>
+                        <button 
+                            className={ss.today_btn}
+                            onClick={goToToday}
+                        >
+                            오늘
+                        </button>
+                        <div className={ss.date_controls}>
+                            <button 
+                                className={ss.nav_button} 
+                                onClick={goToPreviousDay}
+                            >
+                                <FaChevronLeft />
+                            </button>
+                            <span className={ss.current_date}>
+                                {formatDate(currentDate)}
+                            </span>
+                            <button 
+                                className={ss.nav_button} 
+                                onClick={goToNextDay}
+                            >
+                                <FaChevronRight />
+                            </button>
+                        </div>
+                    </div>
+                    <button 
+                        className={ss.addBtn}
+                        onClick={() => setShowAddModal(true)}
+                        disabled={loading}
+                    >
+                        <FaPlus /> {loading ? '로딩 중...' : '회의실 추가'}
+                    </button>
+                </div>
             </div>
 
             {/* 현재 진행 중인 회의 */}
@@ -346,23 +420,15 @@ const AdminRoom = () => {
                 <div className={ss.reservationSection}>
                     <div className={ss.sectionHeader}>
                         <h3><FaCalendarAlt /> 예약 현황</h3>
-                        <div className={ss.dateSelector}>
-                            <label>날짜 선택:</label>
-                            <input 
-                                type="date" 
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                            />
-                        </div>
                     </div>
                     
                     {reservationsLoading ? (
                         <div className={ss.loadingState}>
                             <p>예약 정보를 불러오는 중...</p>
                         </div>
-                    ) : selectedDateReservations.length > 0 ? (
+                    ) : getSelectedDateReservations().length > 0 ? (
                         <div className={ss.reservationList}>
-                            {selectedDateReservations.map(reservation => (
+                            {getSelectedDateReservations().map(reservation => (
                                 <div key={reservation._id} className={ss.reservationCard}>
                                     <div className={ss.reservationHeader}>
                                         <h4>{reservation.meetingName}</h4>

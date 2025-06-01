@@ -4,7 +4,9 @@
     min-height: calc(100vh - 160px);
 }
 
+
 /* 헤더 */
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -27,6 +29,83 @@
     font-size: 14px;
 }
 
+.dashboard_date {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.date_navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 6px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.today_btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    font-size: 14px;
+}
+
+.today_btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.date_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav_button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nav_button:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.current_date {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
 .addBtn {
     display: flex;
     align-items: center;
@@ -46,7 +125,9 @@
     transform: translateY(-1px);
 }
 
+
 /* 현재 진행 중인 회의 */
+
 .currentMeetings {
     margin-bottom: 30px;
     padding: 20px;
@@ -107,14 +188,18 @@
     font-size: 14px;
 }
 
+
 /* 메인 컨텐츠 */
+
 .mainContent {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
 }
 
+
 /* 회의실 섹션 */
+
 .roomSection h3 {
     margin: 0 0 20px 0;
     color: var(--text-primary);
@@ -160,7 +245,8 @@
     gap: 8px;
 }
 
-.editBtn, .deleteBtn {
+.editBtn,
+.deleteBtn {
     padding: 8px;
     border: none;
     border-radius: var(--border-radius-sm);
@@ -219,7 +305,9 @@
     font-size: 14px;
 }
 
+
 /* 예약 섹션 */
+
 .reservationSection h3 {
     margin: 0 0 20px 0;
     color: var(--text-primary);
@@ -325,7 +413,9 @@
     border-radius: var(--border-radius-md);
 }
 
+
 /* 로딩 상태 */
+
 .loadingState {
     padding: 40px;
     text-align: center;
@@ -340,7 +430,9 @@
     font-size: 16px;
 }
 
+
 /* 빈 회의실 상태 */
+
 .emptyRoomState {
     padding: 30px;
     text-align: center;
@@ -355,7 +447,9 @@
     font-size: 14px;
 }
 
+
 /* 모달 */
+
 .modal {
     position: fixed;
     top: 0;
@@ -480,7 +574,8 @@
     border-top: 1px solid var(--border-color);
 }
 
-.cancelBtn, .saveBtn {
+.cancelBtn,
+.saveBtn {
     padding: 12px 24px;
     border: none;
     border-radius: var(--border-radius-sm);
@@ -508,12 +603,13 @@
     background-color: var(--accent-hover);
 }
 
+
 /* 반응형 */
+
 @media (max-width: 1024px) {
     .mainContent {
         grid-template-columns: 1fr;
     }
-    
     .roomGrid {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
@@ -523,35 +619,41 @@
     .adminRoom {
         padding: 15px;
     }
-    
     .header {
         flex-direction: column;
-        gap: 15px;
+        gap: 20px;
         align-items: stretch;
     }
-    
+    .headerRight {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .date_navigation {
+        justify-content: center;
+    }
+    .current_date {
+        font-size: 0.85rem;
+        padding: 0 8px;
+    }
     .sectionHeader {
         flex-direction: column;
         gap: 15px;
         align-items: stretch;
     }
-    
     .meetingCards {
         grid-template-columns: 1fr;
     }
-    
     .currentMeetingCard {
         flex-direction: column;
+        align-items: flex-start;
         gap: 10px;
-        align-items: stretch;
     }
-    
     .modalContent {
-        padding: 20px;
-        margin: 20px;
+        width: 95%;
+        margin: 20px auto;
     }
-    
     .modalActions {
         flex-direction: column;
+        gap: 10px;
     }
 }
