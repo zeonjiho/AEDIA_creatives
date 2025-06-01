@@ -442,6 +442,35 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
     }
 })
 
+app.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({ message: '존재하지 않는 이메일입니다.' });
+        }
+
+        const slackId = user.slackId;
+        if (!slackId) {
+            return res.status(404).json({ message: '슬랙 ID가 없습니다.' });
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        await slackBot.chat.postMessage({
+            channel: slackId,
+            text: `🔐 AEDIA 임시 비밀번호: [${code}]입니다.`
+        });
+        user.password = code;
+        await user.save();
+
+        res.status(200).json({ message: '임시 비밀번호가 발송되었습니다.' });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '임시 비밀번호 발송 중 오류가 발생했습니다.' });
+    }
+})
+
 // 사용자 정보 불러오기 (메인 등에서 사용)
 app.get('/get-user-info', async (req, res) => {
     const { userId } = req.query;
@@ -463,13 +492,13 @@ app.get('/get-user-info', async (req, res) => {
 // 사용자 프로필 업데이트 API
 app.put('/update-user-profile', async (req, res) => {
     const { userId } = req.query;
-    const { 
-        name, 
-        email, 
-        phone, 
-        address, 
-        emergencyContact, 
-        department, 
+    const {
+        name,
+        email,
+        phone,
+        address,
+        emergencyContact,
+        department,
         bio,
         roles,
         avatar
@@ -478,14 +507,14 @@ app.put('/update-user-profile', async (req, res) => {
     try {
         // 이메일 중복 체크 (다른 사용자가 같은 이메일 사용하는지)
         if (email) {
-            const existingUser = await User.findOne({ 
-                email: email, 
-                _id: { $ne: userId } 
+            const existingUser = await User.findOne({
+                email: email,
+                _id: { $ne: userId }
             });
-            
+
             if (existingUser) {
-                return res.status(400).json({ 
-                    message: '이미 사용중인 이메일입니다.' 
+                return res.status(400).json({
+                    message: '이미 사용중인 이메일입니다.'
                 });
             }
         }
@@ -493,12 +522,12 @@ app.put('/update-user-profile', async (req, res) => {
         // 아바타가 변경되었고 기존 아바타가 로컬 파일인 경우 삭제
         if (avatar) {
             const existingUser = await User.findById(userId);
-            if (existingUser && existingUser.avatar && 
+            if (existingUser && existingUser.avatar &&
                 existingUser.avatar !== avatar &&
                 !existingUser.avatar.startsWith('http')) {
-                
+
                 const oldFilePath = path.join('./uploads/product/', existingUser.avatar);
-                
+
                 try {
                     if (fs.existsSync(oldFilePath)) {
                         fs.unlinkSync(oldFilePath);
@@ -512,7 +541,7 @@ app.put('/update-user-profile', async (req, res) => {
         }
 
         const updateData = {};
-        
+
         // 제공된 필드만 업데이트
         if (name !== undefined) updateData.name = name;
         if (email !== undefined) updateData.email = email;
@@ -594,7 +623,7 @@ app.post('/attendance/check-in', async (req, res) => {
             method: method
         };
 
-            await User.findByIdAndUpdate(userId, {
+        await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -947,11 +976,11 @@ app.put('/todos/:id', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                text,
-                dueDate,
-                dueTime: dueTime || null,
-                projectId: projectId || null,
-                updatedAt: new Date()
+            text,
+            dueDate,
+            dueTime: dueTime || null,
+            projectId: projectId || null,
+            updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -975,8 +1004,8 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                completed: !todo.completed,
-                updatedAt: new Date()
+            completed: !todo.completed,
+            updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
