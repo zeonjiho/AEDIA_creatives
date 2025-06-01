@@ -19,6 +19,7 @@ import { users, notifications, currentUser } from '../../data/mockDatabase'
 import AediaLogo from '../../components/AediaLogo/AediaLogo'
 import SearchModal from '../../components/SearchModal/SearchModal'
 import { openSearchModal } from '../../utils/searchUtils'
+import getProjectThumbnail from '../../utils/getProjectThumbnail'
 
 const MobileLayout = ({ user }) => {
     const navigate = useNavigate()
@@ -260,7 +261,7 @@ const MobileLayout = ({ user }) => {
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
                         >
                             {user?.avatar ? (
-                                <img src={user?.avatar} alt={user?.name} className={ss.avatar} />
+                                <img src={getProjectThumbnail(user?.avatar)} alt={user?.name} className={ss.avatar} />
                             ) : (
                                 <FaUserCircle className={ss.avatar_icon} />
                             )}
@@ -273,7 +274,7 @@ const MobileLayout = ({ user }) => {
                                 <div className={ss.profile_header}>
                                     <div className={ss.profile_avatar_section}>
                                         {user?.avatar ? (
-                                            <img src={user?.avatar} alt={user?.name} className={ss.profile_avatar} />
+                                            <img src={getProjectThumbnail(user?.avatar)} alt={user?.name} className={ss.profile_avatar} />
                                         ) : (
                                             <FaUserCircle className={ss.profile_avatar_placeholder} />
                                         )}

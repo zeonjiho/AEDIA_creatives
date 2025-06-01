@@ -471,7 +471,8 @@ app.put('/update-user-profile', async (req, res) => {
         emergencyContact, 
         department, 
         bio,
-        roles
+        roles,
+        avatar
     } = req.body;
 
     try {
@@ -489,6 +490,27 @@ app.put('/update-user-profile', async (req, res) => {
             }
         }
 
+        // 아바타가 변경되었고 기존 아바타가 로컬 파일인 경우 삭제
+        if (avatar) {
+            const existingUser = await User.findById(userId);
+            if (existingUser && existingUser.avatar && 
+                existingUser.avatar !== avatar &&
+                !existingUser.avatar.startsWith('http')) {
+                
+                const oldFilePath = path.join('./uploads/product/', existingUser.avatar);
+                
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                        console.log('기존 아바타 파일 삭제:', existingUser.avatar);
+                    }
+                } catch (fileError) {
+                    console.error('기존 아바타 파일 삭제 실패:', fileError);
+                    // 파일 삭제 실패해도 프로필 업데이트는 계속 진행
+                }
+            }
+        }
+
         const updateData = {};
         
         // 제공된 필드만 업데이트
@@ -500,6 +522,7 @@ app.put('/update-user-profile', async (req, res) => {
         if (department !== undefined) updateData.department = department;
         if (bio !== undefined) updateData.bio = bio;
         if (roles !== undefined) updateData.roles = roles;
+        if (avatar !== undefined) updateData.avatar = avatar;
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
@@ -1503,6 +1526,49 @@ app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
     } catch (err) {
         console.error('썸네일 업로드 실패:', err);
         res.status(500).json({ message: '썸네일 업로드 실패' });
+    }
+});
+
+// 프로필 사진 업로드 API
+app.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
+
+        console.log('프로필 사진 업로드 요청:', req.file.filename);
+
+        // 파일 경로 및 새 파일명 생성
+        const originalPath = req.file.path;
+        const fileExtension = path.extname(req.file.originalname);
+        const timestamp = Date.now();
+        const newFilename = `avatar_${timestamp}${fileExtension}`;
+        const newPath = path.join('./uploads/product/', newFilename);
+
+        // 이미지 리사이징 및 최적화 (프로필 사진은 정사각형으로)
+        if (req.file.mimetype.startsWith('image/')) {
+            await sharp(originalPath)
+                .resize(400, 400, {
+                    fit: 'cover',
+                    withoutEnlargement: true
+                })
+                .jpeg({ quality: 85 })
+                .toFile(newPath);
+
+            // 원본 파일 삭제
+            fs.unlinkSync(originalPath);
+        } else {
+            // 이미지가 아닌 경우 그대로 이동
+            fs.renameSync(originalPath, newPath);
+        }
+
+        res.status(200).json({
+            message: '프로필 사진 업로드 성공',
+            filename: newFilename
+        });
+    } catch (err) {
+        console.error('프로필 사진 업로드 실패:', err);
+        res.status(500).json({ message: '프로필 사진 업로드 실패' });
     }
 });
 

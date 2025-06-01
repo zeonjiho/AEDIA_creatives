@@ -24,6 +24,7 @@ import {
 } from 'react-icons/fa';
 import api from '../../utils/api';
 import { jwtDecode } from 'jwt-decode';
+import getProjectThumbnail from '../../utils/getProjectThumbnail';
 
 const Profile = () => {
   const [user, setUser] = useState({});
@@ -44,6 +45,13 @@ const Profile = () => {
   const [saveStatus, setSaveStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // 아바타 편집 관련 상태
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // 로컬 스토리지에서 사용자 ID 가져오기
   const userId = jwtDecode(localStorage.getItem('token')).userId;
@@ -239,6 +247,130 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setAvatarFile(file);
+      
+      // 파일 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!avatarFile) {
+      alert('선택된 파일이 없습니다.');
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      
+      // 1. 아바타 업로드
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+      
+      console.log('아바타 업로드 시작:', avatarFile.name);
+      
+      const uploadResponse = await api.post('/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (uploadResponse.status === 200) {
+        const filename = uploadResponse.data.filename;
+        console.log('아바타 업로드 성공:', filename);
+        
+        // 2. 프로필 업데이트 (파일명만 저장)
+        const response = await api.put(`/update-user-profile?userId=${userId}`, {
+          avatar: filename // 파일명만 저장
+        });
+        
+        if (response.status === 200) {
+          const updatedUser = response.data.user;
+          setUser(updatedUser);
+          setFormData(updatedUser);
+          
+          // 로컬 스토리지의 사용자 정보도 업데이트
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          setEditingAvatar(false);
+          setAvatarFile(null);
+          setAvatarPreview(null);
+          
+          // 파일 input 초기화
+          const fileInput = document.getElementById('avatar-input');
+          if (fileInput) fileInput.value = '';
+          
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
+      }
+    } catch (error) {
+      console.error('아바타 업데이트 실패:', error);
+      
+      let errorMessage = '아바타 업데이트 중 오류가 발생했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleCancelAvatar = () => {
+    setEditingAvatar(false);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    // 파일 input 초기화
+    const fileInput = document.getElementById('avatar-input');
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!window.confirm('프로필 사진을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      
+      const response = await api.put(`/update-user-profile?userId=${userId}`, {
+        avatar: null
+      });
+      
+      if (response.status === 200) {
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        setFormData(updatedUser);
+        
+        // 로컬 스토리지의 사용자 정보도 업데이트
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setEditingAvatar(false);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus(''), 3000);
+      }
+    } catch (error) {
+      console.error('아바타 삭제 실패:', error);
+      setError('아바타 삭제 중 오류가 발생했습니다.');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   // 로딩 중 표시
   if (loading) {
     return (
@@ -301,19 +433,110 @@ const Profile = () => {
         <div className={styles.profile_avatar_section}>
           <div className={styles.avatar_container}>
             <div className={styles.avatar_wrapper}>
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt="프로필 이미지"
-                  className={styles.avatar_image}
-                />
+              {editingAvatar ? (
+                <div className={styles.avatar_editor}>
+                  {/* 편집 모드 스켈레톤 */}
+                  {!avatarLoaded && !avatarPreview && (
+                    <div className={styles.avatar_skeleton}>
+                      <div className={styles.skeleton_animation}></div>
+                    </div>
+                  )}
+                  
+                  <img 
+                    src={avatarPreview || getProjectThumbnail(user.avatar)} 
+                    alt="아바타 미리보기"
+                    className={`${styles.avatar_image} ${avatarLoaded || avatarPreview ? styles.loaded : styles.loading}`}
+                    onLoad={() => setAvatarLoaded(true)}
+                    style={{ display: avatarLoaded || avatarPreview ? 'block' : 'none' }}
+                  />
+                  <div className={styles.avatar_overlay}>
+                    <div className={styles.avatar_actions}>
+                      <label htmlFor="avatar-input" className={styles.avatar_upload_button}>
+                        <FaCamera />
+                        이미지 선택
+                      </label>
+                      <input
+                        id="avatar-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        style={{ display: 'none' }}
+                        disabled={isUploadingAvatar}
+                      />
+                      {user.avatar && (
+                        <button
+                          type="button"
+                          className={styles.avatar_remove_button}
+                          onClick={handleRemoveAvatar}
+                          disabled={isUploadingAvatar}
+                        >
+                          <FaTimes />
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <FaUserCircle className={styles.avatar_placeholder} />
+                <div 
+                  className={styles.avatar_display}
+                  onClick={() => !isEditMode && setEditingAvatar(true)}
+                >
+                  {/* 일반 모드 스켈레톤 */}
+                  {!avatarLoaded && user.avatar && (
+                    <div className={styles.avatar_skeleton}>
+                      <div className={styles.skeleton_animation}></div>
+                    </div>
+                  )}
+                  
+                  {user.avatar ? (
+                    <img 
+                      src={getProjectThumbnail(user.avatar)} 
+                      alt="프로필 이미지"
+                      className={`${styles.avatar_image} ${avatarLoaded ? styles.loaded : styles.loading}`}
+                      onLoad={() => setAvatarLoaded(true)}
+                      style={{ display: avatarLoaded ? 'block' : 'none' }}
+                    />
+                  ) : (
+                    <FaUserCircle className={styles.avatar_placeholder} />
+                  )}
+                  
+                  {!isEditMode && (
+                    <div className={styles.avatar_edit_overlay}>
+                      <FaCamera className={styles.edit_icon} />
+                      <span>클릭하여 편집</span>
+                    </div>
+                  )}
+                </div>
               )}
               <div className={styles.avatar_status}></div>
             </div>
-            {isEditMode && (
-              <button className={styles.change_avatar_button}>
+            
+            {editingAvatar && (
+              <div className={styles.avatar_editor_actions}>
+                <button 
+                  className={styles.cancel_button}
+                  onClick={handleCancelAvatar}
+                  disabled={isUploadingAvatar}
+                >
+                  취소
+                </button>
+                <button 
+                  className={styles.save_button}
+                  onClick={handleSaveAvatar}
+                  disabled={!avatarFile || isUploadingAvatar}
+                >
+                  <FaSave /> {isUploadingAvatar ? '업로드 중...' : '저장'}
+                </button>
+              </div>
+            )}
+            
+            {isEditMode && !editingAvatar && (
+              <button 
+                className={styles.change_avatar_button}
+                onClick={() => setEditingAvatar(true)}
+                disabled={isUploadingAvatar}
+              >
                 <FaCamera />
                 <span>사진 변경</span>
               </button>
