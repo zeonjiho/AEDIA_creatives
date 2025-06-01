@@ -104,6 +104,121 @@ cron.schedule('0 0 * * *', async () => {
     timezone: "Asia/Seoul"
 });
 
+// 자동 퇴근 처리 스케줄러 (매 10분마다 실행)
+cron.schedule('*/10 * * * *', async () => {
+    try {
+        const now = new Date();
+        console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
+
+        // 모든 활성 사용자 조회 (slackId 유무와 관계없이)
+        const users = await User.find({ 
+            status: 'active'
+        }).select('_id name slackId attendance');
+
+        let notificationsSent = 0;
+        let autoCheckoutsProcessed = 0;
+
+        for (const user of users) {
+            if (!user.attendance || user.attendance.length === 0) continue;
+
+            // 출석 기록을 시간 순으로 정렬 (최신순)
+            const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
+            const lastRecord = sortedAttendance[0];
+
+            // 가장 최근 기록이 체크인인 경우만 처리
+            if (lastRecord && lastRecord.type === 'checkIn') {
+                const checkInTime = new Date(lastRecord.time);
+                const elapsedHours = (now - checkInTime) / (1000 * 60 * 60); // 시간 단위
+                const elapsedMinutes = (now - checkInTime) / (1000 * 60); // 분 단위
+
+                // 12시간 경과 시 자동 퇴근 처리 (모든 사용자 대상)
+                if (elapsedHours >= 12) {
+                    console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${elapsedHours.toFixed(1)}시간)\x1b[0m`);
+                    
+                    // 자동 퇴근 기록 추가
+                    const autoCheckoutRecord = {
+                        type: 'checkOut',
+                        time: now,
+                        date: now.toISOString().split('T')[0],
+                        method: 'auto_checkout'
+                    };
+
+                    user.attendance.push(autoCheckoutRecord);
+                    await user.save();
+
+                    // 자동 퇴근 처리 슬랙 알림 (slackId가 있는 경우만)
+                    if (user.slackId) {
+                        try {
+                            const workHours = Math.floor(elapsedMinutes / 60);
+                            const workMinutes = Math.floor(elapsedMinutes % 60);
+                            
+                            await slackBot.chat.postMessage({
+                                channel: user.slackId,
+                                text: `🏢 **자동 퇴근 처리되었습니다**\n\n출근 시간: ${checkInTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n퇴근 시간: ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n근무 시간: ${workHours}시간 ${workMinutes}분\n\n다음부터는 퇴근 시 꼭 퇴근 버튼을 눌러주세요! 😊`
+                            });
+                            console.log(`\x1b[32m자동 퇴근 알림 전송 성공: ${user.name}\x1b[0m`);
+                        } catch (slackError) {
+                            console.error(`\x1b[31m자동 퇴근 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
+                        }
+                    } else {
+                        console.log(`\x1b[33m자동 퇴근 처리 완료 (슬랙 알림 없음): ${user.name}\x1b[0m`);
+                    }
+
+                    autoCheckoutsProcessed++;
+                }
+                // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - slackId가 있는 경우만
+                else if (elapsedHours >= 11 && user.slackId) {
+                    const remainingMinutes = 12 * 60 - elapsedMinutes; // 자동 퇴근까지 남은 분
+                    
+                    // 알림 시점들 (60, 30, 20, 10분 전)
+                    const notificationPoints = [60, 30, 20, 10];
+                    
+                    for (const notificationMinutes of notificationPoints) {
+                        // 알림 시점에 근접한지 확인 (±5분 오차 허용)
+                        if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
+                            console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림)\x1b[0m`);
+                            
+                            try {
+                                await slackBot.chat.postMessage({
+                                    channel: user.slackId,
+                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(elapsedHours)}시간 ${Math.floor(elapsedMinutes % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
+                                });
+                                console.log(`\x1b[32m퇴근 예정 알림 전송 성공: ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
+                                notificationsSent++;
+                            } catch (slackError) {
+                                console.error(`\x1b[31m퇴근 예정 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
+                            }
+                            
+                            break; // 한 번만 알림 보내기
+                        }
+                    }
+                }
+                // 슬랙ID가 없는 사용자의 경우 알림 없이 로그만 출력
+                else if (elapsedHours >= 11 && !user.slackId) {
+                    const remainingMinutes = 12 * 60 - elapsedMinutes;
+                    const notificationPoints = [60, 30, 20, 10];
+                    
+                    for (const notificationMinutes of notificationPoints) {
+                        if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
+                            console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (notificationsSent > 0 || autoCheckoutsProcessed > 0) {
+            console.log(`\x1b[32m[${now.toLocaleString()}] 자동 퇴근 스케줄러 완료 - 알림 ${notificationsSent}건, 자동 퇴근 ${autoCheckoutsProcessed}건 처리\x1b[0m`);
+        }
+
+    } catch (error) {
+        console.error(`\x1b[31m[${new Date().toLocaleString()}] 자동 퇴근 처리 중 오류:`, error, '\x1b[0m');
+    }
+}, {
+    timezone: "Asia/Seoul"
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -367,7 +482,7 @@ app.post('/attendance/check-in', async (req, res) => {
             method: method
         };
 
-        await User.findByIdAndUpdate(userId, {
+            await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -1337,7 +1452,7 @@ app.post('/add-project', async (req, res) => {
             description: description.trim(),
             status: status || 'concept',
             deadline: deadlineDate,
-            thumbnail: thumbnail || 'default_thumbnail.jpg',
+            thumbnail: thumbnail || 'default_thumbnail.jpeg',
             progress: 0,
             staffList: staffList || [],
             team: team || []
@@ -1351,6 +1466,38 @@ app.post('/add-project', async (req, res) => {
             .populate('staffList.members.userId', 'name email department');
 
         console.log('프로젝트 생성 성공:', populatedProject._id);
+
+        // 팀원들에게 슬랙 알림 보내기
+        if (team && team.length > 0) {
+            try {
+                // 팀원들의 정보 조회
+                const teamMembers = await User.find({
+                    _id: { $in: team }
+                }).select('name slackId');
+                
+                console.log('새 프로젝트 팀원들:', teamMembers);
+                
+                // 각 팀원에게 슬랙 알림 발송
+                for (const member of teamMembers) {
+                    if (member.slackId) {
+                        try {
+                            await slackBot.chat.postMessage({
+                                channel: member.slackId,
+                                text: `🎬 **${title}** 프로젝트에 초대되었습니다.\n\n프로젝트 상태: ${status || 'concept'}\n마감일: ${deadlineDate.toLocaleDateString('ko-KR')}\n\n새로운 프로젝트가 시작되었습니다! 프로젝트에 대한 자세한 정보는 AEDIA 시스템에서 확인하실 수 있습니다.`
+                            });
+                            console.log(`새 프로젝트 슬랙 알림 전송 성공: ${member.name} (${member.slackId})`);
+                        } catch (slackError) {
+                            console.error(`새 프로젝트 슬랙 알림 전송 실패 - ${member.name}:`, slackError);
+                            // 슬랙 전송 실패해도 프로젝트 생성은 계속 진행
+                        }
+                    } else {
+                        console.log(`슬랙 ID가 없는 사용자: ${member.name}`);
+                    }
+                }
+            } catch (memberError) {
+                console.error('팀원 정보 조회 실패:', memberError);
+            }
+        }
 
         res.status(200).json({ 
             message: '프로젝트가 성공적으로 생성되었습니다.',
@@ -1400,8 +1547,9 @@ app.put('/projects/:id', async (req, res) => {
     try {
         const { title, description, status, deadline, thumbnail, progress, team, staffList } = req.body;
         
-        // 기존 프로젝트 조회 (썸네일 파일 삭제용)
-        const existingProject = await Project.findById(req.params.id);
+        // 기존 프로젝트 조회 (썸네일 파일 삭제용 및 팀원 비교용)
+        const existingProject = await Project.findById(req.params.id)
+            .populate('team', 'name email slackId');
         if (!existingProject) {
             return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
         }
@@ -1411,7 +1559,7 @@ app.put('/projects/:id', async (req, res) => {
             const oldThumbnail = existingProject.thumbnail;
             // 기존 썸네일이 기본 썸네일이 아니고, 로컬 파일명인 경우 삭제
             if (oldThumbnail && 
-                oldThumbnail !== 'default_thumbnail.jpg' && 
+                oldThumbnail !== 'default_thumbnail.jpeg' && 
                 !oldThumbnail.startsWith('http')) {
                 
                 const oldFilePath = path.join('./uploads/product/', oldThumbnail);
@@ -1440,6 +1588,51 @@ app.put('/projects/:id', async (req, res) => {
         // team과 staffList는 제공된 경우에만 업데이트
         if (team !== undefined) {
             updateData.team = team;
+            
+            // 새로 추가된 팀원 찾기
+            const existingTeamIds = existingProject.team.map(member => 
+                typeof member === 'object' ? member._id.toString() : member.toString()
+            );
+            
+            const newTeamIds = team.filter(newMemberId => {
+                const memberIdStr = typeof newMemberId === 'object' ? newMemberId._id || newMemberId.id : newMemberId;
+                return !existingTeamIds.includes(memberIdStr.toString());
+            });
+            
+            console.log('기존 팀원 IDs:', existingTeamIds);
+            console.log('새로운 팀원 IDs:', newTeamIds);
+            
+            // 새로 추가된 팀원들에게 슬랙 알림 보내기
+            if (newTeamIds.length > 0) {
+                try {
+                    // 새로 추가된 팀원들의 정보 조회
+                    const newMembers = await User.find({
+                        _id: { $in: newTeamIds }
+                    }).select('name slackId');
+                    
+                    console.log('새로 추가된 팀원들:', newMembers);
+                    
+                    // 각 새 팀원에게 슬랙 알림 발송
+                    for (const member of newMembers) {
+                        if (member.slackId) {
+                            try {
+                                await slackBot.chat.postMessage({
+                                    channel: member.slackId,
+                                    text: `🎬 **${title}** 프로젝트에 초대되었습니다.\n\n프로젝트 상태: ${status}\n마감일: ${new Date(deadline).toLocaleDateString('ko-KR')}\n\n프로젝트에 대한 자세한 정보는 AEDIA 시스템에서 확인하실 수 있습니다.`
+                                });
+                                console.log(`슬랙 알림 전송 성공: ${member.name} (${member.slackId})`);
+                            } catch (slackError) {
+                                console.error(`슬랙 알림 전송 실패 - ${member.name}:`, slackError);
+                                // 슬랙 전송 실패해도 프로젝트 업데이트는 계속 진행
+                            }
+                        } else {
+                            console.log(`슬랙 ID가 없는 사용자: ${member.name}`);
+                        }
+                    }
+                } catch (memberError) {
+                    console.error('새 팀원 정보 조회 실패:', memberError);
+                }
+            }
         }
         if (staffList !== undefined) {
             updateData.staffList = staffList;
