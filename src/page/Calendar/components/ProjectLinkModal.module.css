@@ -1,0 +1,493 @@
+.modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal_content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* 헤더 */
+
+.modal_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal_title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.title_icon {
+    color: #000;
+}
+
+.close_btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.close_btn:hover {
+    background: #f0f0f0;
+    color: #000;
+}
+
+
+/* 바디 */
+
+.modal_body {
+    padding: 20px;
+    max-height: calc(90vh - 80px);
+    overflow-y: auto;
+}
+
+
+/* 섹션 */
+
+.section {
+    margin-bottom: 30px;
+}
+
+.section:last-child {
+    margin-bottom: 0;
+}
+
+.section_title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section_icon {
+    color: #000;
+    font-size: 14px;
+}
+
+
+/* 이벤트 목록 */
+
+.linked_events {
+    space-y: 10px;
+}
+
+.event_item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.event_info {
+    flex: 1;
+}
+
+.event_title {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 4px;
+}
+
+.event_time {
+    font-size: 14px;
+    color: #666;
+}
+
+.link_status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.linked {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.project_name {
+    background: #000;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.unlink_btn {
+    background: white;
+    color: #000;
+    border: 1px solid #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.unlink_btn:hover {
+    background: #000;
+    color: white;
+}
+
+.unlinked {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.unlinked_text {
+    color: #999;
+    font-size: 14px;
+}
+
+.select_btn {
+    background: #000;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.select_btn:hover {
+    background: #333;
+}
+
+
+/* 검색 박스 */
+
+.search_box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search_icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+}
+
+.search_input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search_input:focus {
+    border-color: #000;
+}
+
+
+/* 프로젝트 그리드 */
+
+.projects_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.project_card {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.project_card:hover {
+    border-color: #000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project_card.selected {
+    border-color: #000;
+    background: #f8f8f8;
+}
+
+.project_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.project_title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.project_status {
+    background: #000;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.project_description {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project_meta {
+    display: flex;
+    gap: 15px;
+}
+
+.meta_item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #666;
+}
+
+.meta_icon {
+    font-size: 10px;
+}
+
+
+/* 액션 버튼들 */
+
+.action_buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.cancel_btn {
+    background: white;
+    color: #666;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel_btn:hover {
+    color: #000;
+    border-color: #000;
+}
+
+.link_btn {
+    background: #000;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.link_btn:hover {
+    background: #333;
+}
+
+.link_btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+
+/* 빈 상태 */
+
+.empty_state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+}
+
+
+/* 반응형 */
+
+@media (max-width: 768px) {
+    .modal_content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    .projects_grid {
+        grid-template-columns: 1fr;
+    }
+    .action_buttons {
+        flex-direction: column;
+    }
+    .event_item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .link_status {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+
+/* 다크 모드 */
+
+@media (prefers-color-scheme: dark) {
+    .modal_content {
+        background: #1a1a1a;
+    }
+    .modal_header {
+        border-bottom-color: #333;
+    }
+    .modal_title {
+        color: #fff;
+    }
+    .title_icon {
+        color: #fff;
+    }
+    .close_btn {
+        color: #ccc;
+    }
+    .close_btn:hover {
+        background: #333;
+        color: #fff;
+    }
+    .section_title {
+        color: #fff;
+    }
+    .section_icon {
+        color: #fff;
+    }
+    .event_item {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    .event_title {
+        color: #fff;
+    }
+    .project_name {
+        background: #fff;
+        color: #000;
+    }
+    .unlink_btn {
+        background: #000;
+        color: #fff;
+        border-color: #fff;
+    }
+    .unlink_btn:hover {
+        background: #fff;
+        color: #000;
+    }
+    .select_btn {
+        background: #fff;
+        color: #000;
+    }
+    .select_btn:hover {
+        background: #ccc;
+    }
+    .search_input {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #fff;
+    }
+    .search_input:focus {
+        border-color: #fff;
+    }
+    .project_card {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    .project_card:hover {
+        border-color: #fff;
+    }
+    .project_card.selected {
+        background: #333;
+        border-color: #fff;
+    }
+    .project_title {
+        color: #fff;
+    }
+    .project_status {
+        background: #fff;
+        color: #000;
+    }
+    .cancel_btn {
+        background: #000;
+        color: #fff;
+        border-color: #fff;
+    }
+    .cancel_btn:hover {
+        background: #fff;
+        color: #000;
+    }
+    .link_btn {
+        background: #fff;
+        color: #000;
+    }
+    .link_btn:hover {
+        background: #ccc;
+    }
+    .action_buttons {
+        border-top-color: #333;
+    }
+}

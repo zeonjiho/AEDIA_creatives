@@ -3,10 +3,12 @@ import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import ss from './Calendar.module.css'
-import { FaSync, FaPlus, FaCalendarAlt, FaGoogle, FaTimes } from 'react-icons/fa'
+import { FaSync, FaPlus, FaCalendarAlt, FaGoogle, FaTimes, FaLink } from 'react-icons/fa'
 import PublicCalendarService from '../../utils/publicCalendarService'
 import EventModal from './components/EventModal'
 import AddEventModal from './components/AddEventModal'
+import ProjectInfoModal from './components/ProjectInfoModal'
+import ProjectLinkModal from './components/ProjectLinkModal'
 
 // moment 한국어 설정
 moment.locale('ko')
@@ -14,6 +16,8 @@ const localizer = momentLocalizer(moment)
 
 const CalendarPage = () => {
     const [events, setEvents] = useState([])
+    const [projects, setProjects] = useState([]) // 프로젝트 데이터
+    const [eventProjectLinks, setEventProjectLinks] = useState([]) // 이벤트-프로젝트 연결 정보
     const [currentView, setCurrentView] = useState('month')
     const [currentDate, setCurrentDate] = useState(new Date())
     const [isLoading, setIsLoading] = useState(false)
@@ -28,6 +32,13 @@ const CalendarPage = () => {
     const [isEventModalOpen, setIsEventModalOpen] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [selectedSlot, setSelectedSlot] = useState(null)
+    const [isProjectLinkModalOpen, setIsProjectLinkModalOpen] = useState(false) // 프로젝트 연동 모달
+
+    // 프로젝트 정보 호버 모달 상태
+    const [hoveredEvent, setHoveredEvent] = useState(null)
+    const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
+    const [isProjectModalVisible, setIsProjectModalVisible] = useState(false)
+    const [hoverTimeout, setHoverTimeout] = useState(null)
 
     // 현재 시간을 표시하기 위한 상태 추가
     const [currentTime, setCurrentTime] = useState(new Date())
@@ -66,6 +77,7 @@ const CalendarPage = () => {
     useEffect(() => {
         loadEvents()
         checkCalendarStatus()
+        loadProjects()
     }, [])
 
     // 날짜 변경 시 이벤트 다시 로드
@@ -180,6 +192,86 @@ const CalendarPage = () => {
         loadEvents(true)
     }
 
+    // 이벤트 호버 시작 핸들러
+    const handleEventMouseEnter = (event, mouseEvent) => {
+        // 기존 타이머가 있다면 클리어
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout)
+        }
+
+        const rect = mouseEvent.currentTarget.getBoundingClientRect()
+        const modalWidth = window.innerWidth <= 768 ? 280 : 320 // 반응형 모달 너비
+        const modalHeight = 400 // 예상 모달 높이
+        const gap = 15 // 이벤트와 모달 사이 간격
+        
+        // 스크롤 위치 고려
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop
+        
+        // 화면 크기
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+        
+        // 기본 위치 (이벤트 중앙 상단)
+        let x = rect.left + scrollX + (rect.width / 2)
+        let y = rect.top + scrollY - gap
+        
+        // 오른쪽 경계 체크 (모달이 화면 밖으로 나가지 않도록)
+        if (x + modalWidth / 2 > viewportWidth + scrollX - 20) {
+            x = viewportWidth + scrollX - modalWidth / 2 - 20 // 20px 여백
+        }
+        
+        // 왼쪽 경계 체크
+        if (x - modalWidth / 2 < scrollX + 20) {
+            x = scrollX + modalWidth / 2 + 20 // 20px 여백
+        }
+        
+        // 상단 경계 체크 (모달이 위로 나가면 아래쪽에 표시)
+        if (y - modalHeight < scrollY + 20) {
+            y = rect.bottom + scrollY + gap
+        }
+        
+        // 하단 경계 체크
+        if (y + modalHeight > viewportHeight + scrollY - 20) {
+            y = rect.top + scrollY - gap - modalHeight
+        }
+        
+        setHoveredEvent(event)
+        setHoverPosition({ x, y })
+        
+        // 약간의 딜레이 후 모달 표시 (200ms로 단축)
+        const timeout = setTimeout(() => {
+            setIsProjectModalVisible(true)
+        }, 200)
+        
+        setHoverTimeout(timeout)
+    }
+
+    // 이벤트 호버 종료 핸들러
+    const handleEventMouseLeave = () => {
+        // 타이머가 있다면 클리어 (모달이 나타나기 전에 마우스를 뗀 경우)
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout)
+            setHoverTimeout(null)
+        }
+        
+        // 즉시 모달 숨기기
+        setIsProjectModalVisible(false)
+        setHoveredEvent(null)
+    }
+
+    // 프로젝트 모달 호버 유지 핸들러
+    const handleProjectModalMouseEnter = () => {
+        // 모달에 마우스가 올라가면 숨기기 취소
+        setIsProjectModalVisible(true)
+    }
+
+    // 프로젝트 모달 호버 종료 핸들러
+    const handleProjectModalMouseLeave = () => {
+        setIsProjectModalVisible(false)
+        setHoveredEvent(null)
+    }
+
     // 이벤트 스타일 설정
     const eventStyleGetter = (event) => {
         let backgroundColor = '#3174ad'
@@ -219,6 +311,49 @@ const CalendarPage = () => {
         }
     }
 
+    // 커스텀 이벤트 컴포넌트
+    const CustomEvent = ({ event }) => {
+        return (
+            <div 
+                style={{ 
+                    height: '100%', 
+                    width: '100%',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                    e.stopPropagation()
+                    handleEventMouseEnter(event, e)
+                }}
+                onMouseLeave={(e) => {
+                    e.stopPropagation()
+                    handleEventMouseLeave()
+                }}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    handleSelectEvent(event)
+                }}
+            >
+                <span style={{ 
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: 'white',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                }}>
+                    {event.title}
+                </span>
+            </div>
+        )
+    }
+
     // 캘린더 메시지 한국어 설정
     const messages = {
         allDay: '종일',
@@ -234,6 +369,193 @@ const CalendarPage = () => {
         event: '이벤트',
         noEventsInRange: '해당 기간에 일정이 없습니다.',
         showMore: (total) => `+${total} 더보기`
+    }
+
+    // 프로젝트 데이터 로드 함수
+    const loadProjects = async () => {
+        try {
+            // 실제 API 호출 (예시)
+            // const response = await fetch('/api/projects')
+            // const projectData = await response.json()
+            
+            // 임시 목업 데이터 (실제 DB 스키마에 맞춤)
+            const mockProjects = [
+                {
+                    _id: '507f1f77bcf86cd799439011',
+                    title: 'AEDIA 창작 플랫폼',
+                    description: 'AI 기반 창작 도구 개발 프로젝트',
+                    status: 'production',
+                    progress: 75,
+                    thumbnail: 'aedia_thumbnail.jpg',
+                    deadline: new Date('2024-12-31'),
+                    team: ['507f191e810c19729de860ea', '507f191e810c19729de860eb'],
+                    staffList: [
+                        {
+                            roleName: '프로젝트 매니저',
+                            members: [{ userId: '507f191e810c19729de860ea' }]
+                        },
+                        {
+                            roleName: '개발자',
+                            members: [{ userId: '507f191e810c19729de860eb' }, { userId: '507f191e810c19729de860ec' }]
+                        }
+                    ],
+                    createdAt: new Date('2024-01-15'),
+                    updatedAt: new Date('2024-11-01')
+                },
+                {
+                    _id: '507f1f77bcf86cd799439012',
+                    title: '모바일 앱 UI/UX 리뉴얼',
+                    description: '사용자 경험 개선을 위한 전면 리뉴얼',
+                    status: 'post_production',
+                    progress: 90,
+                    thumbnail: 'mobile_app_thumbnail.jpg',
+                    deadline: new Date('2024-11-15'),
+                    team: ['507f191e810c19729de860ed', '507f191e810c19729de860ee'],
+                    staffList: [
+                        {
+                            roleName: 'UI/UX 디자이너',
+                            members: [{ userId: '507f191e810c19729de860ed' }]
+                        },
+                        {
+                            roleName: '프론트엔드 개발자',
+                            members: [{ userId: '507f191e810c19729de860ee' }]
+                        }
+                    ],
+                    createdAt: new Date('2024-02-01'),
+                    updatedAt: new Date('2024-10-28')
+                },
+                {
+                    _id: '507f1f77bcf86cd799439013',
+                    title: '브랜드 아이덴티티 구축',
+                    description: '새로운 브랜드 로고 및 가이드라인 제작',
+                    status: 'development',
+                    progress: 45,
+                    thumbnail: 'brand_identity_thumbnail.jpg',
+                    deadline: new Date('2024-12-20'),
+                    team: ['507f191e810c19729de860ef', '507f191e810c19729de860f0', '507f191e810c19729de860f1'],
+                    staffList: [
+                        {
+                            roleName: '브랜드 디자이너',
+                            members: [{ userId: '507f191e810c19729de860ef' }]
+                        },
+                        {
+                            roleName: '그래픽 디자이너',
+                            members: [{ userId: '507f191e810c19729de860f0' }, { userId: '507f191e810c19729de860f1' }]
+                        }
+                    ],
+                    createdAt: new Date('2024-03-10'),
+                    updatedAt: new Date('2024-10-30')
+                },
+                {
+                    _id: '507f1f77bcf86cd799439014',
+                    title: '개인 포트폴리오 사이트',
+                    description: '개인 작업물 전시를 위한 포트폴리오 웹사이트',
+                    status: 'pre_production',
+                    progress: 60,
+                    thumbnail: 'portfolio_thumbnail.jpg',
+                    deadline: new Date('2024-11-30'),
+                    team: ['507f191e810c19729de860f2'],
+                    staffList: [
+                        {
+                            roleName: '풀스택 개발자',
+                            members: [{ userId: '507f191e810c19729de860f2' }]
+                        }
+                    ],
+                    createdAt: new Date('2024-04-01'),
+                    updatedAt: new Date('2024-10-25')
+                }
+            ]
+            
+            setProjects(mockProjects)
+        } catch (error) {
+            console.error('프로젝트 로드 실패:', error)
+        }
+    }
+
+    // 프로젝트 연동 관련 함수들
+    const handleLinkProject = (event, project) => {
+        const eventId = event.id || event.title
+        
+        // 기존 연결이 있으면 제거
+        const updatedLinks = eventProjectLinks.filter(link => link.eventId !== eventId)
+        
+        // 새 연결 추가
+        const newLink = {
+            eventId: eventId,
+            projectId: project._id,
+            linkedAt: new Date()
+        }
+        
+        setEventProjectLinks([...updatedLinks, newLink])
+        setToast({ type: 'success', message: `${event.title}이(가) ${project.title}과(와) 연동되었습니다.` })
+        
+        console.log('프로젝트 연동:', event.title, '->', project.title)
+    }
+
+    const handleUnlinkProject = (eventId) => {
+        const updatedLinks = eventProjectLinks.filter(link => link.eventId !== eventId)
+        setEventProjectLinks(updatedLinks)
+        setToast({ type: 'success', message: '프로젝트 연동이 해제되었습니다.' })
+        
+        console.log('프로젝트 연동 해제:', eventId)
+    }
+
+    // 연동된 프로젝트 찾기 (이제 실제 연동 데이터 사용)
+    const getLinkedProjectForEvent = (event) => {
+        const eventId = event.id || event.title
+        const link = eventProjectLinks.find(link => link.eventId === eventId)
+        return link ? projects.find(p => p._id === link.projectId) : null
+    }
+
+    // 기존 getProjectForEvent 함수를 수정 (연동된 프로젝트 우선)
+    const getProjectForEvent = (event) => {
+        // 먼저 연동된 프로젝트가 있는지 확인
+        const linkedProject = getLinkedProjectForEvent(event)
+        if (linkedProject) {
+            return linkedProject
+        }
+
+        // 연동된 프로젝트가 없으면 기존 자동 매칭 로직 사용
+        const matchedProject = projects.find(project => {
+            // 제목으로 매칭
+            const titleMatch = event.title && project.title.toLowerCase().includes(event.title.toLowerCase())
+            // 이벤트 타입에 따른 프로젝트 상태 매칭
+            const statusMatch = getProjectByEventType(event.type, project)
+            
+            return titleMatch || statusMatch
+        })
+        
+        return matchedProject || null
+    }
+
+    // 이벤트 타입에 따른 프로젝트 매칭
+    const getProjectByEventType = (eventType, project) => {
+        const typeMapping = {
+            'meeting': ['concept', 'development', 'pre_production'],
+            'deadline': ['post_production', 'quality_check', 'delivery'],
+            'client': ['production', 'vfx', 'sound_design'],
+            'personal': ['concept', 'development'],
+            'user': ['development', 'production']
+        }
+        
+        return typeMapping[eventType]?.includes(project.status)
+    }
+
+    // 프로젝트 상태를 한국어로 변환
+    const getStatusInKorean = (status) => {
+        const statusMap = {
+            'concept': '기획',
+            'development': '개발',
+            'pre_production': '프리 프로덕션',
+            'production': '프로덕션',
+            'post_production': '포스트 프로덕션',
+            'vfx': 'VFX',
+            'sound_design': '사운드 디자인',
+            'quality_check': '품질 검수',
+            'delivery': '납품'
+        }
+        
+        return statusMap[status] || status
     }
 
     return (
@@ -275,6 +597,14 @@ const CalendarPage = () => {
                     >
                         <FaSync className={isLoading ? ss.spinning : ''} />
                         새로고침
+                    </button>
+                    
+                    <button 
+                        className={ss.customize_btn}
+                        onClick={() => setIsProjectLinkModalOpen(true)}
+                    >
+                        <FaLink />
+                        프로젝트 연동
                     </button>
                     
                     <button 
@@ -403,6 +733,9 @@ const CalendarPage = () => {
                             localizer.format(start, 'HH:mm', culture) + ' - ' + 
                             localizer.format(end, 'HH:mm', culture)
                     }}
+                    components={{
+                        event: CustomEvent
+                    }}
                 />
             </div>
 
@@ -488,6 +821,29 @@ const CalendarPage = () => {
                     onSave={handleSaveNewEvent}
                 />
             )}
+
+            {/* 프로젝트 정보 모달 */}
+            {isProjectModalVisible && (
+                <ProjectInfoModal
+                    event={hoveredEvent}
+                    position={hoverPosition}
+                    isVisible={isProjectModalVisible}
+                    onMouseEnter={handleProjectModalMouseEnter}
+                    onMouseLeave={handleProjectModalMouseLeave}
+                    project={getProjectForEvent(hoveredEvent)}
+                />
+            )}
+
+            {/* 프로젝트 연동 모달 */}
+            <ProjectLinkModal
+                isOpen={isProjectLinkModalOpen}
+                onClose={() => setIsProjectLinkModalOpen(false)}
+                projects={projects}
+                events={events}
+                eventProjectLinks={eventProjectLinks}
+                onLinkProject={handleLinkProject}
+                onUnlinkProject={handleUnlinkProject}
+            />
         </div>
     )
 }

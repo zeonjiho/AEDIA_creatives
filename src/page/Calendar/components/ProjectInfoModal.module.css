@@ -1,0 +1,369 @@
+.modal_overlay {
+    position: absolute;
+    z-index: 9999;
+    pointer-events: auto;
+    animation: fadeIn 0.2s ease-out;
+    transform: translateX(-50%);
+}
+
+.modal_content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    width: 320px;
+    max-width: 90vw;
+    border: 1px solid #e0e0e0;
+}
+
+
+/* 헤더 */
+
+.modal_header {
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.project_title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.title_icon {
+    color: #000;
+    font-size: 14px;
+}
+
+.client_name {
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* 진행률 */
+
+.progress_section {
+    margin-bottom: 16px;
+}
+
+.progress_label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+.progress_percent {
+    font-weight: 600;
+    color: #000;
+}
+
+.progress_bar {
+    width: 100%;
+    height: 6px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress_fill {
+    height: 100%;
+    background: linear-gradient(90deg, #333, #000);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+
+/* 상태 및 우선순위 */
+
+.status_section {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.status_item {
+    flex: 1;
+}
+
+.status_badge,
+.priority_badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+}
+
+.status_badge {
+    background: #000;
+    color: white;
+    border-color: #000;
+}
+
+.priority_badge {
+    background: white;
+    color: #000;
+    border-color: #000;
+}
+
+
+/* 세부 정보 */
+
+.details_section {
+    margin-bottom: 16px;
+}
+
+.detail_item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #555;
+}
+
+.detail_item:last-child {
+    margin-bottom: 0;
+}
+
+.detail_icon {
+    color: #000;
+    width: 12px;
+    flex-shrink: 0;
+}
+
+
+/* 설명 */
+
+.description_section {
+    margin-bottom: 16px;
+}
+
+.description_text {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.4;
+    margin: 0;
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #000;
+}
+
+
+/* 이벤트 정보 */
+
+.event_info {
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.event_time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+}
+
+
+/* 애니메이션 */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+}
+
+
+/* 반응형 */
+
+@media (max-width: 768px) {
+    .modal_content {
+        width: 280px;
+        padding: 16px;
+    }
+    .project_title {
+        font-size: 15px;
+    }
+    .detail_item,
+    .event_time {
+        font-size: 12px;
+    }
+}
+
+
+/* 다크 모드 대응 */
+
+@media (prefers-color-scheme: dark) {
+    .modal_content {
+        background: #1a1a1a;
+        border-color: #333;
+    }
+    .project_title {
+        color: #fff;
+    }
+    .title_icon,
+    .detail_icon {
+        color: #fff;
+    }
+    .client_name {
+        color: #ccc;
+    }
+    .detail_item {
+        color: #ccc;
+    }
+    .description_text {
+        background-color: #2a2a2a;
+        color: #ddd;
+        border-left-color: #fff;
+    }
+    .event_time {
+        color: #fff;
+    }
+    .modal_header {
+        border-bottom-color: #333;
+    }
+    .event_info {
+        border-top-color: #333;
+    }
+    .progress_bar {
+        background-color: #333;
+    }
+    .progress_fill {
+        background: linear-gradient(90deg, #666, #fff);
+    }
+    .status_badge {
+        background: #fff;
+        color: #000;
+        border-color: #fff;
+    }
+    .priority_badge {
+        background: #000;
+        color: #fff;
+        border-color: #fff;
+    }
+    .action_buttons {
+        border-top-color: #333;
+    }
+    .unlinked_icon {
+        color: #666;
+    }
+    .unlinked_title {
+        color: #fff;
+    }
+    .event_info_simple {
+        background: #2a2a2a;
+        border-left-color: #fff;
+    }
+    .event_title_simple {
+        color: #fff;
+    }
+    .event_time_simple {
+        color: #ccc;
+    }
+    .time_icon {
+        color: #fff;
+    }
+    .unlinked_action {
+        background: #2a2a2a;
+        border-color: #555;
+    }
+    .action_text {
+        color: #ccc;
+    }
+}
+
+
+/* 연동되지 않은 프로젝트 스타일 */
+
+.unlinked_content {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.unlinked_icon {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.unlinked_title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 10px 0;
+}
+
+.unlinked_description {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 20px 0;
+    line-height: 1.4;
+}
+
+.event_info_simple {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 3px solid #000;
+}
+
+.event_title_simple {
+    font-size: 16px;
+    color: #000;
+    margin-bottom: 8px;
+}
+
+.event_time_simple {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+.time_icon {
+    color: #000;
+    font-size: 12px;
+}
+
+.unlinked_action {
+    padding: 15px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    border: 1px dashed #ccc;
+}
+
+.action_text {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+}
+
+.action_buttons {
+    border-top-color: #333;
+}
