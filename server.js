@@ -482,7 +482,7 @@ app.post('/attendance/check-in', async (req, res) => {
             method: method
         };
 
-        await User.findByIdAndUpdate(userId, {
+            await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -835,11 +835,11 @@ app.put('/todos/:id', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            text,
-            dueDate,
-            dueTime: dueTime || null,
-            projectId: projectId || null,
-            updatedAt: new Date()
+                text,
+                dueDate,
+                dueTime: dueTime || null,
+                projectId: projectId || null,
+                updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -863,8 +863,8 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            completed: !todo.completed,
-            updatedAt: new Date()
+                completed: !todo.completed,
+                updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -1577,6 +1577,12 @@ app.put('/projects/:id', async (req, res) => {
             progress
         };
 
+        // 상태 변경 감지 및 알림
+        const statusChanged = status && status !== existingProject.status;
+        if (statusChanged) {
+            console.log(`프로젝트 상태 변경 감지: ${existingProject.status} -> ${status}`);
+        }
+
         // team과 staffList는 제공된 경우에만 업데이트
         if (team !== undefined) {
             updateData.team = team;
@@ -1636,6 +1642,56 @@ app.put('/projects/:id', async (req, res) => {
         )
             .populate('team', 'name email department position')
             .populate('staffList.members.userId', 'name email department');
+
+        // 프로젝트 상태 변경 시 모든 팀원에게 알림
+        if (statusChanged) {
+            try {
+                // 현재 팀원 목록 조회 (업데이트된 프로젝트 기준)
+                const currentTeam = await User.find({
+                    _id: { $in: updatedProject.team.map(member => member._id || member) }
+                }).select('name slackId');
+
+                console.log('상태 변경 알림 대상 팀원들:', currentTeam.map(m => m.name));
+
+                // 상태 한글화 함수
+                const getStatusText = (status) => {
+                    switch (status) {
+                        case 'concept': return 'Concept';
+                        case 'development': return 'Development';
+                        case 'pre_production': return 'Pre-Production';
+                        case 'production': return 'Production';
+                        case 'post_production': return 'Post-Production';
+                        case 'vfx': return 'VFX/CG';
+                        case 'sound_design': return 'Sound Design';
+                        case 'quality_check': return 'Quality Check';
+                        case 'delivery': return 'Delivery';
+                        default: return status;
+                    }
+                };
+
+                const oldStatusText = getStatusText(existingProject.status);
+                const newStatusText = getStatusText(status);
+
+                // 각 팀원에게 상태 변경 알림 발송
+                for (const member of currentTeam) {
+                    if (member.slackId) {
+                        try {
+                            await slackBot.chat.postMessage({
+                                channel: member.slackId,
+                                text: `📋 **${title}** 프로젝트의 상태가 **${newStatusText}**으로 변경되었습니다.\n\n이전 상태: ${oldStatusText}\n현재 상태: ${newStatusText}\n진행률: ${progress}%\n마감일: ${new Date(deadline).toLocaleDateString('ko-KR')}\n\n프로젝트 상태가 업데이트되었습니다. AEDIA 시스템에서 자세한 내용을 확인해주세요! 🚀`
+                            });
+                            console.log(`상태 변경 알림 전송 성공: ${member.name} (${member.slackId})`);
+                        } catch (slackError) {
+                            console.error(`상태 변경 알림 전송 실패 - ${member.name}:`, slackError);
+                        }
+                    } else {
+                        console.log(`상태 변경 알림 대상이지만 슬랙 ID가 없는 사용자: ${member.name}`);
+                    }
+                }
+            } catch (statusNotificationError) {
+                console.error('상태 변경 알림 처리 중 오류:', statusNotificationError);
+            }
+        }
 
         res.status(200).json({
             message: '프로젝트가 성공적으로 수정되었습니다.',
