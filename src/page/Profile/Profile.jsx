@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Profile.module.css';
-import { 
-  FaCamera, 
-  FaEdit, 
-  FaSave, 
-  FaTimes, 
-  FaUserCircle, 
-  FaEye, 
-  FaEyeSlash, 
+import {
+  FaCamera,
+  FaEdit,
+  FaSave,
+  FaTimes,
+  FaUserCircle,
+  FaEye,
+  FaEyeSlash,
   FaExclamationCircle,
   FaUser,
   FaBriefcase,
@@ -22,7 +22,9 @@ import {
   FaInfoCircle,
   FaCheck
 } from 'react-icons/fa';
-import { currentUser, departments, positions } from '../../data/mockDatabase';
+import api from '../../utils/api';
+import { jwtDecode } from 'jwt-decode';
+import getProjectThumbnail from '../../utils/getProjectThumbnail';
 
 const Profile = () => {
   const [user, setUser] = useState({});
@@ -41,12 +43,48 @@ const Profile = () => {
   const [passwordError, setPasswordError] = useState('');
   const [activeTab, setActiveTab] = useState('기본정보');
   const [saveStatus, setSaveStatus] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // 아바타 편집 관련 상태
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // 로컬 스토리지에서 사용자 ID 가져오기
+  const userId = jwtDecode(localStorage.getItem('token')).userId;
 
   useEffect(() => {
-    // 실제 앱에서는 API 호출을 통해 사용자 정보를 가져옵니다
-    setUser(currentUser);
-    setFormData(currentUser);
+    loadUserProfile();
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      if (!userId) {
+        setError('사용자 정보를 찾을 수 없습니다.');
+        return;
+      }
+      const response = await api.get(`/get-user-info?userId=${userId}`);
+
+      if (response.status === 200) {
+        const userInfo = response.data;
+        console.log('사용자 정보 로드 완료:', response.data);
+
+        setUser(userInfo);
+        setFormData(userInfo);
+      }
+    } catch (err) {
+      console.error('사용자 정보 로드 실패:', err);
+      setError('사용자 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditToggle = () => {
     if (isEditMode) {
@@ -65,10 +103,21 @@ const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    
+    if (name === 'role') {
+      // roles 배열의 첫 번째 요소 업데이트
+      const updatedRoles = [...(formData.roles || [])];
+      updatedRoles[0] = value;
+      setFormData({
+        ...formData,
+        roles: updatedRoles
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -97,50 +146,88 @@ const Profile = () => {
     });
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSaveStatus('saving');
-    
-    // 비밀번호 변경 시 유효성 검사
-    if (activeTab === '비밀번호변경') {
-      if (!passwordData.currentPassword) {
-        setPasswordError('현재 비밀번호를 입력해주세요.');
+
+    try {
+      if (!userId) {
+        setError('로그인이 필요합니다.');
         setSaveStatus('');
         return;
       }
-      
-      if (!passwordData.newPassword) {
-        setPasswordError('새 비밀번호를 입력해주세요.');
-        setSaveStatus('');
-        return;
-      }
-      
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setPasswordError('비밀번호가 일치하지 않습니다.');
-        setSaveStatus('');
-        return;
-      }
-      
-      // 실제 앱에서는 API 호출을 통해 비밀번호를 업데이트합니다
-      setTimeout(() => {
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
+
+      // 비밀번호 변경 시
+      if (activeTab === '비밀번호변경') {
+        if (!passwordData.currentPassword) {
+          setPasswordError('현재 비밀번호를 입력해주세요.');
+          setSaveStatus('');
+          return;
+        }
+
+        if (!passwordData.newPassword) {
+          setPasswordError('새 비밀번호를 입력해주세요.');
+          setSaveStatus('');
+          return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+          setPasswordError('비밀번호가 일치하지 않습니다.');
+          setSaveStatus('');
+          return;
+        }
+
+        const response = await api.put(`/change-password?userId=${userId}`, {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
         });
-        setPasswordError('');
-        setSaveStatus('success');
-        setTimeout(() => setSaveStatus(''), 3000);
-      }, 1000);
-    } else {
-      // 실제 앱에서는 API 호출을 통해 사용자 정보를 업데이트합니다
-      setTimeout(() => {
-        setUser(formData);
-        setSaveStatus('success');
-        setTimeout(() => setSaveStatus(''), 3000);
-      }, 1000);
+
+        if (response.status === 200) {
+          setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+          setPasswordError('');
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
+      } else {
+        // 프로필 정보 업데이트
+        console.log('프로필 업데이트 데이터:', formData);
+        const response = await api.put(`/update-user-profile?userId=${userId}`, formData);
+
+        if (response.status === 200) {
+          const updatedUser = response.data.user;
+          setUser(updatedUser);
+          setFormData(updatedUser);
+
+          // 로컬 스토리지의 사용자 정보도 업데이트
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
+      }
+    } catch (err) {
+      console.error('저장 실패:', err);
+
+      let errorMessage = '저장 중 오류가 발생했습니다.';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+
+        if (activeTab === '비밀번호변경') {
+          setPasswordError(errorMessage);
+        }
+      }
+
+      if (activeTab !== '비밀번호변경') {
+        setError(errorMessage);
+      }
+
+      setSaveStatus('');
     }
-    
+
     setIsEditMode(false);
   };
 
@@ -148,16 +235,172 @@ const Profile = () => {
     setActiveTab(tab);
     setPasswordError('');
     setSaveStatus('');
+    setError('');
   };
 
   const getTabIcon = (tabName) => {
-    switch(tabName) {
+    switch (tabName) {
       case '기본정보': return <FaUser />;
       case '직무정보': return <FaBriefcase />;
       case '비밀번호변경': return <FaLock />;
       default: return <FaInfoCircle />;
     }
   };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setAvatarFile(file);
+      
+      // 파일 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!avatarFile) {
+      alert('선택된 파일이 없습니다.');
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      
+      // 1. 아바타 업로드
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+      
+      console.log('아바타 업로드 시작:', avatarFile.name);
+      
+      const uploadResponse = await api.post('/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (uploadResponse.status === 200) {
+        const filename = uploadResponse.data.filename;
+        console.log('아바타 업로드 성공:', filename);
+        
+        // 2. 프로필 업데이트 (파일명만 저장)
+        const response = await api.put(`/update-user-profile?userId=${userId}`, {
+          avatar: filename // 파일명만 저장
+        });
+        
+        if (response.status === 200) {
+          const updatedUser = response.data.user;
+          setUser(updatedUser);
+          setFormData(updatedUser);
+          
+          // 로컬 스토리지의 사용자 정보도 업데이트
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          setEditingAvatar(false);
+          setAvatarFile(null);
+          setAvatarPreview(null);
+          
+          // 파일 input 초기화
+          const fileInput = document.getElementById('avatar-input');
+          if (fileInput) fileInput.value = '';
+          
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus(''), 3000);
+        }
+      }
+    } catch (error) {
+      console.error('아바타 업데이트 실패:', error);
+      
+      let errorMessage = '아바타 업데이트 중 오류가 발생했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleCancelAvatar = () => {
+    setEditingAvatar(false);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    // 파일 input 초기화
+    const fileInput = document.getElementById('avatar-input');
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!window.confirm('프로필 사진을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      
+      const response = await api.put(`/update-user-profile?userId=${userId}`, {
+        avatar: null
+      });
+      
+      if (response.status === 200) {
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        setFormData(updatedUser);
+        
+        // 로컬 스토리지의 사용자 정보도 업데이트
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setEditingAvatar(false);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus(''), 3000);
+      }
+    } catch (error) {
+      console.error('아바타 삭제 실패:', error);
+      setError('아바타 삭제 중 오류가 발생했습니다.');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  // 로딩 중 표시
+  if (loading) {
+    return (
+      <div className={styles.profile_container}>
+        <div className={styles.loading_container}>
+          <div className={styles.loading_spinner}></div>
+          <p>사용자 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 표시
+  if (error && !user._id) {
+    return (
+      <div className={styles.profile_container}>
+        <div className={styles.error_container}>
+          <FaExclamationCircle className={styles.error_icon} />
+          <h3>오류가 발생했습니다</h3>
+          <p>{error}</p>
+          <button
+            className={styles.retry_button}
+            onClick={loadUserProfile}
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.profile_container}>
@@ -166,8 +409,8 @@ const Profile = () => {
           <div className={styles.header_title}>
             <h1>Profile</h1>
           </div>
-          <button 
-            className={`${styles.edit_button} ${isEditMode ? styles.cancel : ''}`} 
+          <button
+            className={`${styles.edit_button} ${isEditMode ? styles.cancel : ''}`}
             onClick={handleEditToggle}
           >
             {isEditMode ? <><FaTimes /> 취소</> : <><FaEdit /> 편집</>}
@@ -179,40 +422,136 @@ const Profile = () => {
             {saveStatus === 'success' && <><FaCheck /> 성공적으로 저장되었습니다!</>}
           </div>
         )}
+        {error && (
+          <div className={styles.error_message}>
+            <FaExclamationCircle /> {error}
+          </div>
+        )}
       </div>
 
       <div className={styles.profile_content}>
         <div className={styles.profile_avatar_section}>
           <div className={styles.avatar_container}>
             <div className={styles.avatar_wrapper}>
-              {user.profileImage ? (
-                <img 
-                  src={user.profileImage} 
-                  alt="프로필 이미지" 
-                  className={styles.avatar_image} 
-                />
+              {editingAvatar ? (
+                <div className={styles.avatar_editor}>
+                  {/* 편집 모드 스켈레톤 */}
+                  {!avatarLoaded && !avatarPreview && (
+                    <div className={styles.avatar_skeleton}>
+                      <div className={styles.skeleton_animation}></div>
+                    </div>
+                  )}
+                  
+                  <img 
+                    src={avatarPreview || getProjectThumbnail(user.avatar)} 
+                    alt="아바타 미리보기"
+                    className={`${styles.avatar_image} ${avatarLoaded || avatarPreview ? styles.loaded : styles.loading}`}
+                    onLoad={() => setAvatarLoaded(true)}
+                    style={{ display: avatarLoaded || avatarPreview ? 'block' : 'none' }}
+                  />
+                  <div className={styles.avatar_overlay}>
+                    <div className={styles.avatar_actions}>
+                      <label htmlFor="avatar-input" className={styles.avatar_upload_button}>
+                        <FaCamera />
+                        이미지 선택
+                      </label>
+                      <input
+                        id="avatar-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        style={{ display: 'none' }}
+                        disabled={isUploadingAvatar}
+                      />
+                      {user.avatar && (
+                        <button
+                          type="button"
+                          className={styles.avatar_remove_button}
+                          onClick={handleRemoveAvatar}
+                          disabled={isUploadingAvatar}
+                        >
+                          <FaTimes />
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <FaUserCircle className={styles.avatar_placeholder} />
+                <div 
+                  className={styles.avatar_display}
+                  onClick={() => !isEditMode && setEditingAvatar(true)}
+                >
+                  {/* 일반 모드 스켈레톤 */}
+                  {!avatarLoaded && user.avatar && (
+                    <div className={styles.avatar_skeleton}>
+                      <div className={styles.skeleton_animation}></div>
+                    </div>
+                  )}
+                  
+                  {user.avatar ? (
+                    <img 
+                      src={getProjectThumbnail(user.avatar)} 
+                      alt="프로필 이미지"
+                      className={`${styles.avatar_image} ${avatarLoaded ? styles.loaded : styles.loading}`}
+                      onLoad={() => setAvatarLoaded(true)}
+                      style={{ display: avatarLoaded ? 'block' : 'none' }}
+                    />
+                  ) : (
+                    <FaUserCircle className={styles.avatar_placeholder} />
+                  )}
+                  
+                  {!isEditMode && (
+                    <div className={styles.avatar_edit_overlay}>
+                      <FaCamera className={styles.edit_icon} />
+                      <span>클릭하여 편집</span>
+                    </div>
+                  )}
+                </div>
               )}
               <div className={styles.avatar_status}></div>
             </div>
-            {isEditMode && (
-              <button className={styles.change_avatar_button}>
+            
+            {editingAvatar && (
+              <div className={styles.avatar_editor_actions}>
+                <button 
+                  className={styles.cancel_button}
+                  onClick={handleCancelAvatar}
+                  disabled={isUploadingAvatar}
+                >
+                  취소
+                </button>
+                <button 
+                  className={styles.save_button}
+                  onClick={handleSaveAvatar}
+                  disabled={!avatarFile || isUploadingAvatar}
+                >
+                  <FaSave /> {isUploadingAvatar ? '업로드 중...' : '저장'}
+                </button>
+              </div>
+            )}
+            
+            {isEditMode && !editingAvatar && (
+              <button 
+                className={styles.change_avatar_button}
+                onClick={() => setEditingAvatar(true)}
+                disabled={isUploadingAvatar}
+              >
                 <FaCamera />
                 <span>사진 변경</span>
               </button>
             )}
           </div>
           <div className={styles.user_info}>
-            <h2 className={styles.user_name}>{user.name}</h2>
+            <h2 className={styles.user_name}>{user.name || '이름 없음'}</h2>
             <p className={styles.user_role}>
               <FaBriefcase className={styles.role_icon} />
-              {user.role}
+              {(user.roles && user.roles.length > 0) ? user.roles[0] : user.department || '직책 없음'}
             </p>
             <div className={styles.user_stats}>
               <div className={styles.stat_item}>
                 <FaCalendarAlt />
-                <span>입사 {user.joinDate ? new Date().getFullYear() - new Date(user.joinDate).getFullYear() : 0}년차</span>
+                <span>입사 {user.createdAt ? new Date().getFullYear() - new Date(user.createdAt).getFullYear() : 0}년차</span>
               </div>
               <div className={styles.stat_item}>
                 <FaIdCard />
@@ -220,11 +559,11 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          
+
           {isEditMode && (
             <div className={styles.tabs}>
               {['기본정보', '직무정보', '비밀번호변경'].map((tab) => (
-                <button 
+                <button
                   key={tab}
                   className={`${styles.tab} ${activeTab === tab ? styles.active : ''}`}
                   onClick={() => handleTabChange(tab)}
@@ -247,23 +586,23 @@ const Profile = () => {
                     <h3>기본 정보</h3>
                     <p>개인 정보를 관리하세요</p>
                   </div>
-                  
+
                   <div className={styles.form_row}>
                     <div className={styles.form_group}>
                       <label>
                         <FaIdCard className={styles.input_icon} />
-                        아이디
+                        이메일 (로그인 ID)
                       </label>
-                      <input 
-                        type="text" 
-                        name="username" 
-                        value={formData.username || ''} 
-                        onChange={handleInputChange} 
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email || ''}
+                        onChange={handleInputChange}
                         readOnly
-                        className={styles.readonly_input} 
+                        className={styles.readonly_input}
                       />
                       <small className={styles.field_note}>
-                        <FaShieldAlt /> 아이디는 보안상 변경할 수 없습니다.
+                        <FaShieldAlt /> 이메일은 보안상 변경할 수 없습니다.
                       </small>
                     </div>
                     <div className={styles.form_group}>
@@ -271,12 +610,12 @@ const Profile = () => {
                         <FaUser className={styles.input_icon} />
                         이름
                       </label>
-                      <input 
-                        type="text" 
-                        name="name" 
-                        value={formData.name || ''} 
-                        onChange={handleInputChange} 
-                        required 
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name || ''}
+                        onChange={handleInputChange}
+                        required
                       />
                     </div>
                   </div>
@@ -284,28 +623,28 @@ const Profile = () => {
                   <div className={styles.form_row}>
                     <div className={styles.form_group}>
                       <label>
-                        <FaEnvelope className={styles.input_icon} />
-                        이메일
+                        <FaPhone className={styles.input_icon} />
+                        전화번호
                       </label>
-                      <input 
-                        type="email" 
-                        name="email" 
-                        value={formData.email || ''} 
-                        onChange={handleInputChange} 
-                        required 
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone || ''}
+                        onChange={handleInputChange}
+                        placeholder="예: 010-1234-5678"
                       />
                     </div>
                     <div className={styles.form_group}>
                       <label>
                         <FaPhone className={styles.input_icon} />
-                        전화번호
+                        비상 연락처
                       </label>
-                      <input 
-                        type="tel" 
-                        name="phone" 
-                        value={formData.phone || ''} 
-                        onChange={handleInputChange} 
-                        placeholder="예: 010-1234-5678"
+                      <input
+                        type="tel"
+                        name="emergencyContact"
+                        value={formData.emergencyContact || ''}
+                        onChange={handleInputChange}
+                        placeholder="비상시 연락 가능한 번호"
                       />
                     </div>
                   </div>
@@ -315,26 +654,12 @@ const Profile = () => {
                       <FaMapMarkerAlt className={styles.input_icon} />
                       주소
                     </label>
-                    <input 
-                      type="text" 
-                      name="address" 
-                      value={formData.address || ''} 
-                      onChange={handleInputChange} 
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address || ''}
+                      onChange={handleInputChange}
                       placeholder="상세 주소를 입력하세요"
-                    />
-                  </div>
-
-                  <div className={styles.form_group}>
-                    <label>
-                      <FaPhone className={styles.input_icon} />
-                      비상 연락처
-                    </label>
-                    <input 
-                      type="tel" 
-                      name="emergencyContact" 
-                      value={formData.emergencyContact || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="비상시 연락 가능한 번호"
                     />
                   </div>
                 </div>
@@ -352,92 +677,40 @@ const Profile = () => {
                     <div className={styles.form_group}>
                       <label>
                         <FaBriefcase className={styles.input_icon} />
-                        직책
+                        부서
                       </label>
-                      <select 
-                        name="position" 
-                        value={formData.position || ''} 
+                      <input
+                        type="text"
+                        name="department"
+                        value={formData.department || ''}
                         onChange={handleInputChange}
-                      >
-                        <option value="">직책을 선택하세요</option>
-                        {Object.values(positions).map(position => (
-                          <option key={position.id} value={position.id}>
-                            {position.name}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="예: 개발팀"
+                      />
                     </div>
                     <div className={styles.form_group}>
                       <label>
                         <FaIdCard className={styles.input_icon} />
-                        직함
+                        직책
                       </label>
                       <input 
                         type="text" 
                         name="role" 
-                        value={formData.role || ''} 
+                        value={(formData.roles && formData.roles.length > 0) ? formData.roles[0] : ''} 
                         onChange={handleInputChange} 
                         placeholder="예: 시니어 개발자"
                       />
                     </div>
                   </div>
 
-                  <div className={styles.form_row}>
-                    <div className={styles.form_group}>
-                      <label>
-                        <FaBriefcase className={styles.input_icon} />
-                        부서
-                      </label>
-                      <select 
-                        name="department" 
-                        value={formData.department || ''} 
-                        onChange={handleInputChange}
-                      >
-                        <option value="">부서를 선택하세요</option>
-                        {Object.values(departments).map(department => (
-                          <option key={department.id} value={department.id}>
-                            {department.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className={styles.form_group}>
-                      <label>
-                        <FaCalendarAlt className={styles.input_icon} />
-                        입사일
-                      </label>
-                      <input 
-                        type="date" 
-                        name="joinDate" 
-                        value={formData.joinDate || ''} 
-                        onChange={handleInputChange} 
-                      />
-                    </div>
-                  </div>
-
-                  {/* <div className={styles.form_group}>
-                    <label>
-                      <FaGraduationCap className={styles.input_icon} />
-                      학력
-                    </label>
-                    <input 
-                      type="text" 
-                      name="education" 
-                      value={formData.education || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="예: 00대학교 컴퓨터공학과"
-                    />
-                  </div> */}
-
                   <div className={styles.form_group}>
                     <label>
                       <FaInfoCircle className={styles.input_icon} />
                       자기소개
                     </label>
-                    <textarea 
-                      name="bio" 
-                      value={formData.bio || ''} 
-                      onChange={handleInputChange} 
+                    <textarea
+                      name="bio"
+                      value={formData.bio || ''}
+                      onChange={handleInputChange}
                       placeholder="간단한 자기소개를 작성해주세요"
                       rows="4"
                     />
@@ -471,15 +744,15 @@ const Profile = () => {
                       현재 비밀번호
                     </label>
                     <div className={styles.password_input_container}>
-                      <input 
-                        type={showPassword.current ? "text" : "password"} 
-                        name="currentPassword" 
-                        value={passwordData.currentPassword} 
-                        onChange={handlePasswordChange} 
+                      <input
+                        type={showPassword.current ? "text" : "password"}
+                        name="currentPassword"
+                        value={passwordData.currentPassword}
+                        onChange={handlePasswordChange}
                         placeholder="현재 비밀번호를 입력하세요"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={styles.toggle_password_button}
                         onClick={() => togglePasswordVisibility('current')}
                       >
@@ -494,15 +767,15 @@ const Profile = () => {
                       새 비밀번호
                     </label>
                     <div className={styles.password_input_container}>
-                      <input 
-                        type={showPassword.new ? "text" : "password"} 
-                        name="newPassword" 
-                        value={passwordData.newPassword} 
-                        onChange={handlePasswordChange} 
+                      <input
+                        type={showPassword.new ? "text" : "password"}
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
                         placeholder="새 비밀번호를 입력하세요"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={styles.toggle_password_button}
                         onClick={() => togglePasswordVisibility('new')}
                       >
@@ -517,15 +790,15 @@ const Profile = () => {
                       새 비밀번호 확인
                     </label>
                     <div className={styles.password_input_container}>
-                      <input 
-                        type={showPassword.confirm ? "text" : "password"} 
-                        name="confirmPassword" 
-                        value={passwordData.confirmPassword} 
-                        onChange={handlePasswordChange} 
+                      <input
+                        type={showPassword.confirm ? "text" : "password"}
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
                         placeholder="새 비밀번호를 다시 입력하세요"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={styles.toggle_password_button}
                         onClick={() => togglePasswordVisibility('confirm')}
                       >
@@ -543,8 +816,8 @@ const Profile = () => {
               )}
 
               <div className={styles.form_actions}>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className={styles.save_button}
                   disabled={saveStatus === 'saving'}
                 >
@@ -567,15 +840,15 @@ const Profile = () => {
                   <div className={styles.info_card}>
                     <FaIdCard className={styles.info_icon} />
                     <div className={styles.info_content}>
-                      <label>아이디</label>
-                      <p>{user.username || '미설정'}</p>
+                      <label>이메일</label>
+                      <p>{user.email || '미설정'}</p>
                     </div>
                   </div>
                   <div className={styles.info_card}>
-                    <FaEnvelope className={styles.info_icon} />
+                    <FaUser className={styles.info_icon} />
                     <div className={styles.info_content}>
-                      <label>이메일</label>
-                      <p>{user.email || '미설정'}</p>
+                      <label>이름</label>
+                      <p>{user.name || '미설정'}</p>
                     </div>
                   </div>
                   <div className={styles.info_card}>
@@ -599,6 +872,13 @@ const Profile = () => {
                       <p>{user.emergencyContact || '미설정'}</p>
                     </div>
                   </div>
+                  <div className={styles.info_card}>
+                    <FaIdCard className={styles.info_icon} />
+                    <div className={styles.info_content}>
+                      <label>사용자 유형</label>
+                      <p>{user.userType === 'internal' ? '내부 직원' : '외부 인력'}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -611,33 +891,33 @@ const Profile = () => {
                   <div className={styles.info_card}>
                     <FaBriefcase className={styles.info_icon} />
                     <div className={styles.info_content}>
-                      <label>직책</label>
-                      <p>{user.role || '미설정'}</p>
-                    </div>
-                  </div>
-                  <div className={styles.info_card}>
-                    <FaIdCard className={styles.info_icon} />
-                    <div className={styles.info_content}>
                       <label>부서</label>
                       <p>{user.department || '미설정'}</p>
                     </div>
                   </div>
                   <div className={styles.info_card}>
-                    <FaCalendarAlt className={styles.info_icon} />
+                    <FaIdCard className={styles.info_icon} />
                     <div className={styles.info_content}>
-                      <label>입사일</label>
-                      <p>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : '미설정'}</p>
+                      <label>직책/역할</label>
+                      <p>{(user.roles && user.roles.length > 0) ? user.roles[0] : '미설정'}</p>
                     </div>
                   </div>
-                  {/* <div className={styles.info_card}>
-                    <FaGraduationCap className={styles.info_icon} />
+                  <div className={styles.info_card}>
+                    <FaCalendarAlt className={styles.info_icon} />
                     <div className={styles.info_content}>
-                      <label>학력</label>
-                      <p>{user.education || '미설정'}</p>
+                      <label>가입일</label>
+                      <p>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '미설정'}</p>
                     </div>
-                  </div> */}
+                  </div>
+                  <div className={styles.info_card}>
+                    <FaIdCard className={styles.info_icon} />
+                    <div className={styles.info_content}>
+                      <label>계정 상태</label>
+                      <p>{user.status === 'active' ? '활성' : user.status === 'waiting' ? '승인 대기' : '비활성'}</p>
+                    </div>
+                  </div>
                 </div>
-                
+
                 {user.bio && (
                   <div className={styles.bio_section}>
                     <div className={styles.bio_header}>

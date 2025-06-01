@@ -460,6 +460,118 @@ app.get('/get-user-info', async (req, res) => {
     }
 })
 
+// 사용자 프로필 업데이트 API
+app.put('/update-user-profile', async (req, res) => {
+    const { userId } = req.query;
+    const { 
+        name, 
+        email, 
+        phone, 
+        address, 
+        emergencyContact, 
+        department, 
+        bio,
+        roles,
+        avatar
+    } = req.body;
+
+    try {
+        // 이메일 중복 체크 (다른 사용자가 같은 이메일 사용하는지)
+        if (email) {
+            const existingUser = await User.findOne({ 
+                email: email, 
+                _id: { $ne: userId } 
+            });
+            
+            if (existingUser) {
+                return res.status(400).json({ 
+                    message: '이미 사용중인 이메일입니다.' 
+                });
+            }
+        }
+
+        // 아바타가 변경되었고 기존 아바타가 로컬 파일인 경우 삭제
+        if (avatar) {
+            const existingUser = await User.findById(userId);
+            if (existingUser && existingUser.avatar && 
+                existingUser.avatar !== avatar &&
+                !existingUser.avatar.startsWith('http')) {
+                
+                const oldFilePath = path.join('./uploads/product/', existingUser.avatar);
+                
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                        console.log('기존 아바타 파일 삭제:', existingUser.avatar);
+                    }
+                } catch (fileError) {
+                    console.error('기존 아바타 파일 삭제 실패:', fileError);
+                    // 파일 삭제 실패해도 프로필 업데이트는 계속 진행
+                }
+            }
+        }
+
+        const updateData = {};
+        
+        // 제공된 필드만 업데이트
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        if (address !== undefined) updateData.address = address;
+        if (emergencyContact !== undefined) updateData.emergencyContact = emergencyContact;
+        if (department !== undefined) updateData.department = department;
+        if (bio !== undefined) updateData.bio = bio;
+        if (roles !== undefined) updateData.roles = roles;
+        if (avatar !== undefined) updateData.avatar = avatar;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({
+            message: '프로필이 성공적으로 업데이트되었습니다.',
+            user: updatedUser
+        });
+
+    } catch (err) {
+        console.error('프로필 업데이트 실패:', err);
+        res.status(500).json({ message: '프로필 업데이트 중 오류가 발생했습니다.' });
+    }
+});
+
+// 비밀번호 변경 API
+app.put('/change-password', async (req, res) => {
+    const { userId } = req.query;
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 현재 비밀번호 확인
+        if (user.password !== currentPassword) {
+            return res.status(400).json({ message: '현재 비밀번호가 일치하지 않습니다.' });
+        }
+
+        // 새 비밀번호로 업데이트
+        await User.findByIdAndUpdate(userId, { password: newPassword });
+
+        res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+
+    } catch (err) {
+        console.error('비밀번호 변경 실패:', err);
+        res.status(500).json({ message: '비밀번호 변경 중 오류가 발생했습니다.' });
+    }
+});
+
 // 출근 체크인 API
 app.post('/attendance/check-in', async (req, res) => {
     const { location, method = 'manual' } = req.body;
@@ -1414,6 +1526,49 @@ app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
     } catch (err) {
         console.error('썸네일 업로드 실패:', err);
         res.status(500).json({ message: '썸네일 업로드 실패' });
+    }
+});
+
+// 프로필 사진 업로드 API
+app.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
+
+        console.log('프로필 사진 업로드 요청:', req.file.filename);
+
+        // 파일 경로 및 새 파일명 생성
+        const originalPath = req.file.path;
+        const fileExtension = path.extname(req.file.originalname);
+        const timestamp = Date.now();
+        const newFilename = `avatar_${timestamp}${fileExtension}`;
+        const newPath = path.join('./uploads/product/', newFilename);
+
+        // 이미지 리사이징 및 최적화 (프로필 사진은 정사각형으로)
+        if (req.file.mimetype.startsWith('image/')) {
+            await sharp(originalPath)
+                .resize(400, 400, {
+                    fit: 'cover',
+                    withoutEnlargement: true
+                })
+                .jpeg({ quality: 85 })
+                .toFile(newPath);
+
+            // 원본 파일 삭제
+            fs.unlinkSync(originalPath);
+        } else {
+            // 이미지가 아닌 경우 그대로 이동
+            fs.renameSync(originalPath, newPath);
+        }
+
+        res.status(200).json({
+            message: '프로필 사진 업로드 성공',
+            filename: newFilename
+        });
+    } catch (err) {
+        console.error('프로필 사진 업로드 실패:', err);
+        res.status(500).json({ message: '프로필 사진 업로드 실패' });
     }
 });
 

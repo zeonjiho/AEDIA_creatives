@@ -19,6 +19,9 @@ const userSchema = new Schema({
     phone: {
         type: String,
     },
+    emergencyContact: {
+        type: String,
+    },
     email: {
         type: String,
     },
@@ -43,6 +46,10 @@ const userSchema = new Schema({
         type: String,
     },
     avatar: {
+        type: String,
+        default: '',
+    },
+    bio: {
         type: String,
         default: '',
     },

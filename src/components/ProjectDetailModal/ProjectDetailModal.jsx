@@ -22,6 +22,7 @@ const ProjectDetailModal = ({
   const [editingStaff, setEditingStaff] = useState(false);
   const [editingThumbnail, setEditingThumbnail] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [currentStaffCategory, setCurrentStaffCategory] = useState('');
@@ -33,6 +34,9 @@ const ProjectDetailModal = ({
 
   // 프로젝트 개요 편집 상태
   const [tempDescription, setTempDescription] = useState('');
+
+  // 프로젝트 제목 편집 상태
+  const [tempTitle, setTempTitle] = useState('');
 
   // 로딩 상태
   const [isUpdating, setIsUpdating] = useState(false);
@@ -394,6 +398,36 @@ const ProjectDetailModal = ({
     setTempDescription('');
   };
 
+  // 프로젝트 제목 편집 함수들
+  const handleTitleEdit = () => {
+    setTempTitle(selectedProject.title);
+    setEditingTitle(true);
+  };
+
+  const handleTitleSave = async () => {
+    try {
+      if (!tempTitle.trim()) {
+        alert('프로젝트 제목을 입력해주세요.');
+        return;
+      }
+
+      await updateProjectOnServer({
+        ...selectedProject,
+        title: tempTitle.trim()
+      });
+      
+      setEditingTitle(false);
+      setTempTitle('');
+    } catch (error) {
+      // 에러는 updateProjectOnServer에서 처리됨
+    }
+  };
+
+  const handleTitleCancel = () => {
+    setEditingTitle(false);
+    setTempTitle('');
+  };
+
   // Todo 관련 함수들
   const handleAddTodo = (e) => {
     e.preventDefault();
@@ -601,7 +635,46 @@ const ProjectDetailModal = ({
       <div className={styles.modal_panel}>
         <div className={styles.panel_header}>
           <div className={styles.panel_title}>
-            <h2>{selectedProject.title}</h2>
+            {editingTitle ? (
+              <div className={styles.title_editor}>
+                <input
+                  type="text"
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  className={styles.title_input}
+                  placeholder="프로젝트 제목을 입력하세요..."
+                  disabled={isUpdating}
+                  autoFocus
+                />
+                <div className={styles.title_editor_actions}>
+                  <button 
+                    className={styles.title_cancel_button}
+                    onClick={handleTitleCancel}
+                    disabled={isUpdating}
+                  >
+                    <HiX />
+                  </button>
+                  <button 
+                    className={styles.title_save_button}
+                    onClick={handleTitleSave}
+                    disabled={isUpdating || !tempTitle.trim()}
+                  >
+                    <HiSave />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.title_display}>
+                <h2>{selectedProject.title}</h2>
+                <button 
+                  className={styles.edit_title_button}
+                  onClick={handleTitleEdit}
+                  disabled={isUpdating}
+                >
+                  <HiPencil />
+                </button>
+              </div>
+            )}
             {isUpdating && <span className={styles.updating_indicator}>업데이트 중...</span>}
           </div>
           <button className={styles.close_button} onClick={onClose}>

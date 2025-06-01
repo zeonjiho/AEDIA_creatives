@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './ReservationModal.module.css';
 import { HiX, HiCalendar, HiClock, HiOfficeBuilding, HiDocumentText, HiBookmark, HiUserGroup, HiPencilAlt } from 'react-icons/hi';
 import ProjectSelectModal from '../../components/ProjectSelectModal';
+import getProjectThumbnail from '../../utils/getProjectThumbnail';
 
 const ReservationModal = ({ 
     isOpen, 
@@ -311,7 +312,7 @@ const ReservationModal = ({
                                             {selectedParticipants.map(participant => (
                                                 <div key={participant.id} className={styles.participant_chip}>
                                                     <img 
-                                                        src={participant.avatar || '/default-avatar.png'} 
+                                                        src={getProjectThumbnail(participant.avatar)} 
                                                         alt={participant.name}
                                                         className={styles.participant_avatar}
                                                     />
@@ -345,7 +346,7 @@ const ReservationModal = ({
                                                         onClick={() => handleParticipantToggle(user.id)}
                                                     >
                                                         <img 
-                                                            src={user.avatar || '/default-avatar.png'} 
+                                                            src={getProjectThumbnail(user.avatar)} 
                                                             alt={user.name}
                                                             className={styles.participant_avatar}
                                                         />
