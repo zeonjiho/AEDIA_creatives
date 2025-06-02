@@ -893,6 +893,7 @@
     }
 }
 
+
 /* 빈 상태 및 로딩 상태 */
 
 .loading_state {
@@ -902,7 +903,8 @@
     justify-content: center;
     padding: 60px 40px;
     color: var(--text-secondary);
-    grid-column: 1 / -1; /* 그리드 전체 영역 차지 */
+    grid-column: 1 / -1;
+    /* 그리드 전체 영역 차지 */
 }
 
 .loading_state p {
