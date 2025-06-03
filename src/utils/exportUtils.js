@@ -132,15 +132,64 @@ export const generateMonthlyStaffCSV = () => {
 };
 
 // 테이블 데이터를 CSV로 변환하는 범용 함수
-export const generateTableCSV = (tableData, headers) => {
-    let csvContent = headers.join(',') + '\n';
+export const generateTableCSV = (tableData, headers, reportInfo = {}) => {
+    let csvContent = '';
 
+    // 헤더 정보 추가
+    csvContent += '=== AEDIA 출석 관리 시스템 ===\n';
+    csvContent += `리포트: ${reportInfo.title || '데이터 내보내기'}\n`;
+    csvContent += `내보내기 날짜: ${new Date().toLocaleDateString('ko-KR')} ${new Date().toLocaleTimeString('ko-KR')}\n`;
+
+    // 데이터 기간 자동 계산 및 표시
+    if (tableData && tableData.length > 0) {
+        const dates = tableData.map(row => new Date(row.date)).filter(date => !isNaN(date));
+        if (dates.length > 0) {
+            const earliestDate = new Date(Math.min(...dates));
+            const latestDate = new Date(Math.max(...dates));
+            csvContent += `데이터 기간: ${earliestDate.toLocaleDateString('ko-KR')} ~ ${latestDate.toLocaleDateString('ko-KR')}\n`;
+        }
+    }
+
+    // 필터 정보 추가 (있는 경우)
+    if (reportInfo.filters && Object.keys(reportInfo.filters).length > 0) {
+        csvContent += '\n=== 적용된 필터 ===\n';
+        Object.entries(reportInfo.filters).forEach(([key, value]) => {
+            if (value && value !== 'all') {
+                csvContent += `${key}: ${value}\n`;
+            }
+        });
+    }
+
+    // 총 레코드 수 정보
+    csvContent += `\n총 레코드 수: ${tableData.length}건\n`;
+
+    // 상태별 통계 (출석 데이터인 경우)
+    if (tableData.length > 0 && tableData[0].status) {
+        const statusCounts = {};
+        tableData.forEach(row => {
+            const status = getStatusTextForCSV(row.status);
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+
+        csvContent += '\n=== 상태별 통계 ===\n';
+        Object.entries(statusCounts).forEach(([status, count]) => {
+            const percentage = ((count / tableData.length) * 100).toFixed(1);
+            csvContent += `${status}: ${count}건 (${percentage}%)\n`;
+        });
+    }
+
+    csvContent += '\n'; // 빈 줄
+
+    // 실제 데이터 테이블 헤더
+    csvContent += headers.join(',') + '\n';
+
+    // 데이터 행들
     tableData.forEach(row => {
         const csvRow = headers.map(header => {
             let value = '';
             switch (header) {
                 case '이름':
-                    value = row.name || '';
+                    value = row.name || row.userName || '';
                     break;
                 case '소속':
                     value = row.department || '미정';
@@ -162,6 +211,24 @@ export const generateTableCSV = (tableData, headers) => {
                     break;
                 case '사용자 유형':
                     value = getUserTypeTextForCSV(row.userType);
+                    break;
+                case '날짜':
+                    value = formatDateForCSV(row.date);
+                    break;
+                case '구분':
+                    value = getUserTypeTextForCSV(row.userType);
+                    break;
+                case '출근시간':
+                    value = formatTimeForCSV(row.checkInTime);
+                    break;
+                case '퇴근시간':
+                    value = formatTimeForCSV(row.checkOutTime);
+                    break;
+                case '근무시간':
+                    value = formatWorkHoursForCSV(row.workHours);
+                    break;
+                case '비고':
+                    value = row.note || '';
                     break;
                 default:
                     value = row[header.toLowerCase()] || '';
@@ -198,6 +265,16 @@ const getStatusTextForCSV = (status) => {
             return '활동 중';
         case 'inactive':
             return '비활성';
+        case 'present':
+            return '출석';
+        case 'late':
+            return '지각';
+        case 'absent':
+            return '결석';
+        case 'vacation':
+            return '휴가';
+        case 'remote':
+            return '재택근무';
         default:
             return status || '';
     }
@@ -222,4 +299,23 @@ const formatDateForCSV = (dateString) => {
         month: '2-digit',
         day: '2-digit'
     });
+};
+
+const formatTimeForCSV = (timeString) => {
+    if (!timeString) return '';
+    // HH:MM:SS 형식의 문자열인 경우 HH:MM만 반환
+    if (typeof timeString === 'string' && timeString.includes(':')) {
+        return timeString.substring(0, 5);
+    }
+    // Date 객체인 경우
+    const time = new Date(timeString);
+    return time.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const formatWorkHoursForCSV = (hours) => {
+    if (!hours) return '';
+    return hours.toFixed(2);
 };

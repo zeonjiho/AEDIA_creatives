@@ -8,10 +8,14 @@ const ExportButton = ({
   chartRef, 
   chartTitle, 
   csvData, 
+  reportInfo,
   onExportStart, 
   onExportComplete 
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // 차트가 있는지 확인
+  const hasChart = chartRef && chartRef.current;
 
   const handleExportPDF = async () => {
     try {
@@ -37,6 +41,8 @@ const ExportButton = ({
       if (onExportStart) onExportStart('CSV');
       
       const fileName = chartTitle.replace(/\s+/g, '_');
+      // reportInfo가 있으면 csvData가 이미 reportInfo를 포함하고 있음
+      // 없으면 일반 CSV 내보내기
       const result = exportToCSV(csvData, fileName);
       
       if (result.success) {
@@ -63,13 +69,15 @@ const ExportButton = ({
         <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: '0.7rem' }} />
       </button>
       <div className={`${ss.export_dropdown} ${showDropdown ? ss.show : ''}`}>
-        <button 
-          className={ss.export_option}
-          onClick={handleExportPDF}
-        >
-          <FontAwesomeIcon icon={faFilePdf} style={{ color: '#e74c3c' }} />
-          PDF로 내보내기
-        </button>
+        {hasChart && (
+          <button 
+            className={ss.export_option}
+            onClick={handleExportPDF}
+          >
+            <FontAwesomeIcon icon={faFilePdf} style={{ color: '#e74c3c' }} />
+            PDF로 내보내기
+          </button>
+        )}
         <button 
           className={ss.export_option}
           onClick={handleExportCSV}

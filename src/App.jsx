@@ -22,6 +22,8 @@ import AdminStaff from './page/Admin/AdminStaff/AdminStaff';
 import AdminFinanceMeal from './page/Admin/AdminFinance/AdminFinanceMeal';
 import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
 import AdminRoom from './page/Admin/AdminRoom/AdminRoom';
+import AdminAttendance from './page/Admin/AdminAttendance/AdminAttendance';
+import AdminAttendanceSummary from './page/Admin/AdminAttendance/AdminAttendanceSummary';
 
 
 function App() {
@@ -55,6 +57,8 @@ function App() {
           <Route index element={<AdminMain />} />
           <Route path='user-list' element={<AdminUser />} />
           <Route path='staff-list' element={<AdminStaff />} />
+          <Route path='attendance' element={<AdminAttendance />} />
+          <Route path='attendance/summary' element={<AdminAttendanceSummary />} />
           <Route path='finance'>
             <Route path='meal' element={<AdminFinanceMeal />} />
             <Route path='taxi' element={<AdminFinanceTaxi />} />

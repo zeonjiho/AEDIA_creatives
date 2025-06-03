@@ -12,6 +12,7 @@ import {
     faTachometerAlt,
     faCoins,
     faCog,
+    faCalendarCheck,
 } from '@fortawesome/free-solid-svg-icons';
 
 const AdminLayout = () => {
@@ -86,6 +87,15 @@ const AdminLayout = () => {
             ]
         },
         {
+            id: 'attendance',
+            name: '출석 관리',
+            icon: faCalendarCheck,
+            submenus: [
+                { id: 'attendance-list', name: '출석 현황', path: '/admin/attendance' },
+                { id: 'attendance-summary', name: '출석 통계', path: '/admin/attendance/summary' },
+            ]
+        },
+        {
             id: 'finance',
             name: 'finance-management',
             icon: faCoins,
@@ -129,6 +139,7 @@ const AdminLayout = () => {
         { id: 'dashboard', name: '대시보드', icon: faTachometerAlt, path: '/admin' },
         { id: 'user-list', name: '직원', icon: faUsers, path: '/admin/user-list' },
         { id: 'staff-list', name: '스태프', icon: faUsers, path: '/admin/staff-list' },
+        { id: 'attendance', name: '출석', icon: faCalendarCheck, path: '/admin/attendance' },
         { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal' },
         { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi' },
     ];
@@ -160,10 +171,22 @@ const AdminLayout = () => {
 
         for (const menu of menuData) {
             if (menu.submenus) {
+                // 정확한 경로 매칭
                 const activeSubmenu = menu.submenus.find(sub => location.pathname === sub.path);
                 if (activeSubmenu) return activeSubmenu.name;
+                
+                // 중첩된 경로를 위한 부분 매칭 (예: /admin/attendance/summary)
+                const partialMatch = menu.submenus.find(sub => location.pathname.startsWith(sub.path));
+                if (partialMatch) return partialMatch.name;
             }
         }
+        
+        // 출석 관리 페이지들을 위한 추가 처리
+        if (location.pathname.startsWith('/admin/attendance')) {
+            if (location.pathname === '/admin/attendance') return '출석 현황';
+            if (location.pathname === '/admin/attendance/summary') return '출석 통계';
+        }
+        
         return '대시보드';
     };
 
@@ -202,7 +225,7 @@ const AdminLayout = () => {
                     <div className={ss.sidebarHeader}>
                         {!menuCollapsed && (
                             <>
-                                <h2 className={ss.title}>AEDIA Studio</h2>
+                                <h2 className={ss.title}>AEDIASTUDIO</h2>
                                 <h3 className={ss.subtitle}>관리자 페이지</h3>
                             </>
                         )}
