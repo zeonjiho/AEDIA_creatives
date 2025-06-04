@@ -84,6 +84,7 @@ const AdminLayout = () => {
             submenus: [
                 { id: 'user-list', name: '직원 목록', path: '/admin/user-list' },
                 { id: 'staff-list', name: '스태프 목록', path: '/admin/staff-list' },
+                { id: 'deleted-list', name: '삭제된 인력', path: '/admin/deleted-list' },
             ]
         },
         {
@@ -101,7 +102,8 @@ const AdminLayout = () => {
             icon: faCoins,
             submenus: [
                 { id: 'finance-meal', name: '식사 영수증 관리', path: '/admin/finance/meal' },
-                { id: 'finance-taxi', name: '택시비 영수증 관리', path: '/admin/finance/taxi' }
+                { id: 'finance-taxi', name: '택시비 영수증 관리', path: '/admin/finance/taxi' },
+                { id: 'finance-credit-card', name: '법인카드 관리', path: '/admin/finance/credit-card' }
             ]
         },
         {

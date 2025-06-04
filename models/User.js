@@ -28,6 +28,9 @@ const userSchema = new Schema({
     slackId: {
         type: String,
     },
+    snsId: {
+        type: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
@@ -37,6 +40,9 @@ const userSchema = new Schema({
     },
     joinYear: {
         type: String,
+    },
+    hireYear: {
+        type: Number,
     },
     adminMemo: {
         type: String,

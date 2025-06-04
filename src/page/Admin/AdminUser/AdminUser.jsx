@@ -17,10 +17,23 @@ const AdminUser = () => {
 
   const fetchUserList = async () => {
     try {
-      const response = await api.get('/get-user-list?userType=all');
+      const response = await api.get('/get-user-list?userType=internal');
       
-      // status가 waiting인 유저를 최상단에 배치
-      const sortedUsers = response.data.sort((a, b) => {
+      // API 응답 데이터 검증
+      const userData = response.data || [];
+      if (!Array.isArray(userData)) {
+        console.error('API 응답이 배열이 아닙니다:', userData);
+        setUserList([]);
+        return;
+      }
+      
+      // status가 deleted인 유저는 제외하고, null/undefined 값도 제거
+      const filteredUsers = userData
+        .filter(user => user !== null && user !== undefined)
+        .filter(user => user.status !== 'deleted');
+      
+      // waiting인 유저를 최상단에 배치
+      const sortedUsers = filteredUsers.sort((a, b) => {
         if (a.status === 'waiting' && b.status !== 'waiting') return -1;
         if (a.status !== 'waiting' && b.status === 'waiting') return 1;
         return new Date(b.createdAt) - new Date(a.createdAt); // 최신순 정렬
@@ -28,7 +41,8 @@ const AdminUser = () => {
       
       setUserList(sortedUsers);
     } catch (err) {
-      console.log(err);
+      console.error('유저 목록 조회 실패:', err);
+      setUserList([]); // 에러 시 빈 배열로 설정
     }
   }
 
@@ -69,13 +83,30 @@ const AdminUser = () => {
 
   // 사용자 정보 업데이트 처리
   const handleUserUpdate = (updatedUser) => {
-    setUserList(prevList => 
-      prevList.map(user => 
-        user._id === updatedUser._id ? updatedUser : user
-      )
-    );
-    // 사용자가 삭제되거나 상태가 변경된 경우 전체 목록 새로고침
-    fetchUserList();
+    if (updatedUser === null) {
+      // 삭제된 유저인 경우 목록에서 제거
+      fetchUserList(); // 전체 목록 새로고침으로 삭제된 유저 제외
+      return;
+    }
+    
+    if (updatedUser.status === 'deleted') {
+      // status가 deleted로 변경된 경우 목록에서 제거
+      setUserList(prevList => 
+        prevList.filter(user => user._id !== updatedUser._id)
+      );
+    } else {
+      // 일반 업데이트인 경우
+      setUserList(prevList => 
+        prevList.map(user => 
+          user && user._id === updatedUser._id ? updatedUser : user
+        ).filter(user => user !== null) // null 값 제거
+      );
+    }
+    
+    // 안전을 위해 전체 목록도 새로고침
+    setTimeout(() => {
+      fetchUserList();
+    }, 500);
   };
 
   // 상태에 따른 스타일 클래스 반환
@@ -126,13 +157,14 @@ const AdminUser = () => {
 
   // 상태별 카운트 계산
   const getStatusCounts = () => {
+    const validUsers = userList.filter(user => user !== null && user !== undefined);
     const counts = {
-      total: userList.length,
-      active: userList.filter(user => user.status === 'active').length,
-      waiting: userList.filter(user => user.status === 'waiting').length,
-      inactive: userList.filter(user => user.status === 'inactive').length,
-      internal: userList.filter(user => user.userType === 'internal').length,
-      external: userList.filter(user => user.userType === 'external').length
+      total: validUsers.length,
+      active: validUsers.filter(user => user.status === 'active').length,
+      waiting: validUsers.filter(user => user.status === 'waiting').length,
+      inactive: validUsers.filter(user => user.status === 'inactive').length,
+      internal: validUsers.filter(user => user.userType === 'internal').length,
+      external: validUsers.filter(user => user.userType === 'external').length
     };
     return counts;
   }
@@ -223,7 +255,10 @@ const AdminUser = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle="유저_목록"
-            csvData={generateTableCSV(userList, ['이름', '전화번호', '이메일', '상태', '사용자 유형', '역할', '가입일'])}
+            csvData={generateTableCSV(
+              userList.filter(user => user !== null && user !== undefined), 
+              ['이름', '전화번호', '이메일', '상태', '사용자 유형', '역할', '관리자 메모', '가입일']
+            )}
           />
         </div>
         <table className={ss.data_table}>
@@ -235,20 +270,23 @@ const AdminUser = () => {
               <th>상태</th>
               <th>구분</th>
               <th>역할</th>
+              <th>관리자 메모</th>
               <th>가입일</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {userList && userList.length > 0 ? userList.map((user, idx) => (
+            {userList && userList.length > 0 ? userList
+              .filter(user => user !== null && user !== undefined) // null, undefined 값 제거
+              .map((user, idx) => (
               <tr 
-                key={user._id || idx} 
+                key={user._id || `user-${idx}`}
                 className={user.status === 'waiting' ? ss.waiting_row : ''}
                 onClick={() => handleRowClick(user)}
                 style={{ cursor: 'pointer' }}
               >
                 <td style={{fontWeight: '600', color: 'var(--text-primary)', position: 'relative', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  {user.name}
+                  {user.name || '-'}
                   {user.status === 'waiting' && <span style={{backgroundColor: 'var(--warning-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px'}}>NEW</span>}
                 </td>
                 <td>{formatPhoneNumber(user.phone)}</td>
@@ -264,6 +302,26 @@ const AdminUser = () => {
                     ? user.roles.join(', ') 
                     : '-'
                   }
+                </td>
+                <td style={{maxWidth: '150px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
+                  {user.adminMemo ? (
+                    <span style={{
+                      backgroundColor: 'var(--bg-secondary)',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontStyle: 'italic',
+                      color: 'var(--text-secondary)',
+                      display: 'inline-block',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {user.adminMemo}
+                    </span>
+                  ) : (
+                    <span style={{color: 'var(--text-tertiary)'}}>-</span>
+                  )}
                 </td>
                 <td>{formatDate(user.createdAt)}</td>
                 <td style={{textAlign: 'center', padding: '12px', verticalAlign: 'middle', width: '120px'}}>
@@ -301,7 +359,7 @@ const AdminUser = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 유저가 없습니다.
                 </td>
               </tr>

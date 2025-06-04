@@ -36,25 +36,42 @@ const AdminStaff = () => {
   const fetchUserList = async () => {
     try {
       const response = await api.get('/get-user-list?userType=external');
-      setUserList(response.data);
+      
+      // API 응답 데이터 검증
+      const userData = response.data || [];
+      if (!Array.isArray(userData)) {
+        console.error('API 응답이 배열이 아닙니다:', userData);
+        setUserList([]);
+        return;
+      }
+      
+      // status가 deleted인 외부 스태프는 제외하고, null/undefined 값도 제거
+      const filteredUsers = userData
+        .filter(user => user !== null && user !== undefined)
+        .filter(user => user.status !== 'deleted');
+      
+      setUserList(filteredUsers);
     } catch (err) {
-      console.log(err);
+      console.error('스태프 목록 조회 실패:', err);
+      setUserList([]); // 에러 시 빈 배열로 설정
     }
   }
 
   // 통계 계산 (상태 제거)
   const getStaffStats = () => {
+    const validUsers = userList.filter(user => user !== null && user !== undefined);
     const stats = {
-      total: userList.length,
-      departments: [...new Set(userList.filter(user => user.department).map(user => user.department))].length,
-      withSNS: userList.filter(user => user.snsId).length
+      total: validUsers.length,
+      departments: [...new Set(validUsers.filter(user => user.department).map(user => user.department))].length,
+      withSNS: validUsers.filter(user => user.snsId).length
     };
     return stats;
   }
 
   // 소속별 카운트 계산
   const getDepartmentData = () => {
-    const departmentCounts = userList.reduce((acc, user) => {
+    const validUsers = userList.filter(user => user !== null && user !== undefined);
+    const departmentCounts = validUsers.reduce((acc, user) => {
       const dept = user.department || '미정';
       acc[dept] = (acc[dept] || 0) + 1;
       return acc;
@@ -64,7 +81,8 @@ const AdminStaff = () => {
 
   // 역할별 데이터 계산
   const getRoleData = () => {
-    return userList.reduce((acc, user) => {
+    const validUsers = userList.filter(user => user !== null && user !== undefined);
+    return validUsers.reduce((acc, user) => {
       if (user.roles && user.roles.length > 0) {
         user.roles.forEach(role => {
           acc[role] = (acc[role] || 0) + 1;
@@ -90,12 +108,30 @@ const AdminStaff = () => {
 
   // 스태프 정보 업데이트 처리
   const handleStaffUpdate = (updatedStaff) => {
-    setUserList(prevList => 
-      prevList.map(staff => 
-        staff._id === updatedStaff._id ? updatedStaff : staff
-      )
-    );
-    fetchUserList(); // 전체 목록 새로고침
+    if (updatedStaff === null) {
+      // 삭제된 스태프인 경우 목록에서 제거
+      fetchUserList(); // 전체 목록 새로고침으로 삭제된 스태프 제외
+      return;
+    }
+    
+    if (updatedStaff.status === 'deleted') {
+      // status가 deleted로 변경된 경우 목록에서 제거
+      setUserList(prevList => 
+        prevList.filter(staff => staff._id !== updatedStaff._id)
+      );
+    } else {
+      // 일반 업데이트인 경우
+      setUserList(prevList => 
+        prevList.map(staff => 
+          staff && staff._id === updatedStaff._id ? updatedStaff : staff
+        ).filter(staff => staff !== null) // null 값 제거
+      );
+    }
+    
+    // 안전을 위해 전체 목록도 새로고침
+    setTimeout(() => {
+      fetchUserList();
+    }, 500);
   };
 
   // 날짜 포맷팅
@@ -329,7 +365,10 @@ const AdminStaff = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle="스태프_목록"
-            csvData={generateTableCSV(userList, ['이름', '소속', '전화번호', '이메일', 'SNS 아이디', '역할', '등록일'])}
+            csvData={generateTableCSV(
+              userList.filter(user => user !== null && user !== undefined), 
+              ['이름', '소속', '전화번호', '이메일', 'SNS 아이디', '역할', '관리자 메모', '등록일']
+            )}
           />
         </div>
         <table className={ss.data_table}>
@@ -341,17 +380,20 @@ const AdminStaff = () => {
               <th>이메일</th>
               <th>SNS 아이디</th>
               <th>역할</th>
+              <th>관리자 메모</th>
               <th>등록일</th>
             </tr>
           </thead>
           <tbody>
-            {userList && userList.length > 0 ? userList.map((user, idx) => (
+            {userList && userList.length > 0 ? userList
+              .filter(user => user !== null && user !== undefined) // null, undefined 값 제거
+              .map((user, idx) => (
               <tr 
-                key={user._id || idx}
+                key={user._id || `staff-${idx}`}
                 onClick={() => handleRowClick(user)}
                 style={{ cursor: 'pointer' }}
               >
-                <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>{user.name}</td>
+                <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>{user.name || '-'}</td>
                 <td style={{fontWeight: '500', color: 'var(--accent-color)'}}>{user.department || '미정'}</td>
                 <td>{formatPhoneNumber(user.phone)}</td>
                 <td>{user.email || '-'}</td>
@@ -370,11 +412,31 @@ const AdminStaff = () => {
                     : '미정'
                   }
                 </td>
+                <td style={{maxWidth: '150px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
+                  {user.adminMemo ? (
+                    <span style={{
+                      backgroundColor: 'var(--bg-secondary)',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontStyle: 'italic',
+                      color: 'var(--text-secondary)',
+                      display: 'inline-block',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {user.adminMemo}
+                    </span>
+                  ) : (
+                    <span style={{color: 'var(--text-tertiary)'}}>-</span>
+                  )}
+                </td>
                 <td>{formatDate(user.createdAt)}</td>
               </tr>
             )) : (
               <tr>
-                <td colSpan="7" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 외부 스태프가 없습니다.
                 </td>
               </tr>

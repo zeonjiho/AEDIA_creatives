@@ -11,7 +11,7 @@ const StaffModal = ({
   const [department, setDepartment] = useState(staff?.department || '')
   const [roles, setRoles] = useState(staff?.roles?.join(', ') || '')
   const [snsId, setSnsId] = useState(staff?.snsId || '')
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState(staff?.adminMemo || '')
   const [loading, setLoading] = useState(false)
 
   // 모달이 열릴 때마다 스태프 정보로 상태 초기화
@@ -20,7 +20,7 @@ const StaffModal = ({
       setDepartment(staff.department || '')
       setRoles(staff.roles?.join(', ') || '')
       setSnsId(staff.snsId || '')
-      setNote('')
+      setNote(staff.adminMemo || '')
     }
   }, [staff])
 
@@ -59,7 +59,7 @@ const StaffModal = ({
         department: department.trim() || null,
         roles: roles ? roles.split(',').map(role => role.trim()).filter(role => role) : [],
         snsId: snsId.trim() || null,
-        note
+        adminMemo: note
       }
 
       // API 호출 (실제 구현 시 엔드포인트 확인 필요)

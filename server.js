@@ -27,6 +27,7 @@ const Calendar = require('./models/Calendar')
 const Room = require('./models/Room')
 const Project = require('./models/Project')
 const SlackCode = require('./models/SlackCode')
+const CreditCard = require('./models/CreditCard')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -270,16 +271,21 @@ app.get('/get-user-list', async (req, res) => {
         if (userType === 'all') {
             const userList = await User.find({ status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
+        } else if (userType === 'all-deleted') {
+            const userList = await User.find({ status: 'deleted' }).select('-password');
+            res.status(200).json(userList);
         } else if (userType === 'internal') {
             const userList = await User.find({ userType: 'internal', status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
         } else if (userType === 'external') {
             const userList = await User.find({ userType: 'external', status: { $ne: 'deleted' } }).select('-password');
             res.status(200).json(userList);
+        } else {
+            res.status(400).json({ message: '잘못된 userType 파라미터입니다.' });
         }
     } catch (err) {
         console.log(err)
-        res.status(500).json()
+        res.status(500).json({ message: '사용자 목록 조회 실패' });
     }
 })
 
@@ -441,6 +447,77 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
         res.status(500).json({ message: '승인 처리 중 오류가 발생했습니다.' });
     }
 })
+
+// 사용자 정보 업데이트 API (관리자용)
+app.put('/admin/update-user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { status, userType, roles, hireYear, adminMemo } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 업데이트할 데이터 준비
+        const updateData = {};
+        if (status !== undefined) updateData.status = status;
+        if (userType !== undefined) updateData.userType = userType;
+        if (roles !== undefined) updateData.roles = roles;
+        if (hireYear !== undefined) updateData.hireYear = hireYear;
+        if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
+
+        console.log(`유저 업데이트 요청 - ID: ${userId}, 업데이트 데이터:`, updateData);
+
+        // 사용자 정보 업데이트
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        console.log(`유저 업데이트 완료 - ID: ${userId}, 새 상태: ${updatedUser.status}`);
+
+        res.status(200).json({ 
+            message: '사용자 정보가 업데이트되었습니다.', 
+            user: updatedUser 
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '사용자 정보 업데이트 중 오류가 발생했습니다.' });
+    }
+})
+
+// 사용자 삭제 API (관리자용) - status를 deleted로 변경
+app.delete('/admin/delete-user/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // status를 'deleted'로 변경 (실제 삭제가 아닌 논리적 삭제)
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { status: 'deleted' },
+            { new: true }
+        ).select('-password');
+
+        res.status(200).json({
+            message: '사용자가 삭제되었습니다.',
+            user: updatedUser
+        });
+    } catch (err) {
+        console.error('사용자 삭제 실패:', err);
+        res.status(500).json({ message: '사용자 삭제에 실패했습니다.' });
+    }
+});
 
 app.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
@@ -1513,6 +1590,37 @@ app.post('/delete-staff', async (req, res) => {
     }
 })
 
+// 스태프 삭제 API (관리자용) - status를 deleted로 변경
+app.delete('/admin/delete-staff/:staffId', async (req, res) => {
+    const { staffId } = req.params;
+
+    try {
+        const staff = await User.findById(staffId);
+        if (!staff) {
+            return res.status(404).json({ message: '스태프를 찾을 수 없습니다.' });
+        }
+
+        if (staff.userType !== 'external') {
+            return res.status(400).json({ message: '외부 스태프만 삭제할 수 있습니다.' });
+        }
+
+        // status를 'deleted'로 변경 (실제 삭제가 아닌 논리적 삭제)
+        const updatedStaff = await User.findByIdAndUpdate(
+            staffId,
+            { status: 'deleted' },
+            { new: true }
+        ).select('-password');
+
+        res.status(200).json({
+            message: '스태프가 삭제되었습니다.',
+            staff: updatedStaff
+        });
+    } catch (err) {
+        console.error('스태프 삭제 실패:', err);
+        res.status(500).json({ message: '스태프 삭제에 실패했습니다.' });
+    }
+});
+
 // 프로젝트 관련 API
 
 // 썸네일 업로드 API
@@ -2160,5 +2268,189 @@ app.post('/calendar/links/batch', async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '일괄 캘린더 연동 실패' });
+    }
+});
+
+// 외부 스태프 정보 업데이트 API (관리자용)
+app.put('/admin/update-staff/:staffId', async (req, res) => {
+    const { staffId } = req.params;
+    const { department, roles, snsId, adminMemo, status } = req.body;
+
+    try {
+        const staff = await User.findById(staffId);
+        if (!staff) {
+            return res.status(404).json({ message: '스태프를 찾을 수 없습니다.' });
+        }
+
+        if (staff.userType !== 'external') {
+            return res.status(400).json({ message: '외부 스태프만 이 API를 통해 업데이트할 수 있습니다.' });
+        }
+
+        // 업데이트할 데이터 준비
+        const updateData = {};
+        if (department !== undefined) updateData.department = department;
+        if (roles !== undefined) updateData.roles = roles;
+        if (snsId !== undefined) updateData.snsId = snsId;
+        if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
+        if (status !== undefined) updateData.status = status;
+
+        console.log(`스태프 업데이트 요청 - ID: ${staffId}, 업데이트 데이터:`, updateData);
+
+        // 스태프 정보 업데이트
+        const updatedStaff = await User.findByIdAndUpdate(
+            staffId,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        if (!updatedStaff) {
+            return res.status(404).json({ message: '스태프를 찾을 수 없습니다.' });
+        }
+
+        console.log(`스태프 업데이트 완료 - ID: ${staffId}, 새 상태: ${updatedStaff.status}`);
+
+        res.status(200).json({ 
+            message: '스태프 정보가 업데이트되었습니다.', 
+            staff: updatedStaff 
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '스태프 정보 업데이트 중 오류가 발생했습니다.' });
+    }
+})
+
+// 법인카드 관련 API
+
+// 법인카드 목록 조회
+app.get('/credit-cards', async (req, res) => {
+    try {
+        const cards = await CreditCard.find({ status: 'active' }).sort({ createdAt: -1 });
+        res.status(200).json(cards);
+    } catch (err) {
+        console.error('법인카드 목록 조회 실패:', err);
+        res.status(500).json({ message: '법인카드 목록 조회 실패' });
+    }
+});
+
+// 법인카드 등록
+app.post('/credit-cards', async (req, res) => {
+    const { cardName, number } = req.body;
+    
+    try {
+        // 필수 필드 검증
+        if (!cardName || !number) {
+            return res.status(400).json({ message: '카드명과 카드번호는 필수입니다.' });
+        }
+
+        // 카드번호 형식 검증 (앞 4자리 + 뒤 4자리 = 8자리)
+        if (number.length !== 8) {
+            return res.status(400).json({ message: '카드번호는 앞 4자리와 뒤 4자리로 총 8자리여야 합니다.' });
+        }
+
+        // 중복 카드번호 확인
+        const existingCard = await CreditCard.findOne({ number: number, status: 'active' });
+        if (existingCard) {
+            return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
+        }
+
+        const newCard = new CreditCard({
+            cardName: cardName.trim(),
+            number: number,
+            status: 'active'
+        });
+
+        await newCard.save();
+
+        console.log(`새 법인카드 등록: ${cardName} (${number})`);
+
+        res.status(201).json({
+            message: '법인카드가 성공적으로 등록되었습니다.',
+            card: newCard
+        });
+    } catch (err) {
+        console.error('법인카드 등록 실패:', err);
+        res.status(500).json({ message: '법인카드 등록에 실패했습니다.' });
+    }
+});
+
+// 법인카드 수정
+app.put('/credit-cards/:cardId', async (req, res) => {
+    const { cardId } = req.params;
+    const { cardName, number } = req.body;
+
+    try {
+        // 필수 필드 검증
+        if (!cardName || !number) {
+            return res.status(400).json({ message: '카드명과 카드번호는 필수입니다.' });
+        }
+
+        // 카드번호 형식 검증
+        if (number.length !== 8) {
+            return res.status(400).json({ message: '카드번호는 앞 4자리와 뒤 4자리로 총 8자리여야 합니다.' });
+        }
+
+        const card = await CreditCard.findById(cardId);
+        if (!card || card.status === 'deleted') {
+            return res.status(404).json({ message: '법인카드를 찾을 수 없습니다.' });
+        }
+
+        // 다른 카드와 번호 중복 확인 (자기 자신 제외)
+        const existingCard = await CreditCard.findOne({ 
+            number: number, 
+            status: 'active',
+            _id: { $ne: cardId }
+        });
+        if (existingCard) {
+            return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
+        }
+
+        // 카드 정보 업데이트
+        const updatedCard = await CreditCard.findByIdAndUpdate(
+            cardId,
+            { 
+                cardName: cardName.trim(),
+                number: number
+            },
+            { new: true }
+        );
+
+        console.log(`법인카드 수정: ${updatedCard.cardName} (${updatedCard.number})`);
+
+        res.status(200).json({
+            message: '법인카드 정보가 성공적으로 수정되었습니다.',
+            card: updatedCard
+        });
+    } catch (err) {
+        console.error('법인카드 수정 실패:', err);
+        res.status(500).json({ message: '법인카드 수정에 실패했습니다.' });
+    }
+});
+
+// 법인카드 삭제 (status를 deleted로 변경)
+app.delete('/credit-cards/:cardId', async (req, res) => {
+    const { cardId } = req.params;
+
+    try {
+        const card = await CreditCard.findById(cardId);
+        if (!card || card.status === 'deleted') {
+            return res.status(404).json({ message: '법인카드를 찾을 수 없습니다.' });
+        }
+
+        // status를 'deleted'로 변경 (논리적 삭제)
+        const deletedCard = await CreditCard.findByIdAndUpdate(
+            cardId,
+            { status: 'deleted' },
+            { new: true }
+        );
+
+        console.log(`법인카드 삭제: ${deletedCard.cardName} (${deletedCard.number})`);
+
+        res.status(200).json({
+            message: '법인카드가 삭제되었습니다.',
+            card: deletedCard
+        });
+    } catch (err) {
+        console.error('법인카드 삭제 실패:', err);
+        res.status(500).json({ message: '법인카드 삭제에 실패했습니다.' });
     }
 });

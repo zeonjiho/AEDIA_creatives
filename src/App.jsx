@@ -24,6 +24,8 @@ import AdminFinanceTaxi from './page/Admin/AdminFinance/AdminFinanceTaxi';
 import AdminRoom from './page/Admin/AdminRoom/AdminRoom';
 import AdminAttendance from './page/Admin/AdminAttendance/AdminAttendance';
 import AdminAttendanceSummary from './page/Admin/AdminAttendance/AdminAttendanceSummary';
+import AdminDeleted from './page/Admin/AdminUser/AdminDeleted';
+import AdminCreditCard from './page/Admin/AdminFinance/AdminCreditCard';
 
 
 function App() {
@@ -56,12 +58,14 @@ function App() {
         <Route path='/admin' element={<AdminLayout />}>
           <Route index element={<AdminMain />} />
           <Route path='user-list' element={<AdminUser />} />
+          <Route path='deleted-list' element={<AdminDeleted />} />
           <Route path='staff-list' element={<AdminStaff />} />
           <Route path='attendance' element={<AdminAttendance />} />
           <Route path='attendance/summary' element={<AdminAttendanceSummary />} />
           <Route path='finance'>
             <Route path='meal' element={<AdminFinanceMeal />} />
             <Route path='taxi' element={<AdminFinanceTaxi />} />
+            <Route path='credit-card' element={<AdminCreditCard />} />
           </Route>
           <Route path='project' element={<AdminProject />} />
           <Route path='room' element={<AdminRoom />} />

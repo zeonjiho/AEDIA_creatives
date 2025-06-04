@@ -12,7 +12,7 @@ const UserModal = ({
   const [userType, setUserType] = useState(user?.userType || 'external')
   const [roles, setRoles] = useState(user?.roles?.join(', ') || '')
   const [hireYear, setHireYear] = useState(user?.hireYear || '')
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState(user?.adminMemo || '')
   const [loading, setLoading] = useState(false)
 
   // 모달이 열릴 때마다 사용자 정보로 상태 초기화
@@ -22,7 +22,7 @@ const UserModal = ({
       setUserType(user.userType || 'external')
       setRoles(user.roles?.join(', ') || '')
       setHireYear(user.hireYear || '')
-      setNote('')
+      setNote(user.adminMemo || '')
     }
   }, [user])
 
@@ -82,7 +82,7 @@ const UserModal = ({
         userType,
         roles: roles ? roles.split(',').map(role => role.trim()).filter(role => role) : [],
         hireYear: hireYear ? parseInt(hireYear) : null,
-        note
+        adminMemo: note
       }
 
       // API 호출 (실제 구현 시 엔드포인트 확인 필요)
