@@ -8,6 +8,9 @@ const creditCardSchema = new Schema({
     number: {
         type: String,
     },
+    label: {
+        type: String,
+    },
     status: {
         type: String,
         enum: ['active', 'deleted'],
