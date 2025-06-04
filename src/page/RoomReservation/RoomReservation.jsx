@@ -321,8 +321,8 @@ const RoomReservation = () => {
         const { name, value } = e.target
         setReservationFormData(prev => {
             const updated = {
-                ...prev,
-                [name]: value
+            ...prev,
+            [name]: value
             }
             
             // startDate가 변경되면 endDate도 같은 날짜로 설정
@@ -361,11 +361,11 @@ const RoomReservation = () => {
     const handleProjectSelect = (projectId) => {
         const selectedProject = projectsList.find(project => project.id === projectId)
         if (selectedProject) {
-            setReservationFormData(prev => ({
-                ...prev,
+        setReservationFormData(prev => ({
+            ...prev,
                 project: selectedProject.title,
                 projectId: selectedProject.id
-            }))
+        }))
         }
         setProjectSearchTerm('')
     }
@@ -412,7 +412,7 @@ const RoomReservation = () => {
             
             const startDateTime = new Date(startDateTimeString)
             const endDateTime = new Date(endDateTimeString)
-            
+        
             // 유효한 날짜인지 확인
             if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
                 alert('⚠️ 날짜나 시간 형식이 올바르지 않습니다.')
@@ -432,9 +432,9 @@ const RoomReservation = () => {
             if (selectedReservation) {
                 await api.put(`/rooms/${selectedRoom._id}/reservations/${selectedReservation._id}`, reservationData)
                 alert('✅ 예약이 성공적으로 업데이트되었습니다.')
-            } 
+        } 
             // 새 예약 생성
-            else {
+        else {
                 await api.post(`/rooms/${selectedRoom._id}/reservations`, reservationData)
                 alert('✅ 새 예약이 성공적으로 추가되었습니다.')
             }
@@ -513,7 +513,7 @@ const RoomReservation = () => {
             
             // 예약 목록 새로고침
             await loadReservations()
-            setShowReservationForm(false)
+        setShowReservationForm(false)
             
         } catch (error) {
             console.error('예약 삭제 중 오류:', error)

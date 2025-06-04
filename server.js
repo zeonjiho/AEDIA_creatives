@@ -623,7 +623,7 @@ app.post('/attendance/check-in', async (req, res) => {
             method: method
         };
 
-        await User.findByIdAndUpdate(userId, {
+            await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -976,11 +976,11 @@ app.put('/todos/:id', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            text,
-            dueDate,
-            dueTime: dueTime || null,
-            projectId: projectId || null,
-            updatedAt: new Date()
+                text,
+                dueDate,
+                dueTime: dueTime || null,
+                projectId: projectId || null,
+                updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -1004,8 +1004,8 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            completed: !todo.completed,
-            updatedAt: new Date()
+                completed: !todo.completed,
+                updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -1890,15 +1890,275 @@ app.put('/projects/:id', async (req, res) => {
 // 프로젝트 삭제 API
 app.delete('/projects/:id', async (req, res) => {
     try {
-        const deletedProject = await Project.findByIdAndDelete(req.params.id);
-
-        if (!deletedProject) {
+        const projectId = req.params.id;
+        
+        // 프로젝트 존재 확인
+        const project = await Project.findById(projectId);
+        if (!project) {
             return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
         }
 
-        res.status(200).json({ message: '프로젝트가 성공적으로 삭제되었습니다.' });
+        // 관련된 캘린더 연동 정보도 함께 삭제 (cascade)
+        const deletedCalendarLinks = await Calendar.deleteMany({ projectId: projectId });
+        console.log(`프로젝트 삭제와 함께 캘린더 연동 ${deletedCalendarLinks.deletedCount}개 삭제됨`);
+
+        // 프로젝트 삭제
+        const deletedProject = await Project.findByIdAndDelete(projectId);
+
+        res.status(200).json({ 
+            message: '프로젝트가 성공적으로 삭제되었습니다.',
+            deletedCalendarLinks: deletedCalendarLinks.deletedCount
+        });
     } catch (err) {
         console.error('프로젝트 삭제 실패:', err);
         res.status(500).json({ message: '프로젝트 삭제 실패' });
+    }
+});
+
+// 캘린더 관련 API
+
+// 캘린더 연동 정보 조회
+app.get('/calendar/links', async (req, res) => {
+    try {
+        const links = await Calendar.find({})
+            .populate({
+                path: 'projectId',
+                select: 'title description status progress thumbnail deadline team staffList',
+                populate: [
+                    {
+                        path: 'team',
+                        select: 'name email department userType'
+                    },
+                    {
+                        path: 'staffList.members.userId',
+                        select: 'name email department userType'
+                    }
+                ]
+            })
+            .sort({ createdAt: -1 });
+
+        // null 참조된 프로젝트 필터링 및 정리
+        const validLinks = []
+        const invalidLinkIds = []
+
+        for (const link of links) {
+            if (!link.projectId) {
+                // 프로젝트가 삭제되어 null인 경우
+                invalidLinkIds.push(link._id)
+                console.log(`무효한 캘린더 연동 발견 (삭제된 프로젝트): ${link.linkId}`)
+                continue
+            }
+
+            // team 배열에서 null 참조 제거
+            if (link.projectId.team) {
+                link.projectId.team = link.projectId.team.filter(member => member !== null)
+            }
+
+            // staffList에서 null 참조 제거
+            if (link.projectId.staffList) {
+                link.projectId.staffList = link.projectId.staffList.map(role => ({
+                    ...role,
+                    members: role.members ? role.members.filter(member => 
+                        member && member.userId !== null
+                    ) : []
+                }))
+            }
+
+            validLinks.push(link)
+        }
+
+        // 무효한 연동 정보 자동 삭제
+        if (invalidLinkIds.length > 0) {
+            await Calendar.deleteMany({ _id: { $in: invalidLinkIds } })
+            console.log(`무효한 캘린더 연동 ${invalidLinkIds.length}개 자동 삭제됨`)
+        }
+
+        res.status(200).json(validLinks);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '캘린더 연동 정보 조회 실패' });
+    }
+});
+
+// 캘린더 이벤트와 프로젝트 연동
+app.post('/calendar/link', async (req, res) => {
+    const { linkId, projectId } = req.body;
+
+    try {
+        // 필수 필드 검증
+        if (!linkId || !projectId) {
+            return res.status(400).json({
+                message: '캘린더 이벤트 ID와 프로젝트 ID는 필수입니다.'
+            });
+        }
+
+        // 프로젝트 존재 여부 확인
+        const project = await Project.findById(projectId);
+        if (!project) {
+            return res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
+        }
+
+        // 기존 연동이 있으면 삭제
+        await Calendar.deleteMany({ linkId: linkId });
+
+        // 새 연동 생성
+        const newLink = new Calendar({
+            linkId,
+            projectId
+        });
+
+        await newLink.save();
+
+        // populate해서 반환
+        const populatedLink = await Calendar.findById(newLink._id)
+            .populate({
+                path: 'projectId',
+                select: 'title description status progress thumbnail deadline team staffList',
+                populate: [
+                    {
+                        path: 'team',
+                        select: 'name email department userType'
+                    },
+                    {
+                        path: 'staffList.members.userId',
+                        select: 'name email department userType'
+                    }
+                ]
+            });
+
+        res.status(201).json({
+            message: '캘린더 이벤트와 프로젝트가 연동되었습니다.',
+            link: populatedLink
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '캘린더 연동 생성 실패' });
+    }
+});
+
+// 캘린더 연동 해제
+app.delete('/calendar/link/:linkId', async (req, res) => {
+    const { linkId } = req.params;
+
+    try {
+        const deletedLink = await Calendar.findOneAndDelete({ linkId: linkId });
+
+        if (!deletedLink) {
+            return res.status(404).json({ message: '연동 정보를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({ message: '캘린더 연동이 해제되었습니다.' });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '캘린더 연동 해제 실패' });
+    }
+});
+
+// 특정 캘린더 이벤트의 연동 프로젝트 조회
+app.get('/calendar/link/:linkId', async (req, res) => {
+    const { linkId } = req.params;
+
+    try {
+        const link = await Calendar.findOne({ linkId: linkId })
+            .populate({
+                path: 'projectId',
+                select: 'title description status progress thumbnail deadline team staffList',
+                populate: [
+                    {
+                        path: 'team',
+                        select: 'name email department userType'
+                    },
+                    {
+                        path: 'staffList.members.userId',
+                        select: 'name email department userType'
+                    }
+                ]
+            });
+
+        if (!link) {
+            return res.status(404).json({ message: '연동된 프로젝트가 없습니다.' });
+        }
+
+        // 프로젝트가 삭제되어 null인 경우 처리
+        if (!link.projectId) {
+            // 무효한 연동 정보 삭제
+            await Calendar.findByIdAndDelete(link._id)
+            console.log(`무효한 캘린더 연동 삭제됨 (삭제된 프로젝트): ${linkId}`)
+            return res.status(404).json({ message: '연동된 프로젝트가 삭제되었습니다.' });
+        }
+
+        // team 배열에서 null 참조 제거
+        if (link.projectId.team) {
+            link.projectId.team = link.projectId.team.filter(member => member !== null)
+        }
+
+        // staffList에서 null 참조 제거
+        if (link.projectId.staffList) {
+            link.projectId.staffList = link.projectId.staffList.map(role => ({
+                ...role,
+                members: role.members ? role.members.filter(member => 
+                    member && member.userId !== null
+                ) : []
+            }))
+        }
+
+        res.status(200).json(link);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '연동 프로젝트 조회 실패' });
+    }
+});
+
+// 일괄 연동 생성 (여러 이벤트를 한 번에 연동)
+app.post('/calendar/links/batch', async (req, res) => {
+    const { links } = req.body; // [{ linkId, projectId }, ...]
+
+    try {
+        if (!Array.isArray(links) || links.length === 0) {
+            return res.status(400).json({
+                message: '연동할 링크 정보가 필요합니다.'
+            });
+        }
+
+        const results = [];
+        const errors = [];
+
+        for (const linkData of links) {
+            try {
+                const { linkId, projectId } = linkData;
+
+                // 프로젝트 존재 여부 확인
+                const project = await Project.findById(projectId);
+                if (!project) {
+                    errors.push({ linkId, error: '프로젝트를 찾을 수 없습니다.' });
+                    continue;
+                }
+
+                // 기존 연동이 있으면 삭제
+                await Calendar.deleteMany({ linkId: linkId });
+
+                // 새 연동 생성
+                const newLink = new Calendar({
+                    linkId,
+                    projectId
+                });
+
+                await newLink.save();
+                results.push({ linkId, projectId, status: 'success' });
+
+            } catch (error) {
+                errors.push({ linkId: linkData.linkId, error: error.message });
+            }
+        }
+
+        res.status(200).json({
+            message: `${results.length}개 연동 완료, ${errors.length}개 실패`,
+            results,
+            errors
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: '일괄 캘린더 연동 실패' });
     }
 });

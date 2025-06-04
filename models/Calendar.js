@@ -5,10 +5,10 @@ const calendarSchema = new Schema({
     linkId: {
         type: String,
     },
-    participants: [{
+    projectId: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+        ref: 'Project',
+    },
 });
 
 const Calendar = mongoose.model('Calendar', calendarSchema);

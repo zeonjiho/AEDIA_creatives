@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Contact.module.css';
-import {
-  HiSearch, HiUser, HiUserGroup, HiPhone, HiMail,
+import { 
+  HiSearch, HiUser, HiUserGroup, HiPhone, HiMail, 
   HiOfficeBuilding, HiClock, HiTag, HiDocument,
   HiViewGrid, HiViewList, HiPencil, HiCheck, HiX, HiPlus, HiTrash
 } from 'react-icons/hi';
@@ -39,7 +39,7 @@ const Contact = () => {
   const [editingData, setEditingData] = useState({}); // 편집 중인 데이터
   const [successMessage, setSuccessMessage] = useState(''); // 성공 메시지
   const [allStaffData, setAllStaffData] = useState([]);
-
+  
   // 스탭 검색 모달 관련 상태
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
@@ -51,7 +51,7 @@ const Contact = () => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
+    
     return () => clearInterval(timer);
   }, []);
 
@@ -72,7 +72,7 @@ const Contact = () => {
 
     // 검색어 필터링
     if (searchTerm) {
-      filtered = filtered.filter(person =>
+      filtered = filtered.filter(person => 
         person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (person.roles && person.roles.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()))) ||
         (person.department && person.department.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -168,14 +168,14 @@ const Contact = () => {
 
       if (response.status === 200) {
         // 편집 상태 초기화
-        setEditingId(null);
-        setEditingData({});
+    setEditingId(null);
+    setEditingData({});
         
         // 서버에서 최신 데이터를 다시 받아옴
         await fetchAllStaffData();
         
-        setSuccessMessage('연락처가 성공적으로 수정되었습니다.');
-        setTimeout(() => setSuccessMessage(''), 3000);
+    setSuccessMessage('연락처가 성공적으로 수정되었습니다.');
+    setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       console.error('스탭 수정 실패:', error);
@@ -235,7 +235,7 @@ const Contact = () => {
         setEditingData(prev => ({ ...prev, [field]: value }));
       }
     } else {
-      setEditingData(prev => ({ ...prev, [field]: value }));
+    setEditingData(prev => ({ ...prev, [field]: value }));
     }
   };
 
@@ -265,7 +265,7 @@ const Contact = () => {
       await fetchAllStaffData();
       
       setSuccessMessage(`${selectedStaff.length}명의 스탭이 연락처에 추가되었습니다.`);
-      setTimeout(() => setSuccessMessage(''), 3000);
+        setTimeout(() => setSuccessMessage(''), 3000);
     }
   };
 
@@ -273,7 +273,7 @@ const Contact = () => {
   const renderEditableField = (person, field, icon, label, isEditing) => {
     const editableFields = getEditableFields(person.userType);
     const canEdit = editableFields.includes(field);
-
+    
     if (isEditing && canEdit) {
       if (field === 'roles') {
         return (
@@ -290,18 +290,18 @@ const Contact = () => {
           </div>
         );
       } else {
-        return (
-          <div className={styles.info_item}>
-            {icon && <span className={styles.info_icon}>{icon}</span>}
-            <span className={styles.info_label}>{label}:</span>
-            <input
-              type={field === 'email' ? 'email' : 'text'}
-              value={editingData[field] || ''}
-              onChange={(e) => handleEditChange(field, e.target.value)}
-              className={styles.edit_input}
-            />
-          </div>
-        );
+      return (
+        <div className={styles.info_item}>
+          {icon && <span className={styles.info_icon}>{icon}</span>}
+          <span className={styles.info_label}>{label}:</span>
+          <input
+            type={field === 'email' ? 'email' : 'text'}
+            value={editingData[field] || ''}
+            onChange={(e) => handleEditChange(field, e.target.value)}
+            className={styles.edit_input}
+          />
+        </div>
+      );
       }
     } else {
       let value = person[field];
@@ -313,7 +313,7 @@ const Contact = () => {
       }
 
       if (!value) return null;
-
+      
       return (
         <div className={styles.info_item}>
           {icon && <span className={styles.info_icon}>{icon}</span>}
@@ -357,7 +357,7 @@ const Contact = () => {
                       placeholder="이름을 입력하세요"
                     />
                   ) : (
-                    <h3 className={styles.person_name}>{person.name}</h3>
+                  <h3 className={styles.person_name}>{person.name}</h3>
                   )}
                   <span className={`${styles.person_type} ${getTypeClass(person.userType)}`}>
                     {getTypeText(person.userType)}
@@ -385,13 +385,13 @@ const Contact = () => {
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => startEditing(person)}
-                            className={`${styles.action_btn} ${styles.edit_btn}`}
-                            title="수정"
-                          >
-                            <HiPencil />
-                          </button>
+                        <button
+                          onClick={() => startEditing(person)}
+                          className={`${styles.action_btn} ${styles.edit_btn}`}
+                          title="수정"
+                        >
+                          <HiPencil />
+                        </button>
                           <button
                             onClick={() => handleDelete(person)}
                             className={`${styles.action_btn} ${styles.delete_btn}`}
@@ -405,12 +405,12 @@ const Contact = () => {
                   )}
                 </div>
               </div>
-
+              
               <div className={styles.card_content}>
                 {renderEditableField(person, 'roles', <HiTag className={styles.info_icon} />, '직책', isEditing)}
-
+                
                 {renderEditableField(person, 'department', <HiOfficeBuilding className={styles.info_icon} />, '회사', isEditing)}
-
+                
                 {/* {person.experience && (
                   <div className={styles.info_item}>
                     <HiClock className={styles.info_icon} />
@@ -418,9 +418,9 @@ const Contact = () => {
                     <span className={styles.info_value}>{person.experience}</span>
                   </div>
                 )} */}
-
+                
                 {renderEditableField(person, 'phone', <HiPhone className={styles.info_icon} />, '연락처', isEditing)}
-
+                
                 {renderEditableField(person, 'email', <HiMail className={styles.info_icon} />, '이메일', isEditing)}
               </div>
             </div>
@@ -450,13 +450,13 @@ const Contact = () => {
             <div className={styles.list_header_cell}>이메일</div>
             <div className={styles.list_header_cell}>작업</div>
           </div>
-
+          
           {/* 리스트 아이템들 */}
           <div className={styles.list_body}>
             {filteredStaff.map(person => {
               const isEditing = editingId === (person._id || person.id);
               const editableFields = getEditableFields(person.userType);
-
+              
               return (
                 <div key={person._id || person.id} className={styles.list_item}>
                   <div className={styles.list_cell}>
@@ -474,7 +474,7 @@ const Contact = () => {
                             placeholder="이름 입력"
                           />
                         ) : (
-                          <span className={styles.list_person_name}>{person.name}</span>
+                        <span className={styles.list_person_name}>{person.name}</span>
                         )}
                         <span className={`${styles.list_person_type} ${getTypeClass(person.userType)}`}>
                           {getTypeText(person.userType)}
@@ -498,7 +498,7 @@ const Contact = () => {
                       </div>
                     </div>
                   </div>
-
+                  
                   <div className={styles.list_cell}>
                     {isEditing && editableFields.includes('roles') ? (
                       <input
@@ -512,7 +512,7 @@ const Contact = () => {
                       person.roles && person.roles.length > 0 ? person.roles.join(', ') : '직책 없음'
                     )}
                   </div>
-
+                  
                   <div className={styles.list_cell}>
                     {isEditing && editableFields.includes('department') ? (
                       <input
@@ -525,9 +525,9 @@ const Contact = () => {
                       person.department
                     )}
                   </div>
-
+                  
                   <div className={styles.list_cell}>{person.experience || '-'}</div>
-
+                  
                   <div className={styles.list_cell}>
                     {isEditing && editableFields.includes('phone') ? (
                       <input
@@ -542,7 +542,7 @@ const Contact = () => {
                       </a>
                     ) : '-'}
                   </div>
-
+                  
                   <div className={styles.list_cell}>
                     {isEditing && editableFields.includes('email') ? (
                       <input
@@ -557,7 +557,7 @@ const Contact = () => {
                       </a>
                     ) : '-'}
                   </div>
-
+                  
                   <div className={styles.list_cell}>
                     {person.userType === 'external' ? ( // 외부 스탭만 편집 버튼 표시
                       <>
@@ -580,13 +580,13 @@ const Contact = () => {
                           </div>
                         ) : (
                           <div className={styles.list_actions}>
-                            <button
-                              onClick={() => startEditing(person)}
-                              className={`${styles.action_btn} ${styles.edit_btn}`}
-                              title="수정"
-                            >
-                              <HiPencil />
-                            </button>
+                          <button
+                            onClick={() => startEditing(person)}
+                            className={`${styles.action_btn} ${styles.edit_btn}`}
+                            title="수정"
+                          >
+                            <HiPencil />
+                          </button>
                             <button
                               onClick={() => handleDelete(person)}
                               className={`${styles.action_btn} ${styles.delete_btn}`}
@@ -632,18 +632,18 @@ const Contact = () => {
             })} {currentTime.toLocaleTimeString('ko-KR')}
           </p>
         </div>
-
+        
         <div className={styles.header_controls}>
           <div className={styles.view_controls}>
             <div className={styles.view_toggle_group}>
-              <button
+              <button 
                 className={`${styles.view_toggle_btn} ${viewMode === 'card' ? styles.active : ''}`}
                 onClick={() => setViewMode('card')}
                 title="카드뷰"
               >
                 <HiViewGrid />
               </button>
-              <button
+              <button 
                 className={`${styles.view_toggle_btn} ${viewMode === 'list' ? styles.active : ''}`}
                 onClick={() => setViewMode('list')}
                 title="리스트뷰"
@@ -651,7 +651,7 @@ const Contact = () => {
                 <HiViewList />
               </button>
             </div>
-            <button
+            <button 
               className={styles.add_staff_btn}
               onClick={handleAddStaffClick}
               title="외부 스탭 추가"
@@ -686,23 +686,23 @@ const Contact = () => {
             className={styles.search_input}
           />
         </div>
-
+        
         <div className={styles.filters}>
           {/* 타입 필터 */}
           <div className={styles.filter_group}>
-            <button
+            <button 
               className={`${styles.filter_tab} ${typeFilter === 'all' ? styles.active : ''}`}
               onClick={() => setTypeFilter('all')}
             >
               전체
             </button>
-            <button
+            <button 
               className={`${styles.filter_tab} ${typeFilter === 'external' ? styles.active : ''}`}
               onClick={() => setTypeFilter('external')}
             >
               <HiUser /> 외부 스탭
             </button>
-            <button
+            <button 
               className={`${styles.filter_tab} ${typeFilter === 'internal' ? styles.active : ''}`}
               onClick={() => setTypeFilter('internal')}
             >
@@ -712,8 +712,8 @@ const Contact = () => {
 
           {/* 직책 필터 */}
           <div className={styles.filter_group}>
-            <select
-              value={positionFilter}
+            <select 
+              value={positionFilter} 
               onChange={(e) => setPositionFilter(e.target.value)}
               className={styles.position_select}
             >

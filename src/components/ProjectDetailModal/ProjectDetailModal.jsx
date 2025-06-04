@@ -95,7 +95,7 @@ const ProjectDetailModal = ({
           ...response.data.project,
           id: response.data.project._id || response.data.project.id
         };
-        onProjectUpdate(updatedProject);
+    onProjectUpdate(updatedProject);
         
         return updatedProject;
       }
@@ -120,7 +120,7 @@ const ProjectDetailModal = ({
         ...selectedProject,
         status: newStatus 
       });
-      setEditingProjectStatus(false);
+    setEditingProjectStatus(false);
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -136,7 +136,7 @@ const ProjectDetailModal = ({
   const handleSaveProgress = async () => {
     try {
       await updateProjectOnServer(selectedProject);
-      setEditingProgress(false);
+    setEditingProgress(false);
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -152,7 +152,7 @@ const ProjectDetailModal = ({
   const handleSaveDeadline = async () => {
     try {
       await updateProjectOnServer(selectedProject);
-      setEditingDeadline(false);
+    setEditingDeadline(false);
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -161,11 +161,11 @@ const ProjectDetailModal = ({
   // 팀원 관리 함수들
   const handleTeamMemberRemove = async (memberToRemove) => {
     try {
-      let updatedTeam;
-      if (typeof memberToRemove === 'string') {
-        updatedTeam = selectedProject.team.filter(member => member !== memberToRemove);
-      } else {
-        updatedTeam = selectedProject.team.filter(member => 
+    let updatedTeam;
+    if (typeof memberToRemove === 'string') {
+      updatedTeam = selectedProject.team.filter(member => member !== memberToRemove);
+    } else {
+      updatedTeam = selectedProject.team.filter(member => 
           (typeof member === 'string' ? member : member._id || member.id) !== (typeof memberToRemove === 'string' ? memberToRemove : memberToRemove._id || memberToRemove.id)
         );
       }
@@ -185,21 +185,21 @@ const ProjectDetailModal = ({
 
   const handleTeamSelect = async (selectedPeople) => {
     try {
-      const currentTeam = selectedProject.team || [];
-      const newMembers = selectedPeople.filter(person => 
-        !currentTeam.some(member => 
+    const currentTeam = selectedProject.team || [];
+    const newMembers = selectedPeople.filter(person => 
+      !currentTeam.some(member => 
           (typeof member === 'string' ? member : member._id || member.id) === (person._id || person.id)
-        )
-      );
-      
-      const updatedTeam = [...currentTeam, ...newMembers];
+      )
+    );
+    
+    const updatedTeam = [...currentTeam, ...newMembers];
       
       await updateProjectOnServer({
         ...selectedProject,
         team: updatedTeam
       });
       
-      setShowTeamModal(false);
+    setShowTeamModal(false);
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -248,8 +248,8 @@ const ProjectDetailModal = ({
         staffList: updatedStaffList
       });
       
-      setShowStaffModal(false);
-      setCurrentStaffCategory('');
+    setShowStaffModal(false);
+    setCurrentStaffCategory('');
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -265,7 +265,7 @@ const ProjectDetailModal = ({
             members: role.members.filter(member => 
               (member.userId || member._id || member.id) !== personId
             )
-          };
+    };
         }
         return role;
       });
@@ -325,9 +325,9 @@ const ProjectDetailModal = ({
           thumbnail: filename // 파일명만 저장
         });
         
-        setEditingThumbnail(false);
-        setThumbnailFile(null);
-        setThumbnailPreview(null);
+    setEditingThumbnail(false);
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
         
         // 파일 input 초기화
         const fileInput = document.getElementById('thumbnail-input-detail');
@@ -361,13 +361,13 @@ const ProjectDetailModal = ({
       const defaultThumbnail = 'default_thumbnail.jpeg'; // 기본 썸네일 파일명
       
       await updateProjectOnServer({
-        ...selectedProject,
-        thumbnail: defaultThumbnail
+      ...selectedProject, 
+      thumbnail: defaultThumbnail 
       });
       
-      setEditingThumbnail(false);
-      setThumbnailFile(null);
-      setThumbnailPreview(null);
+    setEditingThumbnail(false);
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -382,12 +382,12 @@ const ProjectDetailModal = ({
   const handleDescriptionSave = async () => {
     try {
       await updateProjectOnServer({
-        ...selectedProject,
-        description: tempDescription
+      ...selectedProject, 
+      description: tempDescription 
       });
       
-      setEditingDescription(false);
-      setTempDescription('');
+    setEditingDescription(false);
+    setTempDescription('');
     } catch (error) {
       // 에러는 updateProjectOnServer에서 처리됨
     }
@@ -564,19 +564,19 @@ const ProjectDetailModal = ({
     return (selectedProject.team || [])
       .filter(member => member) // 유효한 멤버만 필터링
       .map(member => {
-        if (typeof member === 'string') {
-          return {
-            id: `temp_${member}`,
+      if (typeof member === 'string') {
+        return {
+          id: `temp_${member}`,
             _id: `temp_${member}`,
-            name: member,
+          name: member,
             userType: 'employee',
             roles: ['팀원'],
-            position: '팀원',
+          position: '팀원',
             department: '프로젝트팀',
             phone: '',
             email: ''
-          };
-        }
+        };
+      }
         
         // 객체인 경우 안전하게 처리
         return {
@@ -665,7 +665,7 @@ const ProjectDetailModal = ({
               </div>
             ) : (
               <div className={styles.title_display}>
-                <h2>{selectedProject.title}</h2>
+            <h2>{selectedProject.title}</h2>
                 <button 
                   className={styles.edit_title_button}
                   onClick={handleTitleEdit}
@@ -1007,45 +1007,45 @@ const ProjectDetailModal = ({
                 const staffMembers = getStaffByCategory(category);
                 
                 return (
-                  <div key={category} className={styles.staff_category}>
-                    <div className={styles.category_header}>
-                      <h4>{category}</h4>
-                      {editingStaff && (
-                        <button
-                          type="button"
-                          className={styles.add_staff_button}
-                          onClick={() => handleStaffModalOpen(category)}
+                <div key={category} className={styles.staff_category}>
+                  <div className={styles.category_header}>
+                    <h4>{category}</h4>
+                    {editingStaff && (
+                      <button
+                        type="button"
+                        className={styles.add_staff_button}
+                        onClick={() => handleStaffModalOpen(category)}
                           disabled={isUpdating}
-                        >
-                          <HiPlus />
-                        </button>
-                      )}
-                    </div>
-                    <div className={styles.staff_members}>
+                      >
+                        <HiPlus />
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.staff_members}>
                       {staffMembers.length === 0 ? (
-                        <p className={styles.no_staff}>배정된 스탭이 없습니다</p>
-                      ) : (
+                      <p className={styles.no_staff}>배정된 스탭이 없습니다</p>
+                    ) : (
                         staffMembers.map(person => (
                           <div key={person.userId || person._id || person.id} className={styles.staff_member}>
-                            <span className={styles.member_name}>{person.name}</span>
+                          <span className={styles.member_name}>{person.name}</span>
                             <span className={styles.member_info}>({person.department || '부서 없음'})</span>
-                            {person.phone && <span className={styles.member_phone}>📞 {person.phone}</span>}
-                            {person.isExternal && <span className={styles.external_badge}>외부</span>}
-                            {editingStaff && (
-                              <button
-                                type="button"
-                                className={styles.remove_staff_button}
+                          {person.phone && <span className={styles.member_phone}>📞 {person.phone}</span>}
+                          {person.isExternal && <span className={styles.external_badge}>외부</span>}
+                          {editingStaff && (
+                            <button
+                              type="button"
+                              className={styles.remove_staff_button}
                                 onClick={() => handleRemoveStaff(category, person.userId || person._id || person.id)}
                                 disabled={isUpdating}
-                              >
-                                <HiX />
-                              </button>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
+                            >
+                              <HiX />
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
+                </div>
                 );
               })}
             </div>

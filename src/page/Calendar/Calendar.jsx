@@ -1,3 +1,18 @@
+/**
+ * Calendar 페이지
+ * 
+ * 구글 캘린더 연동 및 프로젝트 연결 기능:
+ * 1. 구글 캘린더에서 이벤트를 가져와서 표시
+ * 2. 각 캘린더 이벤트를 AEDIA 프로젝트와 연동 가능
+ * 3. 구글 캘린더 이벤트의 고유 ID(linkId)를 사용하여 DB에 연동 정보 저장
+ * 4. ProjectStatus.jsx에서 생성한 프로젝트와 실시간 연동
+ * 
+ * 연동 방식:
+ * - linkId: 구글 캘린더 이벤트의 고유 ID (event.id, event.iCalUID 등)
+ * - projectId: AEDIA 프로젝트의 MongoDB ObjectId
+ * - Calendar 모델을 통해 연동 정보를 데이터베이스에 저장
+ */
+
 import React, { useState, useEffect } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
@@ -40,17 +55,27 @@ const CalendarPage = () => {
     const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
     const [isProjectModalVisible, setIsProjectModalVisible] = useState(false)
     const [hoverTimeout, setHoverTimeout] = useState(null)
+    const [globalMousePos, setGlobalMousePos] = useState({ x: 0, y: 0 })
 
     // 현재 시간을 표시하기 위한 상태 추가
     const [currentTime, setCurrentTime] = useState(new Date())
     
+    // 글로벌 마우스 위치 추적
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            setGlobalMousePos({ x: e.clientX, y: e.clientY })
+        }
+        
+        document.addEventListener('mousemove', handleMouseMove)
+        return () => document.removeEventListener('mousemove', handleMouseMove)
+    }, [])
+
     // 1초마다 시간 업데이트
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date())
         }, 1000)
         
-        // 컴포넌트 언마운트 시 타이머 정리
         return () => clearInterval(timer)
     }, [])
 
@@ -79,6 +104,7 @@ const CalendarPage = () => {
         loadEvents()
         checkCalendarStatus()
         loadProjects()
+        loadCalendarLinks() // 캘린더 연동 정보 로드 추가
     }, [])
 
     // 날짜 변경 시 이벤트 다시 로드
@@ -195,50 +221,19 @@ const CalendarPage = () => {
 
     // 이벤트 호버 시작 핸들러
     const handleEventMouseEnter = (event, mouseEvent) => {
+        // 같은 이벤트면 위치만 업데이트하고 리렌더링 방지
+        if (hoveredEvent && hoveredEvent.id === event.id) {
+            updateModalPosition()
+            return
+        }
+
         // 기존 타이머가 있다면 클리어
         if (hoverTimeout) {
             clearTimeout(hoverTimeout)
         }
 
-        const rect = mouseEvent.currentTarget.getBoundingClientRect()
-        const modalWidth = window.innerWidth <= 768 ? 280 : 320 // 반응형 모달 너비
-        const modalHeight = 400 // 예상 모달 높이
-        const gap = 15 // 이벤트와 모달 사이 간격
-        
-        // 스크롤 위치 고려
-        const scrollX = window.pageXOffset || document.documentElement.scrollLeft
-        const scrollY = window.pageYOffset || document.documentElement.scrollTop
-        
-        // 화면 크기
-        const viewportWidth = window.innerWidth
-        const viewportHeight = window.innerHeight
-        
-        // 기본 위치 (이벤트 중앙 상단)
-        let x = rect.left + scrollX + (rect.width / 2)
-        let y = rect.top + scrollY - gap
-        
-        // 오른쪽 경계 체크 (모달이 화면 밖으로 나가지 않도록)
-        if (x + modalWidth / 2 > viewportWidth + scrollX - 20) {
-            x = viewportWidth + scrollX - modalWidth / 2 - 20 // 20px 여백
-        }
-        
-        // 왼쪽 경계 체크
-        if (x - modalWidth / 2 < scrollX + 20) {
-            x = scrollX + modalWidth / 2 + 20 // 20px 여백
-        }
-        
-        // 상단 경계 체크 (모달이 위로 나가면 아래쪽에 표시)
-        if (y - modalHeight < scrollY + 20) {
-            y = rect.bottom + scrollY + gap
-        }
-        
-        // 하단 경계 체크
-        if (y + modalHeight > viewportHeight + scrollY - 20) {
-            y = rect.top + scrollY - gap - modalHeight
-        }
-        
         setHoveredEvent(event)
-        setHoverPosition({ x, y })
+        updateModalPosition()
         
         // 약간의 딜레이 후 모달 표시 (200ms로 단축)
         const timeout = setTimeout(() => {
@@ -246,6 +241,71 @@ const CalendarPage = () => {
         }, 200)
         
         setHoverTimeout(timeout)
+    }
+
+    // 마우스 이동 핸들러 (같은 이벤트 내에서 마우스 이동 시)
+    const handleEventMouseMove = (event, mouseEvent) => {
+        // 같은 이벤트이고 모달이 표시중일 때만 위치 업데이트
+        if (hoveredEvent && hoveredEvent.id === event.id && isProjectModalVisible) {
+            updateModalPosition()
+        }
+    }
+
+    // 모달 위치 업데이트 함수 (글로벌 마우스 위치 사용)
+    const updateModalPosition = () => {
+        const modalWidth = window.innerWidth <= 768 ? 280 : 320
+        const modalHeight = 250 // 실제 모달 크기에 맞게 줄임
+        const offset = 15 // 마우스와 모달 사이 간격
+        
+        // 글로벌 마우스 위치 사용
+        const mouseX = globalMousePos.x
+        const mouseY = globalMousePos.y
+        
+        // 화면 크기
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+        
+        // 기본 위치 (마우스 오른쪽 아래)
+        let x = mouseX + offset
+        let y = mouseY + offset
+        
+        // 오른쪽 경계 체크 (왼쪽으로 이동)
+        if (x + modalWidth > viewportWidth - 20) {
+            x = mouseX - modalWidth - offset
+        }
+        
+        // 왼쪽 경계 체크
+        if (x < 20) {
+            x = mouseX + offset // 다시 오른쪽으로
+        }
+        
+        // 하단 경계 체크 (더 관대하게 - 실제로 모달이 화면 밖으로 나갈 때만)
+        if (y + modalHeight > viewportHeight - 50) {
+            // 마우스 위쪽에 공간이 충분한 경우에만 위로 이동
+            if (mouseY > modalHeight + 50) {
+                y = mouseY - modalHeight - 5
+            } else {
+                // 공간이 부족하면 화면 하단에 맞춰서 배치
+                y = viewportHeight - modalHeight - 20
+            }
+        }
+        
+        // 상단 경계 체크 (아래로 이동)
+        if (y < 20) {
+            y = mouseY + offset
+        }
+        
+        // 스크롤 위치를 더해서 절대 위치로 변환
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop
+        
+        const finalX = x + scrollX
+        const finalY = y + scrollY
+        
+        setHoverPosition({ 
+            x: finalX, 
+            y: finalY 
+        })
     }
 
     // 이벤트 호버 종료 핸들러
@@ -256,9 +316,11 @@ const CalendarPage = () => {
             setHoverTimeout(null)
         }
         
-        // 즉시 모달 숨기기
-        setIsProjectModalVisible(false)
-        setHoveredEvent(null)
+        // 약간의 딜레이를 두고 모달 숨기기 (마우스가 모달로 이동할 시간 제공)
+        setTimeout(() => {
+            setIsProjectModalVisible(false)
+            setHoveredEvent(null)
+        }, 100)
     }
 
     // 프로젝트 모달 호버 유지 핸들러
@@ -330,6 +392,10 @@ const CalendarPage = () => {
                 onMouseEnter={(e) => {
                     e.stopPropagation()
                     handleEventMouseEnter(event, e)
+                }}
+                onMouseMove={(e) => {
+                    e.stopPropagation()
+                    handleEventMouseMove(event, e)
                 }}
                 onMouseLeave={(e) => {
                     e.stopPropagation()
@@ -519,41 +585,166 @@ const CalendarPage = () => {
         }
     }
 
-    // 프로젝트 연동 관련 함수들
-    const handleLinkProject = (event, project) => {
-        const eventId = event.id || event.title
+    // 이벤트에서 linkId를 추출하는 헬퍼 함수
+    const getEventLinkId = (event) => {
+        if (!event) return null
         
-        // 기존 연결이 있으면 제거
-        const updatedLinks = eventProjectLinks.filter(link => link.eventId !== eventId)
-        
-        // 새 연결 추가
-        const newLink = {
-            eventId: eventId,
-            projectId: project._id,
-            linkedAt: new Date()
+        // 구글 캘린더 이벤트의 경우 고유 ID 우선 사용
+        if (event.source === 'google' && event.id) {
+            return event.id
         }
         
-        setEventProjectLinks([...updatedLinks, newLink])
-        setToast({ type: 'success', message: `${event.title}이(가) ${project.title}과(와) 연동되었습니다.` })
-        
-        console.log('프로젝트 연동:', event.title, '->', project.title)
+        // 기타 이벤트의 경우 사용 가능한 ID 순서대로 시도
+        return event.id || event.iCalUID || event.htmlLink || `${event.title}_${event.start?.getTime()}`
     }
 
-    const handleUnlinkProject = (eventId) => {
-        const updatedLinks = eventProjectLinks.filter(link => link.eventId !== eventId)
-        setEventProjectLinks(updatedLinks)
-        setToast({ type: 'success', message: '프로젝트 연동이 해제되었습니다.' })
-        
-        console.log('프로젝트 연동 해제:', eventId)
+    // 캘린더 연동 정보 로드
+    const loadCalendarLinks = async () => {
+        try {
+            console.log('캘린더 연동 정보 조회 시작')
+            const response = await api.get('/calendar/links')
+            console.log('캘린더 연동 정보 조회 성공:', response.data.length, '개')
+            
+            // 백엔드 데이터를 기존 형태로 변환
+            const formattedLinks = response.data.map(link => ({
+                eventId: link.linkId, // 기존 코드와의 호환성을 위해
+                linkId: link.linkId,
+                projectId: link.projectId._id,
+                project: link.projectId, // populate된 프로젝트 정보
+                linkedAt: link.createdAt || new Date()
+            }))
+            
+            setEventProjectLinks(formattedLinks)
+            console.log('캘린더 연동 정보 로드 완료:', formattedLinks)
+        } catch (error) {
+            console.error('캘린더 연동 정보 로드 실패:', error)
+            // 실패 시 빈 배열로 설정
+            setEventProjectLinks([])
+        }
+    }
+
+    // 프로젝트 연동 관련 함수들
+    const handleLinkProject = async (event, project) => {
+        try {
+            // 통일된 방식으로 linkId 추출
+            const linkId = getEventLinkId(event)
+            
+            if (!linkId) {
+                setToast({ type: 'error', message: '이벤트 ID를 찾을 수 없습니다.' })
+                return
+            }
+            
+            console.log('프로젝트 연동 시작:', { 
+                eventTitle: event.title, 
+                linkId: linkId, 
+                projectTitle: project.title,
+                projectId: project._id 
+            })
+
+            const response = await api.post('/calendar/link', {
+                linkId: linkId,
+                projectId: project._id
+            })
+
+            if (response.status === 201) {
+                // 연동 정보 다시 로드
+                await loadCalendarLinks()
+                
+                setToast({ 
+                    type: 'success', 
+                    message: `"${event.title}"이(가) "${project.title}"과(와) 연동되었습니다.` 
+                })
+                
+                console.log('프로젝트 연동 성공:', response.data)
+            }
+        } catch (error) {
+            console.error('프로젝트 연동 실패:', error)
+            
+            let errorMessage = '프로젝트 연동에 실패했습니다.'
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message
+            }
+            
+            setToast({ type: 'error', message: errorMessage })
+        }
+    }
+
+    const handleUnlinkProject = async (eventId) => {
+        try {
+            // eventId가 이미 linkId인 경우와 이벤트 객체인 경우 모두 처리
+            let linkId = eventId
+            
+            // 이벤트 객체가 전달된 경우
+            if (typeof eventId === 'object' && eventId !== null) {
+                linkId = getEventLinkId(eventId)
+            } else {
+                // 문자열 ID가 전달된 경우, 현재 연동 정보에서 실제 linkId 찾기
+                const existingLink = eventProjectLinks.find(link => 
+                    link.eventId === eventId || link.linkId === eventId
+                )
+                
+                if (existingLink) {
+                    linkId = existingLink.linkId
+                }
+            }
+            
+            if (!linkId) {
+                setToast({ type: 'error', message: '연동 해제할 이벤트를 찾을 수 없습니다.' })
+                return
+            }
+            
+            console.log('프로젝트 연동 해제 시작:', { eventId, linkId })
+
+            const response = await api.delete(`/calendar/link/${encodeURIComponent(linkId)}`)
+
+            if (response.status === 200) {
+                // 연동 정보 다시 로드
+                await loadCalendarLinks()
+                
+                setToast({ 
+                    type: 'success', 
+                    message: '프로젝트 연동이 해제되었습니다.' 
+                })
+                
+                console.log('프로젝트 연동 해제 성공')
+            }
+        } catch (error) {
+            console.error('프로젝트 연동 해제 실패:', error)
+            
+            let errorMessage = '프로젝트 연동 해제에 실패했습니다.'
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message
+            }
+            
+            setToast({ type: 'error', message: errorMessage })
+        }
     }
 
     // 연동된 프로젝트 찾기 (이제 실제 연동 데이터 사용)
     const getLinkedProjectForEvent = (event) => {
         if (!event) return null
         
-        const eventId = event.id || event.title
-        const link = eventProjectLinks.find(link => link.eventId === eventId)
-        return link ? projects.find(p => p._id === link.projectId) : null
+        // 통일된 방식으로 linkId 추출
+        const linkId = getEventLinkId(event)
+        
+        if (!linkId) return null
+        
+        // linkId로 연동된 프로젝트 찾기
+        const link = eventProjectLinks.find(link => 
+            link.linkId === linkId || 
+            link.eventId === linkId
+        )
+        
+        if (link) {
+            // 이미 populate된 프로젝트 정보가 있으면 사용
+            if (link.project) {
+                return link.project
+            }
+            // 없으면 프로젝트 목록에서 찾기
+            return projects.find(p => p._id === link.projectId)
+        }
+        
+        return null
     }
 
     // 기존 getProjectForEvent 함수를 수정 (연동된 프로젝트 우선)

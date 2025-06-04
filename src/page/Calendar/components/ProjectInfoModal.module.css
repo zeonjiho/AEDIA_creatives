@@ -3,15 +3,10 @@
     z-index: 9999;
     pointer-events: auto;
     animation: fadeIn 0.2s ease-out;
-    transform: translateX(-50%);
 }
 
 
 /* 작은 모달 오버레이 */
-
-.modal_overlay.compact {
-    transform: translateX(-50%);
-}
 
 .modal_content {
     background: var(--bg-secondary);
@@ -428,11 +423,11 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-10px);
+        transform: translateY(-10px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%);
+        transform: translateY(0);
     }
 }
 
