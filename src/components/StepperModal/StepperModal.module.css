@@ -143,7 +143,7 @@
     padding: 0 24px 24px;
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 80px;
+    margin-bottom: 90px;
 }
 
 .step_content {
@@ -278,13 +278,55 @@
 }
 
 
+/* 분할결제 체크박스 */
+
+.split_payment_checkbox_container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.checkbox_option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #333;
+}
+
+.checkbox_option input[type="checkbox"] {
+    margin: 0;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox_option input[type="checkbox"]:checked+span {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.split_payment_description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-left: 24px;
+}
+
+
 /* 참가자 컨테이너 */
 
 .participants_container {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 16px;
+    padding: 12px;
     background-color: #f8f9fa;
     border-radius: 8px;
 }
@@ -296,7 +338,7 @@
 }
 
 .person_select_btn {
-    flex: 2;
+    flex: 1;
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -304,10 +346,11 @@
     cursor: pointer;
     text-align: left;
     transition: all 0.2s;
-    min-height: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     font-size: 14px;
+    overflow: hidden;
 }
 
 .person_select_btn:hover {
@@ -421,6 +464,25 @@
     font-size: 14px;
 }
 
+.project_input {
+    flex: 2;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.project_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
 .participant_row input {
     flex: 1;
     padding: 10px;
@@ -452,16 +514,102 @@
     background: #007bff;
     color: white;
     border: none;
-    border-radius: 6px;
-    padding: 10px 16px;
+    border-radius: 8px;
+    padding: 12px 24px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
     align-self: flex-start;
+    transition: all 0.2s;
+    align-self: center;
 }
 
 .add_participant_btn:hover {
     background: #0056b3;
+}
+
+
+/* 분할결제 관련 */
+
+.split_payment_container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.split_payment_row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.split_payment_item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.split_label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+}
+
+.my_amount_input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.my_amount_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.total_amount_display {
+    padding: 12px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    text-align: center;
+}
+
+.difference_display {
+    padding: 12px;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.difference_label {
+    font-size: 14px;
+    color: #155724;
+    font-weight: 500;
+}
+
+.difference_amount {
+    font-size: 16px;
+    color: #155724;
+    font-weight: 700;
+}
+
+.error_text {
+    color: #dc3545;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 
@@ -877,8 +1025,8 @@
         padding: 0;
     }
     .modal_content {
-        margin-bottom: 100px;
-        padding-bottom: 20px;
+        margin-bottom: 80px;
+        padding-bottom: 10px;
     }
     .modal_footer_blur {
         position: fixed;
@@ -928,4 +1076,508 @@
     .photo_grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
+    /* 분할결제 모바일 */
+    .split_payment_row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .split_payment_container {
+        padding: 12px;
+    }
+    .difference_display {
+        margin-top: 12px;
+        padding: 10px;
+        font-size: 14px;
+    }
+    .split_payment_item {
+        width: 100%;
+    }
+    .my_amount_input {
+        padding: 14px 12px;
+        font-size: 16px;
+    }
+    .total_amount_display {
+        padding: 14px 12px;
+        font-size: 16px;
+    }
+    .split_label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    .difference_amount {
+        font-size: 18px;
+    }
+    .split_payment_checkbox_container {
+        padding: 12px;
+    }
+    .checkbox_option {
+        font-size: 16px;
+    }
+    .split_payment_description {
+        font-size: 13px;
+        margin-left: 28px;
+    }
+    /* 계좌이체 모바일 */
+    .account_info_row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .account_info_container {
+        padding: 12px;
+    }
+    /* 신용카드 모바일 */
+    .card_info_row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .card_info_container {
+        padding: 12px;
+    }
+    .card_company_wrapper,
+    .card_number_wrapper {
+        width: 100%;
+    }
+    .bank_select_wrapper,
+    .account_number_wrapper {
+        width: 100%;
+    }
+    /* 법인카드 모달 모바일 */
+    .corporate_card_modal {
+        width: 95%;
+        margin: 10px;
+        max-height: 70vh;
+    }
+    .corporate_card_list {
+        padding: 0 16px;
+        max-height: 300px;
+    }
+    .corporate_card_item {
+        padding: 12px;
+    }
+    .card_alias {
+        font-size: 13px;
+    }
+    .card_number {
+        font-size: 12px;
+    }
+    /* .participant_row {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    } */
+    /* .person_select_btn {
+        flex: none;
+        width: 100%;
+        min-height: 60px;
+        padding: 14px 12px;
+    }
+    .project_input {
+        flex: none;
+        width: 100%;
+        min-height: 60px;
+        padding: 14px 12px;
+        font-size: 16px;
+    } */
+    .remove_btn {
+        align-self: center;
+        margin-top: 8px;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    .add_participant_btn {
+        padding: 14px 20px;
+        font-size: 16px;
+        margin-top: 8px;
+    }
+    .participants_container {
+        padding: 12px;
+        gap: 16px;
+    }
+    /* 입력 정보 요약 모바일 */
+    .summary_container {
+        padding: 12px;
+        gap: 12px;
+    }
+    .summary_section {
+        padding: 10px;
+    }
+    .summary_title {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    .summary_item {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+    }
+    .summary_label {
+        min-width: auto;
+        font-size: 12px;
+        color: #888;
+    }
+    .summary_value {
+        font-size: 13px;
+    }
+}
+
+
+/* 신용카드 정보 */
+
+.card_info_container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.card_info_row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.card_company_wrapper,
+.card_number_wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.card_label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+}
+
+.card_company_select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.card_company_select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.card_number_input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    font-family: 'Monaco', 'Menlo', monospace;
+    letter-spacing: 1px;
+}
+
+.card_number_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.card_info_description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card_info_description::before {
+    content: '🔒';
+    font-size: 14px;
+}
+
+
+/* 계좌 정보 */
+
+.account_info_container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.account_info_row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.bank_select_wrapper,
+.account_number_wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.account_label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+}
+
+.bank_select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.bank_select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.account_number_input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.account_number_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.account_info_description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.account_info_description::before {
+    content: '🔒';
+    font-size: 14px;
+}
+
+
+/* 기타 옵션 직접입력 */
+
+.other_input_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.other_input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.other_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+
+/* 법인카드 선택 버튼 */
+
+.corporate_card_select_btn {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    text-align: left;
+    color: #333;
+    transition: all 0.2s;
+}
+
+.corporate_card_select_btn:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+
+.corporate_card_select_btn:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+
+/* 법인카드 입력 필드 */
+
+.corporate_card_input {
+    cursor: pointer;
+    background: #f8f9fa !important;
+    font-family: 'Monaco', 'Menlo', monospace;
+    letter-spacing: 1px;
+}
+
+.corporate_card_input:hover {
+    border-color: #007bff;
+    background: #f0f8ff !important;
+}
+
+
+/* 별칭 입력 필드 */
+
+.alias_input_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.alias_input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.alias_input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+
+/* 법인카드 선택 모달 */
+
+.corporate_card_modal {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+    animation: confirmSlideIn 0.3s ease-out;
+}
+
+.corporate_card_list {
+    padding: 0 24px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.corporate_card_item {
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.corporate_card_item:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+    color: #007bff;
+}
+
+.corporate_card_item:focus {
+    outline: none;
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+
+.card_alias {
+    font-weight: 700;
+    font-size: 14px;
+    color: #333;
+}
+
+.card_number {
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+.corporate_card_item:hover .card_alias {
+    color: #007bff;
+}
+
+.corporate_card_item:hover .card_number {
+    color: #0056b3;
+}
+
+
+/* 입력 정보 요약 */
+
+.summary_container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.summary_section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.summary_title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 6px;
+}
+
+.summary_item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.summary_label {
+    font-weight: 500;
+    color: #666;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.summary_value {
+    color: #333;
+    font-weight: 500;
+    word-break: break-word;
+    flex: 1;
 }

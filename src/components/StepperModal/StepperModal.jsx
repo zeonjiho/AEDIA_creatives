@@ -57,8 +57,18 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       amount: '',
       project: '',
       paymentMethod: '',
-      participants: [{ person: null, amount: '' }],
-      attachedFiles: []
+      participants: [{ person: null, project: '' }],
+      attachedFiles: [],
+      myAmount: '', // 분할결제용 내가 낸 금액 추가
+      isSplitPayment: false, // 분할결제 체크박스 상태 추가
+      isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
+      cardCompany: '', // 카드사 추가
+      cardCompanyOther: '', // 기타 카드사 직접입력 추가
+      cardAlias: '', // 법인카드 별칭 추가
+      cardNumber: '', // 신용카드 번호 추가
+      bankName: '', // 은행명 추가
+      bankNameOther: '', // 기타 은행 직접입력 추가
+      accountNumber: '' // 계좌번호 추가
     };
   };
 
@@ -85,6 +95,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const canvasRef = useRef(null);
   const [isCamera, setIsCamera] = useState(false);
   const [stream, setStream] = useState(null);
+  const [showCorporateCardModal, setShowCorporateCardModal] = useState(false);
 
   // 데이터 저장 함수
   const saveToStorage = (data, step = null) => {
@@ -227,26 +238,88 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           return false;
         }
         
-        // 다중 인원, 외부인원, 분할결제의 경우 참가자 정보 검증
-        const isMultiPersonPayment = ['다중 인원', '외부인원', '분할결제'].includes(formData.paymentMethod);
-        if (isMultiPersonPayment) {
-          const hasValidParticipants = formData.participants.some(p => p.person && p.amount > 0);
-          if (!hasValidParticipants) {
+        // 신용카드 선택시 카드사와 카드번호 검증
+        if (formData.paymentMethod === '신용카드') {
+          if (!formData.cardCompany) {
+            showToast('카드사를 선택해주세요.');
+            return false;
+          }
+          if (formData.cardCompany === '기타' && !formData.cardCompanyOther) {
+            showToast('카드사명을 직접 입력해주세요.');
+            return false;
+          }
+          if (!formData.cardNumber) {
+            showToast('카드번호를 입력해주세요.');
+            return false;
+          }
+          // 법인카드가 아닌 경우에만 카드번호 길이 검증
+          if (formData.cardCompany !== '법인카드' && formData.cardNumber.replace(/\s/g, '').length < 15) {
+            showToast('신용카드 번호를 올바르게 입력해주세요.');
+            return false;
+          }
+        }
+        
+        // 계좌이체 선택시 은행명과 계좌번호 검증
+        if (formData.paymentMethod === '계좌이체') {
+          if (!formData.bankName) {
+            showToast('은행을 선택해주세요.');
+            return false;
+          }
+          if (formData.bankName === '기타' && !formData.bankNameOther) {
+            showToast('은행명을 직접 입력해주세요.');
+            return false;
+          }
+          if (!formData.accountNumber || formData.accountNumber.length < 10) {
+            showToast('계좌번호를 올바르게 입력해주세요.');
+            return false;
+          }
+        }
+        
+        // 다중인원의 경우 참가자 정보 검증
+        if (formData.isMultiPersonPayment) {
+          // 실제로 입력된 참가자들만 필터링 (person이나 project 중 하나라도 있는 경우)
+          const filledParticipants = formData.participants.filter(p => p.person || p.project);
+          
+          // 입력된 참가자가 하나도 없으면 에러
+          if (filledParticipants.length === 0) {
             showToast('참가자 정보를 올바르게 입력해주세요.');
             return false;
           }
           
-          // 모든 참가자가 인물과 금액을 가지고 있는지 확인
-          const invalidParticipants = formData.participants.filter(p => p.person || p.amount).filter(p => !p.person || !p.amount || p.amount <= 0);
-          if (invalidParticipants.length > 0) {
-            showToast('모든 참가자의 인물과 금액을 올바르게 입력해주세요.');
+          // 입력된 참가자들 중에서 인물과 프로젝트가 모두 완성된 참가자가 있는지 확인
+          const validParticipants = filledParticipants.filter(p => p.person && p.project);
+          if (validParticipants.length === 0) {
+            showToast('모든 참가자의 인물과 프로젝트를 올바르게 입력해주세요.');
+            return false;
+          }
+          
+          // 입력된 참가자들 중에서 불완전한 참가자가 있는지 확인
+          const incompleteParticipants = filledParticipants.filter(p => !p.person || !p.project);
+          if (incompleteParticipants.length > 0) {
+            showToast('모든 참가자의 인물과 프로젝트를 올바르게 입력해주세요.');
+            return false;
+          }
+        }
+        
+        // 분할결제가 체크된 경우 내가 낸 금액 검증
+        if (formData.isSplitPayment) {
+          if (!formData.myAmount || formData.myAmount <= 0) {
+            showToast('내가 낸 금액을 올바르게 입력해주세요.');
+            return false;
+          }
+          if (parseFloat(formData.myAmount) > parseFloat(formData.amount)) {
+            showToast('내가 낸 금액이 총 금액보다 클 수 없습니다.');
             return false;
           }
         }
         return true;
 
       case 3:
-        // 3단계는 사진이 선택사항이므로 항상 통과
+        // 3단계는 사진 첨부가 필수
+        if (formData.attachedFiles.length === 0) {
+          showToast('사진을 최소 1개 이상 첨부해주세요.');
+          return false;
+        }
         return true;
 
       default:
@@ -310,22 +383,38 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     });
   };
 
-  const handleParticipantAmountChange = (index, value) => {
+  const handleParticipantProjectChange = (index, value) => {
     const newParticipants = [...formData.participants];
-    newParticipants[index].amount = value;
+    newParticipants[index].project = value;
     setFormData(prev => ({
       ...prev,
       participants: newParticipants
     }));
   };
 
+  // 참가자가 추가될 때 기본 프로젝트 설정을 확실히 하는 함수
+  const ensureParticipantProject = (index) => {
+    const participant = formData.participants[index];
+    if (!participant.project && formData.project) {
+      handleParticipantProjectChange(index, formData.project);
+    }
+  };
+
   const handleStaffSelect = (selectedStaff) => {
     if (selectedStaff.length > 0) {
-      const staff = selectedStaff[0]; // 단일 선택
       const newParticipants = [...formData.participants];
       
       if (editingParticipantIndex !== null) {
-        newParticipants[editingParticipantIndex].person = staff;
+        // 기존 참가자 항목 교체 (첫 번째 선택된 인물로)
+        newParticipants[editingParticipantIndex].person = selectedStaff[0];
+        
+        // 나머지 선택된 인물들은 새로운 참가자로 추가
+        for (let i = 1; i < selectedStaff.length; i++) {
+          newParticipants.push({ 
+            person: selectedStaff[i], 
+            project: formData.project || '' 
+          });
+        }
       }
       
       setFormData(prev => ({
@@ -343,10 +432,17 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     setShowStaffModal(true);
   };
 
+  // 이미 선택된 인물들을 가져오는 함수
+  const getSelectedPeople = () => {
+    return formData.participants
+      .filter(p => p.person)
+      .map(p => p.person);
+  };
+
   const addParticipant = () => {
     setFormData(prev => ({
       ...prev,
-      participants: [...prev.participants, { person: null, amount: '' }]
+      participants: [...prev.participants, { person: null, project: prev.project || '' }]
     }));
   };
 
@@ -451,7 +547,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
   const handleSubmit = () => {
     // 최종 검증 (모든 단계)
-    for (let step = 1; step <= 2; step++) {
+    for (let step = 1; step <= 3; step++) {
       if (!validateStep(step)) {
         return;
       }
@@ -469,8 +565,18 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
            formData.amount || 
            formData.project || 
            formData.paymentMethod || 
-           formData.participants.some(p => p.person || p.amount) ||
-           formData.attachedFiles.length > 0;
+           formData.participants.some(p => p.person || p.project) ||
+           formData.attachedFiles.length > 0 ||
+           formData.myAmount ||
+           formData.isSplitPayment ||
+           formData.isMultiPersonPayment ||
+           formData.cardCompany ||
+           formData.cardCompanyOther ||
+           formData.cardAlias ||
+           formData.cardNumber ||
+           formData.bankName ||
+           formData.bankNameOther ||
+           formData.accountNumber; // 신용카드/계좌이체 정보도 확인
   };
 
   const handleClose = () => {
@@ -506,8 +612,18 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       amount: '',
       project: '',
       paymentMethod: '',
-      participants: [{ person: null, amount: '' }],
-      attachedFiles: []
+      participants: [{ person: null, project: '' }],
+      attachedFiles: [],
+      myAmount: '', // 분할결제용 내가 낸 금액 추가
+      isSplitPayment: false, // 분할결제 체크박스 상태 추가
+      isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
+      cardCompany: '', // 카드사 추가
+      cardCompanyOther: '', // 기타 카드사 직접입력 추가
+      cardAlias: '', // 법인카드 별칭 추가
+      cardNumber: '', // 신용카드 번호 추가
+      bankName: '', // 은행명 추가
+      bankNameOther: '', // 기타 은행 직접입력 추가
+      accountNumber: '' // 계좌번호 추가
     });
     setCurrentStep(1);
     
@@ -520,7 +636,173 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     setShowCloseConfirm(false);
   };
 
-  const isMultiPersonPayment = ['다중 인원', '외부인원', '분할결제'].includes(formData.paymentMethod);
+  const isMultiPersonPayment = formData.isMultiPersonPayment;
+  const isSplitPayment = formData.isSplitPayment;
+  const isCardPayment = formData.paymentMethod === '신용카드';
+  const isBankTransfer = formData.paymentMethod === '계좌이체';
+  const isCorporateCard = formData.cardCompany === '법인카드';
+  const isOtherCard = formData.cardCompany === '기타';
+  const isOtherBank = formData.bankName === '기타';
+
+  // 분할결제용 내가 낸 금액 변경 핸들러 추가
+  const handleMyAmountChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      myAmount: value
+    }));
+  };
+
+  // 분할결제 체크박스 변경 핸들러 추가
+  const handleSplitPaymentChange = (checked) => {
+    setFormData(prev => ({
+      ...prev,
+      isSplitPayment: checked,
+      myAmount: checked ? prev.myAmount : '' // 체크 해제시 내가 낸 금액 초기화
+    }));
+  };
+
+  // 다중인원 체크박스 변경 핸들러 추가
+  const handleMultiPersonPaymentChange = (checked) => {
+    setFormData(prev => ({
+      ...prev,
+      isMultiPersonPayment: checked,
+      participants: checked ? prev.participants : [{ person: null, project: '' }] // 체크 해제시 참가자 목록 초기화
+    }));
+  };
+
+  // 신용카드 번호 포맷팅 핸들러
+  const handleCardNumberChange = (value) => {
+    // 숫자만 추출
+    const numbersOnly = value.replace(/\D/g, '');
+    // 4자리마다 공백 추가
+    const formatted = numbersOnly.replace(/(\d{4})(?=\d)/g, '$1 ');
+    setFormData(prev => ({
+      ...prev,
+      cardNumber: formatted
+    }));
+  };
+
+  // 계좌번호 포맷팅 핸들러
+  const handleAccountNumberChange = (value) => {
+    // 숫자와 하이픈만 허용
+    const cleaned = value.replace(/[^\d-]/g, '');
+    setFormData(prev => ({
+      ...prev,
+      accountNumber: cleaned
+    }));
+  };
+
+  // 법인카드 목록 (실제 카드번호 형식)
+  const corporateCards = [
+    { alias: '회사카드', number: 'A 2342 3402 4240 5540' },
+    { alias: '출장용카드', number: 'B 1234 5678 9012 3456' },
+    { alias: '팀카드', number: 'C 9876 5432 1098 7654' },
+    { alias: '법인카드1', number: 'D 4567 8901 2345 6789' },
+    { alias: '법인카드2', number: 'E 3456 7890 1234 5678' },
+    { alias: '마케팅팀', number: 'F 6789 0123 4567 8901' },
+    { alias: '개발팀', number: 'G 7890 1234 5678 9012' },
+    { alias: '영업팀', number: 'H 0123 4567 8901 2345' },
+    { alias: '기획팀', number: 'I 5678 9012 3456 7890' },
+    { alias: '디자인팀', number: 'J 8901 2345 6789 0123' },
+    { alias: '운영팀', number: 'K 2345 6789 0123 4567' },
+    { alias: '회계팀', number: 'L 6789 0123 4567 8901' },
+    { alias: '인사팀', number: 'M 0123 4567 8901 2345' },
+    { alias: '총무팀', number: 'N 4567 8901 2345 6789' },
+    { alias: '연구팀', number: 'O 7890 1234 5678 9012' },
+    { alias: '품질팀', number: 'P 1234 5678 9012 3456' },
+    { alias: '구매팀', number: 'Q 5678 9012 3456 7890' },
+    { alias: '물류팀', number: 'R 9012 3456 7890 1234' },
+    { alias: '고객팀', number: 'S 3456 7890 1234 5678' },
+    { alias: '지원팀', number: 'T 7890 1234 5678 9012' }
+  ];
+
+  // 법인카드 번호 마스킹 함수
+  const maskCorporateCardNumber = (cardNumber) => {
+    const parts = cardNumber.split(' ');
+    if (parts.length === 5) {
+      return `${parts[0]} ${parts[1]} **** **** ${parts[4]}`;
+    }
+    return cardNumber;
+  };
+
+  // 법인카드 선택 핸들러
+  const handleCorporateCardSelect = (selectedCard) => {
+    const maskedCard = maskCorporateCardNumber(selectedCard.number);
+    setFormData(prev => ({
+      ...prev,
+      cardNumber: maskedCard,
+      cardAlias: selectedCard.alias
+    }));
+    setShowCorporateCardModal(false);
+  };
+
+  // 대한민국 카드사 목록 (사용빈도 순서)
+  const koreanCardCompanies = [
+    // 법인카드 (최상단)
+    '법인카드',
+    
+    // 주요 카드사 (빅5)
+    '삼성카드', '신한카드', '현대카드', 'KB국민카드', '롯데카드',
+    
+    // 은행계 카드사
+    '우리카드', '하나카드', 'NH농협카드', '수협카드', '기업은행카드',
+    
+    // 인터넷은행 카드
+    '카카오뱅크카드', '토스뱅크카드', '케이뱅크카드',
+    
+    // 외국계 카드사
+    '시티카드', 'SC제일은행카드',
+    
+    // 전업카드사/기타
+    'BC카드', '광주카드', '전북카드', '제주카드',
+    '다이너스클럽', '아메리칸익스프레스',
+    
+    // 유통업계 카드
+    'SSG카드', '이마트카드', '홈플러스카드',
+    '올리브영카드', 'GS칼텍스카드',
+    
+    // 항공/교통 카드
+    '대한항공카드', '아시아나카드', 'T-money카드',
+    
+    // 기타 제휴카드
+    '네이버카드', 'PAYCO카드', '11번가카드',
+    
+    // 기타 옵션
+    '기타'
+  ];
+
+  // 대한민국 은행 목록 (상위 15개)
+  const koreanBanks = [
+    // 주요 시중은행 (빅4)
+    '국민은행', '신한은행', '하나은행', '우리은행',
+    
+    // 특수은행 (많이 사용됨)
+    '농협은행', '기업은행', '수협은행',
+    
+    // 인터넷은행 (급성장)
+    '카카오뱅크', '토스뱅크', '케이뱅크',
+    
+    // 외국계 은행
+    'SC제일은행', '한국씨티은행',
+    
+    // 지방은행 (주요)
+    '부산은행', '대구은행',
+    
+    // 정책금융기관
+    '산업은행',
+    
+    // 기타 옵션
+    '기타'
+  ];
+
+  // 프로젝트 목록
+  const projectList = [
+    '프로젝트 A',
+    '프로젝트 B', 
+    '프로젝트 C',
+    '프로젝트 D',
+    '프로젝트 E'
+  ];
 
   const renderStep1 = () => (
     <div className={styles.step_content}>
@@ -624,16 +906,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           onChange={(e) => handleInputChange('project', e.target.value)}
         >
           <option value="">프로젝트 선택</option>
-          <option value="프로젝트 A">프로젝트 A</option>
-          <option value="프로젝트 B">프로젝트 B</option>
-          <option value="프로젝트 C">프로젝트 C</option>
+          {projectList.map((project) => (
+            <option key={project} value={project}>{project}</option>
+          ))}
         </select>
       </div>
 
       <div className={styles.input_group}>
         <label>결제방법 <span className={styles.required}>*</span></label>
         <div className={styles.payment_options}>
-          {['신용카드', '현금', '계좌이체', '다중 인원', '외부인원', '분할결제'].map((method) => (
+          {['신용카드', '현금', '계좌이체'].map((method) => (
             <label key={method} className={styles.radio_option}>
               <input
                 type="radio"
@@ -648,9 +930,150 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
         </div>
       </div>
 
+      {/* 신용카드 상세 정보 */}
+      {isCardPayment && (
+        <div className={styles.input_group}>
+          <label>신용카드 정보 <span className={styles.required}>*</span></label>
+          <div className={styles.card_info_container}>
+            <div className={styles.card_info_row}>
+              <div className={styles.card_company_wrapper}>
+                <label className={styles.card_label}>카드사</label>
+                <select
+                  value={formData.cardCompany}
+                  onChange={(e) => handleInputChange('cardCompany', e.target.value)}
+                  className={styles.card_company_select}
+                >
+                  <option value="">카드사 선택</option>
+                  {koreanCardCompanies.map((company) => (
+                    <option key={company} value={company}>{company}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className={styles.card_number_wrapper}>
+                <label className={styles.card_label}>카드번호</label>
+                <input
+                  type="text"
+                  placeholder={isCorporateCard ? "법인카드를 선택하세요" : "카드번호 (예: 1234 5678 9012 3456)"}
+                  value={formData.cardNumber}
+                  onChange={(e) => !isCorporateCard && handleCardNumberChange(e.target.value)}
+                  onClick={() => isCorporateCard && setShowCorporateCardModal(true)}
+                  readOnly={isCorporateCard}
+                  maxLength="19"
+                  className={`${styles.card_number_input} ${isCorporateCard ? styles.corporate_card_input : ''}`}
+                />
+              </div>
+            </div>
+            
+            {/* 기타 카드사 직접입력 */}
+            {isOtherCard && (
+              <div className={styles.other_input_wrapper}>
+                <label className={styles.card_label}>카드사명 직접입력</label>
+                <input
+                  type="text"
+                  placeholder="카드사명을 입력하세요"
+                  value={formData.cardCompanyOther}
+                  onChange={(e) => handleInputChange('cardCompanyOther', e.target.value)}
+                  className={styles.other_input}
+                />
+              </div>
+            )}
+            
+            <div className={styles.card_info_description}>
+              * 카드 정보는 자동으로 마스킹되어 안전하게 관리됩니다
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 계좌이체 상세 정보 */}
+      {isBankTransfer && (
+        <div className={styles.input_group}>
+          <label>계좌 정보 <span className={styles.required}>*</span></label>
+          <div className={styles.account_info_container}>
+            <div className={styles.account_info_row}>
+              <div className={styles.bank_select_wrapper}>
+                <label className={styles.account_label}>은행명</label>
+                <select
+                  value={formData.bankName}
+                  onChange={(e) => handleInputChange('bankName', e.target.value)}
+                  className={styles.bank_select}
+                >
+                  <option value="">은행 선택</option>
+                  {koreanBanks.map((bank) => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className={styles.account_number_wrapper}>
+                <label className={styles.account_label}>계좌번호</label>
+                <input
+                  type="text"
+                  placeholder="계좌번호를 입력하세요"
+                  value={formData.accountNumber}
+                  onChange={(e) => handleAccountNumberChange(e.target.value)}
+                  className={styles.account_number_input}
+                />
+              </div>
+            </div>
+            
+            {/* 기타 은행 직접입력 */}
+            {isOtherBank && (
+              <div className={styles.other_input_wrapper}>
+                <label className={styles.account_label}>은행명 직접입력</label>
+                <input
+                  type="text"
+                  placeholder="은행명을 입력하세요"
+                  value={formData.bankNameOther}
+                  onChange={(e) => handleInputChange('bankNameOther', e.target.value)}
+                  className={styles.other_input}
+                />
+              </div>
+            )}
+            
+            <div className={styles.account_info_description}>
+              * 계좌번호는 안전하게 암호화되어 저장됩니다
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.input_group}>
+        <div className={styles.split_payment_checkbox_container}>
+          <label className={styles.checkbox_option}>
+            <input
+              type="checkbox"
+              checked={formData.isSplitPayment}
+              onChange={(e) => handleSplitPaymentChange(e.target.checked)}
+            />
+            <span>분할결제</span>
+          </label>
+          <span className={styles.split_payment_description}>
+            총 금액 중 일부만 내가 지불한 경우 체크하세요
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.input_group}>
+        <div className={styles.split_payment_checkbox_container}>
+          <label className={styles.checkbox_option}>
+            <input
+              type="checkbox"
+              checked={formData.isMultiPersonPayment}
+              onChange={(e) => handleMultiPersonPaymentChange(e.target.checked)}
+            />
+            <span>다중인원 결제</span>
+          </label>
+          <span className={styles.split_payment_description}>
+            여러 사람이 함께 참여한 경우 체크하세요
+          </span>
+        </div>
+      </div>
+
       {isMultiPersonPayment && (
         <div className={styles.input_group}>
-          <label>세부사항 <span className={styles.required}>*</span></label>
+          <label>다중 인원 결제<span className={styles.required}>*</span></label>
           <div className={styles.participants_container}>
             {formData.participants.map((participant, index) => (
               <div key={index} className={styles.participant_row}>
@@ -685,9 +1108,6 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                       </div>
                       <div className={styles.person_details}>
                         <span className={styles.person_name}>{participant.person.name}</span>
-                        <span className={styles.person_role}>
-                          ({participant.person.roles?.[0] || '직책 없음'})
-                        </span>
                       </div>
                     </div>
                   ) : (
@@ -695,14 +1115,19 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   )}
                 </button>
                 
-                <input
-                  type="number"
-                  placeholder="금액"
-                  value={participant.amount}
-                  onChange={(e) => handleParticipantAmountChange(index, e.target.value)}
-                  min="1"
-                  className={styles.amount_input}
-                />
+                <select
+                  value={participant.project || formData.project || ""}
+                  onChange={(e) => handleParticipantProjectChange(index, e.target.value)}
+                  className={styles.project_input}
+                >
+                  <option value="">프로젝트 선택</option>
+                  {formData.project && (
+                    <option value={formData.project}>{formData.project} (같음)</option>
+                  )}
+                  {projectList.filter(p => p !== formData.project).map((project) => (
+                    <option key={project} value={project}>{project}</option>
+                  ))}
+                </select>
                 
                 {formData.participants.length > 1 && (
                   <button 
@@ -725,13 +1150,148 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
         </div>
       )}
+
+      {isSplitPayment && (
+        <div className={styles.input_group}>
+          <label>분할결제 정보 <span className={styles.required}>*</span></label>
+          <div className={styles.split_payment_container}>
+            <div className={styles.split_payment_row}>
+              <div className={styles.split_payment_item}>
+                <label className={styles.split_label}>내가 낸 금액</label>
+                <input
+                  type="number"
+                  placeholder="내가 낸 금액"
+                  value={formData.myAmount}
+                  onChange={(e) => handleMyAmountChange(e.target.value)}
+                  min="0"
+                  max={formData.amount}
+                  className={styles.my_amount_input}
+                />
+              </div>
+              
+              <div className={styles.split_payment_item}>
+                <label className={styles.split_label}>총 금액</label>
+                <div className={styles.total_amount_display}>
+                  {formData.amount ? `${parseInt(formData.amount).toLocaleString()}원` : '0원'}
+                </div>
+              </div>
+            </div>
+            
+            {formData.myAmount && formData.amount && (
+              <div className={styles.difference_display}>
+                <span className={styles.difference_label}>차액: </span>
+                <span className={styles.difference_amount}>
+                  {(parseFloat(formData.amount) - parseFloat(formData.myAmount || 0)).toLocaleString()}원
+                </span>
+                {parseFloat(formData.myAmount) > parseFloat(formData.amount) && (
+                  <span className={styles.error_text}> (내가 낸 금액이 총 금액보다 큽니다)</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 
   const renderStep3 = () => (
     <div className={styles.step_content}>
+      {/* 입력 정보 요약 */}
       <div className={styles.input_group}>
-        <label>사진 촬영/첨부</label>
+        <label>입력 정보 확인</label>
+        <div className={styles.summary_container}>
+          <div className={styles.summary_section}>
+            <h4 className={styles.summary_title}>기본 정보</h4>
+            <div className={styles.summary_item}>
+              <span className={styles.summary_label}>카테고리:</span>
+              <span className={styles.summary_value}>{formData.category}</span>
+            </div>
+            <div className={styles.summary_item}>
+              <span className={styles.summary_label}>날짜/시간:</span>
+              <span className={styles.summary_value}>{formatDateTime(formData.dateTime)}</span>
+            </div>
+            <div className={styles.summary_item}>
+              <span className={styles.summary_label}>금액:</span>
+              <span className={styles.summary_value}>{parseInt(formData.amount).toLocaleString()}원</span>
+            </div>
+            <div className={styles.summary_item}>
+              <span className={styles.summary_label}>프로젝트:</span>
+              <span className={styles.summary_value}>{formData.project}</span>
+            </div>
+          </div>
+
+          <div className={styles.summary_section}>
+            <h4 className={styles.summary_title}>결제 정보</h4>
+            <div className={styles.summary_item}>
+              <span className={styles.summary_label}>결제방법:</span>
+              <span className={styles.summary_value}>{formData.paymentMethod}</span>
+            </div>
+            
+            {/* 신용카드 정보 */}
+            {isCardPayment && (
+              <>
+                <div className={styles.summary_item}>
+                  <span className={styles.summary_label}>카드사:</span>
+                  <span className={styles.summary_value}>
+                    {formData.cardCompany === '기타' ? formData.cardCompanyOther : formData.cardCompany}
+                  </span>
+                </div>
+                {formData.cardNumber && (
+                  <div className={styles.summary_item}>
+                    <span className={styles.summary_label}>카드번호:</span>
+                    <span className={styles.summary_value}>{formData.cardNumber}</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 계좌이체 정보 */}
+            {isBankTransfer && (
+              <>
+                <div className={styles.summary_item}>
+                  <span className={styles.summary_label}>은행:</span>
+                  <span className={styles.summary_value}>
+                    {formData.bankName === '기타' ? formData.bankNameOther : formData.bankName}
+                  </span>
+                </div>
+                {formData.accountNumber && (
+                  <div className={styles.summary_item}>
+                    <span className={styles.summary_label}>계좌번호:</span>
+                    <span className={styles.summary_value}>{formData.accountNumber}</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 분할결제 정보 */}
+            {isSplitPayment && (
+              <div className={styles.summary_item}>
+                <span className={styles.summary_label}>분할결제:</span>
+                <span className={styles.summary_value}>
+                  내가 낸 금액: {parseInt(formData.myAmount).toLocaleString()}원 / 
+                  차액: {(parseFloat(formData.amount) - parseFloat(formData.myAmount)).toLocaleString()}원
+                </span>
+              </div>
+            )}
+
+            {/* 다중인원 정보 */}
+            {isMultiPersonPayment && (
+              <div className={styles.summary_item}>
+                <span className={styles.summary_label}>참가자:</span>
+                <span className={styles.summary_value}>
+                  {formData.participants
+                    .filter(p => p.person && p.project)
+                    .map(p => `${p.person.name}(${p.project})`)
+                    .join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.input_group}>
+        <label>사진 촬영/첨부 <span className={styles.required}>*</span></label>
         
         {!isCamera ? (
           <div className={styles.photo_actions}>
@@ -839,7 +1399,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           <div className={`${styles.step} ${currentStep >= 2 ? styles.active : ''}`}>
             <div className={styles.step_number}>2</div>
             <span>상세 정보</span>
-              </div>
+          </div>
           <div className={styles.step_divider}></div>
           <div className={`${styles.step} ${currentStep >= 3 ? styles.active : ''}`}>
             <div className={styles.step_number}>3</div>
@@ -955,6 +1515,39 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
           </div>
         )}
+
+        {/* 법인카드 선택 모달 */}
+        {showCorporateCardModal && (
+          <div className={styles.confirm_overlay}>
+            <div className={styles.corporate_card_modal}>
+              <div className={styles.confirm_header}>
+                <h3>법인카드 선택</h3>
+              </div>
+              
+              <div className={styles.corporate_card_list}>
+                {corporateCards.map((card, index) => (
+                  <button
+                    key={index}
+                    className={styles.corporate_card_item}
+                    onClick={() => handleCorporateCardSelect(card)}
+                  >
+                    <div className={styles.card_alias}>{card.alias}</div>
+                    <div className={styles.card_number}>{maskCorporateCardNumber(card.number)}</div>
+                  </button>
+                ))}
+              </div>
+              
+              <div className={styles.confirm_footer}>
+                <button 
+                  className={styles.confirm_cancel_btn}
+                  onClick={() => setShowCorporateCardModal(false)}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <StaffSearchModal
@@ -964,8 +1557,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           setEditingParticipantIndex(null);
         }}
         onSelect={handleStaffSelect}
-        selectedPeople={[]}
-        multiSelect={false}
+        selectedPeople={getSelectedPeople()}
+        multiSelect={true}
         title="인물 선택"
         initialFilterType="all"
       />
