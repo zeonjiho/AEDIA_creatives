@@ -454,7 +454,7 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
 // 사용자 정보 업데이트 API (관리자용)
 app.put('/admin/update-user/:userId', async (req, res) => {
     const { userId } = req.params;
-    const { status, userType, roles, hireYear, adminMemo } = req.body;
+    const { status, userType, roles, hireYear, department, adminMemo } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -468,6 +468,7 @@ app.put('/admin/update-user/:userId', async (req, res) => {
         if (userType !== undefined) updateData.userType = userType;
         if (roles !== undefined) updateData.roles = roles;
         if (hireYear !== undefined) updateData.hireYear = hireYear;
+        if (department !== undefined) updateData.department = department;
         if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
 
         console.log(`유저 업데이트 요청 - ID: ${userId}, 업데이트 데이터:`, updateData);

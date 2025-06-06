@@ -12,6 +12,7 @@ const UserModal = ({
   const [userType, setUserType] = useState(user?.userType || 'external')
   const [roles, setRoles] = useState(user?.roles?.join(', ') || '')
   const [hireYear, setHireYear] = useState(user?.hireYear || '')
+  const [department, setDepartment] = useState(user?.department || '')
   const [note, setNote] = useState(user?.adminMemo || '')
   const [loading, setLoading] = useState(false)
 
@@ -22,6 +23,7 @@ const UserModal = ({
       setUserType(user.userType || 'external')
       setRoles(user.roles?.join(', ') || '')
       setHireYear(user.hireYear || '')
+      setDepartment(user.department || '')
       setNote(user.adminMemo || '')
     }
   }, [user])
@@ -82,6 +84,7 @@ const UserModal = ({
         userType,
         roles: roles ? roles.split(',').map(role => role.trim()).filter(role => role) : [],
         hireYear: hireYear ? parseInt(hireYear) : null,
+        department: department.trim(),
         adminMemo: note
       }
 
@@ -284,17 +287,17 @@ const UserModal = ({
                     <option value="deleted">삭제됨</option>
                   </select>
                 </div>
-                {/* <div className={ss.info_item}>
-                  <label>사용자 구분</label>
-                  <select 
-                    value={userType} 
-                    onChange={(e) => setUserType(e.target.value)}
-                    className={ss.select_input}
-                  >
-                    <option value="internal">내부 직원</option>
-                    <option value="external">외부 스태프</option>
-                  </select>
-                </div> */}
+                <div className={ss.info_item}>
+                  <label>부서</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="직원의 소속 부서를 입력해 주세요."
+                    className={ss.text_input}
+                    style={{width: '100%'}}
+                  />
+                </div>
                 <div className={ss.info_item}>
                   <label>입사 년도</label>
                   <input
