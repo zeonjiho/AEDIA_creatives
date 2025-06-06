@@ -38,9 +38,6 @@ const userSchema = new Schema({
     address: {
         type: String,
     },
-    joinYear: {
-        type: String,
-    },
     hireYear: {
         type: Number,
     },

@@ -132,7 +132,7 @@ const UserModal = ({
   const handleDeleteUser = async () => {
     if (loading) return
     
-    const isConfirmed = window.confirm('정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
+    const isConfirmed = window.confirm('정말로 이 사용자를 삭제하시겠습니까? [삭제된 인력] 페이지에서 복구할 수 있습니다.')
     if (!isConfirmed) return
 
     setLoading(true)
@@ -221,6 +221,10 @@ const UserModal = ({
                 <div className={ss.info_value}>{formatDate(user.createdAt)}</div>
               </div>
               <div className={ss.info_item}>
+                <label>부서</label>
+                <div className={ss.info_value}>{user.department || '-'}</div>
+              </div>
+              {/* <div className={ss.info_item}>
                 <label>최근 로그인</label>
                 <div className={ss.info_value}>{formatDate(user.lastLogin)}</div>
               </div>
@@ -229,7 +233,7 @@ const UserModal = ({
                 <div className={ss.info_value} style={{fontSize: '0.85rem', color: 'var(--text-tertiary)'}}>
                   {user._id}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -280,7 +284,7 @@ const UserModal = ({
                     <option value="deleted">삭제됨</option>
                   </select>
                 </div>
-                <div className={ss.info_item}>
+                {/* <div className={ss.info_item}>
                   <label>사용자 구분</label>
                   <select 
                     value={userType} 
@@ -290,7 +294,7 @@ const UserModal = ({
                     <option value="internal">내부 직원</option>
                     <option value="external">외부 스태프</option>
                   </select>
-                </div>
+                </div> */}
                 <div className={ss.info_item}>
                   <label>입사 년도</label>
                   <input

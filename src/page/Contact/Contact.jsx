@@ -680,7 +680,7 @@ const Contact = () => {
           <HiSearch className={styles.search_icon} />
           <input
             type="text"
-            placeholder="이름, 직책, 부서, 연락처로 검색..."
+            placeholder="이름, 직책, 소속, 연락처로 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={styles.search_input}

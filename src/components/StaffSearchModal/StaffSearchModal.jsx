@@ -67,7 +67,7 @@ const StaffSearchModal = ({
             name: person.name || '이름 없음',
             userType: person.userType || 'external',
             roles: person.roles || [],
-            department: person.department || '부서 없음',
+            department: person.department || '소속 없음',
             phone: person.phone || '',
             email: person.email || ''
           }));
@@ -342,7 +342,7 @@ const StaffSearchModal = ({
                 <HiSearch className={styles.search_icon} />
                 <input
                   type="text"
-                  placeholder="이름, 직책, 부서로 검색..."
+                  placeholder="이름, 직책, 소속으로 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.search_input}
@@ -582,7 +582,7 @@ const StaffSearchModal = ({
                           {person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'}
                         </span>
                         <span className={styles.person_department}>
-                          {person.department || '부서 없음'}
+                          {person.department || '소속 없음'}
                         </span>
                         {person.phone && (
                           <span className={styles.person_phone}>{person.phone}</span>

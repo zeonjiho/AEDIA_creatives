@@ -617,7 +617,7 @@ const ProjectDetailModal = ({
         name: member.name || '이름 없음',
         userType: member.userType || 'external',
         roles: member.roles || [currentStaffCategory],
-        department: member.department || '부서 없음',
+        department: member.department || '소속 없음',
         phone: member.phone || '',
         email: member.email || '',
         position: member.position || currentStaffCategory
@@ -1028,7 +1028,7 @@ const ProjectDetailModal = ({
                         staffMembers.map(person => (
                           <div key={person.userId || person._id || person.id} className={styles.staff_member}>
                           <span className={styles.member_name}>{person.name}</span>
-                            <span className={styles.member_info}>({person.department || '부서 없음'})</span>
+                            <span className={styles.member_info}>({person.department || '소속 없음'})</span>
                           {person.phone && <span className={styles.member_phone}>📞 {person.phone}</span>}
                           {person.isExternal && <span className={styles.external_badge}>외부</span>}
                           {editingStaff && (

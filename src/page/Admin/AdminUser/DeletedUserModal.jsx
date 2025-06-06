@@ -248,7 +248,7 @@ const DeletedUserModal = ({
               <h3 className={ss.section_title}>스태프 정보</h3>
               <div className={ss.info_grid}>
                 <div className={ss.info_item}>
-                  <label>소속 부서</label>
+                  <label>소속</label>
                   <div className={ss.info_value}>
                     {user.department ? (
                       <span className={ss.category_badge}>

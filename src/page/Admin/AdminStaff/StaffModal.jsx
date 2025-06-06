@@ -84,7 +84,7 @@ const StaffModal = ({
   const handleDeleteStaff = async () => {
     if (loading) return
     
-    const isConfirmed = window.confirm('정말로 이 스태프를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
+    const isConfirmed = window.confirm('정말로 이 스태프를 삭제하시겠습니까? [삭제된 인력] 페이지에서 복구할 수 있습니다.')
     if (!isConfirmed) return
 
     setLoading(true)
@@ -151,7 +151,7 @@ const StaffModal = ({
                 <label>등록일</label>
                 <div className={ss.info_value}>{formatDate(staff.createdAt)}</div>
               </div>
-              <div className={ss.info_item}>
+              {/* <div className={ss.info_item}>
                 <label>최근 로그인</label>
                 <div className={ss.info_value}>{formatDate(staff.lastLogin)}</div>
               </div>
@@ -160,7 +160,7 @@ const StaffModal = ({
                 <div className={ss.info_value} style={{fontSize: '0.85rem', color: 'var(--text-tertiary)'}}>
                   {staff._id}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -207,7 +207,7 @@ const StaffModal = ({
             <div className={ss.status_controls}>
               <div className={ss.info_grid}>
                 <div className={ss.info_item}>
-                  <label>소속 부서</label>
+                  <label>소속</label>
                   <input
                     type="text"
                     value={department}

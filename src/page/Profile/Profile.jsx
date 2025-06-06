@@ -551,7 +551,7 @@ const Profile = () => {
             <div className={styles.user_stats}>
               <div className={styles.stat_item}>
                 <FaCalendarAlt />
-                <span>입사 {user.createdAt ? new Date().getFullYear() - new Date(user.createdAt).getFullYear() : 0}년차</span>
+                <span>입사 {user.hireYear ? new Date().getFullYear() - user.hireYear : (user.createdAt ? new Date().getFullYear() - new Date(user.createdAt).getFullYear() : 0)}년차</span>
               </div>
               <div className={styles.stat_item}>
                 <FaIdCard />
