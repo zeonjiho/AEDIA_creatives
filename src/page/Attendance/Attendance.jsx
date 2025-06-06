@@ -292,6 +292,131 @@ const Attendance = () => {
             0
         )
 
+        // === 논리적 유효성 검사 시작 ===
+        
+        // 1. 현재 편집 중인 기록 찾기
+        const currentRecord = todayRecords.find(record => record._id === editMode.recordId)
+        if (!currentRecord) {
+            setStatusMessage('편집할 기록을 찾을 수 없습니다')
+            setMessageType('error')
+            return
+        }
+
+        // 2. 오늘 기록들을 시간순으로 정렬 (편집 중인 기록 제외)
+        const otherRecords = todayRecords
+            .filter(record => record._id !== editMode.recordId)
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+
+        // 3. 새로운 시간으로 전체 기록 목록 생성
+        const allRecordsWithEdit = [...otherRecords, { ...currentRecord, time: datetime }]
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+
+        // 4. 출근/퇴근 기록 분리
+        const checkInRecords = allRecordsWithEdit.filter(r => r.type === 'checkIn')
+        const checkOutRecords = allRecordsWithEdit.filter(r => r.type === 'checkOut')
+
+        // 5. 기본 유효성 검사
+        
+        // 5-1. 시간 충돌 검사 (같은 시간에 다른 기록이 있는지)
+        const timeConflict = otherRecords.find(record => {
+            const recordTime = new Date(record.time)
+            return Math.abs(datetime - recordTime) < 60000 // 1분 이내 차이
+        })
+        
+        if (timeConflict) {
+            const conflictTime = new Date(timeConflict.time).toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            })
+            setStatusMessage(`${conflictTime}에 이미 다른 기록이 있습니다`)
+            setMessageType('error')
+            return
+        }
+
+        // 5-2. 연속된 같은 타입 기록 검사 (출근-출근 또는 퇴근-퇴근)
+        let hasConsecutiveSameType = false
+        let consecutiveMessage = ''
+        
+        for (let i = 0; i < allRecordsWithEdit.length - 1; i++) {
+            const current = allRecordsWithEdit[i]
+            const next = allRecordsWithEdit[i + 1]
+            
+            if (current.type === next.type) {
+                const currentTime = new Date(current.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                const nextTime = new Date(next.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                const typeText = current.type === 'checkIn' ? '출근' : '퇴근'
+                hasConsecutiveSameType = true
+                consecutiveMessage = `${currentTime}과 ${nextTime}에 연속된 ${typeText} 기록이 있습니다`
+                break
+            }
+        }
+
+        if (hasConsecutiveSameType) {
+            if (!window.confirm(`⚠️ 연속된 같은 기록 타입\n\n${consecutiveMessage}\n\n이로 인해 work hours 계산이 부정확할 수 있습니다.\n\n계속 진행하시겠습니까?`)) {
+                return
+            }
+        }
+
+        // 5-3. 페어링 후 시간 역순 검사 (출근 > 퇴근)
+        let hasInvalidPairing = false
+        let invalidPairingMessage = ''
+        
+        for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
+            const checkInTime = new Date(checkInRecords[i].time)
+            const checkOutTime = new Date(checkOutRecords[i].time)
+            
+            if (checkInTime >= checkOutTime) {
+                const checkInStr = checkInTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                const checkOutStr = checkOutTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                hasInvalidPairing = true
+                invalidPairingMessage = `출근 시간(${checkInStr})이 퇴근 시간(${checkOutStr})보다 늦습니다`
+                break
+            }
+        }
+
+        if (hasInvalidPairing) {
+            if (!window.confirm(`⚠️ 시간 순서 오류\n\n${invalidPairingMessage}\n\n계속 진행하시겠습니까?`)) {
+                return
+            }
+        }
+
+        // 5-4. 너무 긴 근무시간 경고 (12시간 이상)
+        let totalWorkMinutes = 0
+        for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
+            const checkInTime = new Date(checkInRecords[i].time)
+            const checkOutTime = new Date(checkOutRecords[i].time)
+            if (checkOutTime > checkInTime) {
+                totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60))
+            }
+        }
+
+        if (totalWorkMinutes > 12 * 60) { // 12시간 = 720분
+            const hours = Math.floor(totalWorkMinutes / 60)
+            const minutes = totalWorkMinutes % 60
+            if (!window.confirm(`⚠️ 긴 근무시간 경고\n\n총 근무시간이 ${hours}시간 ${minutes}분입니다.\n\n계속 진행하시겠습니까?`)) {
+                return
+            }
+        }
+
+        // 5-5. 미래 시간 편집 경고
+        const now = new Date()
+        if (datetime > now) {
+            if (!window.confirm(`⚠️ 미래 시간 편집\n\n현재 시간보다 늦은 시간으로 편집하고 있습니다.\n\n계속 진행하시겠습니까?`)) {
+                return
+            }
+        }
+
+        // 5-6. 불완전한 사이클 경고
+        if (checkInRecords.length !== checkOutRecords.length) {
+            const difference = Math.abs(checkInRecords.length - checkOutRecords.length)
+            const moreType = checkInRecords.length > checkOutRecords.length ? '출근' : '퇴근'
+            if (!window.confirm(`⚠️ 불완전한 출퇴근 사이클\n\n${moreType} 기록이 ${difference}개 더 많습니다.\n일부 기록이 근무시간 계산에서 제외될 수 있습니다.\n\n계속 진행하시겠습니까?`)) {
+                return
+            }
+        }
+
+        // === 유효성 검사 완료 ===
+
         setLoading(true)
         
         try {

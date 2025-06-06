@@ -858,13 +858,13 @@ const CalendarPage = () => {
                         프로젝트 연동
                     </button>
                     
-                    <button 
+                    {/* <button 
                         className={`${ss.customize_btn} ${ss.save_btn}`}
                         onClick={handleAddEventClick}
                     >
                         <FaPlus />
                         새 일정
-                    </button>
+                    </button> */}
                 </div>
             </header>
 

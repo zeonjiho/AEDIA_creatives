@@ -412,7 +412,10 @@ app.post('/login', async (req, res) => {
             res.status(401).json({ message: '대기 상태입니다. 관리자 승인 후 로그인 가능합니다.' });
             return;
         }
-
+        if (user.status === 'deleted' || user.status === 'inactive') {
+            res.status(401).json({ message: '삭제 또는 비활성 계정입니다. 관리자에게 문의해주세요.' });
+            return;
+        }
         if (user.userType === 'external') {
             res.status(401).json({ message: '외부 사용자는 로그인할 수 없습니다.' });
             return;
@@ -482,9 +485,9 @@ app.put('/admin/update-user/:userId', async (req, res) => {
 
         console.log(`유저 업데이트 완료 - ID: ${userId}, 새 상태: ${updatedUser.status}`);
 
-        res.status(200).json({ 
-            message: '사용자 정보가 업데이트되었습니다.', 
-            user: updatedUser 
+        res.status(200).json({
+            message: '사용자 정보가 업데이트되었습니다.',
+            user: updatedUser
         });
     } catch (err) {
         console.log(err);
@@ -700,7 +703,7 @@ app.post('/attendance/check-in', async (req, res) => {
             method: method
         };
 
-            await User.findByIdAndUpdate(userId, {
+        await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
 
@@ -1053,11 +1056,11 @@ app.put('/todos/:id', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                text,
-                dueDate,
-                dueTime: dueTime || null,
-                projectId: projectId || null,
-                updatedAt: new Date()
+            text,
+            dueDate,
+            dueTime: dueTime || null,
+            projectId: projectId || null,
+            updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -1081,8 +1084,8 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-                completed: !todo.completed,
-                updatedAt: new Date()
+            completed: !todo.completed,
+            updatedAt: new Date()
         }, { new: true }
         ).populate('poster', 'name email');
 
@@ -1999,7 +2002,7 @@ app.put('/projects/:id', async (req, res) => {
 app.delete('/projects/:id', async (req, res) => {
     try {
         const projectId = req.params.id;
-        
+
         // 프로젝트 존재 확인
         const project = await Project.findById(projectId);
         if (!project) {
@@ -2013,7 +2016,7 @@ app.delete('/projects/:id', async (req, res) => {
         // 프로젝트 삭제
         const deletedProject = await Project.findByIdAndDelete(projectId);
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: '프로젝트가 성공적으로 삭제되었습니다.',
             deletedCalendarLinks: deletedCalendarLinks.deletedCount
         });
@@ -2066,7 +2069,7 @@ app.get('/calendar/links', async (req, res) => {
             if (link.projectId.staffList) {
                 link.projectId.staffList = link.projectId.staffList.map(role => ({
                     ...role,
-                    members: role.members ? role.members.filter(member => 
+                    members: role.members ? role.members.filter(member =>
                         member && member.userId !== null
                     ) : []
                 }))
@@ -2204,7 +2207,7 @@ app.get('/calendar/link/:linkId', async (req, res) => {
         if (link.projectId.staffList) {
             link.projectId.staffList = link.projectId.staffList.map(role => ({
                 ...role,
-                members: role.members ? role.members.filter(member => 
+                members: role.members ? role.members.filter(member =>
                     member && member.userId !== null
                 ) : []
             }))
@@ -2309,9 +2312,9 @@ app.put('/admin/update-staff/:staffId', async (req, res) => {
 
         console.log(`스태프 업데이트 완료 - ID: ${staffId}, 새 상태: ${updatedStaff.status}`);
 
-        res.status(200).json({ 
-            message: '스태프 정보가 업데이트되었습니다.', 
-            staff: updatedStaff 
+        res.status(200).json({
+            message: '스태프 정보가 업데이트되었습니다.',
+            staff: updatedStaff
         });
     } catch (err) {
         console.log(err);
@@ -2335,7 +2338,7 @@ app.get('/credit-cards', async (req, res) => {
 // 법인카드 등록
 app.post('/credit-cards', async (req, res) => {
     const { cardName, number } = req.body;
-    
+
     try {
         // 필수 필드 검증
         if (!cardName || !number) {
@@ -2395,8 +2398,8 @@ app.put('/credit-cards/:cardId', async (req, res) => {
         }
 
         // 다른 카드와 번호 중복 확인 (자기 자신 제외)
-        const existingCard = await CreditCard.findOne({ 
-            number: number, 
+        const existingCard = await CreditCard.findOne({
+            number: number,
             status: 'active',
             _id: { $ne: cardId }
         });
@@ -2407,7 +2410,7 @@ app.put('/credit-cards/:cardId', async (req, res) => {
         // 카드 정보 업데이트
         const updatedCard = await CreditCard.findByIdAndUpdate(
             cardId,
-            { 
+            {
                 cardName: cardName.trim(),
                 number: number
             },
