@@ -55,7 +55,9 @@ const AdminAttendance = () => {
         workHours: record.workHours,
         status: record.status,
         note: record.note || '',
-        records: record.records || []
+        records: record.records || [],
+        isModified: record.isModified || false,
+        modificationHistory: record.modificationHistory || []
       }));
       
       // 최신순으로 정렬
@@ -101,7 +103,7 @@ const AdminAttendance = () => {
         diff += 24;
     }
     
-    return Math.max(0, diff - 1); // 점심시간 1시간 제외
+    return Math.max(0, diff); // 점심시간 제외 없음
   };
 
   // 출석 상태 업데이트
@@ -160,25 +162,7 @@ const AdminAttendance = () => {
     fetchAttendanceList();
   };
 
-  // 상태에 따른 스타일 클래스 반환
-  const getStatusClass = (status) => {
-    switch (status) {
-      case '출근': return ss.status_active;
-      case '퇴근': return ss.status_active;
-      case '미출근': return ss.status_danger;
-      default: return '';
-    }
-  }
 
-  // 상태 텍스트 변환
-  const getStatusText = (status) => {
-    switch (status) {
-      case '출근': return '출근';
-      case '퇴근': return '퇴근';
-      case '미출근': return '미출근';
-      default: return status;
-    }
-  }
 
   // 유저타입 텍스트 변환
   const getUserTypeText = (userType) => {
@@ -574,7 +558,7 @@ const AdminAttendance = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle="출석_목록"
-            csvData={generateTableCSV(filteredAttendanceList, ['날짜', '이름', '구분', '상태', '출근시간', '퇴근시간', '근무시간', '비고'], getReportInfo())}
+            csvData={generateTableCSV(filteredAttendanceList, ['날짜', '이름', '구분', '출근시간', '퇴근시간', '근무시간', '수정여부', '비고'], getReportInfo())}
             reportInfo={getReportInfo()}
           />
         </div>
@@ -584,10 +568,10 @@ const AdminAttendance = () => {
               <th>날짜</th>
               <th>이름</th>
               <th>구분</th>
-              <th>상태</th>
               <th>출근시간</th>
               <th>퇴근시간</th>
               <th>근무시간</th>
+              <th>수정여부</th>
               <th>비고</th>
             </tr>
           </thead>
@@ -605,14 +589,34 @@ const AdminAttendance = () => {
                   {attendance.userName}
                 </td>
                 <td>{getUserTypeText(attendance.userType)}</td>
-                <td>
-                  <span className={`${ss.status_badge} ${getStatusClass(attendance.status)}`}>
-                    {getStatusText(attendance.status)}
-                  </span>
-                </td>
                 <td>{formatTime(attendance.checkInTime)}</td>
                 <td>{formatTime(attendance.checkOutTime)}</td>
                 <td>{formatWorkHours(attendance.workHours)}</td>
+                <td style={{textAlign: 'center'}}>
+                  {((attendance.isModified === true) || (attendance.modificationHistory && attendance.modificationHistory.length > 0)) ? (
+                    <span style={{
+                      backgroundColor: '#ff6b6b',
+                      color: 'white',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      수정됨 ({attendance.modificationHistory ? attendance.modificationHistory.length : 0})
+                    </span>
+                  ) : (
+                    <span style={{
+                      backgroundColor: '#51cf66',
+                      color: 'white',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      원본
+                    </span>
+                  )}
+                </td>
                 <td style={{maxWidth: '150px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
                   {attendance.note || '-'}
                 </td>

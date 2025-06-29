@@ -35,6 +35,7 @@ const Attendance = () => {
     // 수정 모드 상태
     const [editMode, setEditMode] = useState({ active: false, recordId: null })
     const [editTime, setEditTime] = useState('')
+    const [editReason, setEditReason] = useState('')
 
     // 회사 위치 정보 상태
     const [companyLocation, setCompanyLocation] = useState({
@@ -462,6 +463,12 @@ const Attendance = () => {
             return
         }
 
+        if (!editReason.trim()) {
+            setStatusMessage('수정 사유를 입력해주세요')
+            setMessageType('error')
+            return
+        }
+
         const today = new Date()
         const [hours, minutes] = editTime.split(':')
         
@@ -606,13 +613,15 @@ const Attendance = () => {
         try {
             const response = await api.patch(`/attendance/update/${userId}`, {
                 recordId: editMode.recordId,
-                time: datetime.toISOString()
+                time: datetime.toISOString(),
+                reason: editReason.trim()
             })
             
             setStatusMessage('출석 기록이 수정되었습니다')
             setMessageType('success')
             setEditMode({ active: false, recordId: null })
             setEditTime('')
+            setEditReason('')
             
             // 상태를 즉시 업데이트하기 위해 await 사용
             await loadTodayAttendance()
@@ -636,11 +645,8 @@ const Attendance = () => {
         setLoading(true)
         
         try {
-            await api.delete(`/attendance/delete/${userId}`, {
-                data: {
-                    recordId: recordId
-                }
-            })
+            // API 요청 방식을 수정
+            const response = await api.delete(`/attendance/record/${recordId}?userId=${userId}`)
             
             setStatusMessage('출석 기록이 삭제되었습니다')
             setMessageType('success')
@@ -651,8 +657,26 @@ const Attendance = () => {
             
         } catch (error) {
             console.error('출석 기록 삭제 실패:', error)
-            setStatusMessage(error.response?.data?.message || '출석 기록 삭제 중 오류가 발생했습니다')
-            setMessageType('error')
+            
+            // 대안적인 API 호출 시도
+            try {
+                await api.delete(`/attendance/delete/${userId}`, {
+                    data: {
+                        recordId: recordId
+                    }
+                })
+                
+                setStatusMessage('출석 기록이 삭제되었습니다')
+                setMessageType('success')
+                
+                await loadTodayAttendance()
+                await loadAttendanceHistory()
+                
+            } catch (secondError) {
+                console.error('대안 삭제 방식도 실패:', secondError)
+                setStatusMessage(error.response?.data?.message || secondError.response?.data?.message || '출석 기록 삭제 중 오류가 발생했습니다')
+                setMessageType('error')
+            }
         } finally {
             setLoading(false)
         }
@@ -777,11 +801,23 @@ const Attendance = () => {
                                     onChange={(e) => setEditTime(e.target.value)}
                                     className={ss.time_input}
                                 />
+                                <textarea
+                                    placeholder="수정 사유를 입력하세요 (필수)"
+                                    value={editReason}
+                                    onChange={(e) => setEditReason(e.target.value)}
+                                    className={ss.time_input}
+                                    style={{
+                                        minHeight: '60px',
+                                        resize: 'vertical',
+                                        fontFamily: 'inherit'
+                                    }}
+                                    required
+                                />
                                 <div className={ss.edit_buttons}>
                                     <button 
                                         className={ss.save_button}
                                         onClick={handleEditTime}
-                                        disabled={loading}
+                                        disabled={loading || !editReason.trim()}
                                     >
                                         저장
                                     </button>
@@ -790,6 +826,7 @@ const Attendance = () => {
                                         onClick={() => {
                                             setEditMode({ active: false, recordId: null })
                                             setEditTime('')
+                                            setEditReason('')
                                         }}
                                     >
                                         취소
@@ -830,12 +867,13 @@ const Attendance = () => {
                                     <div className={ss.record_actions}>
                                         <button 
                                             className={ss.edit_btn}
-                                            onClick={() => {
-                                                const time = new Date(record.time)
-                                                const timeString = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
-                                                setEditMode({ active: true, recordId: record._id })
-                                                setEditTime(timeString)
-                                            }}
+                                                                                    onClick={() => {
+                                            const time = new Date(record.time)
+                                            const timeString = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
+                                            setEditMode({ active: true, recordId: record._id })
+                                            setEditTime(timeString)
+                                            setEditReason('')
+                                        }}
                                             title="시간 수정"
                                         >
                                             <FaEdit />

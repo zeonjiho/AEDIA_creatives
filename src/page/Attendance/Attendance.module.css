@@ -387,11 +387,6 @@
     color: var(--text-secondary);
 }
 
-.day_absent {
-    background-color: #9ca3af;
-    color: white;
-}
-
 .day_status {
     color: var(--success-color);
     font-size: 16px;
@@ -470,9 +465,9 @@
     color: white;
 }
 
-.status_absent {
-    background-color: var(--error-color);
-    color: white;
+.status_normal {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 

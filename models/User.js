@@ -93,7 +93,31 @@ const userSchema = new Schema({
             type: String,
             default: 'manual'
         },
-        memo: String      // 비고 사항
+        memo: String, // 비고 사항
+        // 수정 이력 추적 필드들 추가
+        isModified: {
+            type: Boolean,
+            default: false
+        },
+        modificationHistory: [{
+            timestamp: {
+                type: Date,
+                default: Date.now
+            },
+            modifiedBy: {
+                type: String,
+                required: true
+            },
+            changes: String,
+            reason: String, // 수정 사유 추가
+            previousValues: {
+                time: Date,
+                memo: String,
+                method: String
+            }
+        }],
+        originalTime: Date, // 원본 시간 (최초 입력 시간)
+        originalMemo: String // 원본 메모 (최초 입력 메모)
     }],
 
     mainLayout: {

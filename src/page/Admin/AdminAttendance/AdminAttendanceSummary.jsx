@@ -38,9 +38,6 @@ const AdminAttendanceSummary = () => {
         userName: summary.userId?.name || summary.userName || '알 수 없음',
         userType: summary.userId?.userType || summary.userType || 'internal',
         workingDays: summary.workingDays,
-        checkedIn: summary.checkedIn || 0,
-        checkedOut: summary.checkedOut || 0,
-        notCheckedIn: summary.notCheckedIn || 0,
         totalWorkHours: summary.totalWorkHours,
         avgWorkHours: summary.avgWorkHours,
         attendanceRate: summary.attendanceRate
@@ -86,18 +83,13 @@ const AdminAttendanceSummary = () => {
     if (summaryData.length === 0) return {};
 
     const totalWorkingDays = summaryData.reduce((sum, data) => sum + data.workingDays, 0);
-    const totalCheckedIn = summaryData.reduce((sum, data) => sum + (data.checkedIn || 0), 0);
-    const totalCheckedOut = summaryData.reduce((sum, data) => sum + (data.checkedOut || 0), 0);
-    const totalNotCheckedIn = summaryData.reduce((sum, data) => sum + (data.notCheckedIn || 0), 0);
     const totalWorkHours = summaryData.reduce((sum, data) => sum + data.totalWorkHours, 0);
 
     return {
-      avgAttendanceRate: totalWorkingDays > 0 ? Math.round((totalCheckedIn + totalCheckedOut) / totalWorkingDays * 100) : 0,
+      avgAttendanceRate: summaryData.length > 0 ? Math.round(summaryData.reduce((sum, data) => sum + data.attendanceRate, 0) / summaryData.length) : 0,
       totalWorkHours: Math.round(totalWorkHours * 10) / 10,
       avgWorkHours: summaryData.length > 0 ? Math.round((totalWorkHours / summaryData.length) * 10) / 10 : 0,
-      totalCheckedOut,
-      totalCheckedIn,
-      totalNotCheckedIn
+      totalWorkingDays
     };
   };
 
@@ -236,31 +228,24 @@ const AdminAttendanceSummary = () => {
       {/* 메트릭 카드 */}
       <div className={ss.metrics_row}>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{totalStats.totalCheckedOut}</div>
-          <div className={ss.metric_label}>정상 완료</div>
-          <div className={`${ss.metric_change} ${ss.positive}`}>
+          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{totalStats.avgAttendanceRate}%</div>
+          <div className={ss.metric_label}>평균 출석률</div>
+          <div className={`${ss.metric_change} ${totalStats.avgAttendanceRate >= 90 ? ss.positive : totalStats.avgAttendanceRate >= 80 ? ss.neutral : ss.negative}`}>
             {totalStats.avgAttendanceRate >= 90 ? '우수' : totalStats.avgAttendanceRate >= 80 ? '양호' : '개선 필요'}
           </div>
         </div>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--info-color)'}}>{totalStats.totalCheckedIn}</div>
-          <div className={ss.metric_label}>출근 중</div>
-          <div className={`${ss.metric_change} ${ss.neutral}`}>
-            현재 근무 중인 인원
-          </div>
-        </div>
-        <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{totalStats.totalNotCheckedIn}</div>
-          <div className={ss.metric_label}>미출근</div>
-          <div className={`${ss.metric_change} ${totalStats.totalNotCheckedIn <= 2 ? ss.positive : ss.negative}`}>
-            {totalStats.totalNotCheckedIn <= 2 ? '양호' : '주의 필요'}
+          <div className={ss.metric_value} style={{color: 'var(--info-color)'}}>{totalStats.avgWorkHours}h</div>
+          <div className={ss.metric_label}>평균 근무시간</div>
+          <div className={`${ss.metric_change} ${totalStats.avgWorkHours >= 8 ? ss.positive : ss.neutral}`}>
+            {totalStats.avgWorkHours >= 8 ? '목표 달성' : '목표 미달'}
           </div>
         </div>
         <div className={ss.metric_card}>
           <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>{totalStats.totalWorkHours}h</div>
           <div className={ss.metric_label}>총 근무시간</div>
-          <div className={`${ss.metric_change} ${totalStats.avgWorkHours >= 8 ? ss.positive : ss.neutral}`}>
-            평균 {totalStats.avgWorkHours}h/일
+          <div className={`${ss.metric_change} ${ss.neutral}`}>
+            이번 달 전체
           </div>
         </div>
       </div>
@@ -300,7 +285,7 @@ const AdminAttendanceSummary = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle={getReportInfo().title}
-            csvData={generateTableCSV(filteredData, ['이름', '구분', '근무일', '출근완료', '출근중', '미출근', '총근무시간', '평균근무시간', '출석률'], getReportInfo())}
+            csvData={generateTableCSV(filteredData, ['이름', '구분', '근무일', '총근무시간', '평균근무시간', '출석률'], getReportInfo())}
             reportInfo={getReportInfo()}
           />
         </div>
@@ -310,9 +295,6 @@ const AdminAttendanceSummary = () => {
               <th>이름</th>
               <th>구분</th>
               <th>근무일</th>
-              <th>출근완료</th>
-              <th>출근중</th>
-              <th>미출근</th>
               <th>총근무시간</th>
               <th>평균근무시간</th>
               <th>출석률</th>
@@ -326,15 +308,6 @@ const AdminAttendanceSummary = () => {
                 </td>
                 <td>{getUserTypeText(data.userType)}</td>
                 <td style={{textAlign: 'center'}}>{data.workingDays}일</td>
-                <td style={{textAlign: 'center', color: 'var(--success-color)', fontWeight: '600'}}>
-                  {data.checkedOut || 0}일
-                </td>
-                <td style={{textAlign: 'center', color: 'var(--info-color)', fontWeight: '600'}}>
-                  {data.checkedIn || 0}일
-                </td>
-                <td style={{textAlign: 'center', color: 'var(--warning-color)', fontWeight: '600'}}>
-                  {data.notCheckedIn || 0}일
-                </td>
                 <td style={{textAlign: 'center'}}>{data.totalWorkHours}시간</td>
                 <td style={{textAlign: 'center'}}>{data.avgWorkHours}시간</td>
                 <td style={{textAlign: 'center'}}>
@@ -345,7 +318,7 @@ const AdminAttendanceSummary = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="6" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   통계 데이터가 없습니다.
                 </td>
               </tr>

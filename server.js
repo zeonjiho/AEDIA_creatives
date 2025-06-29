@@ -700,7 +700,9 @@ app.post('/attendance/check-in', async(req, res) => {
             type: 'checkIn',
             time: now,
             date: today,
-            method: method
+            method: method,
+            originalTime: now, // 원본 시간 저장
+            isModified: false // 최초 생성시는 수정되지 않음
         };
 
         await User.findByIdAndUpdate(userId, {
@@ -753,7 +755,9 @@ app.post('/attendance/check-out', async(req, res) => {
             type: 'checkOut',
             time: now,
             date: today,
-            method: method
+            method: method,
+            originalTime: now, // 원본 시간 저장
+            isModified: false // 최초 생성시는 수정되지 않음
         };
 
         await User.findByIdAndUpdate(userId, {
@@ -897,7 +901,7 @@ app.get('/attendance/today', async(req, res) => {
 // 출퇴근 기록 수정 API
 app.patch('/attendance/update/:userId', async(req, res) => {
     const { userId } = req.params;
-    const { recordId, time } = req.body;
+    const { recordId, time, reason } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -910,9 +914,36 @@ app.patch('/attendance/update/:userId', async(req, res) => {
             return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
         }
 
+        const record = user.attendance[recordIndex];
+        const oldTime = record.time;
         const newTime = new Date(time);
-        user.attendance[recordIndex].time = newTime;
-        user.attendance[recordIndex].method = 'manual_edit';
+
+        // 원본 시간 저장 (최초 수정 시)
+        if (!record.originalTime) {
+            record.originalTime = oldTime;
+        }
+
+        // 수정 이력 추가
+        if (!record.modificationHistory) {
+            record.modificationHistory = [];
+        }
+
+        record.modificationHistory.push({
+            timestamp: new Date(),
+            modifiedBy: user.name || '사용자',
+            changes: `시간 수정: ${oldTime.toLocaleTimeString('ko-KR')} → ${newTime.toLocaleTimeString('ko-KR')}`,
+            reason: reason || '사유 없음',
+            previousValues: {
+                time: oldTime,
+                memo: record.memo,
+                method: record.method
+            }
+        });
+
+        // 기록 업데이트
+        record.time = newTime;
+        record.method = 'manual_edit';
+        record.isModified = true;
 
         await user.save();
 
@@ -976,7 +1007,9 @@ app.post('/attendance/new-check-in', async(req, res) => {
             type: 'checkIn',
             time: now,
             date: today,
-            method: method
+            method: method,
+            originalTime: now, // 원본 시간 저장
+            isModified: false // 최초 생성시는 수정되지 않음
         };
 
         await User.findByIdAndUpdate(userId, {
@@ -2946,6 +2979,23 @@ app.get('/admin/attendance/list', async(req, res) => {
 
                 const workHours = totalWorkMinutes > 0 ? Math.round((totalWorkMinutes / 60) * 10) / 10 : 0;
 
+                // 수정 여부 확인 - method가 manual_edit이거나 isModified가 true이거나 수정 이력이 있는 경우
+                const isModified = records.some(record =>
+                    record.method === 'manual_edit' ||
+                    record.isModified === true ||
+                    (record.modificationHistory && record.modificationHistory.length > 0)
+                );
+
+                // 모든 수정 이력 수집
+                const allModificationHistory = records.reduce((acc, record) => {
+                    if (record.modificationHistory && record.modificationHistory.length > 0) {
+                        acc.push(...record.modificationHistory);
+                    }
+                    return acc;
+                }, []);
+
+                console.log(`날짜 ${date}, 사용자 ${user.name}: 수정여부=${isModified}, 수정이력=${allModificationHistory.length}개`);
+
                 attendanceList.push({
                     _id: `${user._id}_${date}`,
                     userId: user._id,
@@ -2957,7 +3007,9 @@ app.get('/admin/attendance/list', async(req, res) => {
                     workHours: workHours,
                     status: attendanceStatus,
                     note: firstCheckIn ? firstCheckIn.memo || '' : '',
-                    records: records
+                    records: records,
+                    isModified: isModified,
+                    modificationHistory: allModificationHistory
                 });
             });
         }
@@ -3147,6 +3199,8 @@ app.patch('/admin/attendance/update/:attendanceId', async(req, res) => {
         if (recordIndex !== -1) {
             if (note !== undefined) {
                 user.attendance[recordIndex].memo = note;
+                user.attendance[recordIndex].isModified = true;
+                user.attendance[recordIndex].method = 'manual_edit'; // 관리자 수정 표시
             }
             await user.save();
         }
@@ -3159,6 +3213,141 @@ app.patch('/admin/attendance/update/:attendanceId', async(req, res) => {
     } catch (err) {
         console.error('Admin 출석 정보 수정 실패:', err);
         res.status(500).json({ message: 'Admin 출석 정보 수정에 실패했습니다.' });
+    }
+});
+
+// 개별 출석 기록 수정 API (모달용)
+app.patch('/admin/attendance/:attendanceId', async(req, res) => {
+    const { attendanceId } = req.params;
+    const {
+        status,
+        checkInTime,
+        checkOutTime,
+        note,
+        isModified,
+        modificationHistory
+    } = req.body;
+
+    try {
+        // attendanceId 형식: userId_date
+        const [userId, date] = attendanceId.split('_');
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 해당 날짜의 출석 기록들 찾기 및 업데이트
+        let updated = false;
+        const changes = [];
+
+        for (let i = 0; i < user.attendance.length; i++) {
+            const record = user.attendance[i];
+            if (record.date === date) {
+                // 변경사항 추적
+                if (record.memo !== note && note !== undefined) {
+                    changes.push(`비고: ${record.memo || '없음'} → ${note || '없음'}`);
+                    // 원본 정보 저장 (최초 1회)
+                    if (!record.originalMemo && record.memo) {
+                        record.originalMemo = record.memo;
+                    }
+                    record.memo = note;
+                }
+
+                // 시간 업데이트 (time 필드는 실제 checkIn/checkOut 시간)
+                if (record.type === 'checkIn' && checkInTime) {
+                    const newTime = new Date(`${date}T${checkInTime}:00`);
+                    if (record.time.getTime() !== newTime.getTime()) {
+                        changes.push(`출근시간: ${record.time.toLocaleTimeString('ko-KR')} → ${newTime.toLocaleTimeString('ko-KR')}`);
+                        // 원본 시간 저장 (최초 1회)
+                        if (!record.originalTime) {
+                            record.originalTime = record.time;
+                        }
+                        record.time = newTime;
+                    }
+                }
+
+                if (record.type === 'checkOut' && checkOutTime) {
+                    const newTime = new Date(`${date}T${checkOutTime}:00`);
+                    if (record.time.getTime() !== newTime.getTime()) {
+                        changes.push(`퇴근시간: ${record.time.toLocaleTimeString('ko-KR')} → ${newTime.toLocaleTimeString('ko-KR')}`);
+                        // 원본 시간 저장 (최초 1회)
+                        if (!record.originalTime) {
+                            record.originalTime = record.time;
+                        }
+                        record.time = newTime;
+                    }
+                }
+
+                // 수정 이력 추가
+                if (changes.length > 0) {
+                    record.isModified = true;
+                    record.method = 'manual_edit'; // 관리자 수정 표시
+                    record.modificationHistory = record.modificationHistory || [];
+                    record.modificationHistory.push({
+                        timestamp: new Date(),
+                        modifiedBy: '관리자',
+                        changes: changes.join(', '),
+                        previousValues: {
+                            time: record.originalTime || record.time,
+                            memo: record.originalMemo || record.memo,
+                            method: record.method
+                        }
+                    });
+                }
+
+                updated = true;
+            }
+        }
+
+        if (!updated) {
+            return res.status(404).json({ message: '해당 날짜의 출석 기록을 찾을 수 없습니다.' });
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: '출석 정보가 수정되었습니다.',
+            changes: changes
+        });
+
+    } catch (err) {
+        console.error('Admin 출석 기록 수정 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 기록 수정에 실패했습니다.' });
+    }
+});
+
+// 개별 출석 기록 삭제 API (모달용)
+app.delete('/admin/attendance/:attendanceId', async(req, res) => {
+    const { attendanceId } = req.params;
+
+    try {
+        // attendanceId 형식: userId_date
+        const [userId, date] = attendanceId.split('_');
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 해당 날짜의 모든 출석 기록 삭제
+        const originalLength = user.attendance.length;
+        user.attendance = user.attendance.filter(record => record.date !== date);
+
+        if (user.attendance.length === originalLength) {
+            return res.status(404).json({ message: '해당 날짜의 출석 기록을 찾을 수 없습니다.' });
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: '출석 기록이 삭제되었습니다.',
+            deletedCount: originalLength - user.attendance.length
+        });
+
+    } catch (err) {
+        console.error('Admin 출석 기록 삭제 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 기록 삭제에 실패했습니다.' });
     }
 });
 
