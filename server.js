@@ -2372,14 +2372,25 @@ app.get('/credit-cards', async(req, res) => {
     }
 });
 
+// 삭제된 법인카드 목록 조회
+app.get('/credit-cards/deleted', async(req, res) => {
+    try {
+        const cards = await CreditCard.find({ status: 'deleted' }).sort({ updatedAt: -1 });
+        res.status(200).json(cards);
+    } catch (err) {
+        console.error('삭제된 법인카드 목록 조회 실패:', err);
+        res.status(500).json({ message: '삭제된 법인카드 목록 조회 실패' });
+    }
+});
+
 // 법인카드 등록
 app.post('/credit-cards', async(req, res) => {
     const { cardName, number, label } = req.body;
 
     try {
         // 필수 필드 검증
-        if (!cardName || !number) {
-            return res.status(400).json({ message: '카드명과 카드번호는 필수입니다.' });
+        if (!cardName || !number || !label) {
+            return res.status(400).json({ message: '카드명, 카드번호, 라벨은 모두 필수입니다.' });
         }
 
         // 카드번호 형식 검증 (앞 4자리 + 뒤 4자리 = 8자리)
@@ -2388,7 +2399,11 @@ app.post('/credit-cards', async(req, res) => {
         }
 
         // 라벨 검증 (알파벳 대문자 한 글자)
+<<<<<<< Updated upstream
+        if (!/^[A-Z]$/.test(label)) {
+=======
         if (label && (!/^[A-Z]$/.test(label))) {
+>>>>>>> Stashed changes
             return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
         }
 
@@ -2398,6 +2413,9 @@ app.post('/credit-cards', async(req, res) => {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
+<<<<<<< Updated upstream
+
+=======
         // 중복 라벨 확인 (라벨이 있는 경우)
         if (label) {
             const existingLabel = await CreditCard.findOne({ label: label, status: 'active' });
@@ -2405,6 +2423,7 @@ app.post('/credit-cards', async(req, res) => {
                 return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
             }
         }
+>>>>>>> Stashed changes
 
         const newCard = new CreditCard({
             cardName: cardName.trim(),
@@ -2434,8 +2453,8 @@ app.put('/credit-cards/:cardId', async(req, res) => {
 
     try {
         // 필수 필드 검증
-        if (!cardName || !number) {
-            return res.status(400).json({ message: '카드명과 카드번호는 필수입니다.' });
+        if (!cardName || !number || !label) {
+            return res.status(400).json({ message: '카드명, 카드번호, 라벨은 모두 필수입니다.' });
         }
 
         // 카드번호 형식 검증
@@ -2444,7 +2463,11 @@ app.put('/credit-cards/:cardId', async(req, res) => {
         }
 
         // 라벨 검증 (알파벳 대문자 한 글자)
+<<<<<<< Updated upstream
+        if (!/^[A-Z]$/.test(label)) {
+=======
         if (label && (!/^[A-Z]$/.test(label))) {
+>>>>>>> Stashed changes
             return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
         }
 
@@ -2463,6 +2486,9 @@ app.put('/credit-cards/:cardId', async(req, res) => {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
+<<<<<<< Updated upstream
+
+=======
         // 다른 카드와 라벨 중복 확인 (자기 자신 제외, 라벨이 있는 경우)
         if (label) {
             const existingLabel = await CreditCard.findOne({
@@ -2474,6 +2500,7 @@ app.put('/credit-cards/:cardId', async(req, res) => {
                 return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
             }
         }
+>>>>>>> Stashed changes
 
         // 카드 정보 업데이트
         const updatedCard = await CreditCard.findByIdAndUpdate(
@@ -2520,6 +2547,49 @@ app.delete('/credit-cards/:cardId', async(req, res) => {
     } catch (err) {
         console.error('법인카드 삭제 실패:', err);
         res.status(500).json({ message: '법인카드 삭제에 실패했습니다.' });
+    }
+});
+
+// 법인카드 복구 (status를 active로 변경)
+app.patch('/credit-cards/:cardId/restore', async(req, res) => {
+    const { cardId } = req.params;
+
+    try {
+        const card = await CreditCard.findById(cardId);
+        if (!card || card.status !== 'deleted') {
+            return res.status(404).json({ message: '삭제된 법인카드를 찾을 수 없습니다.' });
+        }
+
+
+
+        // 카드번호 중복 확인 (복구 시)
+        const existingCard = await CreditCard.findOne({
+            number: card.number,
+            status: 'active',
+            _id: { $ne: cardId }
+        });
+        if (existingCard) {
+            return res.status(400).json({ 
+                message: '동일한 카드번호가 이미 사용중입니다. 다른 카드를 먼저 수정해주세요.' 
+            });
+        }
+
+        // status를 'active'로 변경 (복구)
+        const restoredCard = await CreditCard.findByIdAndUpdate(
+            cardId, 
+            { status: 'active' }, 
+            { new: true }
+        );
+
+        console.log(`법인카드 복구: ${restoredCard.cardName} (${restoredCard.label ? restoredCard.label + ' ' : ''}${restoredCard.number})`);
+
+        res.status(200).json({
+            message: '법인카드가 복구되었습니다.',
+            card: restoredCard
+        });
+    } catch (err) {
+        console.error('법인카드 복구 실패:', err);
+        res.status(500).json({ message: '법인카드 복구에 실패했습니다.' });
     }
 });
 

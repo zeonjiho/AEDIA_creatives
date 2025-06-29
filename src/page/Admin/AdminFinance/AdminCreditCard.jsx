@@ -7,12 +7,15 @@ import { generateTableCSV } from '../../../utils/exportUtils'
 
 const AdminCreditCard = () => {
   const [cardList, setCardList] = useState([]);
+  const [deletedCardList, setDeletedCardList] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddMode, setIsAddMode] = useState(false);
+  const [showDeletedCards, setShowDeletedCards] = useState(false);
 
   useEffect(() => {
     fetchCardList();
+    fetchDeletedCardList();
   }, [])
 
   const fetchCardList = async () => {
@@ -36,6 +39,30 @@ const AdminCreditCard = () => {
     } catch (err) {
       console.error('법인카드 목록 조회 실패:', err);
       setCardList([]); // 에러 시 빈 배열로 설정
+    }
+  }
+
+  const fetchDeletedCardList = async () => {
+    try {
+      const response = await api.get('/credit-cards/deleted');
+      
+      // API 응답 데이터 검증
+      const cardData = response.data || [];
+      if (!Array.isArray(cardData)) {
+        console.error('삭제된 카드 API 응답이 배열이 아닙니다:', cardData);
+        setDeletedCardList([]);
+        return;
+      }
+      
+      // null/undefined 값 제거 및 최신순 정렬
+      const validCards = cardData
+        .filter(card => card !== null && card !== undefined)
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      
+      setDeletedCardList(validCards);
+    } catch (err) {
+      console.error('삭제된 법인카드 목록 조회 실패:', err);
+      setDeletedCardList([]); // 에러 시 빈 배열로 설정
     }
   }
 
@@ -88,6 +115,7 @@ const AdminCreditCard = () => {
     // 안전을 위해 전체 목록도 새로고침
     setTimeout(() => {
       fetchCardList();
+      fetchDeletedCardList();
     }, 500);
   };
 
@@ -103,22 +131,41 @@ const AdminCreditCard = () => {
       await api.delete(`/credit-cards/${cardId}`);
       alert('법인카드가 삭제되었습니다.');
       fetchCardList(); // 리스트 새로고침
+      fetchDeletedCardList(); // 삭제된 카드 목록도 새로고침
     } catch (err) {
       console.error('법인카드 삭제 실패:', err);
       alert('법인카드 삭제에 실패했습니다.');
     }
   };
 
-  // 날짜 포맷팅
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  }
+  // 카드 복구 처리
+  const handleRestoreCard = async (cardId, event) => {
+    // 이벤트 버블링 방지
+    event.stopPropagation();
+    
+    const isConfirmed = window.confirm('이 법인카드를 복구하시겠습니까?');
+    if (!isConfirmed) return;
 
+<<<<<<< Updated upstream
+    try {
+      await api.patch(`/credit-cards/${cardId}/restore`);
+      alert('법인카드가 복구되었습니다.');
+      fetchCardList(); // 활성 카드 목록 새로고침
+      fetchDeletedCardList(); // 삭제된 카드 목록도 새로고침
+    } catch (err) {
+      console.error('법인카드 복구 실패:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert('법인카드 복구에 실패했습니다.');
+      }
+    }
+  };
+
+
+
+=======
+>>>>>>> Stashed changes
   // 카드번호 마스킹 처리 (라벨 포함, XXXX-****-****-XXXX 형태로 표시)
   const formatCardNumber = (number, label) => {
     if (!number || number.length !== 8) return '-';
@@ -131,9 +178,11 @@ const AdminCreditCard = () => {
   // 통계 계산
   const getCardStats = () => {
     const validCards = cardList.filter(card => card !== null && card !== undefined);
+    const validDeletedCards = deletedCardList.filter(card => card !== null && card !== undefined);
     return {
       total: validCards.length,
-      active: validCards.filter(card => card.status === 'active').length
+      active: validCards.filter(card => card.status === 'active').length,
+      deleted: validDeletedCards.length
     };
   }
 
@@ -200,10 +249,10 @@ const AdminCreditCard = () => {
           </div>
         </div>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>💳</div>
-          <div className={ss.metric_label}>법인카드 시스템</div>
-          <div className={`${ss.metric_change} ${ss.positive}`}>
-            정상 운영
+          <div className={ss.metric_value} style={{color: 'var(--danger-color)'}}>{cardStats.deleted}</div>
+          <div className={ss.metric_label}>삭제된 카드</div>
+          <div className={`${ss.metric_change} ${ss.neutral}`}>
+            복구 가능
           </div>
         </div>
       </div>
@@ -245,7 +294,11 @@ const AdminCreditCard = () => {
             chartTitle="법인카드_목록"
             csvData={generateTableCSV(
               cardList.filter(card => card !== null && card !== undefined), 
+<<<<<<< Updated upstream
+              ['카드명', '라벨', '카드번호', '상태']
+=======
               ['카드명', '라벨', '카드번호', '상태', '등록일']
+>>>>>>> Stashed changes
             )}
           />
         </div>
@@ -256,7 +309,6 @@ const AdminCreditCard = () => {
               <th>라벨</th>
               <th>카드번호</th>
               <th>상태</th>
-              <th>등록일</th>
               <th></th>
             </tr>
           </thead>
@@ -283,7 +335,6 @@ const AdminCreditCard = () => {
                     활성
                   </span>
                 </td>
-                <td>{formatDate(card.createdAt)}</td>
                 <td style={{textAlign: 'center', padding: '12px', verticalAlign: 'middle', width: '120px'}}>
                   <button 
                     style={{
@@ -324,6 +375,110 @@ const AdminCreditCard = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* 삭제된 법인카드 목록 */}
+      <div className={ss.data_table_container} style={{marginTop: '40px'}}>
+        <div className={ss.table_header}>
+          <div className={ss.table_title}>
+            <div className={`${ss.chart_icon} ${ss.user}`}></div>
+            삭제된 법인카드 목록 ({cardStats.deleted}개)
+            <button 
+              onClick={() => setShowDeletedCards(!showDeletedCards)}
+              style={{
+                marginLeft: '12px',
+                backgroundColor: 'var(--text-tertiary)',
+                color: 'white',
+                border: 'none',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              {showDeletedCards ? '숨기기' : '보기'}
+            </button>
+          </div>
+          {showDeletedCards && (
+                         <ExportButton 
+               chartRef={{ current: null }}
+               chartTitle="삭제된_법인카드_목록"
+               csvData={generateTableCSV(
+                 deletedCardList.filter(card => card !== null && card !== undefined), 
+                 ['카드명', '라벨', '카드번호']
+               )}
+             />
+          )}
+        </div>
+        
+        {showDeletedCards && (
+          <table className={ss.data_table}>
+            <thead>
+                             <tr>
+                 <th>카드명</th>
+                 <th>라벨</th>
+                 <th>카드번호</th>
+                 <th></th>
+               </tr>
+            </thead>
+            <tbody>
+              {deletedCardList && deletedCardList.length > 0 ? deletedCardList
+                .filter(card => card !== null && card !== undefined)
+                .map((card, idx) => (
+                <tr 
+                  key={card._id || `deleted-card-${idx}`}
+                  style={{ backgroundColor: '#fef2f2', opacity: 0.8 }}
+                >
+                  <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>
+                    {card.cardName || '-'}
+                  </td>
+                  <td style={{textAlign: 'center', fontWeight: '700', fontSize: '1.1rem', color: 'var(--danger-color)'}}>
+                    {card.label || '-'}
+                  </td>
+                                     <td style={{fontFamily: 'monospace', fontSize: '0.9rem'}}>
+                     {formatCardNumber(card.number, card.label)}
+                   </td>
+                   <td style={{textAlign: 'center', padding: '12px', verticalAlign: 'middle', width: '120px'}}>
+                    <button 
+                      style={{
+                        backgroundColor: 'var(--success-color)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-block',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={(e) => handleRestoreCard(card._id, e)}
+                      onMouseOver={(e) => {
+                        e.target.style.backgroundColor = '#16a34a';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 2px 4px rgba(34, 197, 94, 0.3)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.backgroundColor = 'var(--success-color)';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    >
+                      복구
+                    </button>
+                  </td>
+                </tr>
+              )) : (
+                                 <tr>
+                   <td colSpan="4" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                     삭제된 법인카드가 없습니다.
+                   </td>
+                 </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* CreditCard Modal */}
