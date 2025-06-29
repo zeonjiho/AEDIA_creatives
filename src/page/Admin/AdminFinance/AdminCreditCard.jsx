@@ -119,12 +119,13 @@ const AdminCreditCard = () => {
     });
   }
 
-  // 카드번호 마스킹 처리 (XXXX-****-****-XXXX 형태로 표시)
-  const formatCardNumber = (number) => {
+  // 카드번호 마스킹 처리 (라벨 포함, XXXX-****-****-XXXX 형태로 표시)
+  const formatCardNumber = (number, label) => {
     if (!number || number.length !== 8) return '-';
     const front = number.substring(0, 4);
     const back = number.substring(4, 8);
-    return `${front}-****-****-${back}`;
+    const labelPrefix = label ? `${label} ` : '';
+    return `${labelPrefix}${front}-****-****-${back}`;
   }
 
   // 통계 계산
@@ -244,7 +245,7 @@ const AdminCreditCard = () => {
             chartTitle="법인카드_목록"
             csvData={generateTableCSV(
               cardList.filter(card => card !== null && card !== undefined), 
-              ['카드명', '카드번호', '상태', '등록일']
+              ['카드명', '라벨', '카드번호', '상태', '등록일']
             )}
           />
         </div>
@@ -252,6 +253,7 @@ const AdminCreditCard = () => {
           <thead>
             <tr>
               <th>카드명</th>
+              <th>라벨</th>
               <th>카드번호</th>
               <th>상태</th>
               <th>등록일</th>
@@ -270,8 +272,11 @@ const AdminCreditCard = () => {
                 <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>
                   {card.cardName || '-'}
                 </td>
+                <td style={{textAlign: 'center', fontWeight: '700', fontSize: '1.1rem', color: 'var(--primary-color)'}}>
+                  {card.label || '-'}
+                </td>
                 <td style={{fontFamily: 'monospace', fontSize: '0.9rem'}}>
-                  {formatCardNumber(card.number)}
+                  {formatCardNumber(card.number, card.label)}
                 </td>
                 <td>
                   <span className={`${ss.status_badge} ${ss.status_active}`}>
@@ -312,7 +317,7 @@ const AdminCreditCard = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="6" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 법인카드가 없습니다.
                 </td>
               </tr>

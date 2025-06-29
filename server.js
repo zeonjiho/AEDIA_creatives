@@ -2341,7 +2341,7 @@ app.get('/credit-cards', async(req, res) => {
 
 // 법인카드 등록
 app.post('/credit-cards', async(req, res) => {
-    const { cardName, number } = req.body;
+    const { cardName, number, label } = req.body;
 
     try {
         // 필수 필드 검증
@@ -2354,21 +2354,35 @@ app.post('/credit-cards', async(req, res) => {
             return res.status(400).json({ message: '카드번호는 앞 4자리와 뒤 4자리로 총 8자리여야 합니다.' });
         }
 
+        // 라벨 검증 (알파벳 대문자 한 글자)
+        if (label && (!/^[A-Z]$/.test(label))) {
+            return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
+        }
+
         // 중복 카드번호 확인
         const existingCard = await CreditCard.findOne({ number: number, status: 'active' });
         if (existingCard) {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
+        // 중복 라벨 확인 (라벨이 있는 경우)
+        if (label) {
+            const existingLabel = await CreditCard.findOne({ label: label, status: 'active' });
+            if (existingLabel) {
+                return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
+            }
+        }
+
         const newCard = new CreditCard({
             cardName: cardName.trim(),
             number: number,
+            label: label || null,
             status: 'active'
         });
 
         await newCard.save();
 
-        console.log(`새 법인카드 등록: ${cardName} (${number})`);
+        console.log(`새 법인카드 등록: ${cardName} (${label ? label + ' ' : ''}${number})`);
 
         res.status(201).json({
             message: '법인카드가 성공적으로 등록되었습니다.',
@@ -2383,7 +2397,7 @@ app.post('/credit-cards', async(req, res) => {
 // 법인카드 수정
 app.put('/credit-cards/:cardId', async(req, res) => {
     const { cardId } = req.params;
-    const { cardName, number } = req.body;
+    const { cardName, number, label } = req.body;
 
     try {
         // 필수 필드 검증
@@ -2394,6 +2408,11 @@ app.put('/credit-cards/:cardId', async(req, res) => {
         // 카드번호 형식 검증
         if (number.length !== 8) {
             return res.status(400).json({ message: '카드번호는 앞 4자리와 뒤 4자리로 총 8자리여야 합니다.' });
+        }
+
+        // 라벨 검증 (알파벳 대문자 한 글자)
+        if (label && (!/^[A-Z]$/.test(label))) {
+            return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
         }
 
         const card = await CreditCard.findById(cardId);
@@ -2411,15 +2430,28 @@ app.put('/credit-cards/:cardId', async(req, res) => {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
+        // 다른 카드와 라벨 중복 확인 (자기 자신 제외, 라벨이 있는 경우)
+        if (label) {
+            const existingLabel = await CreditCard.findOne({
+                label: label,
+                status: 'active',
+                _id: { $ne: cardId }
+            });
+            if (existingLabel) {
+                return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
+            }
+        }
+
         // 카드 정보 업데이트
         const updatedCard = await CreditCard.findByIdAndUpdate(
             cardId, {
                 cardName: cardName.trim(),
-                number: number
+                number: number,
+                label: label || null
             }, { new: true }
         );
 
-        console.log(`법인카드 수정: ${updatedCard.cardName} (${updatedCard.number})`);
+        console.log(`법인카드 수정: ${updatedCard.cardName} (${updatedCard.label ? updatedCard.label + ' ' : ''}${updatedCard.number})`);
 
         res.status(200).json({
             message: '법인카드 정보가 성공적으로 수정되었습니다.',
