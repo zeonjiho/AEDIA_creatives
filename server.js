@@ -580,7 +580,8 @@ app.put('/update-user-profile', async(req, res) => {
         department,
         bio,
         roles,
-        avatar
+        avatar,
+        slackId
     } = req.body;
 
     try {
@@ -631,6 +632,7 @@ app.put('/update-user-profile', async(req, res) => {
         if (bio !== undefined) updateData.bio = bio;
         if (roles !== undefined) updateData.roles = roles;
         if (avatar !== undefined) updateData.avatar = avatar;
+        if (slackId !== undefined) updateData.slackId = slackId;
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
