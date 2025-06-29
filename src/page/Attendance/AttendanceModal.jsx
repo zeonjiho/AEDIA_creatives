@@ -10,7 +10,7 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
         setActiveTab(tab)
     }
 
-    // 현재 주의 월~금 날짜 계산
+    // 현재 주의 월~일 날짜 계산
     const getCurrentWeekDays = () => {
         const today = new Date()
         const currentDay = today.getDay() // 0: 일요일, 1: 월요일, ...
@@ -20,12 +20,12 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
         monday.setDate(today.getDate() + mondayOffset)
         
         const weekDays = []
-        for (let i = 0; i < 5; i++) { // 월~금
+        for (let i = 0; i < 7; i++) { // 월~일
             const day = new Date(monday)
             day.setDate(monday.getDate() + i)
             weekDays.push({
                 date: day.toISOString().split('T')[0],
-                name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i],
+                name: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
                 fullDate: day
             })
         }

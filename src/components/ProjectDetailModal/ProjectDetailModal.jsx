@@ -262,10 +262,13 @@ const ProjectDetailModal = ({
         if (role.roleName === category) {
           return {
             ...role,
-            members: role.members.filter(member => 
-              (member.userId || member._id || member.id) !== personId
-            )
-    };
+            members: role.members.filter(member => {
+              // populate된 userId 객체가 있는 경우와 없는 경우 모두 처리
+              const userData = member.userId || member;
+              const memberId = userData._id || userData.id || member.userId;
+              return memberId !== personId;
+            })
+          };
         }
         return role;
       });
@@ -601,7 +604,20 @@ const ProjectDetailModal = ({
     }
     
     const roleData = selectedProject.staffList.find(role => role.roleName === category);
-    return roleData ? roleData.members || [] : [];
+    const members = roleData ? roleData.members || [] : [];
+    
+    // 디버깅을 위한 로그
+    if (members.length > 0) {
+      console.log(`[${category}] 스탭 멤버들:`, members);
+      members.forEach((member, index) => {
+        const userData = member.userId || member;
+        console.log(`  [${index}] member:`, member);
+        console.log(`  [${index}] userData:`, userData);
+        console.log(`  [${index}] name:`, userData.name || member.name);
+      });
+    }
+    
+    return members;
   };
 
   // 현재 스탭 카테고리의 선택된 멤버들 가져오기 (StaffSearchModal에 맞는 형태로 변환)
@@ -610,6 +626,7 @@ const ProjectDetailModal = ({
     
     // StaffSearchModal이 기대하는 형태로 변환하고 안전성 확보
     return staffMembers
+<<<<<<< Updated upstream
       .filter(member => member && member.name) // name이 있는 멤버만 필터링
       .map(member => ({
         id: member.userId || member._id || member.id || `temp_${Date.now()}_${Math.random()}`,
@@ -622,6 +639,26 @@ const ProjectDetailModal = ({
         email: member.email || '',
         position: member.position || currentStaffCategory
       }));
+=======
+      .filter(member => member && (member.name || (member.userId && member.userId.name))) // name이 있는 멤버만 필터링
+      .map((member, index) => {
+        // populate된 userId 객체가 있는 경우와 없는 경우 모두 처리
+        const userData = member.userId || member;
+        const memberId = userData._id || userData.id || member.userId || `temp_${Date.now()}_${index}`;
+        
+        return {
+          id: memberId,
+          _id: memberId,
+          name: userData.name || member.name || '이름 없음',
+          userType: userData.userType || member.userType || 'external',
+          roles: userData.roles || member.roles || [currentStaffCategory],
+          department: userData.department || member.department || '부서 없음',
+          phone: userData.phone || member.phone || '',
+          email: userData.email || member.email || '',
+          position: userData.position || member.position || currentStaffCategory
+        };
+      });
+>>>>>>> Stashed changes
   };
 
   const staffCategories = [
@@ -1025,6 +1062,7 @@ const ProjectDetailModal = ({
                       {staffMembers.length === 0 ? (
                       <p className={styles.no_staff}>배정된 스탭이 없습니다</p>
                     ) : (
+<<<<<<< Updated upstream
                         staffMembers.map(person => (
                           <div key={person.userId || person._id || person.id} className={styles.staff_member}>
                           <span className={styles.member_name}>{person.name}</span>
@@ -1043,6 +1081,36 @@ const ProjectDetailModal = ({
                           )}
                         </div>
                       ))
+=======
+                        staffMembers.map((person, index) => {
+                          // populate된 userId 객체가 있는 경우와 없는 경우 모두 처리
+                          const userData = person.userId || person;
+                          const personName = userData.name || person.name || '이름 없음';
+                          const personDept = userData.department || person.department || '부서 없음';
+                          const personPhone = userData.phone || person.phone;
+                          const personId = userData._id || userData.id || person.userId || `staff_${category}_${index}`;
+                          const isExternal = userData.userType === 'external' || person.isExternal;
+                          
+                          return (
+                            <div key={personId} className={styles.staff_member}>
+                              <span className={styles.member_name}>{personName}</span>
+                              <span className={styles.member_info}>({personDept})</span>
+                              {personPhone && <span className={styles.member_phone}>📞 {personPhone}</span>}
+                              {isExternal && <span className={styles.external_badge}>외부</span>}
+                              {editingStaff && (
+                                <button
+                                  type="button"
+                                  className={styles.remove_staff_button}
+                                  onClick={() => handleRemoveStaff(category, personId)}
+                                  disabled={isUpdating}
+                                >
+                                  <HiX />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })
+>>>>>>> Stashed changes
                     )}
                   </div>
                 </div>
