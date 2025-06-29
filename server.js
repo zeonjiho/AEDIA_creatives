@@ -29,6 +29,7 @@ const Project = require('./models/Project')
 const SlackCode = require('./models/SlackCode')
 const CreditCard = require('./models/CreditCard')
 const Company = require('./models/Company')
+const Receipt = require('./models/Receipt')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -2553,16 +2554,14 @@ app.patch('/credit-cards/:cardId/restore', async(req, res) => {
             _id: { $ne: cardId }
         });
         if (existingCard) {
-            return res.status(400).json({ 
-                message: '동일한 카드번호가 이미 사용중입니다. 다른 카드를 먼저 수정해주세요.' 
+            return res.status(400).json({
+                message: '동일한 카드번호가 이미 사용중입니다. 다른 카드를 먼저 수정해주세요.'
             });
         }
 
         // status를 'active'로 변경 (복구)
         const restoredCard = await CreditCard.findByIdAndUpdate(
-            cardId, 
-            { status: 'active' }, 
-            { new: true }
+            cardId, { status: 'active' }, { new: true }
         );
 
         console.log(`법인카드 복구: ${restoredCard.cardName} (${restoredCard.label ? restoredCard.label + ' ' : ''}${restoredCard.number})`);
@@ -3436,5 +3435,497 @@ app.delete('/admin/attendance/delete/:attendanceId', async(req, res) => {
     } catch (err) {
         console.error('Admin 출석 기록 삭제 실패:', err);
         res.status(500).json({ message: 'Admin 출석 기록 삭제에 실패했습니다.' });
+    }
+});
+
+// ============================================
+// Receipt API 엔드포인트들
+// ============================================
+
+// 전체 영수증 조회 (필터링 옵션 포함)
+app.get('/receipts', async(req, res) => {
+    try {
+        const {
+            type,
+            status,
+            category,
+            userId,
+            projectId,
+            startDate,
+            endDate,
+            page = 1,
+            limit = 50
+        } = req.query;
+
+        // 필터 조건 구성
+        const filter = {};
+
+        if (type && type !== 'all') filter.type = type;
+        if (status && status !== 'all') filter.status = status;
+        if (category && category !== 'all') filter.category = category;
+        if (userId) filter.userId = userId;
+        if (projectId) filter.projectId = projectId;
+
+        if (startDate || endDate) {
+            filter.date = {};
+            if (startDate) filter.date.$gte = new Date(startDate);
+            if (endDate) filter.date.$lte = new Date(endDate);
+        }
+
+        const receipts = await Receipt.find(filter)
+            .populate('userId', 'name email')
+            .populate('projectId', 'title')
+            .populate('approvedBy', 'name')
+            .sort({ date: -1, createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await Receipt.countDocuments(filter);
+
+        res.status(200).json({
+            success: true,
+            data: receipts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error('영수증 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 상세 조회
+app.get('/receipts/:id', async(req, res) => {
+    try {
+        const receipt = await Receipt.findById(req.params.id)
+            .populate('userId', 'name email avatar')
+            .populate('projectId', 'title description')
+            .populate('approvedBy', 'name email');
+
+        if (!receipt) {
+            return res.status(404).json({
+                success: false,
+                message: '영수증을 찾을 수 없습니다.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: receipt
+        });
+
+    } catch (error) {
+        console.error('영수증 상세 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 상세 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 새 영수증 추가
+app.post('/receipts', async(req, res) => {
+    try {
+        const {
+            title,
+            description,
+            amount,
+            date,
+            time,
+            type,
+            category,
+            paymentMethod,
+            userId,
+            userName,
+            projectId,
+            projectName,
+            route,
+            attachmentUrls = []
+        } = req.body;
+
+        // 필수 필드 검증
+        if (!title || !amount || !date || !type || !category || !paymentMethod || !userId || !userName) {
+            return res.status(400).json({
+                success: false,
+                message: '필수 필드가 누락되었습니다.'
+            });
+        }
+
+        // 택시 타입인 경우 route 필수
+        if (type === 'TAXI' && !route) {
+            return res.status(400).json({
+                success: false,
+                message: '택시 영수증은 경로 정보가 필요합니다.'
+            });
+        }
+
+        const receipt = new Receipt({
+            title,
+            description,
+            amount: parseFloat(amount),
+            date: new Date(date),
+            time,
+            type,
+            category,
+            paymentMethod,
+            userId,
+            userName,
+            projectId: projectId || null,
+            projectName: projectName || null,
+            route: type === 'TAXI' ? route : null,
+            attachmentUrls,
+            status: 'PENDING'
+        });
+
+        const savedReceipt = await receipt.save();
+
+        // 생성된 영수증을 populate하여 반환
+        const populatedReceipt = await Receipt.findById(savedReceipt._id)
+            .populate('userId', 'name email')
+            .populate('projectId', 'title');
+
+        res.status(201).json({
+            success: true,
+            message: '영수증이 성공적으로 등록되었습니다.',
+            data: populatedReceipt
+        });
+
+    } catch (error) {
+        console.error('영수증 등록 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 등록에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 수정
+app.put('/receipts/:id', async(req, res) => {
+    try {
+        const receiptId = req.params.id;
+        const updateData = req.body;
+
+        // 승인된 영수증은 수정 불가
+        const existingReceipt = await Receipt.findById(receiptId);
+        if (!existingReceipt) {
+            return res.status(404).json({
+                success: false,
+                message: '영수증을 찾을 수 없습니다.'
+            });
+        }
+
+        if (existingReceipt.status === 'APPROVED') {
+            return res.status(403).json({
+                success: false,
+                message: '승인된 영수증은 수정할 수 없습니다.'
+            });
+        }
+
+        // 금액이 있는 경우 숫자로 변환
+        if (updateData.amount) {
+            updateData.amount = parseFloat(updateData.amount);
+        }
+
+        // 날짜가 있는 경우 Date 객체로 변환
+        if (updateData.date) {
+            updateData.date = new Date(updateData.date);
+        }
+
+        const updatedReceipt = await Receipt.findByIdAndUpdate(
+                receiptId,
+                updateData, { new: true, runValidators: true }
+            ).populate('userId', 'name email')
+            .populate('projectId', 'title');
+
+        res.status(200).json({
+            success: true,
+            message: '영수증이 성공적으로 수정되었습니다.',
+            data: updatedReceipt
+        });
+
+    } catch (error) {
+        console.error('영수증 수정 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 수정에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 삭제
+app.delete('/receipts/:id', async(req, res) => {
+    try {
+        const receiptId = req.params.id;
+
+        const receipt = await Receipt.findById(receiptId);
+        if (!receipt) {
+            return res.status(404).json({
+                success: false,
+                message: '영수증을 찾을 수 없습니다.'
+            });
+        }
+
+        // 승인된 영수증은 삭제 불가
+        if (receipt.status === 'APPROVED') {
+            return res.status(403).json({
+                success: false,
+                message: '승인된 영수증은 삭제할 수 없습니다.'
+            });
+        }
+
+        await Receipt.findByIdAndDelete(receiptId);
+
+        res.status(200).json({
+            success: true,
+            message: '영수증이 성공적으로 삭제되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('영수증 삭제 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 삭제에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 승인
+app.patch('/receipts/:id/approve', async(req, res) => {
+    try {
+        const receiptId = req.params.id;
+        const { approvedBy } = req.body; // 승인자 ID
+
+        const receipt = await Receipt.findById(receiptId);
+        if (!receipt) {
+            return res.status(404).json({
+                success: false,
+                message: '영수증을 찾을 수 없습니다.'
+            });
+        }
+
+        if (receipt.status === 'APPROVED') {
+            return res.status(400).json({
+                success: false,
+                message: '이미 승인된 영수증입니다.'
+            });
+        }
+
+        const updatedReceipt = await Receipt.findByIdAndUpdate(
+                receiptId, {
+                    status: 'APPROVED',
+                    approvedBy,
+                    approvedAt: new Date(),
+                    rejectionReason: null
+                }, { new: true }
+            ).populate('userId', 'name email')
+            .populate('projectId', 'title')
+            .populate('approvedBy', 'name email');
+
+        res.status(200).json({
+            success: true,
+            message: '영수증이 승인되었습니다.',
+            data: updatedReceipt
+        });
+
+    } catch (error) {
+        console.error('영수증 승인 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 승인에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 거절
+app.patch('/receipts/:id/reject', async(req, res) => {
+    try {
+        const receiptId = req.params.id;
+        const { rejectionReason } = req.body;
+
+        if (!rejectionReason) {
+            return res.status(400).json({
+                success: false,
+                message: '거절 사유를 입력해주세요.'
+            });
+        }
+
+        const receipt = await Receipt.findById(receiptId);
+        if (!receipt) {
+            return res.status(404).json({
+                success: false,
+                message: '영수증을 찾을 수 없습니다.'
+            });
+        }
+
+        const updatedReceipt = await Receipt.findByIdAndUpdate(
+                receiptId, {
+                    status: 'REJECTED',
+                    rejectionReason,
+                    approvedBy: null,
+                    approvedAt: null
+                }, { new: true }
+            ).populate('userId', 'name email')
+            .populate('projectId', 'title');
+
+        res.status(200).json({
+            success: true,
+            message: '영수증이 거절되었습니다.',
+            data: updatedReceipt
+        });
+
+    } catch (error) {
+        console.error('영수증 거절 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 거절에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 영수증 통계 조회
+app.get('/receipts/stats/summary', async(req, res) => {
+    try {
+        const { type, startDate, endDate } = req.query;
+
+        const matchStage = {};
+        if (type && type !== 'all') matchStage.type = type;
+        if (startDate || endDate) {
+            matchStage.date = {};
+            if (startDate) matchStage.date.$gte = new Date(startDate);
+            if (endDate) matchStage.date.$lte = new Date(endDate);
+        }
+
+        // 상태별 통계
+        const statusStats = await Receipt.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // 타입별 통계
+        const typeStats = await Receipt.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$type',
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // 카테고리별 통계
+        const categoryStats = await Receipt.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // 전체 통계
+        const totalStats = await Receipt.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: null,
+                    totalCount: { $sum: 1 },
+                    totalAmount: { $sum: '$amount' },
+                    avgAmount: { $avg: '$amount' }
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                statusStats,
+                typeStats,
+                categoryStats,
+                totalStats: totalStats[0] || { totalCount: 0, totalAmount: 0, avgAmount: 0 }
+            }
+        });
+
+    } catch (error) {
+        console.error('영수증 통계 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '영수증 통계 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 월별 트렌드 조회
+app.get('/receipts/stats/monthly', async(req, res) => {
+    try {
+        const { type, year = new Date().getFullYear() } = req.query;
+
+        const matchStage = {
+            date: {
+                $gte: new Date(`${year}-01-01`),
+                $lt: new Date(`${parseInt(year) + 1}-01-01`)
+            }
+        };
+
+        if (type && type !== 'all') matchStage.type = type;
+
+        const monthlyStats = await Receipt.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: { $month: '$date' },
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: '$amount' }
+                }
+            },
+            { $sort: { '_id': 1 } }
+        ]);
+
+        // 12개월 데이터로 채우기
+        const fullYearStats = Array.from({ length: 12 }, (_, i) => {
+            const monthData = monthlyStats.find(stat => stat._id === i + 1);
+            return {
+                month: i + 1,
+                count: monthData ? monthData.count : 0,
+                totalAmount: monthData ? monthData.totalAmount : 0
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: fullYearStats
+        });
+
+    } catch (error) {
+        console.error('월별 트렌드 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '월별 트렌드 조회에 실패했습니다.',
+            error: error.message
+        });
     }
 });
