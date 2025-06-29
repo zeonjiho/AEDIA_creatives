@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import ss from './Attendance.module.css'
-import { FaCalendarCheck, FaUserClock, FaHistory, FaCheckCircle, FaRegListAlt, FaMapMarkerAlt, FaEdit, FaTrash, FaPlus } from 'react-icons/fa'
+import { FaCalendarCheck, FaUserClock, FaHistory, FaCheckCircle, FaRegListAlt, FaMapMarkerAlt, FaEdit, FaTrash, FaPlus, FaTimes, FaExclamationTriangle } from 'react-icons/fa'
 import AttendanceModal from './AttendanceModal'
 import api from '../../utils/api'
 import { jwtDecode } from 'jwt-decode'
@@ -36,6 +36,13 @@ const Attendance = () => {
     const [editMode, setEditMode] = useState({ active: false, recordId: null })
     const [editTime, setEditTime] = useState('')
     const [editReason, setEditReason] = useState('')
+
+    // 외부 위치 체크인/아웃 모달 상태 추가
+    const [showOffSiteModal, setShowOffSiteModal] = useState(false)
+    const [offSiteReason, setOffSiteReason] = useState('')
+    const [offSiteDistance, setOffSiteDistance] = useState(0)
+    const [pendingLocation, setPendingLocation] = useState(null)
+    const [offSiteMode, setOffSiteMode] = useState('') // 'checkin' 또는 'checkout'
 
     // 회사 위치 정보 상태
     const [companyLocation, setCompanyLocation] = useState({
@@ -74,8 +81,18 @@ const Attendance = () => {
     // 회사 위치 정보 불러오기
     const loadCompanyLocation = async () => {
         try {
+            console.log('🏢 회사 위치 정보 요청 중...')
             const response = await api.get('/company/location')
             const locationData = response.data
+            
+            console.log('🏢 서버에서 받은 회사 위치 데이터:', {
+                hasLocation: locationData.hasLocation,
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                name: locationData.name,
+                address: locationData.address,
+                radius: locationData.radius
+            })
             
             const newCompanyLocation = {
                 latitude: locationData.latitude,
@@ -83,15 +100,15 @@ const Attendance = () => {
                 name: locationData.name,
                 address: locationData.address,
                 hasLocation: locationData.hasLocation,
-                radius: 100 // 기본 반경 100미터
+                radius: locationData.radius || 100 // 기본 반경 100미터
             }
             
             setCompanyLocation(newCompanyLocation)
             
-            console.log('회사 위치 정보 로드:', locationData)
+            console.log('🏢 설정된 회사 위치 정보:', newCompanyLocation)
             return newCompanyLocation
         } catch (error) {
-            console.error('회사 위치 정보 로드 실패:', error)
+            console.error('❌ 회사 위치 정보 로드 실패:', error)
             // 기본값으로 설정 (서울시청)
             const defaultLocation = {
                 latitude: 37.520574,
@@ -101,6 +118,7 @@ const Attendance = () => {
                 hasLocation: false,
                 radius: 100
             }
+            console.log('🏢 기본 위치로 설정:', defaultLocation)
             setCompanyLocation(defaultLocation)
             return defaultLocation
         }
@@ -257,9 +275,20 @@ const Attendance = () => {
 
     // 위치 유효성 검사
     const checkLocationValidity = (latitude, longitude, companyLocationData = companyLocation) => {
+        console.log('📍 위치 검증 시작:', {
+            사용자위치: { latitude, longitude },
+            회사위치: {
+                latitude: companyLocationData.latitude,
+                longitude: companyLocationData.longitude,
+                hasLocation: companyLocationData.hasLocation,
+                radius: companyLocationData.radius
+            }
+        })
+        
         // 회사 위치 정보가 설정되어 있지 않으면 모든 위치 허용
         if (!companyLocationData.hasLocation || !companyLocationData.latitude || !companyLocationData.longitude) {
-            console.log('회사 위치 정보가 없어 위치 검증을 우회합니다.')
+            console.log('📍 ⚠️ 회사 위치 정보가 없어 위치 검증을 우회합니다. (모든 위치 허용)')
+            console.log('📍 ⚠️ 이 경우 외부 위치 모달이 나타나지 않습니다!')
             return true
         }
 
@@ -271,7 +300,14 @@ const Attendance = () => {
         )
         
         const isValid = distance <= companyLocationData.radius
-        console.log(`위치 검증: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocationData.radius}m, 유효성 ${isValid}`)
+        console.log(`📍 위치 검증 결과: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocationData.radius}m, 유효성 ${isValid}`)
+        
+        if (!isValid) {
+            console.log('📍 ✅ 외부 위치 감지! 외부 위치 모달이 표시되어야 합니다.')
+            console.log('📍 ✅ 모달 표시 후 사유 입력하고 확인을 눌러야 외부 위치로 저장됩니다.')
+        } else {
+            console.log('📍 ❌ 회사 내부 위치로 판단됨. 외부 위치 모달이 나타나지 않습니다.')
+        }
         
         return isValid
     }
@@ -329,60 +365,82 @@ const Attendance = () => {
 
     // 출근 체크인 함수
     const handleCheckIn = async () => {
+        console.log('🔵 체크인 시작:', { userId, canCheckIn })
+        
         setLoading(true)
         setStatusMessage('회사 위치 정보 및 현재 위치 확인 중...')
         setMessageType('')
 
         try {
             // 1. 회사 위치 정보 먼저 로드
+            console.log('🔵 회사 위치 정보 로드 중...')
             const currentCompanyLocation = await loadCompanyLocation()
+            console.log('🔵 회사 위치 정보:', currentCompanyLocation)
             
             // 2. 체크인 시 실시간 위치 확인
+            console.log('🔵 현재 위치 확인 중...')
+            setStatusMessage('현재 위치 확인 중...')
             const currentLocation = await getCurrentLocationAsync()
+            console.log('🔵 현재 위치:', currentLocation)
             
             // 3. 위치 검증 (회사 위치가 설정된 경우만)
             if (currentCompanyLocation.hasLocation) {
+                console.log('🔵 위치 검증 중...')
                 const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude, currentCompanyLocation)
                 
                 if (!isValid) {
+                    // 위치가 유효하지 않은 경우 모달 표시
                     const distance = calculateDistance(
                         currentLocation.latitude, currentLocation.longitude,
                         currentCompanyLocation.latitude, currentCompanyLocation.longitude
                     )
-                    setStatusMessage(`인증된 위치에서만 출근 체크가 가능합니다 (${currentCompanyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
-                    setMessageType('error')
+                    console.log('❌ 체크인 위치 검증 실패:', { distance, isValid })
+                    console.log('🔵 외부 위치 체크인 모달 표시 설정:', {
+                        distance: Math.round(distance),
+                        location: currentLocation,
+                        mode: 'checkin'
+                    })
+                    
+                    setOffSiteDistance(Math.round(distance))
+                    setPendingLocation(currentLocation)
+                    setOffSiteReason('')
+                    setOffSiteMode('checkin')
+                    setShowOffSiteModal(true)
+                    setLoading(false)
+                    setStatusMessage('')
                     return
                 }
+                console.log('✅ 위치 검증 성공')
+            } else {
+                console.log('🔵 회사 위치 설정이 없어 위치 검증 우회')
             }
 
             // 4. 위치 인증 성공 시 체크인 진행
-            setStatusMessage('출근 처리 중...')
-            const response = await api.post(`/attendance/check-in?userId=${userId}`, {
-                location: currentLocation,
-                method: 'manual'
-            })
-            
-            const data = response.data
-            setStatusMessage(`${data.message} (${data.status})`)
-            setMessageType('success')
-            
-            // 현재 위치 정보 업데이트
-            setUserLocation(currentLocation)
-            
-            // 상태를 즉시 업데이트하기 위해 await 사용
-            await loadTodayAttendance()
-            await loadAttendanceHistory()
+            await performCheckIn(currentLocation)
             
         } catch (error) {
-            console.error('출근 처리 실패:', error)
+            console.error('❌ 출근 처리 실패:', error)
+            console.log('❌ 에러 상세:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            })
+            
             if (error.message === 'LOCATION_ERROR') {
                 setStatusMessage('위치 정보를 가져올 수 없습니다. GPS를 활성화하고 다시 시도해주세요.')
+            } else if (error.response?.status === 400) {
+                setStatusMessage(error.response?.data?.message || '잘못된 요청입니다.')
+            } else if (error.response?.status === 500) {
+                setStatusMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+            } else if (error.code === 'NETWORK_ERROR') {
+                setStatusMessage('네트워크 연결을 확인해주세요.')
             } else {
                 setStatusMessage(error.response?.data?.message || '출근 처리 중 오류가 발생했습니다')
             }
             setMessageType('error')
         } finally {
             setLoading(false)
+            console.log('🔵 체크인 프로세스 종료')
         }
     }
 
@@ -414,33 +472,32 @@ const Attendance = () => {
                 const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude, currentCompanyLocation)
                 
                 if (!isValid) {
+                    // 위치가 유효하지 않은 경우 모달 표시
                     const distance = calculateDistance(
                         currentLocation.latitude, currentLocation.longitude,
                         currentCompanyLocation.latitude, currentCompanyLocation.longitude
                     )
-                    setStatusMessage(`인증된 위치에서만 퇴근 체크가 가능합니다 (${currentCompanyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
-                    setMessageType('error')
+                    
+                    console.log('❌ 체크아웃 위치 검증 실패:', { distance, isValid })
+                    console.log('🔴 외부 위치 체크아웃 모달 표시 설정:', {
+                        distance: Math.round(distance),
+                        location: currentLocation,
+                        mode: 'checkout'
+                    })
+                    
+                    setOffSiteDistance(Math.round(distance))
+                    setPendingLocation(currentLocation)
+                    setOffSiteReason('')
+                    setOffSiteMode('checkout')
+                    setShowOffSiteModal(true)
+                    setLoading(false)
+                    setStatusMessage('')
                     return
                 }
             }
 
             // 4. 위치 인증 성공 시 체크아웃 진행
-            setStatusMessage('퇴근 처리 중...')
-            const response = await api.post(`/attendance/check-out?userId=${userId}`, {
-                location: currentLocation,
-                method: 'manual'
-            })
-            
-            const data = response.data
-            setStatusMessage(`${data.message} (근무시간: ${data.workHoursFormatted})`)
-            setMessageType('success')
-            
-            // 현재 위치 정보 업데이트
-            setUserLocation(currentLocation)
-            
-            // 상태를 즉시 업데이트하기 위해 await 사용
-            await loadTodayAttendance()
-            await loadAttendanceHistory()
+            await performCheckOut(currentLocation)
             
         } catch (error) {
             console.error('퇴근 처리 실패:', error)
@@ -450,9 +507,133 @@ const Attendance = () => {
                 setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
             }
             setMessageType('error')
+            setLoading(false)
+        }
+    }
+
+    // 실제 체크인 처리 함수
+    const performCheckIn = async (location, isOffSite = false, reason = '') => {
+        console.log('🔵 API 요청 시작...')
+        setLoading(true)
+        setStatusMessage('출근 처리 중...')
+        
+        try {
+            const requestData = {
+                location,
+                method: 'manual',
+                isOffSite,
+                offSiteReason: reason
+            }
+            console.log('🔵 API 요청 데이터:', requestData)
+            
+            const response = await api.post(`/attendance/check-in?userId=${userId}`, requestData)
+            console.log('✅ API 응답:', response.data)
+            
+            const data = response.data
+            setStatusMessage(`${data.message} (${data.status})`)
+            setMessageType('success')
+            
+            // 현재 위치 정보 업데이트
+            setUserLocation(location)
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            console.log('🔵 상태 업데이트 중...')
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            console.log('✅ 체크인 완료')
+            
+        } catch (error) {
+            console.error('❌ 출근 처리 실패:', error)
+            setStatusMessage(error.response?.data?.message || '출근 처리 중 오류가 발생했습니다')
+            setMessageType('error')
         } finally {
             setLoading(false)
         }
+    }
+
+    // 실제 체크아웃 처리 함수
+    const performCheckOut = async (location, isOffSite = false, reason = '') => {
+        setLoading(true)
+        setStatusMessage('퇴근 처리 중...')
+        
+        try {
+            const response = await api.post(`/attendance/check-out?userId=${userId}`, {
+                location,
+                method: 'manual',
+                isOffSite,
+                offSiteReason: reason
+            })
+            
+            const data = response.data
+            setStatusMessage(`${data.message} (근무시간: ${data.workHoursFormatted})`)
+            setMessageType('success')
+            
+            // 현재 위치 정보 업데이트
+            setUserLocation(location)
+            
+            // 상태를 즉시 업데이트하기 위해 await 사용
+            await loadTodayAttendance()
+            await loadAttendanceHistory()
+            
+        } catch (error) {
+            console.error('퇴근 처리 실패:', error)
+            setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
+            setMessageType('error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // 외부 위치 체크인/아웃 확인
+    const handleOffSiteAction = async () => {
+        console.log('🔵 외부 위치 액션 시작:', { offSiteMode, offSiteReason, pendingLocation })
+        
+        if (!offSiteReason.trim()) {
+            setStatusMessage(`외부 위치 ${offSiteMode === 'checkin' ? '출근' : '퇴근'} 사유를 입력해주세요`)
+            setMessageType('error')
+            return
+        }
+
+        if (offSiteReason.trim().length < 10) {
+            setStatusMessage('사유를 10자 이상 입력해주세요')
+            setMessageType('error')
+            return
+        }
+
+        console.log('🔵 외부 위치 모달 닫기')
+        setShowOffSiteModal(false)
+        
+        console.log('🔵 외부 위치 체크인/체크아웃 시작:', { 
+            mode: offSiteMode, 
+            isOffSite: true, 
+            reason: offSiteReason.trim(),
+            location: pendingLocation 
+        })
+        
+        if (offSiteMode === 'checkin') {
+            await performCheckIn(pendingLocation, true, offSiteReason.trim())
+        } else {
+            await performCheckOut(pendingLocation, true, offSiteReason.trim())
+        }
+        
+        console.log('🔵 외부 위치 체크인/체크아웃 완료')
+        
+        // 상태 초기화
+        setPendingLocation(null)
+        setOffSiteReason('')
+        setOffSiteDistance(0)
+        setOffSiteMode('')
+    }
+
+    // 외부 위치 모달 닫기
+    const closeOffSiteModal = () => {
+        setShowOffSiteModal(false)
+        setPendingLocation(null)
+        setOffSiteReason('')
+        setOffSiteDistance(0)
+        setOffSiteMode('')
+        setLoading(false)
+        setStatusMessage('')
     }
 
     // 출퇴근 시간 수정
@@ -768,9 +949,6 @@ const Attendance = () => {
                             <span className={ss.location_info_text}>
                                 {locationDetails.companyName}에서 {locationDetails.distance}m
                             </span>
-                            <span className={ss.location_info_note}>
-                                체크인/아웃 시 실시간 재확인
-                            </span>
                         </div>
                     )}
                     
@@ -906,6 +1084,80 @@ const Attendance = () => {
                     onClose={closeModal} 
                     attendanceHistory={attendanceHistory} 
                 />
+            )}
+
+            {/* 외부 위치 체크아웃 모달 */}
+            {showOffSiteModal && (
+                <div className={ss.modal_overlay} onClick={closeOffSiteModal}>
+                    <div className={ss.offsite_modal} onClick={(e) => e.stopPropagation()}>
+                        <div className={ss.offsite_modal_header}>
+                            <div className={ss.warning_icon}>
+                                <FaExclamationTriangle />
+                            </div>
+                            <h3>외부 위치에서 {offSiteMode === 'checkin' ? '출근' : '퇴근'}</h3>
+                            <button className={ss.close_button} onClick={closeOffSiteModal}>
+                                <FaTimes />
+                            </button>
+                        </div>
+                        
+                        <div className={ss.offsite_modal_body}>
+                            <div className={ss.warning_message}>
+                                <p className={ss.location_info}>
+                                    현재 위치가 회사에서 <strong>{offSiteDistance}m</strong> 떨어져 있습니다.
+                                </p>
+                                
+                                                                 <div className={ss.penalty_warning}>
+                                     <h4>⚠️ 중요 안내사항</h4>
+                                     <ul>
+                                         <li>외부 위치에서의 {offSiteMode === 'checkin' ? '출근' : '퇴근'}은 근태 관리 정책에 따라 <strong>불이익을 받을 수 있습니다</strong></li>
+                                         <li>정당한 사유 없는 외부 {offSiteMode === 'checkin' ? '출근' : '퇴근'}은 <strong>근무 태도 평가에 반영</strong>됩니다</li>
+                                         <li>반복적인 외부 {offSiteMode === 'checkin' ? '출근' : '퇴근'} 시 <strong>인사상 조치</strong>가 취해질 수 있습니다</li>
+                                         <li>모든 외부 {offSiteMode === 'checkin' ? '출근' : '퇴근'} 기록은 <strong>관리자에게 자동 보고</strong>됩니다</li>
+                                     </ul>
+                                 </div>
+                                
+                                <div className={ss.contact_info}>
+                                    <p>문의사항이 있으시면 <strong>관리자에게 연락</strong>해 주시기 바랍니다.</p>
+                                </div>
+                            </div>
+                            
+                                                         <div className={ss.reason_input_section}>
+                                 <label htmlFor="offsite-reason">{offSiteMode === 'checkin' ? '출근' : '퇴근'} 사유 (필수, 10자 이상)</label>
+                                 <textarea
+                                     id="offsite-reason"
+                                     placeholder={offSiteMode === 'checkin' 
+                                         ? "외부 위치에서 출근하는 상세한 사유를 입력해주세요 (예: 고객사 미팅으로 직접 출근, 출장지에서 업무 시작 등)"
+                                         : "외부 위치에서 퇴근하는 상세한 사유를 입력해주세요 (예: 고객사 미팅 후 직접 퇴근, 출장 업무 종료 등)"
+                                     }
+                                     value={offSiteReason}
+                                     onChange={(e) => setOffSiteReason(e.target.value)}
+                                     className={ss.reason_textarea}
+                                     rows={4}
+                                     maxLength={500}
+                                 />
+                                 <div className={ss.char_count}>
+                                     {offSiteReason.length}/500자 (최소 10자 필요)
+                                 </div>
+                             </div>
+                            
+                            <div className={ss.offsite_modal_actions}>
+                                <button 
+                                    className={ss.cancel_button}
+                                    onClick={closeOffSiteModal}
+                                >
+                                    취소
+                                </button>
+                                                                 <button 
+                                     className={ss.confirm_button}
+                                     onClick={handleOffSiteAction}
+                                     disabled={!offSiteReason.trim() || offSiteReason.trim().length < 10}
+                                 >
+                                     {offSiteMode === 'checkin' ? '출근' : '퇴근'} 처리
+                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     )
