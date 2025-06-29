@@ -3,21 +3,19 @@ import styles from './Receipts.module.css';
 import { FaPlus, FaSearch, FaFileDownload, FaTrash, FaEdit, FaReceipt, FaUtensils, FaTaxi, FaTimes } from 'react-icons/fa';
 import ReceiptStepper from '../../components/ReceiptStepper/ReceiptStepper';
 import { 
+  receipts as initialReceiptsData, 
+  receiptCategories, 
+  receiptTypes, 
+  receiptStatuses, 
+  paymentMethods,
   getReceipts,
   getReceiptsByType,
-  createReceipt,
+  addReceipt,
   updateReceipt,
   deleteReceipt,
-  getReceiptStats,
-  receiptCategories,
-  receiptTypes,
-  receiptStatuses,
-  paymentMethods,
-  CATEGORY_NAMES,
-  STATUS_NAMES,
-  PAYMENT_METHOD_NAMES
-} from '../../utils/receiptApi';
-import { currentUser } from '../../data/mockDatabase';
+  getReceiptStatsByType,
+  currentUser
+} from '../../data/mockDatabase';
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
@@ -76,30 +74,20 @@ const Receipts = () => {
   }, [])
 
   // 영수증 데이터 로드
-  const loadReceipts = async () => {
-    try {
-      let response;
-      if (activeTab === 'all') {
-        response = await getReceipts();
-      } else {
-        response = await getReceiptsByType(activeTab);
-      }
-      setReceipts(response.data || []);
-    } catch (error) {
-      console.error('영수증 데이터 로드 실패:', error);
-      setReceipts([]);
+  const loadReceipts = () => {
+    let data;
+    if (activeTab === 'all') {
+      data = getReceipts();
+    } else {
+      data = getReceiptsByType(activeTab);
     }
+    setReceipts(data);
   };
 
   // 통계 데이터 로드
-  const loadStats = async () => {
-    try {
-      const response = await getReceiptStats();
-      setTypeStats(response.data?.typeStats || []);
-    } catch (error) {
-      console.error('통계 데이터 로드 실패:', error);
-      setTypeStats([]);
-    }
+  const loadStats = () => {
+    const stats = getReceiptStatsByType();
+    setTypeStats(stats);
   };
 
   // 검색 및 필터링된 영수증 목록
@@ -116,21 +104,18 @@ const Receipts = () => {
   const openAddModal = () => {
     setModalMode('add');
     setFormData({
-      title: '',
-      description: '',
-      amount: '',
       date: new Date().toISOString().split('T')[0],
-      time: new Date().toTimeString().substr(0, 5), // HH:MM 형식
-      type: activeTab === 'all' ? 'OTHER' : activeTab,
+      title: '',
+      amount: '',
       category: '',
       paymentMethod: 'CORPORATE_CARD',
-      userId: currentUser.id,
-      userName: currentUser.name,
-      projectId: null,
-      projectName: null,
-      route: null, // 택시용
+      status: 'PENDING',
       attachmentUrls: [],
-      status: 'PENDING'
+      type: activeTab === 'all' ? 'OTHER' : activeTab,
+      description: '',
+      project: '',
+      projectId: null,
+      userId: currentUser.id
     });
     setIsModalOpen(true);
   };
@@ -163,60 +148,26 @@ const Receipts = () => {
   };
 
   // 영수증 추가 또는 수정
-  const handleSubmit = async (stepperData) => {    
-    try {
-      // StepperModal 데이터를 Receipt API 형식으로 변환
-      const receiptData = {
-        title: stepperData.title || '영수증', // 기본 제목
-        description: stepperData.description || '',
-        amount: parseFloat(stepperData.amount) || 0,
-        date: stepperData.dateTime ? 
-          `${stepperData.dateTime.year}-${stepperData.dateTime.month.padStart(2, '0')}-${stepperData.dateTime.day.padStart(2, '0')}` : 
-          new Date().toISOString().split('T')[0],
-        time: stepperData.dateTime ? 
-          `${stepperData.dateTime.hour.padStart(2, '0')}:${stepperData.dateTime.minute.padStart(2, '0')}` : 
-          new Date().toTimeString().substr(0, 5),
-        type: activeTab === 'all' ? 'OTHER' : activeTab,
-        category: stepperData.category || 'OTHER',
-        paymentMethod: stepperData.paymentMethod || 'CORPORATE_CARD',
-        userId: currentUser.id,
-        userName: currentUser.name,
-        projectId: stepperData.projectId || null,
-        projectName: stepperData.project || null,
-        route: stepperData.type === 'TAXI' ? stepperData.route : null,
-        attachmentUrls: stepperData.attachedFiles ? 
-          stepperData.attachedFiles.map(file => file.url || file.name) : []
-      };
-
-      if (modalMode === 'add') {
-        // 새 영수증 추가
-        await createReceipt(receiptData);
-      } else {
-        // 기존 영수증 수정
-        await updateReceipt(selectedReceipt._id, receiptData);
-      }
-      
-      await loadReceipts();
-      await loadStats();
-      closeModal();
-    } catch (error) {
-      console.error('영수증 저장 실패:', error);
-      alert('영수증 저장에 실패했습니다. 다시 시도해주세요.');
+  const handleSubmit = (receiptData) => {    
+    if (modalMode === 'add') {
+      // 새 영수증 추가
+      addReceipt(receiptData);
+    } else {
+      // 기존 영수증 수정
+      updateReceipt(selectedReceipt.id, receiptData);
     }
+    
+    loadReceipts();
+    loadStats();
   };
 
   // 영수증 삭제
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (window.confirm('정말로 이 영수증을 삭제하시겠습니까?')) {
-      try {
-        await deleteReceipt(selectedReceipt._id);
-        await loadReceipts();
-        await loadStats();
-        setIsActionModalOpen(false); // 작업 모달 닫기
-      } catch (error) {
-        console.error('영수증 삭제 실패:', error);
-        alert('영수증 삭제에 실패했습니다. 다시 시도해주세요.');
-      }
+      deleteReceipt(selectedReceipt.id);
+      loadReceipts();
+      loadStats();
+      setIsActionModalOpen(false); // 작업 모달 닫기
     }
   };
 
@@ -379,7 +330,7 @@ const Receipts = () => {
             {filteredReceipts.length > 0 ? (
               filteredReceipts.map(receipt => (
                 <tr 
-                  key={receipt._id} 
+                  key={receipt.id} 
                   className={styles.receipt_row}
                   onClick={() => handleRowClick(receipt)}
                 >
@@ -391,9 +342,9 @@ const Receipts = () => {
                       <td>{getCategoryName(receipt.category)}</td>
                       <td>{getPaymentMethodName(receipt.paymentMethod)}</td>
                       <td className={styles.project_cell}>
-                        {receipt.projectName ? (
+                        {receipt.project ? (
                           <span className={styles.project_tag}>
-                            {receipt.projectName}
+                            {receipt.project}
                           </span>
                         ) : (
                           <span className={styles.no_project}>-</span>
@@ -465,9 +416,9 @@ const Receipts = () => {
                 <div className={styles.info_row}>
                   <span>프로젝트:</span>
                   <span>
-                    {selectedReceipt.projectName ? (
+                    {selectedReceipt.project ? (
                       <span className={styles.project_tag_modal}>
-                        {selectedReceipt.projectName}
+                        {selectedReceipt.project}
                       </span>
                     ) : (
                       <span className={styles.no_project_modal}>선택되지 않음</span>
