@@ -210,9 +210,9 @@ const Home = () => {
             try {
                 // 병렬로 모든 데이터 가져오기 - 사용자별 데이터 요청
                 const [todosRes, roomsRes, projectsRes] = await Promise.all([
-                    api.get(`/todos/user/${userId}`), // 사용자별 투두리스트
+                    api.get(`/todos?userId=${userId}`), // 사용자별 투두리스트 (쿼리 파라미터)
                     api.get('/rooms'),  
-                    api.get(`/projects/user/${userId}`) // 사용자가 참여하는 프로젝트만
+                    api.get('/projects') // 모든 프로젝트 (클라이언트에서 필터링)
                 ])
                 
                 // 할일 목록 (서버에서 이미 필터링됨)
@@ -221,8 +221,14 @@ const Home = () => {
                 // 방 목록
                 setRooms(roomsRes.data)
                 
-                // 프로젝트 목록 (서버에서 이미 필터링됨)
-                setProjects(projectsRes.data)
+                // 프로젝트 목록 - 사용자가 참여하는 프로젝트만 필터링
+                const userProjects = projectsRes.data.filter(project => 
+                    project.team && project.team.some(member => {
+                        const memberId = typeof member === 'object' ? member._id : member;
+                        return memberId.toString() === userId.toString();
+                    })
+                );
+                setProjects(userProjects)
                 
                 // 방 예약 정보 (rooms에서 추출)
                 const allReservations = []
