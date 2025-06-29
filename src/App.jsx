@@ -8,7 +8,7 @@ import TodoList from './page/TodoList/TodoList';
 import Calendar from './page/Calendar/Calendar';
 import RoomReservation from './page/RoomReservation/RoomReservation';
 import ProjectStatus from './page/ProjectStatus/ProjectStatus';
-import TeamNotifications from './page/TeamNotifications/TeamNotifications';
+
 import Receipts from './page/Receipts/Receipts';
 import ForgotPassword from './page/ForgotPassword/ForgotPassword';
 import Profile from './page/Profile/Profile';
@@ -50,7 +50,7 @@ function App() {
           <Route path='room-reservation' element={<RoomReservation />} />
           <Route path='projects' element={<ProjectStatus />} />
           <Route path='contact' element={<Contact />} />
-          {/* <Route path='notifications' element={<TeamNotifications />} /> */}
+          
           <Route path='receipts' element={<Receipts />} />
           <Route path='profile' element={<Profile />} />
           <Route path='settings' element={<Settings />} />

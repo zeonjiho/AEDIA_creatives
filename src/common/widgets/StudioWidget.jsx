@@ -18,7 +18,7 @@ const StudioWidget = ({
   rooms = [],
   reservations = [],
   onReservationClick,
-  title = '스튜디오',
+  title = 'Rooms',
   icon = <FaBuilding />
 }) => {
   const roomsGridRef = useRef(null);
@@ -82,7 +82,7 @@ const StudioWidget = ({
   const isRoomOccupied = (roomId) => {
     const now = new Date();
     return reservations.some(reservation => 
-      reservation.roomId === roomId && 
+      String(reservation.roomId) === String(roomId) && 
       new Date(reservation.startTime) <= now && 
       new Date(reservation.endTime) > now
     );
@@ -92,7 +92,7 @@ const StudioWidget = ({
   const getCurrentReservation = (roomId) => {
     const now = new Date();
     return reservations.find(reservation => 
-      reservation.roomId === roomId && 
+      String(reservation.roomId) === String(roomId) && 
       new Date(reservation.startTime) <= now && 
       new Date(reservation.endTime) > now
     );
@@ -107,16 +107,16 @@ const StudioWidget = ({
     >
       <div className={styles.rooms_grid} ref={roomsGridRef}>
         {rooms.map(room => {
-          const currentReservation = getCurrentReservation(room.id);
+          const currentReservation = getCurrentReservation(room._id || room.id);
           const occupied = !!currentReservation;
           
           return (
-            <div key={room.id} className={styles.room_item}>
+            <div key={room._id || room.id} className={styles.room_item}>
               <div className={styles.room_header}>
                 <span className={styles.room_type_icon}>
                   {getStudioIcon(room.type)}
                 </span>
-                <h4 className={styles.room_name}>{room.name}</h4>
+                <h4 className={styles.room_name}>{room.roomName || room.name}</h4>
               </div>
               
               {occupied ? (
@@ -137,7 +137,7 @@ const StudioWidget = ({
               )}
               
               <div className={styles.room_features}>
-                {room.features && room.features.map((feature, i) => (
+                {(room.tools || room.features) && (room.tools || room.features).map((feature, i) => (
                   <span key={i} className={styles.feature_tag}>{feature}</span>
                 ))}
               </div>

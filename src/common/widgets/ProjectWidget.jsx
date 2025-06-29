@@ -34,7 +34,7 @@ const ProjectWidget = ({
           const remainingDays = calculateRemainingDays ? calculateRemainingDays(project.deadline) : 0;
           
           return (
-            <div key={project.id} className={styles.project_item}>
+            <div key={project._id || project.id} className={styles.project_item}>
               <div className={styles.project_header}>
                 <h3 className={styles.project_title}>{project.title}</h3>    
                 <span className={`${styles.project_badge} ${styles["status_" + project.status.replace(/\s+/g, '_').toLowerCase()]}`}>
