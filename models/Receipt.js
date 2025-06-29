@@ -62,6 +62,12 @@ const receiptSchema = new mongoose.Schema({
         default: 'CORPORATE_CARD'
     },
 
+    // 법인카드 정보 (법인카드 결제 시에만 사용)
+    creditCardId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CreditCard',
+    },
+
     // 상태
     status: {
         type: String,
@@ -126,6 +132,7 @@ const receiptSchema = new mongoose.Schema({
 receiptSchema.index({ userId: 1, date: -1 });
 receiptSchema.index({ type: 1, status: 1 });
 receiptSchema.index({ projectId: 1 });
+receiptSchema.index({ creditCardId: 1 });
 
 // 가상 필드: 카테고리 한글명
 receiptSchema.virtual('categoryName').get(function() {

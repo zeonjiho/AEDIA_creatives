@@ -38,7 +38,8 @@ const projectSchema = new Schema({
             'vfx',
             'sound_design',
             'quality_check',
-            'delivery'
+            'delivery',
+            'deleted'
         ],
         default: 'concept'
     },

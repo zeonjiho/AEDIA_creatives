@@ -3459,6 +3459,7 @@ app.get('/receipts', async(req, res) => {
         const receipts = await Receipt.find(filter)
             .populate('userId', 'name email')
             .populate('projectId', 'title')
+            .populate('creditCardId', 'cardName number label')
             .populate('approvedBy', 'name')
             .sort({ date: -1, createdAt: -1 })
             .limit(limit * 1)
@@ -3493,6 +3494,7 @@ app.get('/receipts/:id', async(req, res) => {
         const receipt = await Receipt.findById(req.params.id)
             .populate('userId', 'name email avatar')
             .populate('projectId', 'title description')
+            .populate('creditCardId', 'cardName number label')
             .populate('approvedBy', 'name email');
 
         if (!receipt) {
@@ -3529,6 +3531,7 @@ app.post('/receipts', async(req, res) => {
             type,
             category,
             paymentMethod,
+            creditCardId,
             userId,
             userName,
             projectId,
@@ -3553,6 +3556,14 @@ app.post('/receipts', async(req, res) => {
             });
         }
 
+        // 법인카드 결제인 경우 creditCardId 필수
+        if (paymentMethod === 'CORPORATE_CARD' && !creditCardId) {
+            return res.status(400).json({
+                success: false,
+                message: '법인카드 결제시 카드 정보가 필요합니다.'
+            });
+        }
+
         const receipt = new Receipt({
             title,
             description,
@@ -3562,6 +3573,7 @@ app.post('/receipts', async(req, res) => {
             type,
             category,
             paymentMethod,
+            creditCardId: paymentMethod === 'CORPORATE_CARD' ? creditCardId : null,
             userId,
             userName,
             projectId: projectId || null,
@@ -3576,7 +3588,8 @@ app.post('/receipts', async(req, res) => {
         // 생성된 영수증을 populate하여 반환
         const populatedReceipt = await Receipt.findById(savedReceipt._id)
             .populate('userId', 'name email')
-            .populate('projectId', 'title');
+            .populate('projectId', 'title')
+            .populate('creditCardId', 'cardName number label');
 
         res.status(201).json({
             success: true,
@@ -3630,7 +3643,8 @@ app.put('/receipts/:id', async(req, res) => {
                 receiptId,
                 updateData, { new: true, runValidators: true }
             ).populate('userId', 'name email')
-            .populate('projectId', 'title');
+            .populate('projectId', 'title')
+            .populate('creditCardId', 'cardName number label');
 
         res.status(200).json({
             success: true,
@@ -3716,6 +3730,7 @@ app.patch('/receipts/:id/approve', async(req, res) => {
                 }, { new: true }
             ).populate('userId', 'name email')
             .populate('projectId', 'title')
+            .populate('creditCardId', 'cardName number label')
             .populate('approvedBy', 'name email');
 
         res.status(200).json({
@@ -3763,7 +3778,8 @@ app.patch('/receipts/:id/reject', async(req, res) => {
                     approvedAt: null
                 }, { new: true }
             ).populate('userId', 'name email')
-            .populate('projectId', 'title');
+            .populate('projectId', 'title')
+            .populate('creditCardId', 'cardName number label');
 
         res.status(200).json({
             success: true,

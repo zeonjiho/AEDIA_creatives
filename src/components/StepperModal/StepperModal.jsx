@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './StepperModal.module.css';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
+import api from '../../utils/api';
 
 /**
  * 단계별 모달 컴포넌트
@@ -64,7 +65,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
       cardCompany: '', // 카드사 추가
       cardCompanyOther: '', // 기타 카드사 직접입력 추가
-      cardAlias: '', // 법인카드 별칭 추가
+      cardId: '', // 법인카드 ID 추가
       cardNumber: '', // 신용카드 번호 추가
       bankName: '', // 은행명 추가
       bankNameOther: '', // 기타 은행 직접입력 추가
@@ -97,6 +98,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const [stream, setStream] = useState(null);
   const [showCorporateCardModal, setShowCorporateCardModal] = useState(false);
 
+  const [projects, setProjects] = useState([]);
+  const [corporateCards, setCorporateCards] = useState([]);
+
   // 데이터 저장 함수
   const saveToStorage = (data, step = null) => {
     try {
@@ -106,7 +110,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
         attachedFiles: [] // File 객체는 저장하지 않음
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      
+
       // 현재 단계 저장
       if (step !== null) {
         sessionStorage.setItem(STORAGE_STEP_KEY, step.toString());
@@ -125,6 +129,25 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       console.error('저장된 데이터 삭제 실패:', error);
     }
   };
+
+  // 프로젝트 리스트와 법인카드 리스트 서버에서 가져오기
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const response = await api.get('/projects');
+      if (response.status === 200) {
+        const result = response.data.filter((item, idx) => item.status !== 'deleted')
+        setProjects(result);
+      }
+    }
+    const fetchCorporateCards = async () => {
+      const response = await api.get('/credit-cards');
+      if (response.status === 200) {
+        setCorporateCards(response.data);
+      }
+    }
+    fetchProjects();
+    fetchCorporateCards();
+  }, [])
 
   // formData 변경시마다 저장
   useEffect(() => {
@@ -145,7 +168,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     if (isOpen) {
       const storedData = getStoredFormData();
       const storedStep = getStoredStep();
-      
+
       // 저장된 데이터가 있으면 복원, 없으면 현재 시간으로 초기화
       if (storedData.category || storedData.amount || storedData.project) {
         // 기존에 입력된 데이터가 있으면 복원
@@ -179,18 +202,18 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     if (isOpen) {
       // 기존 beforeunload 핸들러 저장
       const originalOnBeforeUnload = window.onbeforeunload;
-      
+
       // beforeunload 완전 차단
       window.onbeforeunload = null;
-      
+
       // 모든 beforeunload 이벤트 리스너를 무효화하는 핸들러 설정
       const blockBeforeUnload = () => {
         // 아무것도 하지 않음으로써 기본 동작 차단
         return undefined;
       };
-      
+
       window.addEventListener('beforeunload', blockBeforeUnload);
-      
+
       return () => {
         // 정리: 원본 핸들러 복원
         window.onbeforeunload = originalOnBeforeUnload;
@@ -237,7 +260,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           showToast('결제방법을 선택해주세요.');
           return false;
         }
-        
+
         // 신용카드 선택시 카드사와 카드번호 검증
         if (formData.paymentMethod === '신용카드') {
           if (!formData.cardCompany) {
@@ -252,13 +275,21 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             showToast('카드번호를 입력해주세요.');
             return false;
           }
-          // 법인카드가 아닌 경우에만 카드번호 길이 검증
-          if (formData.cardCompany !== '법인카드' && formData.cardNumber.replace(/\s/g, '').length < 15) {
-            showToast('신용카드 번호를 올바르게 입력해주세요.');
-            return false;
+          // 법인카드인 경우 cardId 검증
+          if (formData.cardCompany === '법인카드') {
+            if (!formData.cardId) {
+              showToast('법인카드를 선택해주세요.');
+              return false;
+            }
+          } else {
+            // 법인카드가 아닌 경우에만 카드번호 길이 검증
+            if (formData.cardNumber.replace(/\s/g, '').length < 15) {
+              showToast('신용카드 번호를 올바르게 입력해주세요.');
+              return false;
+            }
           }
         }
-        
+
         // 계좌이체 선택시 은행명과 계좌번호 검증
         if (formData.paymentMethod === '계좌이체') {
           if (!formData.bankName) {
@@ -274,25 +305,25 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             return false;
           }
         }
-        
+
         // 다중인원의 경우 참가자 정보 검증
         if (formData.isMultiPersonPayment) {
           // 실제로 입력된 참가자들만 필터링 (person이나 project 중 하나라도 있는 경우)
           const filledParticipants = formData.participants.filter(p => p.person || p.project);
-          
+
           // 입력된 참가자가 하나도 없으면 에러
           if (filledParticipants.length === 0) {
             showToast('참가자 정보를 올바르게 입력해주세요.');
             return false;
           }
-          
+
           // 입력된 참가자들 중에서 인물과 프로젝트가 모두 완성된 참가자가 있는지 확인
           const validParticipants = filledParticipants.filter(p => p.person && p.project);
           if (validParticipants.length === 0) {
             showToast('모든 참가자의 인물과 프로젝트를 올바르게 입력해주세요.');
             return false;
           }
-          
+
           // 입력된 참가자들 중에서 불완전한 참가자가 있는지 확인
           const incompleteParticipants = filledParticipants.filter(p => !p.person || !p.project);
           if (incompleteParticipants.length > 0) {
@@ -300,7 +331,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             return false;
           }
         }
-        
+
         // 분할결제가 체크된 경우 내가 낸 금액 검증
         if (formData.isSplitPayment) {
           if (!formData.myAmount || formData.myAmount <= 0) {
@@ -330,7 +361,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   // 헤더에 표시할 간략한 정보 생성
   const getHeaderInfo = () => {
     const info = [];
-    
+
     // 1단계 정보
     if (formData.category) {
       info.push(formData.category);
@@ -341,7 +372,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     if (formData.dateTime.month && formData.dateTime.day) {
       info.push(`${parseInt(formData.dateTime.month)}/${parseInt(formData.dateTime.day)}`);
     }
-    
+
     // 2단계 정보 (currentStep >= 2일 때)
     if (currentStep >= 2) {
       if (formData.project) {
@@ -351,12 +382,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
         info.push(formData.paymentMethod);
       }
     }
-    
+
     // 3단계 정보 (currentStep >= 3일 때)
     if (currentStep >= 3 && formData.attachedFiles.length > 0) {
       info.push(`사진 ${formData.attachedFiles.length}개`);
     }
-    
+
     return info.join(' • ');
   };
 
@@ -403,26 +434,26 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const handleStaffSelect = (selectedStaff) => {
     if (selectedStaff.length > 0) {
       const newParticipants = [...formData.participants];
-      
+
       if (editingParticipantIndex !== null) {
         // 기존 참가자 항목 교체 (첫 번째 선택된 인물로)
         newParticipants[editingParticipantIndex].person = selectedStaff[0];
-        
+
         // 나머지 선택된 인물들은 새로운 참가자로 추가
         for (let i = 1; i < selectedStaff.length; i++) {
-          newParticipants.push({ 
-            person: selectedStaff[i], 
-            project: formData.project || '' 
+          newParticipants.push({
+            person: selectedStaff[i],
+            project: formData.project || ''
           });
         }
       }
-      
+
       setFormData(prev => ({
         ...prev,
         participants: newParticipants
       }));
     }
-    
+
     setShowStaffModal(false);
     setEditingParticipantIndex(null);
   };
@@ -470,8 +501,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
       setStream(mediaStream);
       setIsCamera(true);
@@ -561,22 +592,22 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
   // 데이터가 입력되어 있는지 확인하는 함수
   const hasFormData = () => {
-    return formData.category || 
-           formData.amount || 
-           formData.project || 
-           formData.paymentMethod || 
-           formData.participants.some(p => p.person || p.project) ||
-           formData.attachedFiles.length > 0 ||
-           formData.myAmount ||
-           formData.isSplitPayment ||
-           formData.isMultiPersonPayment ||
-           formData.cardCompany ||
-           formData.cardCompanyOther ||
-           formData.cardAlias ||
-           formData.cardNumber ||
-           formData.bankName ||
-           formData.bankNameOther ||
-           formData.accountNumber; // 신용카드/계좌이체 정보도 확인
+    return formData.category ||
+      formData.amount ||
+      formData.project ||
+      formData.paymentMethod ||
+      formData.participants.some(p => p.person || p.project) ||
+      formData.attachedFiles.length > 0 ||
+      formData.myAmount ||
+      formData.isSplitPayment ||
+      formData.isMultiPersonPayment ||
+      formData.cardCompany ||
+      formData.cardCompanyOther ||
+      formData.cardId ||
+      formData.cardNumber ||
+      formData.bankName ||
+      formData.bankNameOther ||
+      formData.accountNumber; // 신용카드/계좌이체 정보도 확인
   };
 
   const handleClose = () => {
@@ -585,7 +616,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       setShowCloseConfirm(true);
       return;
     }
-    
+
     // 데이터가 없으면 바로 닫기
     stopCamera();
     clearStorage();
@@ -604,7 +635,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const handleCloseWithoutSave = () => {
     stopCamera();
     clearStorage(); // 저장된 데이터 삭제
-    
+
     // 폼 데이터도 초기화
     setFormData({
       category: '',
@@ -619,14 +650,14 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
       cardCompany: '', // 카드사 추가
       cardCompanyOther: '', // 기타 카드사 직접입력 추가
-      cardAlias: '', // 법인카드 별칭 추가
+      cardId: '', // 법인카드 ID 추가
       cardNumber: '', // 신용카드 번호 추가
       bankName: '', // 은행명 추가
       bankNameOther: '', // 기타 은행 직접입력 추가
       accountNumber: '' // 계좌번호 추가
     });
     setCurrentStep(1);
-    
+
     setShowCloseConfirm(false);
     onClose();
   };
@@ -693,7 +724,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   // 법인카드 목록 (실제 카드번호 형식)
-  const corporateCards = [
+  const corporateCards2 = [
     { alias: '회사카드', number: 'A 2342 3402 4240 5540' },
     { alias: '출장용카드', number: 'B 1234 5678 9012 3456' },
     { alias: '팀카드', number: 'C 9876 5432 1098 7654' },
@@ -718,10 +749,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
   // 법인카드 번호 마스킹 함수
   const maskCorporateCardNumber = (cardNumber) => {
-    const parts = cardNumber.split(' ');
-    if (parts.length === 5) {
-      return `${parts[0]} ${parts[1]} **** **** ${parts[4]}`;
+    // 숫자만 추출
+    const numbersOnly = cardNumber.replace(/\D/g, '');
+    
+    // 8자리 이상인 경우 첫 4자리와 마지막 4자리만 보여주고 나머지는 마스킹
+    if (numbersOnly.length >= 8) {
+      const firstFour = numbersOnly.substring(0, 4);
+      const lastFour = numbersOnly.substring(numbersOnly.length - 4);
+      return `${firstFour} **** **** ${lastFour}`;
     }
+    
     return cardNumber;
   };
 
@@ -731,7 +768,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     setFormData(prev => ({
       ...prev,
       cardNumber: maskedCard,
-      cardAlias: selectedCard.alias
+      cardId: selectedCard._id
     }));
     setShowCorporateCardModal(false);
   };
@@ -740,33 +777,33 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const koreanCardCompanies = [
     // 법인카드 (최상단)
     '법인카드',
-    
+
     // 주요 카드사 (빅5)
     '삼성카드', '신한카드', '현대카드', 'KB국민카드', '롯데카드',
-    
+
     // 은행계 카드사
     '우리카드', '하나카드', 'NH농협카드', '수협카드', '기업은행카드',
-    
+
     // 인터넷은행 카드
     '카카오뱅크카드', '토스뱅크카드', '케이뱅크카드',
-    
+
     // 외국계 카드사
     '시티카드', 'SC제일은행카드',
-    
+
     // 전업카드사/기타
     'BC카드', '광주카드', '전북카드', '제주카드',
     '다이너스클럽', '아메리칸익스프레스',
-    
+
     // 유통업계 카드
     'SSG카드', '이마트카드', '홈플러스카드',
     '올리브영카드', 'GS칼텍스카드',
-    
+
     // 항공/교통 카드
     '대한항공카드', '아시아나카드', 'T-money카드',
-    
+
     // 기타 제휴카드
     '네이버카드', 'PAYCO카드', '11번가카드',
-    
+
     // 기타 옵션
     '기타'
   ];
@@ -775,41 +812,32 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const koreanBanks = [
     // 주요 시중은행 (빅4)
     '국민은행', '신한은행', '하나은행', '우리은행',
-    
+
     // 특수은행 (많이 사용됨)
     '농협은행', '기업은행', '수협은행',
-    
+
     // 인터넷은행 (급성장)
     '카카오뱅크', '토스뱅크', '케이뱅크',
-    
+
     // 외국계 은행
     'SC제일은행', '한국씨티은행',
-    
+
     // 지방은행 (주요)
     '부산은행', '대구은행',
-    
+
     // 정책금융기관
     '산업은행',
-    
+
     // 기타 옵션
     '기타'
-  ];
-
-  // 프로젝트 목록
-  const projectList = [
-    '프로젝트 A',
-    '프로젝트 B', 
-    '프로젝트 C',
-    '프로젝트 D',
-    '프로젝트 E'
   ];
 
   const renderStep1 = () => (
     <div className={styles.step_content}>
       <div className={styles.input_group}>
         <label>카테고리 <span className={styles.required}>*</span></label>
-        <select 
-          value={formData.category} 
+        <select
+          value={formData.category}
           onChange={(e) => handleInputChange('category', e.target.value)}
         >
           <option value="">카테고리 선택</option>
@@ -824,7 +852,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
         <label>날짜 및 시간 <span className={styles.required}>*</span></label>
         <div className={styles.datetime_container}>
           <div className={styles.datetime_row}>
-            <input 
+            <input
               type="number"
               placeholder="YYYY"
               value={formData.dateTime.year}
@@ -834,8 +862,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               max="2099"
             />
             <span className={styles.datetime_separator}>년</span>
-            
-            <input 
+
+            <input
               type="number"
               placeholder="MM"
               value={formData.dateTime.month}
@@ -845,8 +873,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               max="12"
             />
             <span className={styles.datetime_separator}>월</span>
-            
-            <input 
+
+            <input
               type="number"
               placeholder="DD"
               value={formData.dateTime.day}
@@ -857,9 +885,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             />
             <span className={styles.datetime_separator}>일</span>
           </div>
-          
+
           <div className={styles.datetime_row}>
-            <input 
+            <input
               type="number"
               placeholder="HH"
               value={formData.dateTime.hour}
@@ -869,8 +897,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               max="23"
             />
             <span className={styles.datetime_separator}>시</span>
-            
-            <input 
+
+            <input
               type="number"
               placeholder="MM"
               value={formData.dateTime.minute}
@@ -886,8 +914,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
       <div className={styles.input_group}>
         <label>금액 <span className={styles.required}>*</span></label>
-        <input 
-          type="number" 
+        <input
+          type="number"
           placeholder="금액을 입력하세요"
           value={formData.amount}
           onChange={(e) => handleInputChange('amount', e.target.value)}
@@ -901,13 +929,13 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     <div className={styles.step_content}>
       <div className={styles.input_group}>
         <label>프로젝트 <span className={styles.required}>*</span></label>
-        <select 
-          value={formData.project} 
+        <select
+          value={formData.project}
           onChange={(e) => handleInputChange('project', e.target.value)}
         >
           <option value="">프로젝트 선택</option>
-          {projectList.map((project) => (
-            <option key={project} value={project}>{project}</option>
+          {projects.map((project) => (
+            <option key={project._id} value={project._id}>{project.title}</option>
           ))}
         </select>
       </div>
@@ -949,7 +977,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   ))}
                 </select>
               </div>
-              
+
               <div className={styles.card_number_wrapper}>
                 <label className={styles.card_label}>카드번호</label>
                 <input
@@ -964,7 +992,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
             </div>
-            
+
             {/* 기타 카드사 직접입력 */}
             {isOtherCard && (
               <div className={styles.other_input_wrapper}>
@@ -978,7 +1006,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
             )}
-            
+
             <div className={styles.card_info_description}>
               * 카드 정보는 자동으로 마스킹되어 안전하게 관리됩니다
             </div>
@@ -1005,7 +1033,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   ))}
                 </select>
               </div>
-              
+
               <div className={styles.account_number_wrapper}>
                 <label className={styles.account_label}>계좌번호</label>
                 <input
@@ -1017,7 +1045,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
             </div>
-            
+
             {/* 기타 은행 직접입력 */}
             {isOtherBank && (
               <div className={styles.other_input_wrapper}>
@@ -1031,7 +1059,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
             )}
-            
+
             <div className={styles.account_info_description}>
               * 계좌번호는 안전하게 암호화되어 저장됩니다
             </div>
@@ -1088,8 +1116,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                         {participant.person.userType === 'internal' ? (
                           <div className={styles.profile_image}>
                             {participant.person.profileImage ? (
-                              <img 
-                                src={participant.person.profileImage} 
+                              <img
+                                src={participant.person.profileImage}
                                 alt={participant.person.name}
                                 className={styles.profile_img}
                               />
@@ -1114,7 +1142,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                     <span className={styles.select_placeholder}>👤 인물 선택</span>
                   )}
                 </button>
-                
+
                 <select
                   value={participant.project || formData.project || ""}
                   onChange={(e) => handleParticipantProjectChange(index, e.target.value)}
@@ -1124,14 +1152,14 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   {formData.project && (
                     <option value={formData.project}>{formData.project} (같음)</option>
                   )}
-                  {projectList.filter(p => p !== formData.project).map((project) => (
-                    <option key={project} value={project}>{project}</option>
+                  {projects.filter(p => p._id !== formData.project).map((project) => (
+                    <option key={project._id} value={project._id}>{project.title}</option>
                   ))}
                 </select>
-                
+
                 {formData.participants.length > 1 && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className={styles.remove_btn}
                     onClick={() => removeParticipant(index)}
                   >
@@ -1140,8 +1168,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 )}
               </div>
             ))}
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={styles.add_participant_btn}
               onClick={addParticipant}
             >
@@ -1168,7 +1196,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   className={styles.my_amount_input}
                 />
               </div>
-              
+
               <div className={styles.split_payment_item}>
                 <label className={styles.split_label}>총 금액</label>
                 <div className={styles.total_amount_display}>
@@ -1176,7 +1204,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               </div>
             </div>
-            
+
             {formData.myAmount && formData.amount && (
               <div className={styles.difference_display}>
                 <span className={styles.difference_label}>차액: </span>
@@ -1226,7 +1254,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <span className={styles.summary_label}>결제방법:</span>
               <span className={styles.summary_value}>{formData.paymentMethod}</span>
             </div>
-            
+
             {/* 신용카드 정보 */}
             {isCardPayment && (
               <>
@@ -1268,7 +1296,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <div className={styles.summary_item}>
                 <span className={styles.summary_label}>분할결제:</span>
                 <span className={styles.summary_value}>
-                  내가 낸 금액: {parseInt(formData.myAmount).toLocaleString()}원 / 
+                  내가 낸 금액: {parseInt(formData.myAmount).toLocaleString()}원 /
                   차액: {(parseFloat(formData.amount) - parseFloat(formData.myAmount)).toLocaleString()}원
                 </span>
               </div>
@@ -1292,17 +1320,17 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
       <div className={styles.input_group}>
         <label>사진 촬영/첨부 <span className={styles.required}>*</span></label>
-        
+
         {!isCamera ? (
           <div className={styles.photo_actions}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={styles.camera_btn}
               onClick={startCamera}
             >
               📷 카메라로 촬영
             </button>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -1325,17 +1353,17 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               className={styles.camera_video}
             />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
-            
+
             <div className={styles.camera_controls}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.capture_btn}
                 onClick={capturePhoto}
               >
                 📷 촬영
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.cancel_camera_btn}
                 onClick={stopCamera}
               >
@@ -1344,20 +1372,20 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
           </div>
         )}
-        
+
         {formData.attachedFiles.length > 0 && (
           <div className={styles.attached_files}>
             <h4>첨부된 사진 ({formData.attachedFiles.length}개)</h4>
             <div className={styles.photo_grid}>
               {formData.attachedFiles.map((file, index) => (
                 <div key={index} className={styles.photo_item}>
-                  <img 
-                    src={URL.createObjectURL(file)} 
+                  <img
+                    src={URL.createObjectURL(file)}
                     alt={`사진 ${index + 1}`}
                     className={styles.photo_preview}
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => removeFile(index)}
                     className={styles.remove_photo_btn}
                   >
@@ -1389,7 +1417,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
           <button className={styles.close_btn} onClick={handleClose}>×</button>
         </div>
-        
+
         <div className={styles.stepper}>
           <div className={`${styles.step} ${currentStep >= 1 ? styles.active : ''}`}>
             <div className={styles.step_number}>1</div>
@@ -1406,20 +1434,20 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             <span>사진 촬영</span>
           </div>
         </div>
-        
+
         <div className={styles.modal_content}>
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
         </div>
-        
+
         <div className={styles.modal_footer_blur}>
           {currentStep > 1 && (
             <button className={styles.prev_btn} onClick={prevStep}>
               이전
             </button>
           )}
-          
+
           {currentStep < 3 ? (
             <button className={styles.next_btn} onClick={nextStep}>
               다음
@@ -1446,27 +1474,27 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <div className={styles.confirm_header}>
                 <h3>날짜 및 시간 확인</h3>
               </div>
-              
+
               <div className={styles.confirm_content}>
                 <div className={styles.current_datetime}>
                   {formatDateTime(formData.dateTime)}
                 </div>
-                
+
                 <p className={styles.confirm_message}>
-                  현재 작성된 시간으로 적용됩니다.<br/>
-                  <strong>기준은 영수증에 찍힌 시간입니다.</strong><br/>
+                  현재 작성된 시간으로 적용됩니다.<br />
+                  <strong>기준은 영수증에 찍힌 시간입니다.</strong><br />
                   다음으로 넘어가시겠습니까?
                 </p>
               </div>
-              
+
               <div className={styles.confirm_footer}>
-                <button 
+                <button
                   className={styles.confirm_cancel_btn}
                   onClick={() => setShowDateConfirm(false)}
                 >
                   수정하기
                 </button>
-                <button 
+                <button
                   className={styles.confirm_ok_btn}
                   onClick={confirmDateTime}
                 >
@@ -1484,28 +1512,28 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <div className={styles.confirm_header}>
                 <h3>작성 중인 내용이 있습니다</h3>
               </div>
-              
+
               <div className={styles.confirm_content}>
                 <p className={styles.confirm_message}>
-                  현재 작성 중인 내용을 임시 저장하시겠습니까?<br/>
+                  현재 작성 중인 내용을 임시 저장하시겠습니까?<br />
                   임시 저장하면 다음에 다시 이어서 작성할 수 있습니다.
                 </p>
               </div>
-              
+
               <div className={styles.confirm_footer_multi}>
-                <button 
+                <button
                   className={styles.confirm_cancel_btn}
                   onClick={handleCloseCancelConfirm}
                 >
                   취소
                 </button>
-                <button 
+                <button
                   className={styles.confirm_delete_btn}
                   onClick={handleCloseWithoutSave}
                 >
                   저장하지 않고 닫기
                 </button>
-                <button 
+                <button
                   className={styles.confirm_save_btn}
                   onClick={handleCloseWithSave}
                 >
@@ -1523,7 +1551,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <div className={styles.confirm_header}>
                 <h3>법인카드 선택</h3>
               </div>
-              
+
               <div className={styles.corporate_card_list}>
                 {corporateCards.map((card, index) => (
                   <button
@@ -1531,14 +1559,14 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                     className={styles.corporate_card_item}
                     onClick={() => handleCorporateCardSelect(card)}
                   >
-                    <div className={styles.card_alias}>{card.alias}</div>
-                    <div className={styles.card_number}>{maskCorporateCardNumber(card.number)}</div>
+                    <div className={styles.card_alias}>{card.cardName}</div>
+                    <div className={styles.card_number}>{`${card.label} ${maskCorporateCardNumber(card.number)}`}</div>
                   </button>
                 ))}
               </div>
-              
+
               <div className={styles.confirm_footer}>
-                <button 
+                <button
                   className={styles.confirm_cancel_btn}
                   onClick={() => setShowCorporateCardModal(false)}
                 >
