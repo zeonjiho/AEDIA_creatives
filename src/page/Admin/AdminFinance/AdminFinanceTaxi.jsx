@@ -33,121 +33,17 @@ const AdminFinanceTaxi = () => {
   const fetchTaxiData = async () => {
     try {
       setLoading(true);
-      // 실제 API 엔드포인트로 교체 예정
+      // 최신 API 구조에 맞게 수정
       const response = await api.get('/receipts?type=TAXI');
-      setTaxiData(response.data);
+      
+      // API 응답 구조에 맞게 데이터 추출
+      const receiptsData = response.data?.data || response.data || [];
+      console.log('택시비 데이터 로드 성공:', receiptsData);
+      setTaxiData(receiptsData);
     } catch (error) {
       console.error('택시비 데이터 로드 실패:', error);
-      // 임시 데이터 (API 구현 전까지)
-      const dummyData = [
-        { 
-          _id: '1', 
-          title: '클라이언트 미팅 이동',
-          description: '강남역에서 클라이언트 사무실까지',
-          date: '2024-01-15T00:00:00Z', 
-          time: '18:30',
-          amount: 45000, 
-          route: '강남역 → 테헤란로 클라이언트 사무실', 
-          category: 'TAXI',
-          status: 'APPROVED', 
-          userName: '김직원',
-          userId: 'user1',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'AEDIA Studio',
-          attachmentUrls: ['receipt1.jpg'],
-          createdAt: '2024-01-15T18:30:00Z',
-          approvedAt: '2024-01-16T09:00:00Z'
-        },
-        { 
-          _id: '2', 
-          title: '야근 후 귀가',
-          description: '야근 후 집까지 택시비',
-          date: '2024-01-15T00:00:00Z', 
-          time: '22:15',
-          amount: 32000, 
-          route: '회사 → 홍대입구역', 
-          category: 'TAXI',
-          status: 'PENDING', 
-          userName: '박스태프',
-          userId: 'user2',
-          paymentMethod: 'PERSONAL_CARD',
-          projectName: null,
-          attachmentUrls: [],
-          createdAt: '2024-01-15T22:15:00Z'
-        },
-        { 
-          _id: '3', 
-          title: '출장 공항 이동',
-          description: '부산 출장을 위한 인천공항 이동',
-          date: '2024-01-14T00:00:00Z', 
-          time: '09:00',
-          amount: 38000, 
-          route: '인천공항 → 회사', 
-          category: 'TAXI',
-          status: 'APPROVED', 
-          userName: '이매니저',
-          userId: 'user3',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'Busan Project',
-          attachmentUrls: ['receipt2.jpg'],
-          createdAt: '2024-01-14T09:00:00Z',
-          approvedAt: '2024-01-15T08:30:00Z'
-        },
-        { 
-          _id: '4', 
-          title: '개인 사유 이동',
-          description: '개인 용무로 인한 택시 이용',
-          date: '2024-01-14T00:00:00Z', 
-          time: '19:45',
-          amount: 55000, 
-          route: '회사 → 수원역', 
-          category: 'TAXI',
-          status: 'REJECTED', 
-          userName: '최직원',
-          userId: 'user4',
-          paymentMethod: 'PERSONAL_CARD',
-          projectName: null,
-          attachmentUrls: [],
-          createdAt: '2024-01-14T19:45:00Z',
-          rejectionReason: '개인 용무로 인한 택시비는 지원되지 않습니다'
-        },
-        { 
-          _id: '5', 
-          title: '회사 업무 이동',
-          description: '거래처 방문을 위한 이동',
-          date: '2024-01-13T00:00:00Z', 
-          time: '08:30',
-          amount: 28000, 
-          route: '집 → 회사', 
-          category: 'TAXI',
-          status: 'APPROVED', 
-          userName: '정스태프',
-          userId: 'user5',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'Mobile App',
-          attachmentUrls: ['receipt3.jpg'],
-          createdAt: '2024-01-13T08:30:00Z',
-          approvedAt: '2024-01-14T11:00:00Z'
-        },
-        { 
-          _id: '6', 
-          title: '긴급 회의 참석',
-          description: '긴급 회의를 위한 판교 이동',
-          date: '2024-01-13T00:00:00Z', 
-          time: '14:20',
-          amount: 67000, 
-          route: '서울역 → 판교 테크노밸리', 
-          category: 'TAXI',
-          status: 'PROCESSING', 
-          userName: '한매니저',
-          userId: 'user6',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'AI Platform',
-          attachmentUrls: ['receipt4.jpg'],
-          createdAt: '2024-01-13T14:20:00Z'
-        }
-      ];
-      setTaxiData(dummyData);
+      // API 실패시 빈 배열로 설정
+      setTaxiData([]);
     } finally {
       setLoading(false);
     }
@@ -209,23 +105,32 @@ const AdminFinanceTaxi = () => {
     return new Intl.NumberFormat('ko-KR').format(amount) + '원';
   }
 
-  // 날짜 포맷팅
+  // 날짜 포맷팅 (서버에서 한국 시간으로 저장되므로 그대로 사용)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      month: '2-digit',
-      day: '2-digit'
-    });
+    
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    return `${year}년 ${month}월 ${day}일 ${hours}시 ${minutes.toString().padStart(2, '0')}분`;
   }
 
   // 시간 포맷팅
   const formatTime = (time) => {
-    return time;
+    if (!time) return '00:00';
+    // 이미 HH:MM 형식이면 그대로 반환
+    if (typeof time === 'string' && time.includes(':')) {
+      return time;
+    }
+    return '00:00';
   }
 
   // 프로젝트명 표시
-  const getProjectDisplay = (projectName) => {
-    return projectName || '미배정';
+  const getProjectDisplay = (item) => {
+    return item.projectId?.title || item.projectName || item.project || '미배정';
   }
 
   const stats = getTaxiStats();
@@ -354,27 +259,35 @@ const AdminFinanceTaxi = () => {
 
   // 택시 테이블 데이터를 CSV로 변환하는 함수
   const generateTaxiTableCSV = (data) => {
-    let csvContent = '날짜,시간,제목,사용자,경로,금액,결제방법,프로젝트,상태,메모\n';
+    let csvContent = '날짜,시간,제목,사용자,경로,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
-        formatDate(item.date),
-        formatTime(item.time),
-        item.title,
-        item.userName,
-        item.route,
-        item.amount,
-        getPaymentMethodText(item.paymentMethod),
-        getProjectDisplay(item.projectName),
-        getStatusText(item.status),
+        formatDate(item.date) || '',
+        formatTime(item.time) || '',
+        item.title || '',
+        item.userName || '',
+        item.route || '', // 택시 경로가 없을 수 있음
+        item.amount || 0,
+        item.isSplitPayment ? (item.myAmount || 0) : (item.amount || 0),
+        getPaymentMethodText(item.paymentMethod) || '',
+        getProjectDisplay(item) || '',
+        item.isSplitPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? (item.participants?.length || 0) : 1,
+        getStatusText(item.status) || '',
         item.description || ''
       ];
       
       csvContent += csvRow.map(value => {
-        if (value.toString().includes(',') || value.toString().includes('"')) {
-          return `"${value.toString().replace(/"/g, '""')}"`;
+        // null이나 undefined 값을 안전하게 처리
+        const safeValue = value !== null && value !== undefined ? value : '';
+        const stringValue = safeValue.toString();
+        
+        if (stringValue.includes(',') || stringValue.includes('"')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
         }
-        return value;
+        return stringValue;
       }).join(',') + '\n';
     });
     
@@ -562,6 +475,7 @@ const AdminFinanceTaxi = () => {
               <th>금액</th>
               <th>결제방법</th>
               <th>프로젝트</th>
+              <th>특이사항</th>
               <th>상태</th>
             </tr>
           </thead>
@@ -584,16 +498,52 @@ const AdminFinanceTaxi = () => {
                 </td>
                 <td style={{fontWeight: '500'}}>{item.userName}</td>
                 <td style={{fontSize: '0.85rem'}}>{item.route}</td>
-                <td style={{fontWeight: '600'}}>{formatAmount(item.amount)}</td>
-                <td>{getPaymentMethodText(item.paymentMethod)}</td>
+                <td style={{fontWeight: '600'}}>
+                  {formatAmount(item.amount)}
+                  {/* 분할결제인 경우 내가 낸 금액 표시 */}
+                  {item.isSplitPayment && item.myAmount && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
+                      내가 낸 금액: {formatAmount(item.myAmount)}
+                    </div>
+                  )}
+                </td>
                 <td>
-                  {item.projectName ? (
+                  {getPaymentMethodText(item.paymentMethod)}
+                  {/* 법인카드인 경우 카드 정보 표시 */}
+                  {item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
+                      법인카드
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {getProjectDisplay(item) !== '미배정' ? (
                     <span className={ss.status_badge} style={{backgroundColor: 'var(--accent-color)', color: 'white'}}>
-                      {item.projectName}
+                      {getProjectDisplay(item)}
                     </span>
                   ) : (
                     <span style={{color: 'var(--text-tertiary)'}}>미배정</span>
                   )}
+                </td>
+                <td>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                    {/* 분할결제 표시 */}
+                    {item.isSplitPayment && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--info-color)', color: 'white', fontSize: '0.7rem'}}>
+                        분할결제
+                      </span>
+                    )}
+                    {/* 다중인원 결제 표시 */}
+                    {item.isMultiPersonPayment && item.participants && item.participants.length > 0 && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem'}}>
+                        다중인원 ({item.participants.length}명)
+                      </span>
+                    )}
+                    {/* 특이사항이 없는 경우 */}
+                    {!item.isSplitPayment && !item.isMultiPersonPayment && (
+                      <span style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>-</span>
+                    )}
+                  </div>
                 </td>
                 <td>
                   <span className={`${ss.status_badge} ${getStatusClass(item.status)}`}>
@@ -603,7 +553,7 @@ const AdminFinanceTaxi = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="10" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   택시 이용 내역이 없습니다.
                 </td>
               </tr>

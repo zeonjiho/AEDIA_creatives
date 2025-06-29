@@ -173,16 +173,24 @@
 }
 
 .input_group input,
-.input_group select {
+.input_group select,
+.input_group textarea {
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 14px;
     background: white;
+    font-family: inherit;
+}
+
+.input_group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .input_group input:focus,
-.input_group select:focus {
+.input_group select:focus,
+.input_group textarea:focus {
     outline: none;
     border-color: #007bff;
 }

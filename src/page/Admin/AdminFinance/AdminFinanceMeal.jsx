@@ -33,94 +33,17 @@ const AdminFinanceMeal = () => {
   const fetchMealData = async () => {
     try {
       setLoading(true);
-      // 실제 API 엔드포인트로 교체 예정
+      // 최신 API 구조에 맞게 수정
       const response = await api.get('/receipts?type=MEAL');
-      setMealData(response.data);
+      
+      // API 응답 구조에 맞게 데이터 추출
+      const receiptsData = response.data?.data || response.data || [];
+      console.log('식비 데이터 로드 성공:', receiptsData);
+      setMealData(receiptsData);
     } catch (error) {
       console.error('식비 데이터 로드 실패:', error);
-      // 임시 데이터 (API 구현 전까지)
-      const dummyData = [
-        { 
-          _id: '1', 
-          title: '팀 회식 - 한식당',
-          description: '프로젝트 완료 기념 회식',
-          date: '2024-01-15T00:00:00Z', 
-          amount: 45000, 
-          category: 'DINNER', 
-          status: 'APPROVED', 
-          userName: '김직원',
-          userId: 'user1',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'AEDIA Studio',
-          attachmentUrls: ['receipt1.jpg'],
-          createdAt: '2024-01-15T12:00:00Z',
-          approvedAt: '2024-01-16T09:00:00Z'
-        },
-        { 
-          _id: '2', 
-          title: '클라이언트 미팅 점심',
-          description: '신규 프로젝트 논의 중 식사',
-          date: '2024-01-15T00:00:00Z', 
-          amount: 28000, 
-          category: 'LUNCH', 
-          status: 'PENDING', 
-          userName: '박스태프',
-          userId: 'user2',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: null,
-          attachmentUrls: [],
-          createdAt: '2024-01-15T13:30:00Z'
-        },
-        { 
-          _id: '3', 
-          title: '야근 저녁식사',
-          description: '마감 작업으로 인한 저녁식사',
-          date: '2024-01-14T00:00:00Z', 
-          amount: 15000, 
-          category: 'DINNER', 
-          status: 'APPROVED', 
-          userName: '이매니저',
-          userId: 'user3',
-          paymentMethod: 'PERSONAL_CARD',
-          projectName: 'Mobile App',
-          attachmentUrls: ['receipt2.jpg'],
-          createdAt: '2024-01-14T19:00:00Z',
-          approvedAt: '2024-01-15T08:30:00Z'
-        },
-        { 
-          _id: '4', 
-          title: '팀 미팅 커피',
-          description: '주간 회의 중 커피 구매',
-          date: '2024-01-14T00:00:00Z', 
-          amount: 12000, 
-          category: 'COFFEE', 
-          status: 'REJECTED', 
-          userName: '최직원',
-          userId: 'user4',
-          paymentMethod: 'CASH',
-          projectName: null,
-          attachmentUrls: [],
-          createdAt: '2024-01-14T10:15:00Z',
-          rejectionReason: '개인 커피는 지원되지 않습니다'
-        },
-        { 
-          _id: '5', 
-          title: '출장 중 식사',
-          description: '부산 출장 중 점심식사',
-          date: '2024-01-13T00:00:00Z', 
-          amount: 35000, 
-          category: 'LUNCH', 
-          status: 'APPROVED', 
-          userName: '정스태프',
-          userId: 'user5',
-          paymentMethod: 'CORPORATE_CARD',
-          projectName: 'Busan Project',
-          attachmentUrls: ['receipt3.jpg'],
-          createdAt: '2024-01-13T12:20:00Z',
-          approvedAt: '2024-01-14T11:00:00Z'
-        }
-      ];
-      setMealData(dummyData);
+      // API 실패시 빈 배열로 설정
+      setMealData([]);
     } finally {
       setLoading(false);
     }
@@ -165,14 +88,7 @@ const AdminFinanceMeal = () => {
 
   // 카테고리 텍스트 변환
   const getCategoryText = (category) => {
-    const categoryMap = {
-      'BREAKFAST': '아침',
-      'LUNCH': '점심',
-      'DINNER': '저녁',
-      'SNACK': '간식',
-      'COFFEE': '커피'
-    };
-    return categoryMap[category] || category;
+    return category; // 이미 한글로 저장되어 있음
   }
 
   // 결제 방법 텍스트 변환
@@ -191,18 +107,22 @@ const AdminFinanceMeal = () => {
     return new Intl.NumberFormat('ko-KR').format(amount) + '원';
   }
 
-  // 날짜 포맷팅
+  // 날짜 포맷팅 (서버에서 한국 시간으로 저장되므로 그대로 사용)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      month: '2-digit',
-      day: '2-digit'
-    });
+    
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    return `${year}년 ${month}월 ${day}일 ${hours}시 ${minutes.toString().padStart(2, '0')}분`;
   }
 
   // 프로젝트명 표시
-  const getProjectDisplay = (projectName) => {
-    return projectName || '미배정';
+  const getProjectDisplay = (item) => {
+    return item.projectId?.title || item.projectName || item.project || '미배정';
   }
 
   const stats = getFinanceStats();
@@ -306,7 +226,7 @@ const AdminFinanceMeal = () => {
 
   // 식비 테이블 데이터를 CSV로 변환하는 함수
   const generateMealTableCSV = (data) => {
-    let csvContent = '날짜,제목,사용자,카테고리,금액,결제방법,프로젝트,상태,메모\n';
+    let csvContent = '날짜,제목,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
@@ -315,8 +235,12 @@ const AdminFinanceMeal = () => {
         item.userName,
         getCategoryText(item.category),
         item.amount,
+        item.isSplitPayment ? (item.myAmount || 0) : item.amount,
         getPaymentMethodText(item.paymentMethod),
-        getProjectDisplay(item.projectName),
+        getProjectDisplay(item),
+        item.isSplitPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? (item.participants?.length || 0) : 1,
         getStatusText(item.status),
         item.description || ''
       ];
@@ -489,6 +413,7 @@ const AdminFinanceMeal = () => {
               <th>금액</th>
               <th>결제방법</th>
               <th>프로젝트</th>
+              <th>특이사항</th>
               <th>상태</th>
             </tr>
           </thead>
@@ -510,16 +435,52 @@ const AdminFinanceMeal = () => {
                 </td>
                 <td style={{fontWeight: '500'}}>{item.userName}</td>
                 <td>{getCategoryText(item.category)}</td>
-                <td style={{fontWeight: '600'}}>{formatAmount(item.amount)}</td>
-                <td>{getPaymentMethodText(item.paymentMethod)}</td>
+                <td style={{fontWeight: '600'}}>
+                  {formatAmount(item.amount)}
+                  {/* 분할결제인 경우 내가 낸 금액 표시 */}
+                  {item.isSplitPayment && item.myAmount && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
+                      내가 낸 금액: {formatAmount(item.myAmount)}
+                    </div>
+                  )}
+                </td>
                 <td>
-                  {item.projectName ? (
+                  {getPaymentMethodText(item.paymentMethod)}
+                  {/* 법인카드인 경우 카드 정보 표시 */}
+                  {item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
+                      법인카드
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {getProjectDisplay(item) !== '미배정' ? (
                     <span className={ss.status_badge} style={{backgroundColor: 'var(--accent-color)', color: 'white'}}>
-                      {item.projectName}
+                      {getProjectDisplay(item)}
                     </span>
                   ) : (
                     <span style={{color: 'var(--text-tertiary)'}}>미배정</span>
                   )}
+                </td>
+                <td>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                    {/* 분할결제 표시 */}
+                    {item.isSplitPayment && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--info-color)', color: 'white', fontSize: '0.7rem'}}>
+                        분할결제
+                      </span>
+                    )}
+                    {/* 다중인원 결제 표시 */}
+                    {item.isMultiPersonPayment && item.participants && item.participants.length > 0 && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem'}}>
+                        다중인원 ({item.participants.length}명)
+                      </span>
+                    )}
+                    {/* 특이사항이 없는 경우 */}
+                    {!item.isSplitPayment && !item.isMultiPersonPayment && (
+                      <span style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>-</span>
+                    )}
+                  </div>
                 </td>
                 <td>
                   <span className={`${ss.status_badge} ${getStatusClass(item.status)}`}>

@@ -63,13 +63,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       myAmount: '', // 분할결제용 내가 낸 금액 추가
       isSplitPayment: false, // 분할결제 체크박스 상태 추가
       isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
-      cardCompany: '', // 카드사 추가
-      cardCompanyOther: '', // 기타 카드사 직접입력 추가
-      cardId: '', // 법인카드 ID 추가
-      cardNumber: '', // 신용카드 번호 추가
+      cardType: '', // 법인카드/개인카드 선택 추가
+      creditCardId: '', // 법인카드 ID 추가
       bankName: '', // 은행명 추가
       bankNameOther: '', // 기타 은행 직접입력 추가
-      accountNumber: '' // 계좌번호 추가
+      accountNumber: '', // 계좌번호 추가
+      description: '' // 메모 필드 추가
     };
   };
 
@@ -261,48 +260,37 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           return false;
         }
 
-        // 신용카드 선택시 카드사와 카드번호 검증
+        // 신용카드 선택시 카드 유형 검증
         if (formData.paymentMethod === '신용카드') {
-          if (!formData.cardCompany) {
-            showToast('카드사를 선택해주세요.');
+          if (!formData.cardType) {
+            showToast('카드 유형을 선택해주세요.');
             return false;
           }
-          if (formData.cardCompany === '기타' && !formData.cardCompanyOther) {
-            showToast('카드사명을 직접 입력해주세요.');
-            return false;
-          }
-          if (!formData.cardNumber) {
-            showToast('카드번호를 입력해주세요.');
-            return false;
-          }
-          // 법인카드인 경우 cardId 검증
-          if (formData.cardCompany === '법인카드') {
-            if (!formData.cardId) {
+          // 법인카드인 경우 creditCardId 검증
+          if (formData.cardType === '법인카드') {
+            if (!formData.creditCardId) {
               showToast('법인카드를 선택해주세요.');
-              return false;
-            }
-          } else {
-            // 법인카드가 아닌 경우에만 카드번호 길이 검증
-            if (formData.cardNumber.replace(/\s/g, '').length < 15) {
-              showToast('신용카드 번호를 올바르게 입력해주세요.');
               return false;
             }
           }
         }
 
-        // 계좌이체 선택시 은행명과 계좌번호 검증
-        if (formData.paymentMethod === '계좌이체') {
-          if (!formData.bankName) {
-            showToast('은행을 선택해주세요.');
-            return false;
-          }
-          if (formData.bankName === '기타' && !formData.bankNameOther) {
-            showToast('은행명을 직접 입력해주세요.');
-            return false;
-          }
-          if (!formData.accountNumber || formData.accountNumber.length < 10) {
-            showToast('계좌번호를 올바르게 입력해주세요.');
-            return false;
+        // 현금/계좌이체 선택시 은행명과 계좌번호 검증 (계좌이체인 경우에만)
+        if (formData.paymentMethod === '현금/계좌이체') {
+          // 은행명이나 계좌번호가 입력된 경우에만 검증 (계좌이체로 판단)
+          if (formData.bankName || formData.accountNumber) {
+            if (!formData.bankName) {
+              showToast('은행을 선택해주세요.');
+              return false;
+            }
+            if (formData.bankName === '기타' && !formData.bankNameOther) {
+              showToast('은행명을 직접 입력해주세요.');
+              return false;
+            }
+            if (!formData.accountNumber || formData.accountNumber.length < 10) {
+              showToast('계좌번호를 올바르게 입력해주세요.');
+              return false;
+            }
           }
         }
 
@@ -576,7 +564,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // 최종 검증 (모든 단계)
     for (let step = 1; step <= 3; step++) {
       if (!validateStep(step)) {
@@ -584,10 +572,48 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       }
     }
 
-    stopCamera(); // 제출 시 카메라 정리
-    clearStorage(); // 성공적으로 제출하면 저장된 데이터 삭제
-    onSubmit(formData);
+    try {
+      stopCamera(); // 제출 시 카메라 정리
+      clearStorage(); // 성공적으로 제출하면 저장된 데이터 삭제
+      await onSubmit(formData);
+      // 성공적인 제출이므로 경고창 없이 바로 닫기
+      handleCloseAfterSubmit();
+    } catch (error) {
+      console.error('영수증 제출 실패:', error);
+      // 제출 실패시에는 모달을 닫지 않음
+    }
+  };
+
+  // 제출 후 모달 닫기 (경고창 없음)
+  const handleCloseAfterSubmit = () => {
+    stopCamera();
+    clearStorage();
+    // 폼 데이터 초기화
+    setFormData({
+      category: '',
+      dateTime: getCurrentDateTime(),
+      amount: '',
+      project: '',
+      paymentMethod: '',
+      participants: [{ person: null, project: '' }],
+      attachedFiles: [],
+      myAmount: '',
+      isSplitPayment: false,
+      isMultiPersonPayment: false,
+      cardType: '',
+      creditCardId: '',
+      bankName: '',
+      bankNameOther: '',
+      accountNumber: '',
+      description: ''
+    });
+    setCurrentStep(1);
     onClose();
+    
+    // 성공 메시지 표시 (모달이 닫힌 후 약간 딜레이를 주어 자연스럽게 표시)
+    setTimeout(() => {
+      alert('영수증 등록에 성공했습니다.');
+    }, 100);
   };
 
   // 데이터가 입력되어 있는지 확인하는 함수
@@ -601,23 +627,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       formData.myAmount ||
       formData.isSplitPayment ||
       formData.isMultiPersonPayment ||
-      formData.cardCompany ||
-      formData.cardCompanyOther ||
-      formData.cardId ||
-      formData.cardNumber ||
+      formData.cardType ||
+      formData.creditCardId ||
       formData.bankName ||
       formData.bankNameOther ||
-      formData.accountNumber; // 신용카드/계좌이체 정보도 확인
+      formData.accountNumber ||
+      formData.description; // 메모 필드도 확인
   };
 
   const handleClose = () => {
-    // 입력된 데이터가 있으면 확인 모달 표시
-    if (hasFormData()) {
-      setShowCloseConfirm(true);
-      return;
-    }
-
-    // 데이터가 없으면 바로 닫기
+    // 경고창 없이 바로 닫기
     stopCamera();
     clearStorage();
     onClose();
@@ -648,13 +667,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       myAmount: '', // 분할결제용 내가 낸 금액 추가
       isSplitPayment: false, // 분할결제 체크박스 상태 추가
       isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
-      cardCompany: '', // 카드사 추가
-      cardCompanyOther: '', // 기타 카드사 직접입력 추가
-      cardId: '', // 법인카드 ID 추가
-      cardNumber: '', // 신용카드 번호 추가
+      cardType: '', // 법인카드/개인카드 선택 추가
+      creditCardId: '', // 법인카드 ID 추가
       bankName: '', // 은행명 추가
       bankNameOther: '', // 기타 은행 직접입력 추가
-      accountNumber: '' // 계좌번호 추가
+      accountNumber: '', // 계좌번호 추가
+      description: '' // 메모 필드 추가
     });
     setCurrentStep(1);
 
@@ -670,9 +688,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const isMultiPersonPayment = formData.isMultiPersonPayment;
   const isSplitPayment = formData.isSplitPayment;
   const isCardPayment = formData.paymentMethod === '신용카드';
-  const isBankTransfer = formData.paymentMethod === '계좌이체';
-  const isCorporateCard = formData.cardCompany === '법인카드';
-  const isOtherCard = formData.cardCompany === '기타';
+  const isCashOrTransfer = formData.paymentMethod === '현금/계좌이체';
+  const isCorporateCard = formData.cardType === '법인카드';
+  const isOtherCard = formData.cardType === '개인카드';
   const isOtherBank = formData.bankName === '기타';
 
   // 분할결제용 내가 낸 금액 변경 핸들러 추가
@@ -698,28 +716,6 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       ...prev,
       isMultiPersonPayment: checked,
       participants: checked ? prev.participants : [{ person: null, project: '' }] // 체크 해제시 참가자 목록 초기화
-    }));
-  };
-
-  // 신용카드 번호 포맷팅 핸들러
-  const handleCardNumberChange = (value) => {
-    // 숫자만 추출
-    const numbersOnly = value.replace(/\D/g, '');
-    // 4자리마다 공백 추가
-    const formatted = numbersOnly.replace(/(\d{4})(?=\d)/g, '$1 ');
-    setFormData(prev => ({
-      ...prev,
-      cardNumber: formatted
-    }));
-  };
-
-  // 계좌번호 포맷팅 핸들러
-  const handleAccountNumberChange = (value) => {
-    // 숫자와 하이픈만 허용
-    const cleaned = value.replace(/[^\d-]/g, '');
-    setFormData(prev => ({
-      ...prev,
-      accountNumber: cleaned
     }));
   };
 
@@ -764,49 +760,24 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
 
   // 법인카드 선택 핸들러
   const handleCorporateCardSelect = (selectedCard) => {
-    const maskedCard = maskCorporateCardNumber(selectedCard.number);
     setFormData(prev => ({
       ...prev,
-      cardNumber: maskedCard,
-      cardId: selectedCard._id
+      creditCardId: selectedCard._id,
+      cardType: '법인카드'
     }));
     setShowCorporateCardModal(false);
   };
 
-  // 대한민국 카드사 목록 (사용빈도 순서)
-  const koreanCardCompanies = [
-    // 법인카드 (최상단)
-    '법인카드',
+  // 선택된 법인카드 정보 가져오기
+  const getSelectedCardDisplay = () => {
+    if (!formData.creditCardId) return null;
+    const selectedCard = corporateCards.find(card => card._id === formData.creditCardId);
+    return selectedCard ? 
+      `${selectedCard.cardName} ${selectedCard.label} ${maskCorporateCardNumber(selectedCard.number)}` : 
+      '법인카드 선택됨';
+  };
 
-    // 주요 카드사 (빅5)
-    '삼성카드', '신한카드', '현대카드', 'KB국민카드', '롯데카드',
 
-    // 은행계 카드사
-    '우리카드', '하나카드', 'NH농협카드', '수협카드', '기업은행카드',
-
-    // 인터넷은행 카드
-    '카카오뱅크카드', '토스뱅크카드', '케이뱅크카드',
-
-    // 외국계 카드사
-    '시티카드', 'SC제일은행카드',
-
-    // 전업카드사/기타
-    'BC카드', '광주카드', '전북카드', '제주카드',
-    '다이너스클럽', '아메리칸익스프레스',
-
-    // 유통업계 카드
-    'SSG카드', '이마트카드', '홈플러스카드',
-    '올리브영카드', 'GS칼텍스카드',
-
-    // 항공/교통 카드
-    '대한항공카드', '아시아나카드', 'T-money카드',
-
-    // 기타 제휴카드
-    '네이버카드', 'PAYCO카드', '11번가카드',
-
-    // 기타 옵션
-    '기타'
-  ];
 
   // 대한민국 은행 목록 (상위 15개)
   const koreanBanks = [
@@ -922,6 +893,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
           min="1"
         />
       </div>
+
+      <div className={styles.input_group}>
+        <label>메모 <span className={styles.optional}>(선택사항)</span></label>
+        <textarea
+          placeholder="메모를 입력하세요 (선택사항)"
+          value={formData.description}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          rows="3"
+        />
+      </div>
     </div>
   );
 
@@ -943,7 +924,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       <div className={styles.input_group}>
         <label>결제방법 <span className={styles.required}>*</span></label>
         <div className={styles.payment_options}>
-          {['신용카드', '현금', '계좌이체'].map((method) => (
+          {['신용카드', '현금/계좌이체'].map((method) => (
             <label key={method} className={styles.radio_option}>
               <input
                 type="radio"
@@ -961,63 +942,42 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       {/* 신용카드 상세 정보 */}
       {isCardPayment && (
         <div className={styles.input_group}>
-          <label>신용카드 정보 <span className={styles.required}>*</span></label>
-          <div className={styles.card_info_container}>
-            <div className={styles.card_info_row}>
-              <div className={styles.card_company_wrapper}>
-                <label className={styles.card_label}>카드사</label>
-                <select
-                  value={formData.cardCompany}
-                  onChange={(e) => handleInputChange('cardCompany', e.target.value)}
-                  className={styles.card_company_select}
-                >
-                  <option value="">카드사 선택</option>
-                  {koreanCardCompanies.map((company) => (
-                    <option key={company} value={company}>{company}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.card_number_wrapper}>
-                <label className={styles.card_label}>카드번호</label>
+          <label>카드 유형 <span className={styles.required}>*</span></label>
+          <div className={styles.payment_options}>
+            {['법인카드', '개인카드'].map((type) => (
+              <label key={type} className={styles.radio_option}>
                 <input
-                  type="text"
-                  placeholder={isCorporateCard ? "법인카드를 선택하세요" : "카드번호 (예: 1234 5678 9012 3456)"}
-                  value={formData.cardNumber}
-                  onChange={(e) => !isCorporateCard && handleCardNumberChange(e.target.value)}
-                  onClick={() => isCorporateCard && setShowCorporateCardModal(true)}
-                  readOnly={isCorporateCard}
-                  maxLength="19"
-                  className={`${styles.card_number_input} ${isCorporateCard ? styles.corporate_card_input : ''}`}
+                  type="radio"
+                  name="cardType"
+                  value={type}
+                  checked={formData.cardType === type}
+                  onChange={(e) => handleInputChange('cardType', e.target.value)}
                 />
-              </div>
-            </div>
-
-            {/* 기타 카드사 직접입력 */}
-            {isOtherCard && (
-              <div className={styles.other_input_wrapper}>
-                <label className={styles.card_label}>카드사명 직접입력</label>
-                <input
-                  type="text"
-                  placeholder="카드사명을 입력하세요"
-                  value={formData.cardCompanyOther}
-                  onChange={(e) => handleInputChange('cardCompanyOther', e.target.value)}
-                  className={styles.other_input}
-                />
-              </div>
-            )}
-
-            <div className={styles.card_info_description}>
-              * 카드 정보는 자동으로 마스킹되어 안전하게 관리됩니다
-            </div>
+                <span>{type}</span>
+              </label>
+            ))}
           </div>
         </div>
       )}
 
-      {/* 계좌이체 상세 정보 */}
-      {isBankTransfer && (
+      {/* 법인카드 선택 */}
+      {isCorporateCard && (
         <div className={styles.input_group}>
-          <label>계좌 정보 <span className={styles.required}>*</span></label>
+          <label>법인카드 선택 <span className={styles.required}>*</span></label>
+          <button
+            type="button"
+            className={styles.corporate_card_select_btn}
+            onClick={() => setShowCorporateCardModal(true)}
+          >
+            {formData.creditCardId ? getSelectedCardDisplay() : '법인카드를 선택하세요'}
+          </button>
+        </div>
+      )}
+
+      {/* 현금/계좌이체 상세 정보 */}
+      {formData.paymentMethod === '현금/계좌이체' && (
+        <div className={styles.input_group}>
+          <label>계좌 정보 (선택사항)</label>
           <div className={styles.account_info_container}>
             <div className={styles.account_info_row}>
               <div className={styles.bank_select_wrapper}>
@@ -1040,7 +1000,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                   type="text"
                   placeholder="계좌번호를 입력하세요"
                   value={formData.accountNumber}
-                  onChange={(e) => handleAccountNumberChange(e.target.value)}
+                  onChange={(e) => handleInputChange('accountNumber', e.target.value)}
                   className={styles.account_number_input}
                 />
               </div>
@@ -1061,7 +1021,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             )}
 
             <div className={styles.account_info_description}>
-              * 계좌번호는 안전하게 암호화되어 저장됩니다
+              * 계좌이체인 경우에만 입력하세요. 현금인 경우 입력하지 않아도 됩니다.
             </div>
           </div>
         </div>
@@ -1246,6 +1206,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               <span className={styles.summary_label}>프로젝트:</span>
               <span className={styles.summary_value}>{formData.project}</span>
             </div>
+            {formData.description && (
+              <div className={styles.summary_item}>
+                <span className={styles.summary_label}>메모:</span>
+                <span className={styles.summary_value}>{formData.description}</span>
+              </div>
+            )}
           </div>
 
           <div className={styles.summary_section}>
@@ -1259,22 +1225,24 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             {isCardPayment && (
               <>
                 <div className={styles.summary_item}>
-                  <span className={styles.summary_label}>카드사:</span>
+                  <span className={styles.summary_label}>카드 유형:</span>
                   <span className={styles.summary_value}>
-                    {formData.cardCompany === '기타' ? formData.cardCompanyOther : formData.cardCompany}
+                    {formData.cardType}
                   </span>
                 </div>
-                {formData.cardNumber && (
+                {formData.cardType === '법인카드' && formData.creditCardId && (
                   <div className={styles.summary_item}>
-                    <span className={styles.summary_label}>카드번호:</span>
-                    <span className={styles.summary_value}>{formData.cardNumber}</span>
+                    <span className={styles.summary_label}>법인카드:</span>
+                    <span className={styles.summary_value}>
+                      {getSelectedCardDisplay()}
+                    </span>
                   </div>
                 )}
               </>
             )}
 
-            {/* 계좌이체 정보 */}
-            {isBankTransfer && (
+            {/* 현금/계좌이체 정보 */}
+            {isCashOrTransfer && formData.bankName && (
               <>
                 <div className={styles.summary_item}>
                   <span className={styles.summary_label}>은행:</span>

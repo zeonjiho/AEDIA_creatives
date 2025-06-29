@@ -246,16 +246,47 @@ const storage = multer.diskStorage({
 
 // uploads 디렉토리 확인 및 생성
 const uploadDir = './uploads/product';
+const receiptUploadDir = './uploads/receipts';
+
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
+if (!fs.existsSync(receiptUploadDir)) {
+    fs.mkdirSync(receiptUploadDir);
+}
 
 const upload = multer({
     storage: storage,
     limits: { fileSize: 25 * 1024 * 1024 } // 25MB 제한
+});
+
+// 영수증 이미지 업로드용 multer 설정
+const receiptStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, receiptUploadDir);
+    },
+    filename: (req, file, cb) => {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000000);
+        const ext = path.extname(file.originalname);
+        cb(null, `receipt-${timestamp}-${randomNum}${ext}`);
+    }
+});
+
+const receiptUpload = multer({
+    storage: receiptStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB 제한
+    fileFilter: (req, file, cb) => {
+        // 이미지 파일만 허용
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('이미지 파일만 업로드 가능합니다.'), false);
+        }
+    }
 });
 
 
@@ -265,6 +296,45 @@ const upload = multer({
 
 app.get('/', (req, res) => {
     res.send('Hello World');
+});
+
+// 영수증 이미지 업로드 API
+app.post('/upload', receiptUpload.single('file'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '파일이 업로드되지 않았습니다.' 
+            });
+        }
+
+        // 업로드된 파일의 URL 생성
+        const fileUrl = `/uploads/receipts/${req.file.filename}`;
+
+        console.log('영수증 이미지 업로드 성공:', {
+            originalName: req.file.originalname,
+            filename: req.file.filename,
+            size: req.file.size,
+            url: fileUrl
+        });
+
+        res.status(200).json({
+            success: true,
+            message: '파일 업로드 성공',
+            url: fileUrl,
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            size: req.file.size
+        });
+
+    } catch (error) {
+        console.error('영수증 이미지 업로드 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '파일 업로드에 실패했습니다.',
+            error: error.message
+        });
+    }
 });
 
 app.get('/get-user-list', async(req, res) => {
@@ -3839,7 +3909,19 @@ app.post('/receipts', async(req, res) => {
             projectId,
             projectName,
             route,
-            attachmentUrls = []
+            attachmentUrls = [],
+            // StepperModal 확장 필드들
+            stepperDateTime,
+            isSplitPayment = false,
+            myAmount,
+            isMultiPersonPayment = false,
+            participants = [],
+            cardCompany,
+            cardCompanyOther,
+            cardNumber,
+            bankName,
+            bankNameOther,
+            accountNumber
         } = req.body;
 
         // 필수 필드 검증
@@ -3847,14 +3929,6 @@ app.post('/receipts', async(req, res) => {
             return res.status(400).json({
                 success: false,
                 message: '필수 필드가 누락되었습니다.'
-            });
-        }
-
-        // 택시 타입인 경우 route 필수
-        if (type === 'TAXI' && !route) {
-            return res.status(400).json({
-                success: false,
-                message: '택시 영수증은 경로 정보가 필요합니다.'
             });
         }
 
@@ -3875,14 +3949,27 @@ app.post('/receipts', async(req, res) => {
             type,
             category,
             paymentMethod,
-            creditCardId: paymentMethod === 'CORPORATE_CARD' ? creditCardId : null,
+            creditCardId: (paymentMethod === 'CORPORATE_CARD' && creditCardId) ? creditCardId : null,
             userId,
             userName,
             projectId: projectId || null,
             projectName: projectName || null,
             route: type === 'TAXI' ? route : null,
             attachmentUrls,
-            status: 'PENDING'
+            status: 'PENDING',
+            
+            // StepperModal 확장 필드들
+            stepperDateTime: stepperDateTime || null,
+            isSplitPayment: isSplitPayment || false,
+            myAmount: myAmount ? parseFloat(myAmount) : null,
+            isMultiPersonPayment: isMultiPersonPayment || false,
+            participants: participants || [],
+            cardCompany: cardCompany || null,
+            cardCompanyOther: cardCompanyOther || null,
+            cardNumber: cardNumber || null,
+            bankName: bankName || null,
+            bankNameOther: bankNameOther || null,
+            accountNumber: accountNumber || null
         });
 
         const savedReceipt = await receipt.save();
@@ -3964,43 +4051,7 @@ app.put('/receipts/:id', async(req, res) => {
     }
 });
 
-// 영수증 삭제
-app.delete('/receipts/:id', async(req, res) => {
-    try {
-        const receiptId = req.params.id;
 
-        const receipt = await Receipt.findById(receiptId);
-        if (!receipt) {
-            return res.status(404).json({
-                success: false,
-                message: '영수증을 찾을 수 없습니다.'
-            });
-        }
-
-        // 승인된 영수증은 삭제 불가
-        if (receipt.status === 'APPROVED') {
-            return res.status(403).json({
-                success: false,
-                message: '승인된 영수증은 삭제할 수 없습니다.'
-            });
-        }
-
-        await Receipt.findByIdAndDelete(receiptId);
-
-        res.status(200).json({
-            success: true,
-            message: '영수증이 성공적으로 삭제되었습니다.'
-        });
-
-    } catch (error) {
-        console.error('영수증 삭제 실패:', error);
-        res.status(500).json({
-            success: false,
-            message: '영수증 삭제에 실패했습니다.',
-            error: error.message
-        });
-    }
-});
 
 // 영수증 승인
 app.patch('/receipts/:id/approve', async(req, res) => {

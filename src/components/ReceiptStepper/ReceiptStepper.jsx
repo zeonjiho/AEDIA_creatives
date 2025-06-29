@@ -353,36 +353,30 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   };
   
   // 제출 처리
-  const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     
     // 제출 전 마지막 유효성 검사
     if (!validateForm()) {
       return;
     }
-    
+
     const submittedData = {
       ...formData,
       amount: parseInt(formData.amount, 10) || 0,
       attachmentUrls: imagePreviews
     };
-    
-    onSubmit(submittedData);
-    
-    // 마지막 단계로 이동
-    setCurrentStep(totalSteps);
-  };
-  
-  // 모달 닫기 전 확인
-  const handleCloseConfirm = () => {
-    if (currentStep < totalSteps) {
-      if (window.confirm('작성 중인 내용이 있습니다. 정말 닫으시겠습니까?')) {
-        onClose();
-      }
-    } else {
-      onClose();
+
+    try {
+      await onSubmit(submittedData);
+      // 제출이 성공한 후에만 마지막 단계로 이동
+      setCurrentStep(totalSteps);
+    } catch (error) {
+      console.error('영수증 제출 실패:', error);
+      // 제출 실패시에는 step을 변경하지 않음
     }
   };
+
 
   // 단계별 렌더링
   const renderStepContent = () => {
@@ -893,7 +887,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     <>
       <StepperModal
         isOpen={isOpen}
-        onClose={handleCloseConfirm}
+        onClose={onClose}
+        onSubmit={onSubmit}
         currentStep={currentStep}
         totalSteps={totalSteps}
         onPrevStep={handlePrevStep}

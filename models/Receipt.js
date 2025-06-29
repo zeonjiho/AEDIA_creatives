@@ -44,21 +44,14 @@ const receiptSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: [
-            // 식비 관련
-            'BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'COFFEE',
-            // 교통비 관련  
-            'TAXI', 'BUS', 'SUBWAY', 'TRAIN', 'FLIGHT',
-            // 기타
-            'OFFICE_SUPPLIES', 'EQUIPMENT', 'SOFTWARE', 'EDUCATION', 'ENTERTAINMENT', 'OTHER'
-        ]
+        enum: ['식비', '교통비', '숙박비', '기타']
     },
 
     // 결제 정보
     paymentMethod: {
         type: String,
         required: true,
-        enum: ['CORPORATE_CARD', 'PERSONAL_CARD', 'CASH', 'BANK_TRANSFER'],
+        enum: ['CORPORATE_CARD', 'PERSONAL_CARD', 'CASH'],
         default: 'CORPORATE_CARD'
     },
 
@@ -66,6 +59,47 @@ const receiptSchema = new mongoose.Schema({
     creditCardId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CreditCard',
+    },
+
+    // StepperModal 확장 필드들
+    // 분할결제 정보
+    isSplitPayment: {
+        type: Boolean,
+        default: false
+    },
+    myAmount: {
+        type: Number,
+        min: 0
+    },
+
+    // 다중인원 결제 정보
+    isMultiPersonPayment: {
+        type: Boolean,
+        default: false
+    },
+    participants: [{
+        person: {
+            _id: mongoose.Schema.Types.ObjectId,
+            name: String,
+            userType: String,
+            profileImage: String
+        },
+        project: String
+    }],
+
+    // 결제 세부 정보
+    cardType: String, // 법인카드/개인카드
+    bankName: String,
+    bankNameOther: String,
+    accountNumber: String,
+
+    // StepperModal dateTime 객체
+    stepperDateTime: {
+        year: String,
+        month: String,
+        day: String,
+        hour: String,
+        minute: String
     },
 
     // 상태
@@ -101,9 +135,6 @@ const receiptSchema = new mongoose.Schema({
     // 택시 전용 필드
     route: {
         type: String, // 출발지 → 도착지
-        required: function() {
-            return this.type === 'TAXI';
-        }
     },
 
     // 첨부파일
@@ -134,27 +165,9 @@ receiptSchema.index({ type: 1, status: 1 });
 receiptSchema.index({ projectId: 1 });
 receiptSchema.index({ creditCardId: 1 });
 
-// 가상 필드: 카테고리 한글명
+// 가상 필드: 카테고리 한글명 (이미 한글로 저장되므로 그대로 반환)
 receiptSchema.virtual('categoryName').get(function() {
-    const categoryMap = {
-        'BREAKFAST': '아침',
-        'LUNCH': '점심',
-        'DINNER': '저녁',
-        'SNACK': '간식',
-        'COFFEE': '커피',
-        'TAXI': '택시',
-        'BUS': '버스',
-        'SUBWAY': '지하철',
-        'TRAIN': '기차',
-        'FLIGHT': '항공',
-        'OFFICE_SUPPLIES': '사무용품',
-        'EQUIPMENT': '장비',
-        'SOFTWARE': '소프트웨어',
-        'EDUCATION': '교육',
-        'ENTERTAINMENT': '접대',
-        'OTHER': '기타'
-    };
-    return categoryMap[this.category] || this.category;
+    return this.category;
 });
 
 // 가상 필드: 상태 한글명
@@ -173,8 +186,7 @@ receiptSchema.virtual('paymentMethodName').get(function() {
     const paymentMap = {
         'CORPORATE_CARD': '법인카드',
         'PERSONAL_CARD': '개인카드',
-        'CASH': '현금',
-        'BANK_TRANSFER': '계좌이체'
+        'CASH': '현금/계좌이체'
     };
     return paymentMap[this.paymentMethod] || this.paymentMethod;
 });
