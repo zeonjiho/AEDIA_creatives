@@ -39,19 +39,7 @@ const CreditCardModal = ({
 
   if (!isOpen) return null
 
-  // 날짜 포맷팅
-  const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+
 
   // 카드번호 마스킹 처리
   const formatCardNumber = (number, cardLabel) => {
@@ -176,16 +164,6 @@ const CreditCardModal = ({
                   </div>
                 </div>
                 <div className={ss.info_item}>
-                  <label>등록일</label>
-                  <div className={ss.info_value}>{formatDate(card.createdAt)}</div>
-                </div>
-                <div className={ss.info_item}>
-                  <label>현재 라벨</label>
-                  <div className={ss.info_value} style={{fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary-color)'}}>
-                    {card.label || '-'}
-                  </div>
-                </div>
-                <div className={ss.info_item}>
                   <label>현재 카드번호</label>
                   <div className={ss.info_value} style={{fontFamily: 'monospace', fontSize: '0.9rem'}}>
                     {formatCardNumber(card.number, card.label)}
@@ -225,7 +203,7 @@ const CreditCardModal = ({
               </div>
 
               <div className={ss.info_item} style={{marginTop: '20px'}}>
-                <label>카드 라벨 (선택사항)</label>
+                <label>카드 라벨 *</label>
                 <input
                   type="text"
                   value={label}

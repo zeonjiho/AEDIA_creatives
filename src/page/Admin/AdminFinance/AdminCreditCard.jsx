@@ -30,10 +30,9 @@ const AdminCreditCard = () => {
         return;
       }
       
-      // null/undefined 값 제거 및 최신순 정렬
+      // null/undefined 값 제거
       const validCards = cardData
-        .filter(card => card !== null && card !== undefined)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        .filter(card => card !== null && card !== undefined);
       
       setCardList(validCards);
     } catch (err) {
@@ -54,10 +53,9 @@ const AdminCreditCard = () => {
         return;
       }
       
-      // null/undefined 값 제거 및 최신순 정렬
+      // null/undefined 값 제거
       const validCards = cardData
-        .filter(card => card !== null && card !== undefined)
-        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        .filter(card => card !== null && card !== undefined);
       
       setDeletedCardList(validCards);
     } catch (err) {
