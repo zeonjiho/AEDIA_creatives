@@ -272,6 +272,42 @@
     color: #9ca3af;
 }
 
+.inputWithButton {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inputWithButton .input {
+    flex: 1;
+}
+
+.locationPickerButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.locationPickerButton:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.locationPickerButton:active {
+    transform: translateY(0);
+}
+
 .formActions {
     display: flex;
     justify-content: flex-end;
@@ -609,5 +645,13 @@ input:disabled+.slider:before {
     }
     .adminActions {
         gap: 8px;
+    }
+    .inputWithButton {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .locationPickerButton {
+        width: 100%;
+        justify-content: center;
     }
 }

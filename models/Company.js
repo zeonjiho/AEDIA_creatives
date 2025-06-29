@@ -14,6 +14,14 @@ const companySchema = new Schema({
         type: String,
         default: '',
     },
+    latitude: {
+        type: Number,
+        default: null,
+    },
+    longitude: {
+        type: Number,
+        default: null,
+    },
     phone: {
         type: String,
         default: '',

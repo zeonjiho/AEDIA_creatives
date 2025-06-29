@@ -2786,3 +2786,33 @@ app.post('/company/upload-logo', upload.single('logo'), async(req, res) => {
         res.status(500).json({ message: '로고 업로드에 실패했습니다.' });
     }
 });
+
+// 회사 위치 정보 조회 API (출석 관리용)
+app.get('/company/location', async(req, res) => {
+    try {
+        const company = await Company.findOne({}).select('latitude longitude name address');
+
+        if (!company) {
+            return res.status(200).json({
+                latitude: null,
+                longitude: null,
+                name: 'AEDIA STUDIO',
+                address: '',
+                hasLocation: false
+            });
+        }
+
+        const hasLocation = company.latitude !== null && company.longitude !== null;
+
+        res.status(200).json({
+            latitude: company.latitude,
+            longitude: company.longitude,
+            name: company.name,
+            address: company.address,
+            hasLocation: hasLocation
+        });
+    } catch (err) {
+        console.error('회사 위치 정보 조회 실패:', err);
+        res.status(500).json({ message: '회사 위치 정보 조회에 실패했습니다.' });
+    }
+});

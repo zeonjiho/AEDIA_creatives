@@ -6,6 +6,7 @@ import {
     HiLocationMarker, HiUserGroup, HiShieldCheck
 } from 'react-icons/hi';
 import StaffSearchModal from '../../../components/StaffSearchModal/StaffSearchModal';
+import LocationPicker from '../../../common/LocationPicker';
 import api from '../../../utils/api';
 
 const AdminAdvanced = () => {
@@ -31,11 +32,14 @@ const AdminAdvanced = () => {
     const [showAddAdmin, setShowAddAdmin] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
+    const [showLocationPicker, setShowLocationPicker] = useState(false);
 
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
         name: '',
         address: '',
+        latitude: '',
+        longitude: '',
         phone: '',
         email: '',
         website: ''
@@ -54,6 +58,8 @@ const AdminAdvanced = () => {
                 setFormData({
                     name: response.data.name || '',
                     address: response.data.address || '',
+                    latitude: response.data.latitude || '',
+                    longitude: response.data.longitude || '',
                     phone: response.data.phone || '',
                     email: response.data.email || '',
                     website: response.data.website || ''
@@ -247,6 +253,18 @@ const AdminAdvanced = () => {
         }
     };
 
+    // 위치 선택 핸들러
+    const handleLocationSelect = (location) => {
+        console.log('Selected location:', location);
+        setFormData(prev => ({
+            ...prev,
+            address: location.koreanAddress,
+            latitude: location.lat,
+            longitude: location.lng
+        }));
+        setShowLocationPicker(false);
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -375,13 +393,58 @@ const AdminAdvanced = () => {
                                         <HiLocationMarker className={styles.labelIcon} />
                                         주소
                                     </label>
+                                    <div className={styles.inputWithButton}>
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
+                                            className={styles.input}
+                                            placeholder="회사 주소를 입력하세요"
+                                        />
+                                        <button 
+                                            type="button"
+                                            onClick={() => setShowLocationPicker(true)}
+                                            className={styles.locationPickerButton}
+                                            title="지도에서 위치 선택"
+                                        >
+                                            <HiLocationMarker />
+                                            위치 선택
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>
+                                        <HiLocationMarker className={styles.labelIcon} />
+                                        위도 (Latitude)
+                                    </label>
                                     <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
+                                        type="number"
+                                        step="any"
+                                        name="latitude"
+                                        value={formData.latitude}
                                         onChange={handleInputChange}
                                         className={styles.input}
-                                        placeholder="회사 주소를 입력하세요"
+                                        placeholder="위도를 입력하세요 (예: 37.5665) - 출근 관리에 사용됩니다"
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>
+                                        <HiLocationMarker className={styles.labelIcon} />
+                                        경도 (Longitude)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        name="longitude"
+                                        value={formData.longitude}
+                                        onChange={handleInputChange}
+                                        className={styles.input}
+                                        placeholder="경도를 입력하세요 (예: 126.9780) - 출근 관리에 사용됩니다"
                                     />
                                 </div>
                             </div>
@@ -604,6 +667,22 @@ const AdminAdvanced = () => {
                     multiSelect={true}
                     title="어드민 사용자 추가"
                     initialFilterType="internal"
+                />
+            )}
+
+            {/* 위치 선택 모달 */}
+            {showLocationPicker && (
+                <LocationPicker
+                    isOpen={showLocationPicker}
+                    onClose={() => setShowLocationPicker(false)}
+                    onLocationSelect={handleLocationSelect}
+                    initialLocation={{
+                        name: '',
+                        koreanAddress: formData.address,
+                        englishAddress: '',
+                        lat: formData.latitude ? parseFloat(formData.latitude) : 37.5665,
+                        lng: formData.longitude ? parseFloat(formData.longitude) : 126.9780
+                    }}
                 />
             )}
         </div>
