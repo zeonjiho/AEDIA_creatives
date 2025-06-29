@@ -626,20 +626,6 @@ const ProjectDetailModal = ({
     
     // StaffSearchModal이 기대하는 형태로 변환하고 안전성 확보
     return staffMembers
-<<<<<<< Updated upstream
-      .filter(member => member && member.name) // name이 있는 멤버만 필터링
-      .map(member => ({
-        id: member.userId || member._id || member.id || `temp_${Date.now()}_${Math.random()}`,
-        _id: member.userId || member._id || member.id,
-        name: member.name || '이름 없음',
-        userType: member.userType || 'external',
-        roles: member.roles || [currentStaffCategory],
-        department: member.department || '소속 없음',
-        phone: member.phone || '',
-        email: member.email || '',
-        position: member.position || currentStaffCategory
-      }));
-=======
       .filter(member => member && (member.name || (member.userId && member.userId.name))) // name이 있는 멤버만 필터링
       .map((member, index) => {
         // populate된 userId 객체가 있는 경우와 없는 경우 모두 처리
@@ -658,7 +644,6 @@ const ProjectDetailModal = ({
           position: userData.position || member.position || currentStaffCategory
         };
       });
->>>>>>> Stashed changes
   };
 
   const staffCategories = [
@@ -1062,26 +1047,6 @@ const ProjectDetailModal = ({
                       {staffMembers.length === 0 ? (
                       <p className={styles.no_staff}>배정된 스탭이 없습니다</p>
                     ) : (
-<<<<<<< Updated upstream
-                        staffMembers.map(person => (
-                          <div key={person.userId || person._id || person.id} className={styles.staff_member}>
-                          <span className={styles.member_name}>{person.name}</span>
-                            <span className={styles.member_info}>({person.department || '소속 없음'})</span>
-                          {person.phone && <span className={styles.member_phone}>📞 {person.phone}</span>}
-                          {person.isExternal && <span className={styles.external_badge}>외부</span>}
-                          {editingStaff && (
-                            <button
-                              type="button"
-                              className={styles.remove_staff_button}
-                                onClick={() => handleRemoveStaff(category, person.userId || person._id || person.id)}
-                                disabled={isUpdating}
-                            >
-                              <HiX />
-                            </button>
-                          )}
-                        </div>
-                      ))
-=======
                         staffMembers.map((person, index) => {
                           // populate된 userId 객체가 있는 경우와 없는 경우 모두 처리
                           const userData = person.userId || person;
@@ -1110,7 +1075,6 @@ const ProjectDetailModal = ({
                             </div>
                           );
                         })
->>>>>>> Stashed changes
                     )}
                   </div>
                 </div>
