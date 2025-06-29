@@ -687,6 +687,15 @@ app.post('/attendance/check-in', async(req, res) => {
     const { location, method = 'manual', isOffSite = false, offSiteReason = '' } = req.body;
     const { userId } = req.query;
 
+    console.log('🔵 체크인 API 호출:', {
+        userId,
+        location,
+        method,
+        isOffSite,
+        offSiteReason,
+        timestamp: new Date().toISOString()
+    });
+
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -695,6 +704,21 @@ app.post('/attendance/check-in', async(req, res) => {
 
         const now = new Date();
         const today = now.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+
+        // 중복 체크인 방지: 최근 30초 내 체크인 기록 확인
+        const recentCheckIn = user.attendance
+            .filter(record => record.type === 'checkIn' && record.date === today)
+            .sort((a, b) => new Date(b.time) - new Date(a.time))[0];
+
+        if (recentCheckIn) {
+            const timeDiff = Math.abs(now - new Date(recentCheckIn.time)) / 1000; // 초 단위
+            if (timeDiff < 30) {
+                console.log(`🔵 중복 체크인 차단: ${timeDiff}초 전에 이미 체크인함`);
+                return res.status(400).json({
+                    message: '너무 빠른 시간 내에 중복 출근 처리를 시도했습니다. 잠시 후 다시 시도해주세요.'
+                });
+            }
+        }
 
         // 회사 위치 정보 조회 (거리 계산용)
         let distance = null;
@@ -737,9 +761,18 @@ app.post('/attendance/check-in', async(req, res) => {
             } : null
         };
 
-        await User.findByIdAndUpdate(userId, {
+        console.log('🔵 저장할 체크인 기록:', JSON.stringify(newRecord, null, 2));
+
+        const updateResult = await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
+
+        console.log('🔵 데이터베이스 업데이트 결과:', updateResult ? '성공' : '실패');
+
+        // 저장 후 실제 데이터 확인
+        const updatedUser = await User.findById(userId).select('attendance');
+        const latestRecord = updatedUser.attendance[updatedUser.attendance.length - 1];
+        console.log('🔵 저장된 최신 기록:', JSON.stringify(latestRecord, null, 2));
 
         // 9시 이후면 지각
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
@@ -791,6 +824,15 @@ app.post('/attendance/check-out', async(req, res) => {
     const { location, method = 'manual', isOffSite = false, offSiteReason = '' } = req.body;
     const { userId } = req.query;
 
+    console.log('🔴 체크아웃 API 호출:', {
+        userId,
+        location,
+        method,
+        isOffSite,
+        offSiteReason,
+        timestamp: new Date().toISOString()
+    });
+
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -808,6 +850,21 @@ app.post('/attendance/check-out', async(req, res) => {
         }
 
         const lastCheckIn = sortedAttendance[0];
+
+        // 중복 체크아웃 방지: 최근 30초 내 체크아웃 기록 확인
+        const recentCheckOut = user.attendance
+            .filter(record => record.type === 'checkOut' && record.date === today)
+            .sort((a, b) => new Date(b.time) - new Date(a.time))[0];
+
+        if (recentCheckOut) {
+            const timeDiff = Math.abs(now - new Date(recentCheckOut.time)) / 1000; // 초 단위
+            if (timeDiff < 30) {
+                console.log(`🔴 중복 체크아웃 차단: ${timeDiff}초 전에 이미 체크아웃함`);
+                return res.status(400).json({
+                    message: '너무 빠른 시간 내에 중복 퇴근 처리를 시도했습니다. 잠시 후 다시 시도해주세요.'
+                });
+            }
+        }
 
         // 회사 위치 정보 조회 (거리 계산용)
         let distance = null;
@@ -850,9 +907,18 @@ app.post('/attendance/check-out', async(req, res) => {
             } : null
         };
 
-        await User.findByIdAndUpdate(userId, {
+        console.log('🔴 저장할 체크아웃 기록:', JSON.stringify(newRecord, null, 2));
+
+        const updateResult = await User.findByIdAndUpdate(userId, {
             $push: { attendance: newRecord }
         });
+
+        console.log('🔴 데이터베이스 업데이트 결과:', updateResult ? '성공' : '실패');
+
+        // 저장 후 실제 데이터 확인
+        const updatedUser = await User.findById(userId).select('attendance');
+        const latestRecord = updatedUser.attendance[updatedUser.attendance.length - 1];
+        console.log('🔴 저장된 최신 기록:', JSON.stringify(latestRecord, null, 2));
 
         // 근무 시간 계산
         const workMinutes = Math.floor((now - new Date(lastCheckIn.time)) / (1000 * 60));
@@ -1320,6 +1386,7 @@ app.get('/rooms', async(req, res) => {
         const rooms = await Room.find({})
             .populate('reservations.participants.userId', 'name email')
             .populate('reservations.project', 'title')
+            .populate('reservations.createdBy', 'name email')
             .sort({ createdAt: -1 });
 
         res.status(200).json(rooms);
@@ -1422,7 +1489,8 @@ app.post('/rooms/:roomId/reservations', async(req, res) => {
         startTime,
         endTime,
         participants,
-        project
+        project,
+        createdBy
     } = req.body;
 
     try {
@@ -1505,7 +1573,8 @@ app.post('/rooms/:roomId/reservations', async(req, res) => {
             startTime: start,
             endTime: end,
             status: '예약됨',
-            project: project || null
+            project: project || null,
+            createdBy: createdBy || null
         };
 
         room.reservations.push(newReservation);
@@ -1514,7 +1583,8 @@ app.post('/rooms/:roomId/reservations', async(req, res) => {
         // 생성된 예약 정보를 populate해서 반환
         const populatedRoom = await Room.findById(roomId)
             .populate('reservations.participants.userId', 'name email')
-            .populate('reservations.project', 'title');
+            .populate('reservations.project', 'title')
+            .populate('reservations.createdBy', 'name email');
 
         const createdReservation = populatedRoom.reservations[populatedRoom.reservations.length - 1];
 
@@ -1626,7 +1696,8 @@ app.put('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
         // 업데이트된 예약 정보를 populate해서 반환
         const populatedRoom = await Room.findById(roomId)
             .populate('reservations.participants.userId', 'name email')
-            .populate('reservations.project', 'title');
+            .populate('reservations.project', 'title')
+            .populate('reservations.createdBy', 'name email');
 
         const updatedReservation = populatedRoom.reservations[reservationIndex];
 
@@ -1674,7 +1745,8 @@ app.get('/rooms/:roomId/reservations', async(req, res) => {
     try {
         const room = await Room.findById(roomId)
             .populate('reservations.participants.userId', 'name email')
-            .populate('reservations.project', 'title');
+            .populate('reservations.project', 'title')
+            .populate('reservations.createdBy', 'name email');
 
         if (!room) {
             return res.status(404).json({ message: '회의실을 찾을 수 없습니다.' });
@@ -3016,25 +3088,40 @@ app.get('/company/location', async(req, res) => {
     try {
         const company = await Company.findOne({}).select('latitude longitude name address');
 
+        console.log('🏢 회사 위치 정보 조회:', {
+            회사데이터존재: !!company,
+            위도: company ? company.latitude : null,
+            경도: company ? company.longitude : null,
+            회사명: company ? company.name : null,
+            주소: company ? company.address : null
+        });
+
         if (!company) {
+            console.log('🏢 회사 정보가 없어 기본값 반환');
             return res.status(200).json({
                 latitude: null,
                 longitude: null,
                 name: 'AEDIA STUDIO',
                 address: '',
-                hasLocation: false
+                hasLocation: false,
+                radius: 100
             });
         }
 
         const hasLocation = company.latitude !== null && company.longitude !== null;
 
-        res.status(200).json({
+        const locationInfo = {
             latitude: company.latitude,
             longitude: company.longitude,
             name: company.name,
             address: company.address,
-            hasLocation: hasLocation
-        });
+            hasLocation: hasLocation,
+            radius: company.radius || 100 // 기본 반경 100m
+        };
+
+        console.log('🏢 반환할 회사 위치 정보:', locationInfo);
+
+        res.status(200).json(locationInfo);
     } catch (err) {
         console.error('회사 위치 정보 조회 실패:', err);
         res.status(500).json({ message: '회사 위치 정보 조회에 실패했습니다.' });
@@ -3154,6 +3241,20 @@ app.get('/admin/attendance/list', async(req, res) => {
                 // 외부 위치 정보 수집
                 const hasOffSiteRecord = records.some(record => record.isOffSite === true);
                 const offSiteRecords = records.filter(record => record.isOffSite === true);
+
+                console.log(`📊 ${user.name} (${date}) 외부위치 분석:`, {
+                    총기록수: records.length,
+                    외부기록여부: hasOffSiteRecord,
+                    외부기록수: offSiteRecords.length,
+                    첫출근외부여부: firstCheckIn ? firstCheckIn.isOffSite : false,
+                    마지막퇴근외부여부: lastCheckOut ? lastCheckOut.isOffSite : false,
+                    모든기록외부정보: records.map(r => ({
+                        type: r.type,
+                        isOffSite: r.isOffSite,
+                        offSiteReason: r.offSiteReason
+                    }))
+                });
+
                 const offSiteInfo = hasOffSiteRecord ? {
                     checkIn: firstCheckIn && firstCheckIn.isOffSite ? {
                         reason: firstCheckIn.offSiteReason,
@@ -3165,7 +3266,11 @@ app.get('/admin/attendance/list', async(req, res) => {
                     } : null
                 } : null;
 
-                attendanceList.push({
+                if (hasOffSiteRecord) {
+                    console.log(`📊 ${user.name} (${date}) 외부위치 정보:`, JSON.stringify(offSiteInfo, null, 2));
+                }
+
+                const responseData = {
                     _id: `${user._id}_${date}`,
                     userId: user._id,
                     userName: user.name,
@@ -3182,7 +3287,15 @@ app.get('/admin/attendance/list', async(req, res) => {
                     hasOffSite: hasOffSiteRecord,
                     offSiteInfo: offSiteInfo,
                     offSiteCount: offSiteRecords.length
+                };
+
+                console.log(`🔍 응답 데이터 (${user.name}, ${date}):`, {
+                    hasOffSite: responseData.hasOffSite,
+                    offSiteCount: responseData.offSiteCount,
+                    recordsCount: responseData.records ? responseData.records.length : 0
                 });
+
+                attendanceList.push(responseData);
             });
         }
 
@@ -3411,14 +3524,17 @@ app.patch('/admin/attendance/:attendanceId', async(req, res) => {
 
         // 해당 날짜의 출석 기록들 찾기 및 업데이트
         let updated = false;
-        const changes = [];
+        const allChanges = []; // 모든 변경사항 수집
 
         for (let i = 0; i < user.attendance.length; i++) {
             const record = user.attendance[i];
             if (record.date === date) {
-                // 변경사항 추적
+                const recordChanges = []; // 이 기록만의 변경사항
+
+                // 비고 업데이트
                 if (record.memo !== note && note !== undefined) {
-                    changes.push(`비고: ${record.memo || '없음'} → ${note || '없음'}`);
+                    recordChanges.push(`비고: ${record.memo || '없음'} → ${note || '없음'}`);
+                    allChanges.push(`${record.type === 'checkIn' ? '출근' : '퇴근'} 비고: ${record.memo || '없음'} → ${note || '없음'}`);
                     // 원본 정보 저장 (최초 1회)
                     if (!record.originalMemo && record.memo) {
                         record.originalMemo = record.memo;
@@ -3426,11 +3542,14 @@ app.patch('/admin/attendance/:attendanceId', async(req, res) => {
                     record.memo = note;
                 }
 
-                // 시간 업데이트 (time 필드는 실제 checkIn/checkOut 시간)
+                // 출근 시간 업데이트
                 if (record.type === 'checkIn' && checkInTime) {
                     const newTime = new Date(`${date}T${checkInTime}:00`);
                     if (record.time.getTime() !== newTime.getTime()) {
-                        changes.push(`출근시간: ${record.time.toLocaleTimeString('ko-KR')} → ${newTime.toLocaleTimeString('ko-KR')}`);
+                        const oldTimeStr = record.time.toLocaleTimeString('ko-KR');
+                        const newTimeStr = newTime.toLocaleTimeString('ko-KR');
+                        recordChanges.push(`출근시간: ${oldTimeStr} → ${newTimeStr}`);
+                        allChanges.push(`출근시간: ${oldTimeStr} → ${newTimeStr}`);
                         // 원본 시간 저장 (최초 1회)
                         if (!record.originalTime) {
                             record.originalTime = record.time;
@@ -3439,10 +3558,14 @@ app.patch('/admin/attendance/:attendanceId', async(req, res) => {
                     }
                 }
 
+                // 퇴근 시간 업데이트
                 if (record.type === 'checkOut' && checkOutTime) {
                     const newTime = new Date(`${date}T${checkOutTime}:00`);
                     if (record.time.getTime() !== newTime.getTime()) {
-                        changes.push(`퇴근시간: ${record.time.toLocaleTimeString('ko-KR')} → ${newTime.toLocaleTimeString('ko-KR')}`);
+                        const oldTimeStr = record.time.toLocaleTimeString('ko-KR');
+                        const newTimeStr = newTime.toLocaleTimeString('ko-KR');
+                        recordChanges.push(`퇴근시간: ${oldTimeStr} → ${newTimeStr}`);
+                        allChanges.push(`퇴근시간: ${oldTimeStr} → ${newTimeStr}`);
                         // 원본 시간 저장 (최초 1회)
                         if (!record.originalTime) {
                             record.originalTime = record.time;
@@ -3451,15 +3574,15 @@ app.patch('/admin/attendance/:attendanceId', async(req, res) => {
                     }
                 }
 
-                // 수정 이력 추가
-                if (changes.length > 0) {
+                // 이 기록에 변경사항이 있는 경우에만 수정 이력 추가
+                if (recordChanges.length > 0) {
                     record.isModified = true;
                     record.method = 'manual_edit'; // 관리자 수정 표시
                     record.modificationHistory = record.modificationHistory || [];
                     record.modificationHistory.push({
                         timestamp: new Date(),
                         modifiedBy: '관리자',
-                        changes: changes.join(', '),
+                        changes: recordChanges.join(', '),
                         previousValues: {
                             time: record.originalTime || record.time,
                             memo: record.originalMemo || record.memo,
@@ -3480,7 +3603,7 @@ app.patch('/admin/attendance/:attendanceId', async(req, res) => {
 
         res.status(200).json({
             message: '출석 정보가 수정되었습니다.',
-            changes: changes
+            changes: allChanges
         });
 
     } catch (err) {
@@ -3554,6 +3677,50 @@ app.delete('/admin/attendance/delete/:attendanceId', async(req, res) => {
     } catch (err) {
         console.error('Admin 출석 기록 삭제 실패:', err);
         res.status(500).json({ message: 'Admin 출석 기록 삭제에 실패했습니다.' });
+    }
+});
+
+// 디버깅: 특정 사용자의 출석 기록 상세 조회 (외부 위치 정보 포함)
+app.get('/debug/attendance/:userId', async(req, res) => {
+    const { userId } = req.params;
+    const { limit = 10 } = req.query;
+
+    try {
+        const user = await User.findById(userId).select('name attendance');
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 최근 기록들을 가져와서 외부 위치 정보 확인
+        const recentRecords = user.attendance
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+            .slice(0, limit);
+
+        const debugInfo = {
+            userName: user.name,
+            totalRecords: user.attendance.length,
+            recentRecords: recentRecords.map(record => ({
+                _id: record._id,
+                type: record.type,
+                time: record.time,
+                date: record.date,
+                isOffSite: record.isOffSite,
+                offSiteReason: record.offSiteReason,
+                location: record.location,
+                method: record.method,
+                isModified: record.isModified
+            })),
+            offSiteRecords: recentRecords.filter(record => record.isOffSite === true).length,
+            onSiteRecords: recentRecords.filter(record => !record.isOffSite).length
+        };
+
+        console.log('🔍 디버깅 - 사용자 출석 기록 조회:', JSON.stringify(debugInfo, null, 2));
+
+        res.status(200).json(debugInfo);
+
+    } catch (err) {
+        console.error('디버깅 출석 기록 조회 실패:', err);
+        res.status(500).json({ message: '디버깅 출석 기록 조회에 실패했습니다.' });
     }
 });
 

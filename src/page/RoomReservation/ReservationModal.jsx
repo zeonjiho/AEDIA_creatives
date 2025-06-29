@@ -14,6 +14,7 @@ const ReservationModal = ({
     projects = [], // 전체 프로젝트 목록
     projectsLoading = false,
     users, 
+    currentUser = null, // 현재 사용자 정보
     onClose, 
     onFormChange, 
     onProjectSearchChange, 
@@ -27,6 +28,15 @@ const ReservationModal = ({
     const [showProjectModal, setShowProjectModal] = useState(false);
     
     if (!isOpen) return null;
+
+    // 현재 사용자가 예약 참여자인지 확인하는 함수
+    const canEditReservation = () => {
+        if (!selectedReservation || !currentUser) return false;
+        
+        // 예약의 참여자 목록에 현재 사용자 ID가 있는지 확인
+        return selectedReservation.participants && 
+               selectedReservation.participants.includes(currentUser._id);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -99,6 +109,10 @@ const ReservationModal = ({
 
     // 참여자 선택 핸들러
     const handleParticipantToggle = (userId) => {
+        // 권한이 없으면 참여자 변경 불가
+        if (selectedReservation && !canEditReservation()) {
+            return;
+        }
         onParticipantChange(userId);
     };
 
@@ -168,8 +182,43 @@ const ReservationModal = ({
                                 <HiOfficeBuilding size={48} className={styles.room_preview_icon} />
                             </div>
                         )}
+
+                        {/* 예약 생성자 정보 */}
+                        {selectedReservation && (
+                            <div className={styles.creator_info}>
+                                <div className={styles.creator_content}>
+                                    <HiUserGroup size={16} className={styles.creator_icon} />
+                                    <div className={styles.creator_details}>
+                                        <span className={styles.creator_label}>예약 생성자</span>
+                                        <span className={styles.creator_name}>
+                                            {selectedReservation.createdBy?.name || '알 수 없음'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className={styles.created_time}>
+                                    {selectedReservation.createdAt ? (
+                                        new Date(selectedReservation.createdAt).toLocaleDateString('ko-KR', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                    ) : (
+                                        '생성 날짜 없음'
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         
                         <form onSubmit={handleSubmit} className={styles.modal_form}>
+                            {/* 권한이 없는 경우 읽기 전용 모드임을 알리는 메시지 */}
+                            {selectedReservation && !canEditReservation() && (
+                                <div className={styles.readonly_banner}>
+                                    <HiX size={16} />
+                                    읽기 전용 모드: 예약 참여자만 수정할 수 있습니다.
+                                </div>
+                            )}
                             {/* 회의 제목 */}
                             <div className={styles.form_section}>
                                 <h4 className={styles.section_title}>
@@ -186,6 +235,7 @@ const ReservationModal = ({
                                         onChange={onFormChange}
                                         placeholder="회의 제목을 입력하세요"
                                         className={styles.title_input}
+                                        disabled={selectedReservation && !canEditReservation()}
                                     />
                                 </div>
                                 
@@ -199,6 +249,7 @@ const ReservationModal = ({
                                         placeholder="회의에 대한 간단한 설명을 입력하세요"
                                         className={styles.description_input}
                                         rows={3}
+                                        disabled={selectedReservation && !canEditReservation()}
                                     />
                                 </div>
                             </div>
@@ -220,6 +271,7 @@ const ReservationModal = ({
                                                 value={reservationFormData.startDate}
                                                 onChange={onFormChange}
                                                 className={styles.date_input}
+                                                disabled={selectedReservation && !canEditReservation()}
                                             />
                                         </div>
                                         <div className={styles.form_group}>
@@ -231,6 +283,7 @@ const ReservationModal = ({
                                                 value={reservationFormData.endDate}
                                                 onChange={onFormChange}
                                                 className={styles.date_input}
+                                                disabled={selectedReservation && !canEditReservation()}
                                             />
                                         </div>
                                     </div>
@@ -244,6 +297,7 @@ const ReservationModal = ({
                                                 value={reservationFormData.startTime}
                                                 onChange={onFormChange}
                                                 className={styles.time_input}
+                                                disabled={selectedReservation && !canEditReservation()}
                                             />
                                         </div>
                                         <div className={styles.form_group}>
@@ -255,6 +309,7 @@ const ReservationModal = ({
                                                 value={reservationFormData.endTime}
                                                 onChange={onFormChange}
                                                 className={styles.time_input}
+                                                disabled={selectedReservation && !canEditReservation()}
                                             />
                                         </div>
                                     </div>
@@ -278,6 +333,7 @@ const ReservationModal = ({
                                                         type="button"
                                                         className={styles.clear_project_btn}
                                                         onClick={handleClearProject}
+                                                        disabled={selectedReservation && !canEditReservation()}
                                                     >
                                                         <HiX size={14} />
                                                     </button>
@@ -290,7 +346,7 @@ const ReservationModal = ({
                                             type="button"
                                             className={styles.select_project_btn}
                                             onClick={handleOpenProjectModal}
-                                            disabled={projectsLoading}
+                                            disabled={projectsLoading || (selectedReservation && !canEditReservation())}
                                         >
                                             <HiBookmark size={16} />
                                             {projectsLoading ? '프로젝트 로딩 중...' : '프로젝트 선택'}
@@ -321,6 +377,7 @@ const ReservationModal = ({
                                                         type="button"
                                                         onClick={() => handleParticipantToggle(participant.id)}
                                                         className={styles.remove_participant}
+                                                        disabled={selectedReservation && !canEditReservation()}
                                                     >
                                                         <HiX size={12} />
                                                     </button>
@@ -342,7 +399,7 @@ const ReservationModal = ({
                                                         key={user.id}
                                                         className={`${styles.participant_option} ${
                                                             reservationFormData.participants.includes(user.id) ? styles.selected : ''
-                                                        }`}
+                                                        } ${selectedReservation && !canEditReservation() ? styles.disabled : ''}`}
                                                         onClick={() => handleParticipantToggle(user.id)}
                                                     >
                                                         <img 
@@ -373,14 +430,26 @@ const ReservationModal = ({
                                 <button type="button" className={styles.cancel_button} onClick={onClose}>
                                     취소
                                 </button>
-                                {selectedReservation && (
+                                {selectedReservation && canEditReservation() && (
                                     <button type="button" className={styles.delete_button} onClick={onDelete}>
                                         삭제
                                     </button>
                                 )}
-                                <button type="submit" className={styles.submit_button}>
-                                    {selectedReservation ? '수정하기' : '예약 등록'}
-                                </button>
+                                {selectedReservation ? (
+                                    canEditReservation() ? (
+                                        <button type="submit" className={styles.submit_button}>
+                                            수정하기
+                                        </button>
+                                    ) : (
+                                        <div className={styles.permission_message}>
+                                            예약 참여자만 수정/삭제할 수 있습니다.
+                                        </div>
+                                    )
+                                ) : (
+                                    <button type="submit" className={styles.submit_button}>
+                                        예약 등록
+                                    </button>
+                                )}
                             </div>
                         </form>
                     </div>

@@ -9,6 +9,7 @@ import {
 } from 'react-icons/hi'
 import ReservationModal from './ReservationModal'
 import api from '../../utils/api'
+import { jwtDecode } from 'jwt-decode'
 
 const RoomReservation = () => {
     const navigate = useNavigate()
@@ -19,7 +20,7 @@ const RoomReservation = () => {
     const [users, setUsers] = useState([]) // 실제 사용자 목록
     const [projects, setProjects] = useState([]) // 서버에서 가져올 프로젝트 목록
     const [selectedRoom, setSelectedRoom] = useState(null)
-    const [currentDate, setCurrentDate] = useState(new Date('2023-03-06')) // 2023년 3월 6일로 설정
+    const [currentDate, setCurrentDate] = useState(new Date()) // 현재 날짜로 설정
     const [showReservationForm, setShowReservationForm] = useState(false)
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [reservationFormData, setReservationFormData] = useState({
@@ -41,6 +42,21 @@ const RoomReservation = () => {
     const [currentTime, setCurrentTime] = useState(new Date())
     const [loading, setLoading] = useState(true)
     const [projectsLoading, setProjectsLoading] = useState(false)
+    const [currentUser, setCurrentUser] = useState(null) // 현재 사용자 정보
+    
+    // 현재 사용자 정보 불러오기
+    const loadCurrentUser = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) return
+            
+            const userId = jwtDecode(token).userId
+            const response = await api.get(`/get-user-info?userId=${userId}`)
+            setCurrentUser(response.data)
+        } catch (error) {
+            console.error('현재 사용자 정보를 불러오는데 실패했습니다:', error)
+        }
+    }
     
     // 회의실 목록 불러오기
     const loadRooms = async () => {
@@ -129,19 +145,32 @@ const RoomReservation = () => {
             const allReservations = [];
             for (const room of rooms) {
                 const response = await api.get(`/rooms/${room._id}/reservations`);
-                const roomReservations = response.data.map(reservation => ({
-                    ...reservation,
-                    roomId: room._id,
-                    start: reservation.startTime,
-                    end: reservation.endTime,
-                    title: reservation.meetingName,
-                    description: reservation.meetingDescription || '',
-                    project: reservation.project?.title || '',
-                    projectId: reservation.project?._id || reservation.project?.id || '',
-                    participants: reservation.participants.map(p => p.userId._id)
-                }));
+                console.log(`🔍 ${room.roomName} 예약 데이터:`, response.data);
+                
+                const roomReservations = response.data.map(reservation => {
+                    console.log('🔍 개별 예약 처리:', {
+                        id: reservation._id,
+                        meetingName: reservation.meetingName,
+                        createdBy: reservation.createdBy,
+                        createdAt: reservation.createdAt
+                    });
+                    
+                    return {
+                        ...reservation,
+                        roomId: room._id,
+                        start: reservation.startTime,
+                        end: reservation.endTime,
+                        title: reservation.meetingName,
+                        description: reservation.meetingDescription || '',
+                        project: reservation.project?.title || '',
+                        projectId: reservation.project?._id || reservation.project?.id || '',
+                        participants: reservation.participants.map(p => p.userId._id),
+                        createdBy: reservation.createdBy
+                    };
+                });
                 allReservations.push(...roomReservations);
             }
+            console.log('🔍 전체 예약 목록:', allReservations);
             setReservations(allReservations);
         } catch (error) {
             console.error('예약 목록을 불러오는데 실패했습니다:', error)
@@ -155,6 +184,7 @@ const RoomReservation = () => {
         const loadData = async () => {
             setLoading(true)
             try {
+                await loadCurrentUser() // 현재 사용자 정보 먼저 로드
                 await loadRooms()
                 await loadUsers()
                 setProjectsLoading(true)
@@ -275,15 +305,45 @@ const RoomReservation = () => {
     const handleAddReservation = () => {
         setShowReservationForm(true)
         
-        // 오늘 날짜로 기본 설정
-        const today = new Date()
+        // 현재 로컬 날짜와 시간으로 기본 설정
+        const now = new Date()
+        
+        // 로컬 날짜를 YYYY-MM-DD 형식으로 변환 (시간대 고려)
+        const formatLocalDate = (date) => {
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
+        
+        // 현재 시간을 기준으로 시작 시간 설정 (분은 0 또는 30으로 반올림)
+        const currentMinutes = now.getMinutes()
+        const roundedMinutes = currentMinutes <= 30 ? 30 : 60
+        const startTime = new Date(now)
+        startTime.setMinutes(roundedMinutes === 60 ? 0 : roundedMinutes)
+        if (roundedMinutes === 60) {
+            startTime.setHours(startTime.getHours() + 1)
+        }
+        
+        // 종료 시간은 시작 시간 + 1시간
+        const endTime = new Date(startTime)
+        endTime.setHours(endTime.getHours() + 1)
+        
+        // 시간을 HH:MM 형식으로 변환
+        const formatTime = (date) => {
+            const hours = String(date.getHours()).padStart(2, '0')
+            const minutes = String(date.getMinutes()).padStart(2, '0')
+            return `${hours}:${minutes}`
+        }
+        
+        const todayDate = formatLocalDate(now)
         
         setReservationFormData({
             title: '',
-            startDate: today.toISOString().split('T')[0],
-            endDate: today.toISOString().split('T')[0],
-            startTime: '09:00',
-            endTime: '10:00',
+            startDate: todayDate,
+            endDate: todayDate,
+            startTime: formatTime(startTime),
+            endTime: formatTime(endTime),
             participants: [], // 빈 배열로 시작하여 사용자가 직접 선택하도록 함
             project: '',
             projectId: '',
@@ -294,6 +354,10 @@ const RoomReservation = () => {
     }
     
     const handleReservationClick = (reservation) => {
+        console.log('🔍 선택된 예약 데이터:', reservation)
+        console.log('🔍 예약 생성자 정보:', reservation.createdBy)
+        console.log('🔍 예약 생성 날짜:', reservation.createdAt)
+        
         setSelectedReservation(reservation)
         setSelectedRoom(rooms.find(room => room._id === reservation.roomId))
         setShowReservationForm(true)
@@ -301,15 +365,30 @@ const RoomReservation = () => {
         const startDate = new Date(reservation.startTime)
         const endDate = new Date(reservation.endTime)
         
+        // 로컬 날짜를 YYYY-MM-DD 형식으로 변환 (시간대 고려)
+        const formatLocalDate = (date) => {
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
+        
+        // 로컬 시간을 HH:MM 형식으로 변환
+        const formatLocalTime = (date) => {
+            const hours = String(date.getHours()).padStart(2, '0')
+            const minutes = String(date.getMinutes()).padStart(2, '0')
+            return `${hours}:${minutes}`
+        }
+        
         // 프로젝트 정보 찾기
         const projectInfo = projects.find(p => p.id === reservation.projectId)
         
         setReservationFormData({
             title: reservation.meetingName,
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0],
-            startTime: startDate.toTimeString().slice(0, 5),
-            endTime: endDate.toTimeString().slice(0, 5),
+            startDate: formatLocalDate(startDate),
+            endDate: formatLocalDate(endDate),
+            startTime: formatLocalTime(startDate),
+            endTime: formatLocalTime(endDate),
             participants: reservation.participants || [],
             project: projectInfo ? projectInfo.title : (reservation.project || ''),
             projectId: reservation.projectId || '',
@@ -425,7 +504,8 @@ const RoomReservation = () => {
                 startTime: startDateTime.toISOString(),
                 endTime: endDateTime.toISOString(),
                 participants: reservationFormData.participants,
-                project: reservationFormData.projectId || null // 프로젝트 ID 전송
+                project: reservationFormData.projectId || null, // 프로젝트 ID 전송
+                createdBy: currentUser ? currentUser._id : null // 생성자 정보 전송
             }
             
             // 기존 예약 수정
@@ -845,6 +925,7 @@ const RoomReservation = () => {
                 projects={projects}
                 projectsLoading={projectsLoading}
                 users={users}
+                currentUser={currentUser} // 현재 사용자 정보 전달
                 onClose={handleCancelForm}
                 onFormChange={handleFormChange}
                 onProjectSearchChange={handleProjectSearchChange}

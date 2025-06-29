@@ -81,8 +81,18 @@ const Attendance = () => {
     // 회사 위치 정보 불러오기
     const loadCompanyLocation = async () => {
         try {
+            console.log('🏢 회사 위치 정보 요청 중...')
             const response = await api.get('/company/location')
             const locationData = response.data
+            
+            console.log('🏢 서버에서 받은 회사 위치 데이터:', {
+                hasLocation: locationData.hasLocation,
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                name: locationData.name,
+                address: locationData.address,
+                radius: locationData.radius
+            })
             
             const newCompanyLocation = {
                 latitude: locationData.latitude,
@@ -90,15 +100,15 @@ const Attendance = () => {
                 name: locationData.name,
                 address: locationData.address,
                 hasLocation: locationData.hasLocation,
-                radius: 100 // 기본 반경 100미터
+                radius: locationData.radius || 100 // 기본 반경 100미터
             }
             
             setCompanyLocation(newCompanyLocation)
             
-            console.log('회사 위치 정보 로드:', locationData)
+            console.log('🏢 설정된 회사 위치 정보:', newCompanyLocation)
             return newCompanyLocation
         } catch (error) {
-            console.error('회사 위치 정보 로드 실패:', error)
+            console.error('❌ 회사 위치 정보 로드 실패:', error)
             // 기본값으로 설정 (서울시청)
             const defaultLocation = {
                 latitude: 37.520574,
@@ -108,6 +118,7 @@ const Attendance = () => {
                 hasLocation: false,
                 radius: 100
             }
+            console.log('🏢 기본 위치로 설정:', defaultLocation)
             setCompanyLocation(defaultLocation)
             return defaultLocation
         }
@@ -264,9 +275,20 @@ const Attendance = () => {
 
     // 위치 유효성 검사
     const checkLocationValidity = (latitude, longitude, companyLocationData = companyLocation) => {
+        console.log('📍 위치 검증 시작:', {
+            사용자위치: { latitude, longitude },
+            회사위치: {
+                latitude: companyLocationData.latitude,
+                longitude: companyLocationData.longitude,
+                hasLocation: companyLocationData.hasLocation,
+                radius: companyLocationData.radius
+            }
+        })
+        
         // 회사 위치 정보가 설정되어 있지 않으면 모든 위치 허용
         if (!companyLocationData.hasLocation || !companyLocationData.latitude || !companyLocationData.longitude) {
-            console.log('회사 위치 정보가 없어 위치 검증을 우회합니다.')
+            console.log('📍 ⚠️ 회사 위치 정보가 없어 위치 검증을 우회합니다. (모든 위치 허용)')
+            console.log('📍 ⚠️ 이 경우 외부 위치 모달이 나타나지 않습니다!')
             return true
         }
 
@@ -278,7 +300,14 @@ const Attendance = () => {
         )
         
         const isValid = distance <= companyLocationData.radius
-        console.log(`위치 검증: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocationData.radius}m, 유효성 ${isValid}`)
+        console.log(`📍 위치 검증 결과: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocationData.radius}m, 유효성 ${isValid}`)
+        
+        if (!isValid) {
+            console.log('📍 ✅ 외부 위치 감지! 외부 위치 모달이 표시되어야 합니다.')
+            console.log('📍 ✅ 모달 표시 후 사유 입력하고 확인을 눌러야 외부 위치로 저장됩니다.')
+        } else {
+            console.log('📍 ❌ 회사 내부 위치로 판단됨. 외부 위치 모달이 나타나지 않습니다.')
+        }
         
         return isValid
     }
@@ -365,7 +394,12 @@ const Attendance = () => {
                         currentLocation.latitude, currentLocation.longitude,
                         currentCompanyLocation.latitude, currentCompanyLocation.longitude
                     )
-                    console.log('❌ 위치 검증 실패:', { distance, isValid })
+                    console.log('❌ 체크인 위치 검증 실패:', { distance, isValid })
+                    console.log('🔵 외부 위치 체크인 모달 표시 설정:', {
+                        distance: Math.round(distance),
+                        location: currentLocation,
+                        mode: 'checkin'
+                    })
                     
                     setOffSiteDistance(Math.round(distance))
                     setPendingLocation(currentLocation)
@@ -443,6 +477,13 @@ const Attendance = () => {
                         currentLocation.latitude, currentLocation.longitude,
                         currentCompanyLocation.latitude, currentCompanyLocation.longitude
                     )
+                    
+                    console.log('❌ 체크아웃 위치 검증 실패:', { distance, isValid })
+                    console.log('🔴 외부 위치 체크아웃 모달 표시 설정:', {
+                        distance: Math.round(distance),
+                        location: currentLocation,
+                        mode: 'checkout'
+                    })
                     
                     setOffSiteDistance(Math.round(distance))
                     setPendingLocation(currentLocation)
@@ -545,6 +586,8 @@ const Attendance = () => {
 
     // 외부 위치 체크인/아웃 확인
     const handleOffSiteAction = async () => {
+        console.log('🔵 외부 위치 액션 시작:', { offSiteMode, offSiteReason, pendingLocation })
+        
         if (!offSiteReason.trim()) {
             setStatusMessage(`외부 위치 ${offSiteMode === 'checkin' ? '출근' : '퇴근'} 사유를 입력해주세요`)
             setMessageType('error')
@@ -557,13 +600,23 @@ const Attendance = () => {
             return
         }
 
+        console.log('🔵 외부 위치 모달 닫기')
         setShowOffSiteModal(false)
+        
+        console.log('🔵 외부 위치 체크인/체크아웃 시작:', { 
+            mode: offSiteMode, 
+            isOffSite: true, 
+            reason: offSiteReason.trim(),
+            location: pendingLocation 
+        })
         
         if (offSiteMode === 'checkin') {
             await performCheckIn(pendingLocation, true, offSiteReason.trim())
         } else {
             await performCheckOut(pendingLocation, true, offSiteReason.trim())
         }
+        
+        console.log('🔵 외부 위치 체크인/체크아웃 완료')
         
         // 상태 초기화
         setPendingLocation(null)

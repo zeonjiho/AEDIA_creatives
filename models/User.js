@@ -135,6 +135,8 @@ const userSchema = new Schema({
         type: Object,
         default: {}
     }
+}, {
+    suppressReservedKeysWarning: true // Mongoose 예약 키워드 경고 억제
 });
 
 const User = mongoose.model('User', userSchema);

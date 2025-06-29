@@ -33,6 +33,10 @@ const reservationSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Project'
     },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -52,7 +56,7 @@ const roomSchema = new Schema({
         type: Array,
         default: [],
     },
-    reservations: [reservationSchema]  // 예약 정보 배열
+    reservations: [reservationSchema] // 예약 정보 배열
 });
 
 // 시간 충돌 체크 메서드 추가
