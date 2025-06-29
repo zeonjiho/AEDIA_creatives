@@ -424,41 +424,64 @@ const Profile = () => {
   // 슬랙 ID 인증 관련 함수들
   const handleSendVerificationCode = async () => {
     try {
-      // TODO: 실제 서버 구현 시 API 호출
       console.log('인증번호 발송:', formData.slackId);
       
-      // 임시로 바로 성공 처리
-      setSlackVerification(prev => ({
-        ...prev,
-        isVerificationSent: true
-      }));
+      // 실제 서버 API 호출
+      const response = await api.post('/slack/code', {
+        slackId: formData.slackId
+      });
       
-      setSaveStatus('verification-sent');
-      setTimeout(() => setSaveStatus(''), 3000);
+      if (response.status === 200) {
+        setSlackVerification(prev => ({
+          ...prev,
+          isVerificationSent: true
+        }));
+        
+        setSaveStatus('verification-sent');
+        setTimeout(() => setSaveStatus(''), 3000);
+      }
     } catch (error) {
       console.error('인증번호 발송 실패:', error);
-      setError('인증번호 발송에 실패했습니다.');
-      setTimeout(() => setError(''), 3000);
+      
+      let errorMessage = '인증번호 발송에 실패했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
   const handleVerifyCode = async () => {
     try {
-      // TODO: 실제 서버 구현 시 API 호출
       console.log('인증번호 확인:', slackVerification.verificationCode);
       
-      // 임시로 바로 성공 처리
-      setSlackVerification(prev => ({
-        ...prev,
-        isVerified: true
-      }));
+      // 실제 서버 API 호출
+      const response = await api.post('/slack/code/verify', {
+        slackId: formData.slackId,
+        code: slackVerification.verificationCode
+      });
       
-      setSaveStatus('verification-success');
-      setTimeout(() => setSaveStatus(''), 3000);
+      if (response.status === 200) {
+        setSlackVerification(prev => ({
+          ...prev,
+          isVerified: true
+        }));
+        
+        setSaveStatus('verification-success');
+        setTimeout(() => setSaveStatus(''), 3000);
+      }
     } catch (error) {
       console.error('인증번호 확인 실패:', error);
-      setError('인증번호 확인에 실패했습니다.');
-      setTimeout(() => setError(''), 3000);
+      
+      let errorMessage = '인증번호 확인에 실패했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
