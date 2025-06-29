@@ -558,7 +558,7 @@ const AdminAttendance = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle="출석_목록"
-            csvData={generateTableCSV(filteredAttendanceList, ['날짜', '이름', '구분', '출근시간', '퇴근시간', '근무시간', '수정여부', '비고'], getReportInfo())}
+            csvData={generateTableCSV(filteredAttendanceList, ['날짜', '이름', '구분', '출근시간', '퇴근시간', '근무시간', '외부위치', '수정여부', '비고'], getReportInfo())}
             reportInfo={getReportInfo()}
           />
         </div>
@@ -571,6 +571,7 @@ const AdminAttendance = () => {
               <th>출근시간</th>
               <th>퇴근시간</th>
               <th>근무시간</th>
+              <th>외부 위치</th>
               <th>수정여부</th>
               <th>비고</th>
             </tr>
@@ -592,6 +593,43 @@ const AdminAttendance = () => {
                 <td>{formatTime(attendance.checkInTime)}</td>
                 <td>{formatTime(attendance.checkOutTime)}</td>
                 <td>{formatWorkHours(attendance.workHours)}</td>
+                <td style={{textAlign: 'center', fontSize: '12px'}}>
+                  {attendance.hasOffSite ? (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                      {attendance.offSiteInfo?.checkIn && (
+                        <span style={{
+                          backgroundColor: '#ffa726',
+                          color: 'white',
+                          padding: '1px 6px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: '600'
+                        }}>
+                          외부출근 ({attendance.offSiteInfo.checkIn.distance}m)
+                        </span>
+                      )}
+                      {attendance.offSiteInfo?.checkOut && (
+                        <span style={{
+                          backgroundColor: '#ef5350',
+                          color: 'white',
+                          padding: '1px 6px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: '600'
+                        }}>
+                          외부퇴근 ({attendance.offSiteInfo.checkOut.distance}m)
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{
+                      color: '#9e9e9e',
+                      fontSize: '10px'
+                    }}>
+                      회사 내
+                    </span>
+                  )}
+                </td>
                 <td style={{textAlign: 'center'}}>
                   {((attendance.isModified === true) || (attendance.modificationHistory && attendance.modificationHistory.length > 0)) ? (
                     <span style={{
@@ -623,7 +661,7 @@ const AdminAttendance = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   {attendanceList.length === 0 
                     ? '등록된 출석 기록이 없습니다.' 
                     : (filters.searchName || filters.selectedUser !== 'all' || filters.userType !== 'all')

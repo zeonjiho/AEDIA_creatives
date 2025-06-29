@@ -94,6 +94,17 @@ const userSchema = new Schema({
             default: 'manual'
         },
         memo: String, // 비고 사항
+        // 외부 위치 출퇴근 관련 필드 추가
+        isOffSite: {
+            type: Boolean,
+            default: false
+        },
+        offSiteReason: String, // 외부 위치 출퇴근 사유
+        location: {
+            latitude: Number,
+            longitude: Number,
+            distance: Number // 회사로부터의 거리 (미터)
+        },
         // 수정 이력 추적 필드들 추가
         isModified: {
             type: Boolean,

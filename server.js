@@ -684,7 +684,7 @@ app.put('/change-password', async(req, res) => {
 
 // 출근 체크인 API
 app.post('/attendance/check-in', async(req, res) => {
-    const { location, method = 'manual' } = req.body;
+    const { location, method = 'manual', isOffSite = false, offSiteReason = '' } = req.body;
     const { userId } = req.query;
 
     try {
@@ -696,6 +696,30 @@ app.post('/attendance/check-in', async(req, res) => {
         const now = new Date();
         const today = now.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 
+        // 회사 위치 정보 조회 (거리 계산용)
+        let distance = null;
+        if (location && location.latitude && location.longitude) {
+            try {
+                const company = await Company.findOne({}).select('latitude longitude');
+                if (company && company.latitude && company.longitude) {
+                    // 거리 계산 (Haversine 공식)
+                    const R = 6371e3; // 지구 반지름 (미터)
+                    const φ1 = location.latitude * Math.PI / 180;
+                    const φ2 = company.latitude * Math.PI / 180;
+                    const Δφ = (company.latitude - location.latitude) * Math.PI / 180;
+                    const Δλ = (company.longitude - location.longitude) * Math.PI / 180;
+
+                    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    distance = Math.round(R * c); // 미터 단위
+                }
+            } catch (companyError) {
+                console.error('회사 위치 정보 조회 실패:', companyError);
+            }
+        }
+
         // 새로운 체크인 기록 추가
         const newRecord = {
             type: 'checkIn',
@@ -703,7 +727,14 @@ app.post('/attendance/check-in', async(req, res) => {
             date: today,
             method: method,
             originalTime: now, // 원본 시간 저장
-            isModified: false // 최초 생성시는 수정되지 않음
+            isModified: false, // 최초 생성시는 수정되지 않음
+            isOffSite: isOffSite,
+            offSiteReason: isOffSite ? offSiteReason : null,
+            location: location ? {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                distance: distance
+            } : null
         };
 
         await User.findByIdAndUpdate(userId, {
@@ -714,11 +745,38 @@ app.post('/attendance/check-in', async(req, res) => {
         const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
 
         const responseData = {
-            message: '출근 처리되었습니다.',
+            message: isOffSite ? '외부 위치에서 출근 처리되었습니다.' : '출근 처리되었습니다.',
             checkInTime: now,
             isLate: isLate,
-            status: isLate ? '지각' : '정시'
+            status: isLate ? '지각' : '정시',
+            isOffSite: isOffSite,
+            distance: distance
         };
+
+        // 외부 위치 출근 시 관리자에게 슬랙 알림
+        if (isOffSite && distance !== null) {
+            try {
+                // 관리자 목록 조회
+                const company = await Company.findOne({}).populate('adminUsers.userId', 'name slackId');
+                if (company && company.adminUsers) {
+                    const adminUsers = company.adminUsers.map(admin => admin.userId).filter(admin => admin && admin.slackId);
+
+                    for (const admin of adminUsers) {
+                        try {
+                            await slackBot.chat.postMessage({
+                                channel: admin.slackId,
+                                text: `⚠️ **외부 위치 출근 알림**\n\n사용자: ${user.name}\n출근 시간: ${now.toLocaleString('ko-KR')}\n회사로부터 거리: ${distance}m\n사유: ${offSiteReason}\n\n관리자 페이지에서 자세한 내용을 확인하실 수 있습니다.`
+                            });
+                            console.log(`외부 출근 관리자 알림 전송 성공: ${admin.name}`);
+                        } catch (slackError) {
+                            console.error(`외부 출근 관리자 알림 전송 실패 - ${admin.name}:`, slackError);
+                        }
+                    }
+                }
+            } catch (adminNotificationError) {
+                console.error('관리자 알림 처리 중 오류:', adminNotificationError);
+            }
+        }
 
         res.status(200).json(responseData);
 
@@ -730,7 +788,7 @@ app.post('/attendance/check-in', async(req, res) => {
 
 // 퇴근 체크아웃 API
 app.post('/attendance/check-out', async(req, res) => {
-    const { location, method = 'manual' } = req.body;
+    const { location, method = 'manual', isOffSite = false, offSiteReason = '' } = req.body;
     const { userId } = req.query;
 
     try {
@@ -751,6 +809,30 @@ app.post('/attendance/check-out', async(req, res) => {
 
         const lastCheckIn = sortedAttendance[0];
 
+        // 회사 위치 정보 조회 (거리 계산용)
+        let distance = null;
+        if (location && location.latitude && location.longitude) {
+            try {
+                const company = await Company.findOne({}).select('latitude longitude');
+                if (company && company.latitude && company.longitude) {
+                    // 거리 계산 (Haversine 공식)
+                    const R = 6371e3; // 지구 반지름 (미터)
+                    const φ1 = location.latitude * Math.PI / 180;
+                    const φ2 = company.latitude * Math.PI / 180;
+                    const Δφ = (company.latitude - location.latitude) * Math.PI / 180;
+                    const Δλ = (company.longitude - location.longitude) * Math.PI / 180;
+
+                    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    distance = Math.round(R * c); // 미터 단위
+                }
+            } catch (companyError) {
+                console.error('회사 위치 정보 조회 실패:', companyError);
+            }
+        }
+
         // 새로운 체크아웃 기록 추가
         const newRecord = {
             type: 'checkOut',
@@ -758,7 +840,14 @@ app.post('/attendance/check-out', async(req, res) => {
             date: today,
             method: method,
             originalTime: now, // 원본 시간 저장
-            isModified: false // 최초 생성시는 수정되지 않음
+            isModified: false, // 최초 생성시는 수정되지 않음
+            isOffSite: isOffSite,
+            offSiteReason: isOffSite ? offSiteReason : null,
+            location: location ? {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                distance: distance
+            } : null
         };
 
         await User.findByIdAndUpdate(userId, {
@@ -768,12 +857,41 @@ app.post('/attendance/check-out', async(req, res) => {
         // 근무 시간 계산
         const workMinutes = Math.floor((now - new Date(lastCheckIn.time)) / (1000 * 60));
 
-        res.status(200).json({
-            message: '퇴근 처리되었습니다.',
+        const responseData = {
+            message: isOffSite ? '외부 위치에서 퇴근 처리되었습니다.' : '퇴근 처리되었습니다.',
             checkOutTime: now,
             workHours: workMinutes,
-            workHoursFormatted: `${Math.floor(workMinutes / 60)}시간 ${workMinutes % 60}분`
-        });
+            workHoursFormatted: `${Math.floor(workMinutes / 60)}시간 ${workMinutes % 60}분`,
+            isOffSite: isOffSite,
+            distance: distance
+        };
+
+        // 외부 위치 퇴근 시 관리자에게 슬랙 알림
+        if (isOffSite && distance !== null) {
+            try {
+                // 관리자 목록 조회
+                const company = await Company.findOne({}).populate('adminUsers.userId', 'name slackId');
+                if (company && company.adminUsers) {
+                    const adminUsers = company.adminUsers.map(admin => admin.userId).filter(admin => admin && admin.slackId);
+
+                    for (const admin of adminUsers) {
+                        try {
+                            await slackBot.chat.postMessage({
+                                channel: admin.slackId,
+                                text: `⚠️ **외부 위치 퇴근 알림**\n\n사용자: ${user.name}\n퇴근 시간: ${now.toLocaleString('ko-KR')}\n근무 시간: ${responseData.workHoursFormatted}\n회사로부터 거리: ${distance}m\n사유: ${offSiteReason}\n\n관리자 페이지에서 자세한 내용을 확인하실 수 있습니다.`
+                            });
+                            console.log(`외부 퇴근 관리자 알림 전송 성공: ${admin.name}`);
+                        } catch (slackError) {
+                            console.error(`외부 퇴근 관리자 알림 전송 실패 - ${admin.name}:`, slackError);
+                        }
+                    }
+                }
+            } catch (adminNotificationError) {
+                console.error('관리자 알림 처리 중 오류:', adminNotificationError);
+            }
+        }
+
+        res.status(200).json(responseData);
 
     } catch (err) {
         console.log(err);
@@ -3033,6 +3151,20 @@ app.get('/admin/attendance/list', async(req, res) => {
 
                 console.log(`날짜 ${date}, 사용자 ${user.name}: 수정여부=${isModified}, 수정이력=${allModificationHistory.length}개`);
 
+                // 외부 위치 정보 수집
+                const hasOffSiteRecord = records.some(record => record.isOffSite === true);
+                const offSiteRecords = records.filter(record => record.isOffSite === true);
+                const offSiteInfo = hasOffSiteRecord ? {
+                    checkIn: firstCheckIn && firstCheckIn.isOffSite ? {
+                        reason: firstCheckIn.offSiteReason,
+                        distance: firstCheckIn.location ? firstCheckIn.location.distance : null
+                    } : null,
+                    checkOut: lastCheckOut && lastCheckOut.isOffSite ? {
+                        reason: lastCheckOut.offSiteReason,
+                        distance: lastCheckOut.location ? lastCheckOut.location.distance : null
+                    } : null
+                } : null;
+
                 attendanceList.push({
                     _id: `${user._id}_${date}`,
                     userId: user._id,
@@ -3046,7 +3178,10 @@ app.get('/admin/attendance/list', async(req, res) => {
                     note: firstCheckIn ? firstCheckIn.memo || '' : '',
                     records: records,
                     isModified: isModified,
-                    modificationHistory: allModificationHistory
+                    modificationHistory: allModificationHistory,
+                    hasOffSite: hasOffSiteRecord,
+                    offSiteInfo: offSiteInfo,
+                    offSiteCount: offSiteRecords.length
                 });
             });
         }

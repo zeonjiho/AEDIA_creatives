@@ -290,7 +290,7 @@ const AttendanceModal = ({ isOpen, onClose, attendance, userList, onUpdate }) =>
               {/* 로그 헤더 */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '60px 80px 80px 60px 120px 60px 120px',
+                gridTemplateColumns: '60px 80px 80px 60px 120px 100px 60px 120px',
                 gap: '12px',
                 padding: '12px 16px',
                 backgroundColor: 'var(--bg-secondary)',
@@ -307,6 +307,7 @@ const AttendanceModal = ({ isOpen, onClose, attendance, userList, onUpdate }) =>
                 <span>원본시간</span>
                 <span>상태</span>
                 <span>위치</span>
+                <span>외부 출퇴근</span>
                 <span>방법</span>
                 <span>수정사유</span>
               </div>
@@ -330,11 +331,11 @@ const AttendanceModal = ({ isOpen, onClose, attendance, userList, onUpdate }) =>
                   return (
                     <div key={index} style={{
                       display: 'grid',
-                      gridTemplateColumns: '60px 80px 80px 60px 120px 60px 120px',
+                      gridTemplateColumns: '60px 80px 80px 60px 120px 100px 60px 120px',
                       gap: '12px',
                       padding: '12px 16px',
-                      backgroundColor: isModified ? '#fff3cd' : 'white',
-                      borderLeft: isModified ? '4px solid #ffc107' : '4px solid #28a745',
+                      backgroundColor: record.isOffSite ? '#ffe8e8' : (isModified ? '#fff3cd' : 'white'),
+                      borderLeft: record.isOffSite ? '4px solid #ff4757' : (isModified ? '4px solid #ffc107' : '4px solid #28a745'),
                       borderRadius: '8px',
                       fontSize: '13px',
                       fontFamily: 'var(--font-mono)',
@@ -396,6 +397,48 @@ const AttendanceModal = ({ isOpen, onClose, attendance, userList, onUpdate }) =>
                           '위치정보 없음'
                         }
                       </span>
+                      
+                      {/* OFF-SITE INFO */}
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '2px',
+                        fontSize: '10px' 
+                      }}>
+                        {record.isOffSite ? (
+                          <>
+                            <span style={{
+                              backgroundColor: '#ff4757',
+                              color: 'white',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '9px',
+                              fontWeight: '700',
+                              textAlign: 'center'
+                            }}>
+                              외부 {record.type === 'checkIn' ? '출근' : '퇴근'}
+                            </span>
+                            {record.location?.distance && (
+                              <span style={{
+                                color: '#ff4757',
+                                fontSize: '9px',
+                                fontWeight: '600',
+                                textAlign: 'center'
+                              }}>
+                                {record.location.distance}m
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{
+                            color: '#9e9e9e',
+                            fontSize: '9px',
+                            textAlign: 'center'
+                          }}>
+                            회사 내
+                          </span>
+                        )}
+                      </div>
                       
                       {/* METHOD */}
                       <span style={{ 
@@ -507,6 +550,124 @@ const AttendanceModal = ({ isOpen, onClose, attendance, userList, onUpdate }) =>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* 외부 위치 출퇴근 정보 */}
+          {attendance.hasOffSite && attendance.offSiteInfo && (
+            <div style={{ 
+              marginBottom: '24px', 
+              padding: '16px', 
+              backgroundColor: '#ffe8e8', 
+              borderRadius: '8px',
+              border: '1px solid #ffb3b3'
+            }}>
+              <h3 style={{ 
+                margin: '0 0 16px 0', 
+                fontSize: '16px', 
+                fontWeight: '600', 
+                color: '#d63384',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                ⚠️ 외부 위치 출퇴근 정보
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {attendance.offSiteInfo.checkIn && (
+                  <div style={{
+                    padding: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '8px',
+                    border: '1px solid #ffa726'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#ffa726'
+                    }}>
+                      🏃‍♂️ 외부 출근
+                      <span style={{
+                        backgroundColor: '#ffa726',
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px'
+                      }}>
+                        회사에서 {attendance.offSiteInfo.checkIn.distance}m 떨어짐
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      backgroundColor: '#f9f9f9',
+                      padding: '8px 12px',
+                      borderRadius: '6px'
+                    }}>
+                      <strong>사유:</strong> {attendance.offSiteInfo.checkIn.reason || '사유 없음'}
+                    </div>
+                  </div>
+                )}
+                
+                {attendance.offSiteInfo.checkOut && (
+                  <div style={{
+                    padding: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '8px',
+                    border: '1px solid #ef5350'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#ef5350'
+                    }}>
+                      🚪 외부 퇴근
+                      <span style={{
+                        backgroundColor: '#ef5350',
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '12px'
+                      }}>
+                        회사에서 {attendance.offSiteInfo.checkOut.distance}m 떨어짐
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      backgroundColor: '#f9f9f9',
+                      padding: '8px 12px',
+                      borderRadius: '6px'
+                    }}>
+                      <strong>사유:</strong> {attendance.offSiteInfo.checkOut.reason || '사유 없음'}
+                    </div>
+                  </div>
+                )}
+                
+                {/* 불이익 경고 표시 */}
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#fff3cd',
+                  borderRadius: '6px',
+                  border: '1px solid #ffeaa7',
+                  fontSize: '13px',
+                  color: '#856404'
+                }}>
+                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>📋 관리자 확인 필요</div>
+                  <div>• 외부 위치 출퇴근에 대한 정당성 검토</div>
+                  <div>• 근태 관리 정책에 따른 불이익 검토</div>
+                  <div>• 반복적 외부 출퇴근 시 개별 상담 필요</div>
+                </div>
               </div>
             </div>
           )}
