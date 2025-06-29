@@ -7,27 +7,15 @@ import {
     FaSun,
     FaMoon
 } from 'react-icons/fa'
-import { 
-    todos, 
-    events, 
-    rooms, 
-    projects, 
-    users, 
-    notifications,
-    roomReservations,
-    addTodo,
-    updateTodo,
-    deleteTodo
-} from '../../data/mockDatabase'
 
 // 위젯 그리드 및 위젯 컴포넌트 임포트
 import WidgetGrid, { WidgetGridItem } from '../../common/WidgetGrid'
 import TodoWidget from '../../common/widgets/TodoWidget'
-import ScheduleWidget from '../../common/widgets/ScheduleWidget'
+
 import StudioWidget from '../../common/widgets/StudioWidget'
 import ProjectWidget from '../../common/widgets/ProjectWidget'
-import TeamWidget from '../../common/widgets/TeamWidget'
-import NotificationWidget from '../../common/widgets/NotificationWidget'
+
+
 
 const Home = () => {
     const navigate = useNavigate()
@@ -48,44 +36,32 @@ const Home = () => {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
     
-    // 기본 레이아웃 설정 - 이미지에 보이는 레이아웃과 동일하게 설정
+    // 기본 레이아웃 설정 - 3개 위젯 구조
     const defaultLayouts = {
         lg: [
-            // 첫 번째 행: Todo List, Today's Schedule, Studio Status
+            // 첫 번째 행: Todo List, Studio Status
             { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
-            { i: 'schedule-widget', x: 1, y: 0, w: 1, h: 2 },
-            { i: 'studio-widget', x: 2, y: 0, w: 1, h: 2 },
-            // 두 번째 행: Project Status, Team Members, Notifications
-            { i: 'project-widget', x: 0, y: 2, w: 1, h: 2 },
-            { i: 'team-widget', x: 1, y: 2, w: 1, h: 2 },
-            { i: 'notification-widget', x: 2, y: 2, w: 1, h: 2 }
+            { i: 'studio-widget', x: 1, y: 0, w: 1, h: 2 },
+            // 두 번째 행: Project Status (중앙 배치)
+            { i: 'project-widget', x: 0, y: 2, w: 2, h: 2 }
         ],
         md: [
             // 태블릿 레이아웃 (2열)
             { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
-            { i: 'schedule-widget', x: 1, y: 0, w: 1, h: 2 },
-            { i: 'studio-widget', x: 0, y: 2, w: 1, h: 2 },
-            { i: 'project-widget', x: 1, y: 2, w: 1, h: 2 },
-            { i: 'team-widget', x: 0, y: 4, w: 1, h: 2 },
-            { i: 'notification-widget', x: 1, y: 4, w: 1, h: 2 }
+            { i: 'studio-widget', x: 1, y: 0, w: 1, h: 2 },
+            { i: 'project-widget', x: 0, y: 2, w: 2, h: 2 }
         ],
         sm: [
             // 모바일 레이아웃 (1열)
             { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
-            { i: 'schedule-widget', x: 0, y: 2, w: 1, h: 2 },
-            { i: 'studio-widget', x: 0, y: 4, w: 1, h: 2 },
-            { i: 'project-widget', x: 0, y: 6, w: 1, h: 2 },
-            { i: 'team-widget', x: 0, y: 8, w: 1, h: 2 },
-            { i: 'notification-widget', x: 0, y: 10, w: 1, h: 2 }
+            { i: 'studio-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'project-widget', x: 0, y: 4, w: 1, h: 2 }
         ],
         xs: [
             // 작은 모바일 레이아웃 (1열)
             { i: 'todo-widget', x: 0, y: 0, w: 1, h: 2 },
-            { i: 'schedule-widget', x: 0, y: 2, w: 1, h: 2 },
-            { i: 'studio-widget', x: 0, y: 4, w: 1, h: 2 },
-            { i: 'project-widget', x: 0, y: 6, w: 1, h: 2 },
-            { i: 'team-widget', x: 0, y: 8, w: 1, h: 2 },
-            { i: 'notification-widget', x: 0, y: 10, w: 1, h: 2 }
+            { i: 'studio-widget', x: 0, y: 2, w: 1, h: 2 },
+            { i: 'project-widget', x: 0, y: 4, w: 1, h: 2 }
         ]
     };
     
@@ -218,46 +194,85 @@ const Home = () => {
         document.documentElement.setAttribute('data-theme', theme)
     }, [theme])
     
-    // 투두 리스트 상태 관리
+    // 데이터 상태 관리
     const [todoList, setTodoList] = useState([])
-    const [newTodo, setNewTodo] = useState('')
+    const [rooms, setRooms] = useState([])
+    const [projects, setProjects] = useState([])
+    const [roomReservations, setRoomReservations] = useState([])
+    const [loading, setLoading] = useState(true)
     
-    // 초기 데이터 로드
+    // 실제 데이터 로드
     useEffect(() => {
-        // 현재 사용자의 할 일만 필터링 (예시로 userId 1 사용)
-        const currentUserId = 1
-        setTodoList(todos.filter(todo => todo.userId === currentUserId))
-    }, [])
-
-    // 투두 상태 변경 함수
-    const toggleTodo = (id) => {
-        const todo = todoList.find(todo => todo.id === id)
-        if (todo) {
-            const updated = updateTodo(id, { completed: !todo.completed })
-            if (updated) {
-                setTodoList(todoList.map(t => t.id === id ? updated : t))
+        const loadData = async () => {
+            if (!userId) return
+            
+            setLoading(true)
+            try {
+                // 병렬로 모든 데이터 가져오기 - 사용자별 데이터 요청
+                const [todosRes, roomsRes, projectsRes] = await Promise.all([
+                    api.get(`/todos/user/${userId}`), // 사용자별 투두리스트
+                    api.get('/rooms'),  
+                    api.get(`/projects/user/${userId}`) // 사용자가 참여하는 프로젝트만
+                ])
+                
+                // 할일 목록 (서버에서 이미 필터링됨)
+                setTodoList(todosRes.data)
+                
+                // 방 목록
+                setRooms(roomsRes.data)
+                
+                // 프로젝트 목록 (서버에서 이미 필터링됨)
+                setProjects(projectsRes.data)
+                
+                // 방 예약 정보 (rooms에서 추출)
+                const allReservations = []
+                roomsRes.data.forEach(room => {
+                    if (room.reservations) {
+                        room.reservations.forEach(reservation => {
+                            allReservations.push({
+                                ...reservation,
+                                roomId: room._id
+                            })
+                        })
+                    }
+                })
+                setRoomReservations(allReservations)
+                
+            } catch (error) {
+                console.error('데이터 로드 실패:', error)
+            } finally {
+                setLoading(false)
             }
         }
-    }
+        
+        loadData()
+    }, [userId])
 
-    // 투두 추가 함수
-    const handleAddTodo = (e) => {
-        e.preventDefault()
-        if (newTodo.trim()) {
-            const added = addTodo({
-                userId: 1, // 현재 사용자 ID
-                text: newTodo,
-                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 일주일 후
-            })
-            if (added) {
-                setTodoList([...todoList, added])
-                setNewTodo('')
+    // 투두 상태 변경 함수
+    const toggleTodo = async (id) => {
+        const todo = todoList.find(todo => todo._id === id)
+        if (todo) {
+            try {
+                const response = await api.patch(`/todos/${id}`, { 
+                    completed: !todo.completed 
+                })
+                if (response.data) {
+                    setTodoList(todoList.map(t => t._id === id ? response.data : t))
+                }
+            } catch (error) {
+                console.error('투두 업데이트 실패:', error)
             }
         }
     }
     
     // 프로젝트 진행률 계산
     const calculateProgress = (project) => {
+        // API에서 progress 값을 직접 제공하는 경우
+        if (project.progress !== undefined) {
+            return project.progress
+        }
+        
+        // tasks가 있는 경우 계산
         if (!project.tasks || project.tasks.length === 0) return 0
         const completedTasks = project.tasks.filter(task => task.status === '완료').length
         return Math.round((completedTasks / project.tasks.length) * 100)
@@ -287,17 +302,11 @@ const Home = () => {
     // 시간 포맷팅 - 영어로 변경
     const formattedTime = currentTime.toLocaleTimeString('en-US')
     
-    // 오늘의 이벤트 필터링
-    const todayEvents = events.filter(event => {
-        const eventDate = new Date(event.start)
-        return eventDate.toDateString() === today.toDateString()
-    })
+
     
-    // 가장 가까운 마감일 프로젝트 찾기
-    const upcomingProjects = [...projects]
-        .filter(project => new Date(project.deadline) > today)
-        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-        .slice(0, 3)
+    // 사용자가 참여하는 모든 프로젝트 (최신순 정렬)
+    const userProjects = [...projects]
+        .sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate))
     
     // 날짜 포맷팅 함수 - 영어로 변경
     const formatDate = (dateString) => {
@@ -358,9 +367,20 @@ const Home = () => {
             
             {/* 위젯 그리드 레이아웃 */}
             <main className={ss.dashboard_content}>
-                {layouts ? (
+                {loading ? (
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        height: '400px',
+                        fontSize: '1.2rem',
+                        color: '#6b7280'
+                    }}>
+                        데이터를 불러오는 중...
+                    </div>
+                ) : layouts ? (
                     <WidgetGrid 
-                        columns={3} 
+                        columns={2} 
                         gap="15px" 
                         className={ss.dashboard_grid}
                         layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
@@ -376,24 +396,12 @@ const Home = () => {
                             <TodoWidget 
                                 todos={todoList}
                                 onToggleTodo={toggleTodo}
-                                onAddTodo={handleAddTodo}
-                                newTodo={newTodo}
-                                onNewTodoChange={(e) => setNewTodo(e.target.value)}
                                 onViewAllClick={() => navigate('/todo')}
                                 formatDate={formatDate}
                             />
                         </WidgetGridItem>
 
-                        {/* 오늘의 일정 위젯 */}
-                        <WidgetGridItem 
-                            key="schedule-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <ScheduleWidget 
-                                events={todayEvents}
-                                onViewAllClick={() => navigate('/todo')}
-                            />
-                        </WidgetGridItem>
+
 
                         {/* 스튜디오 현황 위젯 */}
                         <WidgetGridItem 
@@ -413,7 +421,7 @@ const Home = () => {
                             onCustomizeModeChange={handleCustomizeModeChange}
                         >
                             <ProjectWidget 
-                                projects={upcomingProjects}
+                                projects={userProjects}
                                 calculateProgress={calculateProgress}
                                 calculateRemainingDays={calculateRemainingDays}
                                 formatDate={formatDate}
@@ -421,27 +429,9 @@ const Home = () => {
                             />
                         </WidgetGridItem>
 
-                        {/* 팀 멤버 위젯 */}
-                        <WidgetGridItem 
-                            key="team-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <TeamWidget 
-                                members={users.slice(0, 4)}
-                                onViewAllClick={() => navigate('/team')}
-                            />
-                        </WidgetGridItem>
 
-                        {/* 알림 위젯 */}
-                        <WidgetGridItem 
-                            key="notification-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <NotificationWidget 
-                                notifications={notifications.slice(0, 3)}
-                                onViewAllClick={() => navigate('/notifications')}
-                            />
-                        </WidgetGridItem>
+
+
                     </WidgetGrid>
                 ) : (
                     <div style={{ 

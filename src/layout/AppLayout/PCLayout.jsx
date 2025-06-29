@@ -3,10 +3,9 @@ import ss from './PCLayout.module.css'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FaUserCircle,
-    FaBell,
     FaSearch,
 } from 'react-icons/fa'
-import { users, notifications, currentUser } from '../../data/mockDatabase'
+import { users, currentUser } from '../../data/mockDatabase'
 import AediaLogo from '../../components/AediaLogo/AediaLogo'
 import SearchModal from '../../components/SearchModal/SearchModal'
 import { openSearchModal } from '../../utils/searchUtils'
@@ -58,8 +57,7 @@ const PCLayout = ({ user }) => {
     // 프로필 메뉴 토글
     const [showProfileMenu, setShowProfileMenu] = useState(false)
 
-    // 알림 메뉴 토글
-    const [showNotifications, setShowNotifications] = useState(false)
+
 
     // 메뉴 아이템
     const menuItems = [
@@ -86,14 +84,7 @@ const PCLayout = ({ user }) => {
         }
     ]
 
-    // 알림 데이터
-    const [notificationsList, setNotificationsList] = useState([])
 
-    // 알림 데이터 로드
-    useEffect(() => {
-        // 읽지 않은 알림만 표시
-        setNotificationsList(notifications.filter(n => !n.read).slice(0, 5))
-    }, [])
 
     // 메뉴 외부 클릭 시 닫기
     useEffect(() => {
@@ -121,33 +112,14 @@ const PCLayout = ({ user }) => {
                 setShowProfileMenu(false);
             }
 
-            // 알림 메뉴 외부 클릭 시 닫기
-            if (showNotifications && !hasParentWithClass(event.target, ss.notifications_container)) {
-                setShowNotifications(false);
-            }
+
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showProfileMenu, showNotifications, ss]);
+    }, [showProfileMenu, ss]);
 
-    // 알림 시간 포맷팅
-    const formatNotificationTime = (dateString) => {
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffMs = now - date
-        const diffMins = Math.floor(diffMs / 60000)
-        const diffHours = Math.floor(diffMs / 3600000)
-        const diffDays = Math.floor(diffMs / 86400000)
 
-        if (diffMins < 60) {
-            return `${diffMins}분 전`
-        } else if (diffHours < 24) {
-            return `${diffHours}시간 전`
-        } else {
-            return `${diffDays}일 전`
-        }
-    }
 
     // 검색 핸들러 - 검색 모달 열기로 변경
     const handleSearchClick = () => {
@@ -199,52 +171,7 @@ const PCLayout = ({ user }) => {
                         <FaSearch />
                     </button>
 
-                    {/* 알림 버튼 */}
-                    {/* <div className={ss.notifications_container}>
-                        <div
-                            className={ss.notification_button}
-                            onClick={() => setShowNotifications(!showNotifications)}
-                        >
-                            <FaBell />
-                        </div>
 
-                        {showNotifications && (
-                            <div className={ss.notifications_dropdown}>
-                                <div className={ss.notifications_header}>
-                                    <h3>알림</h3>
-                                    <button className={ss.clear_all}>모두 읽음</button>
-                                </div>
-                                <div className={ss.notifications_list}>
-                                    {notificationsList.length > 0 ? (
-                                        notificationsList.map(notification => (
-                                            <div key={notification.id} className={ss.notification_item}>
-                                                <div className={ss.notification_content}>
-                                                    <h4 className={ss.notification_title}>{notification.title}</h4>
-                                                    <p className={ss.notification_text}>{notification.message}</p>
-                                                </div>
-                                                <span className={ss.notification_time}>
-                                                    {formatNotificationTime(notification.createdAt)}
-                                                </span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className={ss.no_notifications}>새로운 알림이 없습니다.</p>
-                                    )}
-                                </div>
-                                <div className={ss.notifications_footer}>
-                                    <button
-                                        className={ss.view_all}
-                                        onClick={() => {
-                                            navigate('/notifications')
-                                            setShowNotifications(false)
-                                        }}
-                                    >
-                                        모든 알림 보기
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div> */}
 
                     {/* 프로필 영역 */}
                     <div className={ss.profile_menu_container}>

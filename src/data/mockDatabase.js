@@ -276,17 +276,7 @@ export const projects = [{
     }
 ];
 
-// 알림 데이터
-export const notifications = [
-    { id: 1, title: '촬영 일정 알림', message: '내일 오전 9시 럭셔리 브랜드 광고 촬영이 스튜디오 A에서 진행됩니다.', type: '일반', recipients: 'all', read: false, createdAt: '2023-03-06T09:50:00' },
-    { id: 2, title: '장비 대여 승인', message: '요청하신 RED Komodo 카메라 대여가 승인되었습니다. 내일 오전 8시부터 수령 가능합니다.', type: '중요', recipients: 'dev', read: true, createdAt: '2023-03-07T09:00:00' },
-    { id: 3, title: '프로젝트 마감일 변경', message: '럭셔리 브랜드 광고 캠페인의 마감일이 5월 10일로 연장되었습니다.', type: '중요', recipients: 'all', read: false, createdAt: '2023-03-05T14:30:00' },
-    { id: 4, title: '편집실 예약 확정', message: '편집실 예약이 3월 20일 14:00-16:00로 확정되었습니다.', type: '일반', recipients: 'design', read: false, createdAt: '2023-03-12T10:15:00' },
-    { id: 5, title: '신규 장비 도입 안내', message: '새로운 DJI Ronin 4D 카메라 시스템이 도입되었습니다. 다음 주 수요일 교육 세션에 참석해주세요.', type: '공지사항', recipients: 'all', read: true, createdAt: '2023-03-01T09:00:00' },
-    { id: 6, title: '클라이언트 피드백', message: '웹 시리즈 1화 러프컷에 대한 클라이언트 피드백이 도착했습니다. 확인 부탁드립니다.', type: '긴급', recipients: 'dev', read: false, createdAt: '2023-03-08T16:30:00' },
-    { id: 7, title: '월간 회의 일정', message: '이번 달 전체 회의가 3월 25일 오후 2시에 진행됩니다. 프로젝트 진행 상황을 준비해주세요.', type: '공지사항', recipients: 'all', read: false, createdAt: '2023-03-10T11:00:00' },
-    { id: 8, title: '음향 장비 점검', message: '스튜디오 음향 장비 정기 점검이 내일 오전에 진행됩니다. 해당 시간에는 녹음 작업이 불가합니다.', type: '일반', recipients: 'dev', read: true, createdAt: '2023-03-14T15:45:00' },
-];
+
 
 // 프로젝트 캘린더 이벤트 데이터
 export const projectEvents = [{
@@ -397,14 +387,7 @@ export const getProjects = () => {
     });
 };
 
-// 알림 목록 조회
-export const getNotifications = () => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([...notifications]);
-        }, 300);
-    });
-};
+
 
 // 데이터 조작 함수들
 // 실제 백엔드가 없으므로 로컬 상태를 변경하는 함수들을 제공합니다.
@@ -549,38 +532,7 @@ export const deleteTask = (projectId, taskId) => {
     return null;
 };
 
-// 알림 관련 함수
-let notificationIdCounter = notifications.length + 1;
 
-export const addNotification = (newNotification) => {
-    const notificationToAdd = {
-        id: notificationIdCounter++,
-        ...newNotification,
-        read: false,
-        createdAt: new Date().toISOString()
-    };
-    notifications.push(notificationToAdd);
-    return notificationToAdd;
-};
-
-export const markNotificationAsRead = (id) => {
-    const index = notifications.findIndex(notification => notification.id === id);
-    if (index !== -1) {
-        notifications[index].read = true;
-        return notifications[index];
-    }
-    return null;
-};
-
-export const deleteNotification = (id) => {
-    const index = notifications.findIndex(notification => notification.id === id);
-    if (index !== -1) {
-        const deleted = notifications[index];
-        notifications.splice(index, 1);
-        return deleted;
-    }
-    return null;
-};
 
 // 프로젝트 이벤트 관련 함수
 let projectEventIdCounter = projectEvents.length + 1;
