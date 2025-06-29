@@ -174,16 +174,16 @@ const KakaoMap = ({ selectedLocation, onLocationSelect }) => {
     markerRef.current.setMap(kakaoMapRef.current);
   };
 
-  if (isLoading) {
-    return (
-      <div className="kakao-map-container">
-        <div className="map-loading">
-          <div className="loading-spinner"></div>
-          <p>카카오맵을 로딩 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="kakao-map-container">
+  //       <div className="map-loading">
+  //         <div className="loading-spinner"></div>
+  //         <p>카카오맵을 로딩 중입니다...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (mapError) {
     return (
