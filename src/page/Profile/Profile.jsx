@@ -56,6 +56,15 @@ const Profile = () => {
   // 로컬 스토리지에서 사용자 ID 가져오기
   const userId = jwtDecode(localStorage.getItem('token')).userId;
 
+  // 슬랙 ID 인증 관련 상태
+  const [slackVerification, setSlackVerification] = useState({
+    originalSlackId: '',
+    verificationCode: '',
+    isVerificationSent: false,
+    isVerified: false,
+    isSlackIdChanged: false
+  });
+
   useEffect(() => {
     loadUserProfile();
   }, []);
@@ -76,7 +85,16 @@ const Profile = () => {
         console.log('사용자 정보 로드 완료:', response.data);
 
         setUser(userInfo);
-        setFormData(userInfo);
+        setFormData({
+          ...userInfo,
+          slackId: userInfo.slackId || '' // 슬랙 ID 기본값 설정
+        });
+        
+        // 슬랙 ID 원본 저장
+        setSlackVerification(prev => ({
+          ...prev,
+          originalSlackId: userInfo.slackId || ''
+        }));
       }
     } catch (err) {
       console.error('사용자 정보 로드 실패:', err);
@@ -89,7 +107,10 @@ const Profile = () => {
   const handleEditToggle = () => {
     if (isEditMode) {
       // 편집 취소 시 원래 데이터로 복원
-      setFormData(user);
+      setFormData({
+        ...user,
+        slackId: user.slackId || '' // 슬랙 ID 기본값 설정
+      });
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -97,6 +118,15 @@ const Profile = () => {
       });
       setPasswordError('');
       setSaveStatus('');
+      
+      // 슬랙 인증 상태 초기화
+      setSlackVerification({
+        originalSlackId: user.slackId || '',
+        verificationCode: '',
+        isVerificationSent: false,
+        isVerified: false,
+        isSlackIdChanged: false
+      });
     }
     setIsEditMode(!isEditMode);
   };
@@ -117,6 +147,18 @@ const Profile = () => {
         ...formData,
         [name]: value
       });
+      
+      // 슬랙 ID 변경 감지
+      if (name === 'slackId') {
+        const isChanged = value !== slackVerification.originalSlackId;
+        setSlackVerification(prev => ({
+          ...prev,
+          isSlackIdChanged: isChanged,
+          isVerificationSent: false,
+          isVerified: false,
+          verificationCode: ''
+        }));
+      }
     }
   };
 
@@ -194,6 +236,14 @@ const Profile = () => {
         }
       } else {
         // 프로필 정보 업데이트
+        
+        // 슬랙 ID가 변경된 경우 인증 확인
+        if (slackVerification.isSlackIdChanged && !slackVerification.isVerified) {
+          setError('슬랙 ID를 변경하려면 인증번호 확인이 필요합니다.');
+          setSaveStatus('');
+          return;
+        }
+        
         console.log('프로필 업데이트 데이터:', formData);
         const response = await api.put(`/update-user-profile?userId=${userId}`, formData);
 
@@ -371,6 +421,54 @@ const Profile = () => {
     }
   };
 
+  // 슬랙 ID 인증 관련 함수들
+  const handleSendVerificationCode = async () => {
+    try {
+      // TODO: 실제 서버 구현 시 API 호출
+      console.log('인증번호 발송:', formData.slackId);
+      
+      // 임시로 바로 성공 처리
+      setSlackVerification(prev => ({
+        ...prev,
+        isVerificationSent: true
+      }));
+      
+      setSaveStatus('verification-sent');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } catch (error) {
+      console.error('인증번호 발송 실패:', error);
+      setError('인증번호 발송에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      // TODO: 실제 서버 구현 시 API 호출
+      console.log('인증번호 확인:', slackVerification.verificationCode);
+      
+      // 임시로 바로 성공 처리
+      setSlackVerification(prev => ({
+        ...prev,
+        isVerified: true
+      }));
+      
+      setSaveStatus('verification-success');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } catch (error) {
+      console.error('인증번호 확인 실패:', error);
+      setError('인증번호 확인에 실패했습니다.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleVerificationCodeChange = (e) => {
+    setSlackVerification(prev => ({
+      ...prev,
+      verificationCode: e.target.value
+    }));
+  };
+
   // 로딩 중 표시
   if (loading) {
     return (
@@ -420,6 +518,8 @@ const Profile = () => {
           <div className={`${styles.save_status} ${styles[saveStatus]}`}>
             {saveStatus === 'saving' && '저장 중...'}
             {saveStatus === 'success' && <><FaCheck /> 성공적으로 저장되었습니다!</>}
+            {saveStatus === 'verification-sent' && <><FaCheck /> 인증번호가 발송되었습니다!</>}
+            {saveStatus === 'verification-success' && <><FaCheck /> 인증이 완료되었습니다!</>}
           </div>
         )}
         {error && (
@@ -649,18 +749,78 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div className={styles.form_group}>
-                    <label>
-                      <FaMapMarkerAlt className={styles.input_icon} />
-                      주소
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address || ''}
-                      onChange={handleInputChange}
-                      placeholder="상세 주소를 입력하세요"
-                    />
+                  <div className={styles.form_row}>
+                    <div className={`${styles.form_group} ${styles.full_width}`}>
+                      <label>
+                        <FaMapMarkerAlt className={styles.input_icon} />
+                        주소
+                      </label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address || ''}
+                        onChange={handleInputChange}
+                        placeholder="상세 주소를 입력하세요"
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.form_row}>
+                    <div className={styles.form_group}>
+                      <label>
+                        <FaEnvelope className={styles.input_icon} />
+                        슬랙 ID
+                      </label>
+                      <div className={styles.slack_input_container}>
+                        <input
+                          type="text"
+                          name="slackId"
+                          value={formData.slackId || ''}
+                          onChange={handleInputChange}
+                          placeholder="슬랙 ID를 입력하세요"
+                          className={styles.slack_id_input}
+                        />
+                        {slackVerification.isSlackIdChanged && (
+                          <button
+                            type="button"
+                            className={`${styles.verification_button} ${slackVerification.isVerificationSent ? styles.sent : ''}`}
+                            onClick={handleSendVerificationCode}
+                            disabled={!formData.slackId || slackVerification.isVerificationSent}
+                          >
+                            {slackVerification.isVerificationSent ? '전송완료' : '인증번호 발송'}
+                          </button>
+                        )}
+                        {slackVerification.isVerified && (
+                          <FaCheck className={styles.verification_success_icon} />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {slackVerification.isSlackIdChanged && slackVerification.isVerificationSent && !slackVerification.isVerified && (
+                      <div className={styles.form_group}>
+                        <label>
+                          <FaLock className={styles.input_icon} />
+                          인증번호
+                        </label>
+                        <div className={styles.verification_input_container}>
+                          <input
+                            type="text"
+                            value={slackVerification.verificationCode}
+                            onChange={handleVerificationCodeChange}
+                            placeholder="인증번호를 입력하세요"
+                            className={styles.verification_code_input}
+                          />
+                          <button
+                            type="button"
+                            className={styles.verify_button}
+                            onClick={handleVerifyCode}
+                            disabled={!slackVerification.verificationCode}
+                          >
+                            확인
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -877,6 +1037,13 @@ const Profile = () => {
                     <div className={styles.info_content}>
                       <label>사용자 유형</label>
                       <p>{user.userType === 'internal' ? '내부 직원' : '외부 인력'}</p>
+                    </div>
+                  </div>
+                  <div className={styles.info_card}>
+                    <FaEnvelope className={styles.info_icon} />
+                    <div className={styles.info_content}>
+                      <label>슬랙 ID</label>
+                      <p>{user.slackId || '미설정'}</p>
                     </div>
                   </div>
                 </div>
