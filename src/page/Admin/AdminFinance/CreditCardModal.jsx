@@ -53,11 +53,7 @@ const CreditCardModal = ({
     })
   }
 
-<<<<<<< Updated upstream
-  // 카드번호 마스킹 처리 (라벨 포함)
-=======
   // 카드번호 마스킹 처리
->>>>>>> Stashed changes
   const formatCardNumber = (number, cardLabel) => {
     if (!number || number.length !== 8) return '-';
     const front = number.substring(0, 4);
@@ -180,8 +176,6 @@ const CreditCardModal = ({
                   </div>
                 </div>
                 <div className={ss.info_item}>
-<<<<<<< Updated upstream
-=======
                   <label>등록일</label>
                   <div className={ss.info_value}>{formatDate(card.createdAt)}</div>
                 </div>
@@ -192,7 +186,6 @@ const CreditCardModal = ({
                   </div>
                 </div>
                 <div className={ss.info_item}>
->>>>>>> Stashed changes
                   <label>현재 카드번호</label>
                   <div className={ss.info_value} style={{fontFamily: 'monospace', fontSize: '0.9rem'}}>
                     {formatCardNumber(card.number, card.label)}
@@ -232,20 +225,12 @@ const CreditCardModal = ({
               </div>
 
               <div className={ss.info_item} style={{marginTop: '20px'}}>
-<<<<<<< Updated upstream
-                <label>카드 라벨 *</label>
-=======
                 <label>카드 라벨 (선택사항)</label>
->>>>>>> Stashed changes
                 <input
                   type="text"
                   value={label}
                   onChange={(e) => handleLabelInput(e.target.value)}
-<<<<<<< Updated upstream
                   placeholder="A-Z"
-=======
-                  placeholder="A-Z 중 한 글자"
->>>>>>> Stashed changes
                   className={ss.text_input}
                   maxLength={1}
                   style={{

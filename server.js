@@ -2399,11 +2399,7 @@ app.post('/credit-cards', async(req, res) => {
         }
 
         // 라벨 검증 (알파벳 대문자 한 글자)
-<<<<<<< Updated upstream
-        if (!/^[A-Z]$/.test(label)) {
-=======
         if (label && (!/^[A-Z]$/.test(label))) {
->>>>>>> Stashed changes
             return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
         }
 
@@ -2413,9 +2409,6 @@ app.post('/credit-cards', async(req, res) => {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
-<<<<<<< Updated upstream
-
-=======
         // 중복 라벨 확인 (라벨이 있는 경우)
         if (label) {
             const existingLabel = await CreditCard.findOne({ label: label, status: 'active' });
@@ -2423,7 +2416,6 @@ app.post('/credit-cards', async(req, res) => {
                 return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
             }
         }
->>>>>>> Stashed changes
 
         const newCard = new CreditCard({
             cardName: cardName.trim(),
@@ -2463,11 +2455,7 @@ app.put('/credit-cards/:cardId', async(req, res) => {
         }
 
         // 라벨 검증 (알파벳 대문자 한 글자)
-<<<<<<< Updated upstream
-        if (!/^[A-Z]$/.test(label)) {
-=======
         if (label && (!/^[A-Z]$/.test(label))) {
->>>>>>> Stashed changes
             return res.status(400).json({ message: '라벨은 알파벳 대문자 한 글자여야 합니다.' });
         }
 
@@ -2486,9 +2474,6 @@ app.put('/credit-cards/:cardId', async(req, res) => {
             return res.status(400).json({ message: '이미 등록된 카드번호입니다.' });
         }
 
-<<<<<<< Updated upstream
-
-=======
         // 다른 카드와 라벨 중복 확인 (자기 자신 제외, 라벨이 있는 경우)
         if (label) {
             const existingLabel = await CreditCard.findOne({
@@ -2500,7 +2485,6 @@ app.put('/credit-cards/:cardId', async(req, res) => {
                 return res.status(400).json({ message: '이미 사용중인 라벨입니다.' });
             }
         }
->>>>>>> Stashed changes
 
         // 카드 정보 업데이트
         const updatedCard = await CreditCard.findByIdAndUpdate(

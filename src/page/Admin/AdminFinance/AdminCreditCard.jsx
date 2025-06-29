@@ -146,7 +146,6 @@ const AdminCreditCard = () => {
     const isConfirmed = window.confirm('이 법인카드를 복구하시겠습니까?');
     if (!isConfirmed) return;
 
-<<<<<<< Updated upstream
     try {
       await api.patch(`/credit-cards/${cardId}/restore`);
       alert('법인카드가 복구되었습니다.');
@@ -164,8 +163,6 @@ const AdminCreditCard = () => {
 
 
 
-=======
->>>>>>> Stashed changes
   // 카드번호 마스킹 처리 (라벨 포함, XXXX-****-****-XXXX 형태로 표시)
   const formatCardNumber = (number, label) => {
     if (!number || number.length !== 8) return '-';
@@ -292,14 +289,10 @@ const AdminCreditCard = () => {
           <ExportButton 
             chartRef={{ current: null }}
             chartTitle="법인카드_목록"
-            csvData={generateTableCSV(
-              cardList.filter(card => card !== null && card !== undefined), 
-<<<<<<< Updated upstream
-              ['카드명', '라벨', '카드번호', '상태']
-=======
-              ['카드명', '라벨', '카드번호', '상태', '등록일']
->>>>>>> Stashed changes
-            )}
+                          csvData={generateTableCSV(
+                cardList.filter(card => card !== null && card !== undefined), 
+                ['카드명', '라벨', '카드번호', '상태']
+              )}
           />
         </div>
         <table className={ss.data_table}>
@@ -368,7 +361,7 @@ const AdminCreditCard = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="6" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="5" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 법인카드가 없습니다.
                 </td>
               </tr>
