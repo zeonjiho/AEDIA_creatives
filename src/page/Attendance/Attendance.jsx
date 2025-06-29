@@ -24,6 +24,13 @@ const Attendance = () => {
     const [isLocationValid, setIsLocationValid] = useState(false)
     const [canCheckIn, setCanCheckIn] = useState(true)
     const [canCheckOut, setCanCheckOut] = useState(false)
+    
+    // 상세 위치 정보 상태 추가
+    const [locationDetails, setLocationDetails] = useState({
+        distance: null,
+        companyName: '',
+        showDetails: false
+    })
 
     // 수정 모드 상태
     const [editMode, setEditMode] = useState({ active: false, recordId: null })
@@ -69,27 +76,32 @@ const Attendance = () => {
             const response = await api.get('/company/location')
             const locationData = response.data
             
-            setCompanyLocation({
+            const newCompanyLocation = {
                 latitude: locationData.latitude,
                 longitude: locationData.longitude,
                 name: locationData.name,
                 address: locationData.address,
                 hasLocation: locationData.hasLocation,
                 radius: 100 // 기본 반경 100미터
-            })
+            }
+            
+            setCompanyLocation(newCompanyLocation)
             
             console.log('회사 위치 정보 로드:', locationData)
+            return newCompanyLocation
         } catch (error) {
             console.error('회사 위치 정보 로드 실패:', error)
             // 기본값으로 설정 (서울시청)
-            setCompanyLocation({
+            const defaultLocation = {
                 latitude: 37.520574,
                 longitude: 127.021637,
                 name: 'AEDIA STUDIO',
                 address: '서울시청 (기본값)',
                 hasLocation: false,
                 radius: 100
-            })
+            }
+            setCompanyLocation(defaultLocation)
+            return defaultLocation
         }
     }
 
@@ -137,58 +149,64 @@ const Attendance = () => {
         }
     }, [statusMessage])
 
-    // 위치 정보 가져오기
+    // 위치 정보 가져오기 (초기 로드 시만 - 참고용)
     useEffect(() => {
         // 회사 위치 정보가 로드된 후에만 위치 검증 실행
         if (companyLocation.latitude === null) {
             return
         }
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude
-                    const userLng = position.coords.longitude
-                    
-                    setUserLocation({
-                        latitude: userLat,
-                        longitude: userLng
+        const loadInitialLocation = async () => {
+            setLocationStatus('위치 정보 로드 중...')
+            
+            try {
+                const currentLocation = await getCurrentLocationAsync()
+                
+                setUserLocation(currentLocation)
+                
+                // 위치가 유효한지 확인
+                const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude)
+                
+                setIsLocationValid(isValid)
+                
+                // 거리 계산 및 상세 정보 저장
+                if (companyLocation.hasLocation) {
+                    const distance = calculateDistance(
+                        currentLocation.latitude, currentLocation.longitude,
+                        companyLocation.latitude, companyLocation.longitude
+                    )
+                    setLocationDetails({
+                        distance: Math.round(distance),
+                        companyName: companyLocation.name,
+                        showDetails: true
                     })
-                    
-                    // 위치가 유효한지 확인
-                    const isValid = checkLocationValidity(userLat, userLng)
-                    
-                    setIsLocationValid(isValid)
-                    
-                    if (isValid) {
-                        if (companyLocation.hasLocation) {
-                            const distance = calculateDistance(
-                                userLat, userLng,
-                                companyLocation.latitude, companyLocation.longitude
-                            )
-                            setLocationStatus(`인증된 위치 (${companyLocation.name} 반경 ${Math.round(distance)}m)`)
-                        } else {
-                            setLocationStatus('위치 인증됨 (회사 위치 미설정)')
-                        }
-                    } else {
-                        const distance = calculateDistance(
-                            userLat, userLng,
-                            companyLocation.latitude, companyLocation.longitude
-                        )
-                        setLocationStatus(`위치 인증 실패 (${companyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
-                    }
-                },
-                (error) => {
-                    console.error('위치 정보 가져오기 오류:', error)
-                    setLocationStatus('위치 정보를 가져올 수 없습니다')
-                    setIsLocationValid(false)
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-            )
-        } else {
-            setLocationStatus('위치 정보를 지원하지 않는 브라우저입니다')
-            setIsLocationValid(false)
+                } else {
+                    setLocationDetails({
+                        distance: null,
+                        companyName: '',
+                        showDetails: false
+                    })
+                }
+                
+                // 간단한 상태 메시지만 표시
+                if (isValid) {
+                    setLocationStatus('위치 활성화')
+                } else {
+                    setLocationStatus('위치 비활성화')
+                }
+            } catch (error) {
+                console.error('위치 정보 가져오기 오류:', error)
+                setLocationStatus('위치 정보 없음')
+                setIsLocationValid(false)
+                setLocationDetails({
+                    distance: null,
+                    companyName: '',
+                    showDetails: false
+                })
+            }
         }
+
+        loadInitialLocation()
     }, [companyLocation])
 
     // 두 지점 사이의 거리 계산 (Haversine 공식)
@@ -208,10 +226,38 @@ const Attendance = () => {
         return distance // 미터 단위
     }
 
+    // 실시간 위치 정보 가져오기 (Promise 기반)
+    const getCurrentLocationAsync = () => {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('LOCATION_ERROR'))
+                return
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    })
+                },
+                (error) => {
+                    console.error('위치 정보 가져오기 오류:', error)
+                    reject(new Error('LOCATION_ERROR'))
+                },
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 15000, 
+                    maximumAge: 0 // 캐시된 위치 정보 사용 안함 (항상 새로운 위치 정보 요청)
+                }
+            )
+        })
+    }
+
     // 위치 유효성 검사
-    const checkLocationValidity = (latitude, longitude) => {
+    const checkLocationValidity = (latitude, longitude, companyLocationData = companyLocation) => {
         // 회사 위치 정보가 설정되어 있지 않으면 모든 위치 허용
-        if (!companyLocation.hasLocation || !companyLocation.latitude || !companyLocation.longitude) {
+        if (!companyLocationData.hasLocation || !companyLocationData.latitude || !companyLocationData.longitude) {
             console.log('회사 위치 정보가 없어 위치 검증을 우회합니다.')
             return true
         }
@@ -219,81 +265,99 @@ const Attendance = () => {
         const distance = calculateDistance(
             latitude,
             longitude,
-            companyLocation.latitude,
-            companyLocation.longitude
+            companyLocationData.latitude,
+            companyLocationData.longitude
         )
         
-        const isValid = distance <= companyLocation.radius
-        console.log(`위치 검증: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocation.radius}m, 유효성 ${isValid}`)
+        const isValid = distance <= companyLocationData.radius
+        console.log(`위치 검증: 거리 ${Math.round(distance)}m, 허용반경 ${companyLocationData.radius}m, 유효성 ${isValid}`)
         
         return isValid
     }
 
     // 위치 정보 새로고침
-    const refreshLocation = () => {
-        setLocationStatus('위치 정보 새로고침 중...')
+    const refreshLocation = async () => {
+        setLocationStatus('새로고침 중...')
         
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude
-                    const userLng = position.coords.longitude
-                    
-                    setUserLocation({
-                        latitude: userLat,
-                        longitude: userLng
-                    })
-                    
-                    // 위치가 유효한지 확인
-                    const isValid = checkLocationValidity(userLat, userLng)
-                    
-                    setIsLocationValid(isValid)
-                    
-                    if (isValid) {
-                        if (companyLocation.hasLocation) {
-                            const distance = calculateDistance(
-                                userLat, userLng,
-                                companyLocation.latitude, companyLocation.longitude
-                            )
-                            setLocationStatus(`위치 새로고침 완료 (${companyLocation.name} 반경 ${Math.round(distance)}m)`)
-                        } else {
-                            setLocationStatus('위치 새로고침 완료 (회사 위치 미설정)')
-                        }
-                    } else {
-                        const distance = calculateDistance(
-                            userLat, userLng,
-                            companyLocation.latitude, companyLocation.longitude
-                        )
-                        setLocationStatus(`위치 인증 실패 (${companyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
-                    }
-                },
-                (error) => {
-                    console.error('위치 정보 가져오기 오류:', error)
-                    setLocationStatus('위치 정보 새로고침 실패')
-                    setIsLocationValid(false)
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            )
-        } else {
-            setLocationStatus('위치 정보를 지원하지 않는 브라우저입니다')
+        try {
+            const currentLocation = await getCurrentLocationAsync()
+            
+            setUserLocation(currentLocation)
+            
+            // 위치가 유효한지 확인
+            const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude)
+            
+            setIsLocationValid(isValid)
+            
+            // 거리 계산 및 상세 정보 저장
+            if (companyLocation.hasLocation) {
+                const distance = calculateDistance(
+                    currentLocation.latitude, currentLocation.longitude,
+                    companyLocation.latitude, companyLocation.longitude
+                )
+                setLocationDetails({
+                    distance: Math.round(distance),
+                    companyName: companyLocation.name,
+                    showDetails: true
+                })
+            } else {
+                setLocationDetails({
+                    distance: null,
+                    companyName: '',
+                    showDetails: false
+                })
+            }
+            
+            // 간단한 상태 메시지만 표시
+            if (isValid) {
+                setLocationStatus('위치 활성화')
+            } else {
+                setLocationStatus('위치 비활성화')
+            }
+        } catch (error) {
+            console.error('위치 정보 가져오기 오류:', error)
+            setLocationStatus('위치 정보 없음')
             setIsLocationValid(false)
+            setLocationDetails({
+                distance: null,
+                companyName: '',
+                showDetails: false
+            })
         }
     }
 
     // 출근 체크인 함수
     const handleCheckIn = async () => {
-        // 위치 검증 (회사 위치가 설정된 경우만)
-        if (companyLocation.hasLocation && !isLocationValid) {
-            setStatusMessage(`인증된 위치에서만 출근 체크가 가능합니다 (${companyLocation.name} 반경 ${companyLocation.radius}m 이내)`)
-            setMessageType('error')
-            return
-        }
-
         setLoading(true)
-        
+        setStatusMessage('회사 위치 정보 및 현재 위치 확인 중...')
+        setMessageType('')
+
         try {
+            // 1. 회사 위치 정보 먼저 로드
+            const currentCompanyLocation = await loadCompanyLocation()
+            
+            // 2. 체크인 시 실시간 위치 확인
+            const currentLocation = await getCurrentLocationAsync()
+            
+            // 3. 위치 검증 (회사 위치가 설정된 경우만)
+            if (currentCompanyLocation.hasLocation) {
+                const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude, currentCompanyLocation)
+                
+                if (!isValid) {
+                    const distance = calculateDistance(
+                        currentLocation.latitude, currentLocation.longitude,
+                        currentCompanyLocation.latitude, currentCompanyLocation.longitude
+                    )
+                    setStatusMessage(`인증된 위치에서만 출근 체크가 가능합니다 (${currentCompanyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
+                    setMessageType('error')
+                    return
+                }
+            }
+
+            // 4. 위치 인증 성공 시 체크인 진행
+            setStatusMessage('출근 처리 중...')
             const response = await api.post(`/attendance/check-in?userId=${userId}`, {
-                location: userLocation || { latitude: 0, longitude: 0 },
+                location: currentLocation,
                 method: 'manual'
             })
             
@@ -301,13 +365,20 @@ const Attendance = () => {
             setStatusMessage(`${data.message} (${data.status})`)
             setMessageType('success')
             
+            // 현재 위치 정보 업데이트
+            setUserLocation(currentLocation)
+            
             // 상태를 즉시 업데이트하기 위해 await 사용
             await loadTodayAttendance()
             await loadAttendanceHistory()
             
         } catch (error) {
             console.error('출근 처리 실패:', error)
-            setStatusMessage(error.response?.data?.message || '출근 처리 중 오류가 발생했습니다')
+            if (error.message === 'LOCATION_ERROR') {
+                setStatusMessage('위치 정보를 가져올 수 없습니다. GPS를 활성화하고 다시 시도해주세요.')
+            } else {
+                setStatusMessage(error.response?.data?.message || '출근 처리 중 오류가 발생했습니다')
+            }
             setMessageType('error')
         } finally {
             setLoading(false)
@@ -320,13 +391,6 @@ const Attendance = () => {
             return
         }
 
-        // 위치 검증 (회사 위치가 설정된 경우만)
-        if (companyLocation.hasLocation && !isLocationValid) {
-            setStatusMessage(`인증된 위치에서만 퇴근 체크가 가능합니다 (${companyLocation.name} 반경 ${companyLocation.radius}m 이내)`)
-            setMessageType('error')
-            return
-        }
-
         if (!canCheckOut) {
             setStatusMessage('출근 기록이 없거나 이미 퇴근 처리되었습니다')
             setMessageType('error')
@@ -334,10 +398,35 @@ const Attendance = () => {
         }
 
         setLoading(true)
+        setStatusMessage('회사 위치 정보 및 현재 위치 확인 중...')
+        setMessageType('')
         
         try {
+            // 1. 회사 위치 정보 먼저 로드
+            const currentCompanyLocation = await loadCompanyLocation()
+            
+            // 2. 체크아웃 시 실시간 위치 확인
+            const currentLocation = await getCurrentLocationAsync()
+            
+            // 3. 위치 검증 (회사 위치가 설정된 경우만)
+            if (currentCompanyLocation.hasLocation) {
+                const isValid = checkLocationValidity(currentLocation.latitude, currentLocation.longitude, currentCompanyLocation)
+                
+                if (!isValid) {
+                    const distance = calculateDistance(
+                        currentLocation.latitude, currentLocation.longitude,
+                        currentCompanyLocation.latitude, currentCompanyLocation.longitude
+                    )
+                    setStatusMessage(`인증된 위치에서만 퇴근 체크가 가능합니다 (${currentCompanyLocation.name}에서 ${Math.round(distance)}m 떨어져 있음)`)
+                    setMessageType('error')
+                    return
+                }
+            }
+
+            // 4. 위치 인증 성공 시 체크아웃 진행
+            setStatusMessage('퇴근 처리 중...')
             const response = await api.post(`/attendance/check-out?userId=${userId}`, {
-                location: userLocation || { latitude: 0, longitude: 0 },
+                location: currentLocation,
                 method: 'manual'
             })
             
@@ -345,13 +434,20 @@ const Attendance = () => {
             setStatusMessage(`${data.message} (근무시간: ${data.workHoursFormatted})`)
             setMessageType('success')
             
+            // 현재 위치 정보 업데이트
+            setUserLocation(currentLocation)
+            
             // 상태를 즉시 업데이트하기 위해 await 사용
             await loadTodayAttendance()
             await loadAttendanceHistory()
             
         } catch (error) {
             console.error('퇴근 처리 실패:', error)
-            setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
+            if (error.message === 'LOCATION_ERROR') {
+                setStatusMessage('위치 정보를 가져올 수 없습니다. GPS를 활성화하고 다시 시도해주세요.')
+            } else {
+                setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
+            }
             setMessageType('error')
         } finally {
             setLoading(false)
@@ -641,6 +737,18 @@ const Attendance = () => {
                              attendanceStatus === '출근' ? 'Checked In' : 'Checked Out'}
                         </div>
                     </div>
+                    
+                    {/* 위치 상세 정보 표시 */}
+                    {locationDetails.showDetails && (
+                        <div className={ss.location_info_content}>
+                            <span className={ss.location_info_text}>
+                                {locationDetails.companyName}에서 {locationDetails.distance}m
+                            </span>
+                            <span className={ss.location_info_note}>
+                                체크인/아웃 시 실시간 재확인
+                            </span>
+                        </div>
+                    )}
                     
                     {/* 위치 상태 표시 */}
                     <div className={ss.location_status}>

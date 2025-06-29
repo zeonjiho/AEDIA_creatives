@@ -8,6 +8,7 @@ const AdminAttendanceSummary = () => {
 
   const [summaryData, setSummaryData] = useState([]);
   const [userList, setUserList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -20,71 +21,52 @@ const AdminAttendanceSummary = () => {
   }, [filters])
 
   const fetchSummaryData = async () => {
+    setLoading(true);
     try {
+      // 실제 출석 통계 데이터 조회 API 호출
       const response = await api.get('/admin/attendance/summary', {
-        params: filters
+        params: {
+          year: filters.year,
+          month: filters.month,
+          userType: filters.userType !== 'all' ? filters.userType : undefined
+        }
       });
-      setSummaryData(response.data);
+      
+      // 응답 데이터 처리
+      const processedData = response.data.map(summary => ({
+        userId: summary.userId?._id || summary.userId,
+        userName: summary.userId?.name || summary.userName || '알 수 없음',
+        userType: summary.userId?.userType || summary.userType || 'internal',
+        workingDays: summary.workingDays,
+        checkedIn: summary.checkedIn || 0,
+        checkedOut: summary.checkedOut || 0,
+        notCheckedIn: summary.notCheckedIn || 0,
+        totalWorkHours: summary.totalWorkHours,
+        avgWorkHours: summary.avgWorkHours,
+        attendanceRate: summary.attendanceRate
+      }));
+      
+      setSummaryData(processedData);
     } catch (err) {
-      console.log(err);
-      // 임시 데이터로 대체
-      setSummaryData(generateMockSummaryData());
+      console.error('출석 통계 데이터 로드 실패:', err);
+      // 에러 발생 시 빈 배열로 설정
+      setSummaryData([]);
+    } finally {
+      setLoading(false);
     }
   }
 
   const fetchUserList = async () => {
     try {
-      const response = await api.get('/get-user-list?userType=all');
-      setUserList(response.data.filter(user => user.status === 'active'));
+      // 사용자 목록 조회
+      const response = await api.get('/admin/users/list');
+      const activeUsers = response.data.filter(user => user.status === 'active');
+      setUserList(activeUsers);
     } catch (err) {
-      console.log(err);
-      setUserList([
-        { _id: '1', name: '김직원', userType: 'internal' },
-        { _id: '2', name: '이직원', userType: 'internal' },
-        { _id: '3', name: '박스태프', userType: 'external' }
-      ]);
+      console.error('사용자 목록 로드 실패:', err);
+      setUserList([]);
     }
   }
-
-  // 임시 통계 데이터 생성
-  const generateMockSummaryData = () => {
-    const mockData = [];
-    
-    // userList가 비어있으면 임시 사용자 사용
-    const users = userList.length > 0 ? userList : [
-      { _id: '1', name: '김직원', userType: 'internal' },
-      { _id: '2', name: '이직원', userType: 'internal' },
-      { _id: '3', name: '박스태프', userType: 'external' }
-    ];
-    
-    users.forEach(user => {
-      const workingDays = 22; // 해당 월 근무일
-      const present = Math.floor(Math.random() * 3) + 19; // 19-21일
-      const late = Math.floor(Math.random() * 3); // 0-2일
-      const absent = Math.floor(Math.random() * 2); // 0-1일
-      const vacation = workingDays - present - late - absent;
-      
-      const totalWorkHours = present * 8 + late * 7.5; // 지각은 0.5시간 적게
-      const avgWorkHours = totalWorkHours / (present + late);
-      
-      mockData.push({
-        userId: user._id,
-        userName: user.name,
-        userType: user.userType,
-        workingDays,
-        present,
-        late,
-        absent,
-        vacation,
-        totalWorkHours: Math.round(totalWorkHours * 10) / 10,
-        avgWorkHours: Math.round(avgWorkHours * 10) / 10,
-        attendanceRate: Math.round(((present + late) / workingDays) * 100),
-        punctualityRate: Math.round((present / (present + late)) * 100)
-      });
-    });
-    
-    return mockData;
-  };
 
   // 필터 변경 처리
   const handleFilterChange = (key, value) => {
@@ -104,22 +86,31 @@ const AdminAttendanceSummary = () => {
     if (summaryData.length === 0) return {};
 
     const totalWorkingDays = summaryData.reduce((sum, data) => sum + data.workingDays, 0);
-    const totalPresent = summaryData.reduce((sum, data) => sum + data.present, 0);
-    const totalLate = summaryData.reduce((sum, data) => sum + data.late, 0);
-    const totalAbsent = summaryData.reduce((sum, data) => sum + data.absent, 0);
-    const totalVacation = summaryData.reduce((sum, data) => sum + data.vacation, 0);
+    const totalCheckedIn = summaryData.reduce((sum, data) => sum + (data.checkedIn || 0), 0);
+    const totalCheckedOut = summaryData.reduce((sum, data) => sum + (data.checkedOut || 0), 0);
+    const totalNotCheckedIn = summaryData.reduce((sum, data) => sum + (data.notCheckedIn || 0), 0);
     const totalWorkHours = summaryData.reduce((sum, data) => sum + data.totalWorkHours, 0);
 
     return {
-      avgAttendanceRate: Math.round((totalPresent + totalLate) / totalWorkingDays * 100),
-      avgPunctualityRate: Math.round(totalPresent / (totalPresent + totalLate) * 100),
+      avgAttendanceRate: totalWorkingDays > 0 ? Math.round((totalCheckedIn + totalCheckedOut) / totalWorkingDays * 100) : 0,
       totalWorkHours: Math.round(totalWorkHours * 10) / 10,
-      avgWorkHours: Math.round((totalWorkHours / summaryData.length) * 10) / 10,
-      totalPresent,
-      totalLate,
-      totalAbsent,
-      totalVacation
+      avgWorkHours: summaryData.length > 0 ? Math.round((totalWorkHours / summaryData.length) * 10) / 10 : 0,
+      totalCheckedOut,
+      totalCheckedIn,
+      totalNotCheckedIn
     };
+  };
+
+  // 필터링된 요약 데이터
+  const getFilteredSummaryData = () => {
+    let filtered = [...summaryData];
+
+    // 사용자 타입 필터링
+    if (filters.userType !== 'all') {
+      filtered = filtered.filter(data => data.userType === filters.userType);
+    }
+
+    return filtered.sort((a, b) => a.userName.localeCompare(b.userName));
   };
 
   // 년도 옵션 생성
@@ -137,7 +128,22 @@ const AdminAttendanceSummary = () => {
     return Array.from({ length: 12 }, (_, i) => i + 1);
   };
 
+  // CSV 내보내기용 리포트 정보 생성
+  const getReportInfo = () => {
+    const activeFilters = {};
+    
+    activeFilters['년도'] = filters.year;
+    activeFilters['월'] = filters.month;
+    if (filters.userType !== 'all') activeFilters['구분'] = getUserTypeText(filters.userType);
+
+    return {
+      title: '출석 통계 리포트',
+      filters: activeFilters
+    };
+  };
+
   const totalStats = getTotalStatistics();
+  const filteredData = getFilteredSummaryData();
   
   return (
     <div className={ss.admin_chart_container}>
@@ -145,7 +151,7 @@ const AdminAttendanceSummary = () => {
         <h1>출석 통계</h1>
         <div className={ss.summary_stats}>
           <div className={`${ss.stat_item} ${ss.stat_user}`}>
-            <span className={ss.stat_number}>{summaryData.length}</span>
+            <span className={ss.stat_number}>{filteredData.length}</span>
             <div className={ss.stat_label}>대상 인원</div>
           </div>
           <div className={ss.stat_item}>
@@ -153,8 +159,8 @@ const AdminAttendanceSummary = () => {
             <div className={ss.stat_label}>평균 출석률</div>
           </div>
           <div className={ss.stat_item}>
-            <span className={ss.stat_number} style={{color: 'var(--accent-color)'}}>{totalStats.avgPunctualityRate}%</span>
-            <div className={ss.stat_label}>평균 정시출근률</div>
+            <span className={ss.stat_number} style={{color: 'var(--info-color)'}}>{totalStats.avgWorkHours}h</span>
+            <div className={ss.stat_label}>평균 근무시간</div>
           </div>
         </div>
       </div>
@@ -199,7 +205,7 @@ const AdminAttendanceSummary = () => {
               border: '1px solid var(--border-color)',
               borderRadius: '6px',
               fontSize: '14px',
-              minWidth: '100px'
+              minWidth: '80px'
             }}
           >
             {generateMonthOptions().map(month => (
@@ -230,31 +236,31 @@ const AdminAttendanceSummary = () => {
       {/* 메트릭 카드 */}
       <div className={ss.metrics_row}>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{totalStats.totalPresent}</div>
-          <div className={ss.metric_label}>총 정상 출석</div>
+          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{totalStats.totalCheckedOut}</div>
+          <div className={ss.metric_label}>정상 완료</div>
           <div className={`${ss.metric_change} ${ss.positive}`}>
-            {Math.round((totalStats.totalPresent / (totalStats.totalPresent + totalStats.totalLate + totalStats.totalAbsent)) * 100)}%
+            {totalStats.avgAttendanceRate >= 90 ? '우수' : totalStats.avgAttendanceRate >= 80 ? '양호' : '개선 필요'}
           </div>
         </div>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{totalStats.totalLate}</div>
-          <div className={ss.metric_label}>총 지각</div>
+          <div className={ss.metric_value} style={{color: 'var(--info-color)'}}>{totalStats.totalCheckedIn}</div>
+          <div className={ss.metric_label}>출근 중</div>
           <div className={`${ss.metric_change} ${ss.neutral}`}>
-            {Math.round((totalStats.totalLate / (totalStats.totalPresent + totalStats.totalLate + totalStats.totalAbsent)) * 100)}%
+            현재 근무 중인 인원
           </div>
         </div>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>{totalStats.avgWorkHours}h</div>
-          <div className={ss.metric_label}>평균 근무시간</div>
-          <div className={`${ss.metric_change} ${totalStats.avgWorkHours >= 8 ? ss.positive : ss.negative}`}>
-            {totalStats.avgWorkHours >= 8 ? '목표 달성' : '목표 미달'}
+          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{totalStats.totalNotCheckedIn}</div>
+          <div className={ss.metric_label}>미출근</div>
+          <div className={`${ss.metric_change} ${totalStats.totalNotCheckedIn <= 2 ? ss.positive : ss.negative}`}>
+            {totalStats.totalNotCheckedIn <= 2 ? '양호' : '주의 필요'}
           </div>
         </div>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--info-color)'}}>{totalStats.totalVacation}</div>
-          <div className={ss.metric_label}>총 휴가</div>
-          <div className={`${ss.metric_change} ${ss.neutral}`}>
-            연차/휴가
+          <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>{totalStats.totalWorkHours}h</div>
+          <div className={ss.metric_label}>총 근무시간</div>
+          <div className={`${ss.metric_change} ${totalStats.avgWorkHours >= 8 ? ss.positive : ss.neutral}`}>
+            평균 {totalStats.avgWorkHours}h/일
           </div>
         </div>
       </div>
@@ -268,17 +274,13 @@ const AdminAttendanceSummary = () => {
           </div>
           <div className={ss.chart_content}>
             <div className={ss.chart_placeholder}>
-              월별 출석률, 정시출근률, 평균근무시간 트렌드를 시각화할 수 있습니다
+              월별 출석률, 평균근무시간 트렌드를 시각화할 수 있습니다
             </div>
           </div>
           <div className={ss.chart_legend}>
             <div className={ss.legend_item}>
               <div className={ss.legend_color} style={{backgroundColor: 'var(--success-color)'}}></div>
               출석률 ({totalStats.avgAttendanceRate}%)
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
-              정시출근률 ({totalStats.avgPunctualityRate}%)
             </div>
             <div className={ss.legend_item}>
               <div className={ss.legend_color} style={{backgroundColor: 'var(--info-color)'}}></div>
@@ -297,8 +299,9 @@ const AdminAttendanceSummary = () => {
           </div>
           <ExportButton 
             chartRef={{ current: null }}
-            chartTitle={`출석통계_${filters.year}년${filters.month}월`}
-            csvData={generateTableCSV(summaryData, ['이름', '구분', '근무일', '출석', '지각', '결석', '휴가', '총근무시간', '평균근무시간', '출석률', '정시출근률'])}
+            chartTitle={getReportInfo().title}
+            csvData={generateTableCSV(filteredData, ['이름', '구분', '근무일', '출근완료', '출근중', '미출근', '총근무시간', '평균근무시간', '출석률'], getReportInfo())}
+            reportInfo={getReportInfo()}
           />
         </div>
         <table className={ss.data_table}>
@@ -307,18 +310,16 @@ const AdminAttendanceSummary = () => {
               <th>이름</th>
               <th>구분</th>
               <th>근무일</th>
-              <th>출석</th>
-              <th>지각</th>
-              <th>결석</th>
-              <th>휴가</th>
+              <th>출근완료</th>
+              <th>출근중</th>
+              <th>미출근</th>
               <th>총근무시간</th>
               <th>평균근무시간</th>
               <th>출석률</th>
-              <th>정시출근률</th>
             </tr>
           </thead>
           <tbody>
-            {summaryData && summaryData.length > 0 ? summaryData.map((data, idx) => (
+            {filteredData && filteredData.length > 0 ? filteredData.map((data, idx) => (
               <tr key={data.userId || idx}>
                 <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>
                   {data.userName}
@@ -326,16 +327,13 @@ const AdminAttendanceSummary = () => {
                 <td>{getUserTypeText(data.userType)}</td>
                 <td style={{textAlign: 'center'}}>{data.workingDays}일</td>
                 <td style={{textAlign: 'center', color: 'var(--success-color)', fontWeight: '600'}}>
-                  {data.present}일
-                </td>
-                <td style={{textAlign: 'center', color: 'var(--warning-color)', fontWeight: '600'}}>
-                  {data.late}일
-                </td>
-                <td style={{textAlign: 'center', color: 'var(--danger-color)', fontWeight: '600'}}>
-                  {data.absent}일
+                  {data.checkedOut || 0}일
                 </td>
                 <td style={{textAlign: 'center', color: 'var(--info-color)', fontWeight: '600'}}>
-                  {data.vacation}일
+                  {data.checkedIn || 0}일
+                </td>
+                <td style={{textAlign: 'center', color: 'var(--warning-color)', fontWeight: '600'}}>
+                  {data.notCheckedIn || 0}일
                 </td>
                 <td style={{textAlign: 'center'}}>{data.totalWorkHours}시간</td>
                 <td style={{textAlign: 'center'}}>{data.avgWorkHours}시간</td>
@@ -344,15 +342,10 @@ const AdminAttendanceSummary = () => {
                     {data.attendanceRate}%
                   </span>
                 </td>
-                <td style={{textAlign: 'center'}}>
-                  <span className={`${ss.status_badge} ${data.punctualityRate >= 95 ? ss.status_active : data.punctualityRate >= 90 ? ss.status_warning : ss.status_danger}`}>
-                    {data.punctualityRate}%
-                  </span>
-                </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan="11" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   통계 데이터가 없습니다.
                 </td>
               </tr>
@@ -375,7 +368,6 @@ const AdminAttendanceSummary = () => {
               <th>구분</th>
               <th>인원수</th>
               <th>평균 출석률</th>
-              <th>평균 정시출근률</th>
               <th>평균 근무시간</th>
             </tr>
           </thead>
@@ -385,7 +377,6 @@ const AdminAttendanceSummary = () => {
               if (filteredData.length === 0) return null;
 
               const avgAttendanceRate = Math.round(filteredData.reduce((sum, data) => sum + data.attendanceRate, 0) / filteredData.length);
-              const avgPunctualityRate = Math.round(filteredData.reduce((sum, data) => sum + data.punctualityRate, 0) / filteredData.length);
               const avgWorkHours = Math.round((filteredData.reduce((sum, data) => sum + data.avgWorkHours, 0) / filteredData.length) * 10) / 10;
 
               return (
@@ -395,11 +386,6 @@ const AdminAttendanceSummary = () => {
                   <td style={{textAlign: 'center'}}>
                     <span className={`${ss.status_badge} ${avgAttendanceRate >= 95 ? ss.status_active : avgAttendanceRate >= 90 ? ss.status_warning : ss.status_danger}`}>
                       {avgAttendanceRate}%
-                    </span>
-                  </td>
-                  <td style={{textAlign: 'center'}}>
-                    <span className={`${ss.status_badge} ${avgPunctualityRate >= 95 ? ss.status_active : avgPunctualityRate >= 90 ? ss.status_warning : ss.status_danger}`}>
-                      {avgPunctualityRate}%
                     </span>
                   </td>
                   <td style={{textAlign: 'center'}}>{avgWorkHours}시간</td>

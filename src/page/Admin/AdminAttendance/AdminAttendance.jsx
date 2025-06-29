@@ -4,7 +4,6 @@ import api from '../../../utils/api'
 import ExportButton from '../../../components/ExportButton/ExportButton'
 import AttendanceModal from './AttendanceModal'
 import { generateTableCSV } from '../../../utils/exportUtils'
-import { generateMockAttendanceData, getMockUserList } from './mockData.js'
 
 const AdminAttendance = () => {
 
@@ -12,6 +11,7 @@ const AdminAttendance = () => {
   const [userList, setUserList] = useState([]);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     startDate: (() => {
       const date = new Date();
@@ -19,7 +19,6 @@ const AdminAttendance = () => {
       return date.toISOString().split('T')[0];
     })(),
     endDate: new Date().toISOString().split('T')[0],
-    status: 'all',
     userType: 'all',
     searchName: '',
     selectedUser: 'all'
@@ -31,13 +30,36 @@ const AdminAttendance = () => {
   }, [filters])
 
   const fetchAttendanceList = async () => {
+    setLoading(true);
     try {
-      const response = await api.get('/admin/attendance', {
-        params: filters
+      // 실제 출석 데이터 조회 API 호출
+      const response = await api.get('/admin/attendance/list', {
+        params: {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          userId: filters.selectedUser !== 'all' ? filters.selectedUser : undefined,
+          userType: filters.userType !== 'all' ? filters.userType : undefined,
+          searchName: filters.searchName.trim() || undefined
+        }
       });
       
+      // 응답 데이터 처리 및 정렬
+      const processedData = response.data.map(record => ({
+        _id: record._id,
+        userId: record.userId?._id || record.userId,
+        userName: record.userId?.name || record.userName || '알 수 없음',
+        userType: record.userId?.userType || record.userType || 'internal',
+        date: record.date,
+        checkInTime: record.checkInTime,
+        checkOutTime: record.checkOutTime,
+        workHours: record.workHours,
+        status: record.status,
+        note: record.note || '',
+        records: record.records || []
+      }));
+      
       // 최신순으로 정렬
-      const sortedAttendance = response.data.sort((a, b) => {
+      const sortedAttendance = processedData.sort((a, b) => {
         if (a.date === b.date) {
           return new Date(`${a.date}T${a.checkInTime || '00:00'}`) - new Date(`${b.date}T${b.checkInTime || '00:00'}`);
         }
@@ -46,20 +68,23 @@ const AdminAttendance = () => {
       
       setAttendanceList(sortedAttendance);
     } catch (err) {
-      console.log(err);
-      // 목업 데이터 사용
-      setAttendanceList(generateMockAttendanceData());
+      console.error('출석 데이터 로드 실패:', err);
+      // 에러 발생 시 빈 배열로 설정
+      setAttendanceList([]);
+    } finally {
+      setLoading(false);
     }
   }
 
   const fetchUserList = async () => {
     try {
-      const response = await api.get('/get-user-list?userType=all');
-      setUserList(response.data.filter(user => user.status === 'active'));
+      // 사용자 목록 조회
+      const response = await api.get('/admin/users/list');
+      const activeUsers = response.data.filter(user => user.status === 'active');
+      setUserList(activeUsers);
     } catch (err) {
-      console.log(err);
-      // 목업 사용자 데이터 사용
-      setUserList(getMockUserList());
+      console.error('사용자 목록 로드 실패:', err);
+      setUserList([]);
     }
   }
 
@@ -69,7 +94,12 @@ const AdminAttendance = () => {
     
     const start = new Date(`2000-01-01T${checkIn}`);
     const end = new Date(`2000-01-01T${checkOut}`);
-    const diff = (end - start) / (1000 * 60 * 60); // 시간 단위
+    let diff = (end - start) / (1000 * 60 * 60); // 시간 단위
+    
+    // 다음날로 넘어간 경우 처리
+    if (diff < 0) {
+        diff += 24;
+    }
     
     return Math.max(0, diff - 1); // 점심시간 1시간 제외
   };
@@ -77,7 +107,7 @@ const AdminAttendance = () => {
   // 출석 상태 업데이트
   const handleUpdateAttendance = async (attendanceId, newStatus, note = '') => {
     try {
-      const response = await api.patch(`/admin/attendance/${attendanceId}`, {
+      const response = await api.patch(`/admin/attendance/update/${attendanceId}`, {
         status: newStatus,
         note
       });
@@ -87,8 +117,24 @@ const AdminAttendance = () => {
         fetchAttendanceList();
       }
     } catch (err) {
-      console.log(err);
+      console.error('출석 상태 업데이트 실패:', err);
       alert('업데이트 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 출석 기록 삭제
+  const handleDeleteAttendance = async (attendanceId) => {
+    if (!window.confirm('이 출석 기록을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/attendance/delete/${attendanceId}`);
+      alert('출석 기록이 삭제되었습니다.');
+      fetchAttendanceList();
+    } catch (err) {
+      console.error('출석 기록 삭제 실패:', err);
+      alert('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -117,11 +163,9 @@ const AdminAttendance = () => {
   // 상태에 따른 스타일 클래스 반환
   const getStatusClass = (status) => {
     switch (status) {
-      case 'present': return ss.status_active;
-      case 'late': return ss.status_warning;
-      case 'absent': return ss.status_danger;
-      case 'vacation': return ss.status_info;
-      case 'remote': return ss.status_info;
+      case '출근': return ss.status_active;
+      case '퇴근': return ss.status_active;
+      case '미출근': return ss.status_danger;
       default: return '';
     }
   }
@@ -129,11 +173,9 @@ const AdminAttendance = () => {
   // 상태 텍스트 변환
   const getStatusText = (status) => {
     switch (status) {
-      case 'present': return '출석';
-      case 'late': return '지각';
-      case 'absent': return '결석';
-      case 'vacation': return '휴가';
-      case 'remote': return '재택근무';
+      case '출근': return '출근';
+      case '퇴근': return '퇴근';
+      case '미출근': return '미출근';
       default: return status;
     }
   }
@@ -141,18 +183,6 @@ const AdminAttendance = () => {
   // 유저타입 텍스트 변환
   const getUserTypeText = (userType) => {
     return userType === 'internal' ? '직원' : '외부 스태프';
-  }
-
-  // 상태 텍스트 변환 (한국어)
-  const getFilterStatusText = (status) => {
-    switch (status) {
-      case 'present': return '출석';
-      case 'late': return '지각';
-      case 'absent': return '결석';
-      case 'vacation': return '휴가';
-      case 'remote': return '재택근무';
-      default: return '전체';
-    }
   }
 
   // 날짜 포맷팅
@@ -169,12 +199,17 @@ const AdminAttendance = () => {
   // 시간 포맷팅
   const formatTime = (timeString) => {
     if (!timeString) return '-';
-    return timeString.substring(0, 5); // HH:MM 형태로 변환
+    const time = new Date(timeString);
+    return time.toLocaleTimeString('ko-KR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false
+    });
   }
 
   // 근무시간 포맷팅
   const formatWorkHours = (hours) => {
-    if (!hours) return '-';
+    if (!hours && hours !== 0) return '-';
     return `${hours.toFixed(1)}시간`;
   }
 
@@ -202,11 +237,6 @@ const AdminAttendance = () => {
       filtered = filtered.filter(attendance => attendance.userId === filters.selectedUser);
     }
 
-    // 상태 필터링
-    if (filters.status !== 'all') {
-      filtered = filtered.filter(attendance => attendance.status === filters.status);
-    }
-
     // 사용자 타입 필터링
     if (filters.userType !== 'all') {
       filtered = filtered.filter(attendance => attendance.userType === filters.userType);
@@ -220,11 +250,6 @@ const AdminAttendance = () => {
     const filteredList = getFilteredAttendanceList();
     const stats = {
       total: filteredList.length,
-      present: filteredList.filter(a => a.status === 'present').length,
-      late: filteredList.filter(a => a.status === 'late').length,
-      absent: filteredList.filter(a => a.status === 'absent').length,
-      vacation: filteredList.filter(a => a.status === 'vacation').length,
-      remote: filteredList.filter(a => a.status === 'remote').length,
       avgWorkHours: 0
     };
 
@@ -261,7 +286,6 @@ const AdminAttendance = () => {
       ...prev,
       searchName: '',
       selectedUser: 'all',
-      status: 'all',
       userType: 'all'
     }));
   };
@@ -272,7 +296,6 @@ const AdminAttendance = () => {
     
     if (filters.startDate) activeFilters['시작일'] = filters.startDate;
     if (filters.endDate) activeFilters['종료일'] = filters.endDate;
-    if (filters.status !== 'all') activeFilters['상태'] = getFilterStatusText(filters.status);
     if (filters.userType !== 'all') activeFilters['구분'] = getUserTypeText(filters.userType);
     if (filters.searchName.trim()) activeFilters['이름 검색'] = filters.searchName;
     if (filters.selectedUser !== 'all') {
@@ -300,18 +323,14 @@ const AdminAttendance = () => {
             <div className={ss.stat_label}>총 출석 기록</div>
           </div>
           <div className={ss.stat_item}>
-            <span className={ss.stat_number} style={{color: 'var(--success-color)'}}>{statistics.present}</span>
-            <div className={ss.stat_label}>정상 출석</div>
-          </div>
-          <div className={ss.stat_item}>
-            <span className={ss.stat_number} style={{color: 'var(--info-color)'}}>{statistics.remote}</span>
-            <div className={ss.stat_label}>재택근무</div>
+            <span className={ss.stat_number} style={{color: 'var(--accent-color)'}}>{statistics.avgWorkHours.toFixed(1)}h</span>
+            <div className={ss.stat_label}>평균 근무시간</div>
           </div>
         </div>
       </div>
 
       {/* 현재 필터 정보 표시 */}
-      {(filters.searchName || filters.selectedUser !== 'all' || filters.status !== 'all' || filters.userType !== 'all') && (
+      {(filters.searchName || filters.selectedUser !== 'all' || filters.userType !== 'all') && (
         <div style={{
           backgroundColor: '#e7f3ff',
           padding: '12px 20px',
@@ -352,16 +371,6 @@ const AdminAttendance = () => {
                 border: '1px solid #b3d7ff'
               }}>
                 직원: {activeUsers.find(u => u.userId === filters.selectedUser)?.userName || '선택된 직원'}
-              </span>
-            )}
-            {filters.status !== 'all' && (
-              <span style={{
-                backgroundColor: 'white',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                border: '1px solid #b3d7ff'
-              }}>
-                상태: {getStatusText(filters.status)}
               </span>
             )}
             {filters.userType !== 'all' && (
@@ -468,27 +477,6 @@ const AdminAttendance = () => {
           />
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-          <label style={{fontWeight: '600', color: 'var(--text-primary)'}}>상태:</label>
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid var(--border-color)',
-              borderRadius: '6px',
-              fontSize: '14px',
-              minWidth: '120px'
-            }}
-          >
-            <option value="all">전체</option>
-            <option value="present">출석</option>
-            <option value="late">지각</option>
-            <option value="absent">결석</option>
-            <option value="vacation">휴가</option>
-            <option value="remote">재택근무</option>
-          </select>
-        </div>
-        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
           <label style={{fontWeight: '600', color: 'var(--text-primary)'}}>구분:</label>
           <select
             value={filters.userType}
@@ -536,24 +524,10 @@ const AdminAttendance = () => {
       {/* 메트릭 카드 */}
       <div className={ss.metrics_row}>
         <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{statistics.present}</div>
-          <div className={ss.metric_label}>정상 출석</div>
+          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{statistics.total}</div>
+          <div className={ss.metric_label}>총 기록</div>
           <div className={`${ss.metric_change} ${ss.positive}`}>
-            {statistics.total > 0 ? Math.round((statistics.present / statistics.total) * 100) : 0}%
-          </div>
-        </div>
-        <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--info-color)'}}>{statistics.remote}</div>
-          <div className={ss.metric_label}>재택근무</div>
-          <div className={`${ss.metric_change} ${ss.neutral}`}>
-            {statistics.total > 0 ? Math.round((statistics.remote / statistics.total) * 100) : 0}%
-          </div>
-        </div>
-        <div className={ss.metric_card}>
-          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{statistics.late}</div>
-          <div className={ss.metric_label}>지각</div>
-          <div className={`${ss.metric_change} ${ss.neutral}`}>
-            {statistics.total > 0 ? Math.round((statistics.late / statistics.total) * 100) : 0}%
+            전체 출석 기록
           </div>
         </div>
         <div className={ss.metric_card}>
@@ -580,23 +554,11 @@ const AdminAttendance = () => {
           <div className={ss.chart_legend}>
             <div className={ss.legend_item}>
               <div className={ss.legend_color} style={{backgroundColor: 'var(--success-color)'}}></div>
-              정상 출석 ({statistics.present})
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--info-color)'}}></div>
-              재택근무 ({statistics.remote})
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--warning-color)'}}></div>
-              지각 ({statistics.late})
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--danger-color)'}}></div>
-              결석 ({statistics.absent})
+              총 기록 ({statistics.total})
             </div>
             <div className={ss.legend_item}>
               <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
-              휴가 ({statistics.vacation})
+              평균 근무시간 ({statistics.avgWorkHours.toFixed(1)}h)
             </div>
           </div>
         </div>
@@ -633,7 +595,6 @@ const AdminAttendance = () => {
             {filteredAttendanceList && filteredAttendanceList.length > 0 ? filteredAttendanceList.map((attendance, idx) => (
               <tr 
                 key={attendance._id || idx} 
-                className={attendance.status === 'late' ? ss.warning_row : attendance.status === 'absent' ? ss.danger_row : ''}
                 onClick={() => handleRowClick(attendance)}
                 style={{ cursor: 'pointer' }}
               >
@@ -642,8 +603,6 @@ const AdminAttendance = () => {
                 </td>
                 <td style={{fontWeight: '600'}}>
                   {attendance.userName}
-                  {attendance.status === 'late' && <span style={{backgroundColor: 'var(--warning-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', marginLeft: '8px'}}>지각</span>}
-                  {attendance.status === 'absent' && <span style={{backgroundColor: 'var(--danger-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', marginLeft: '8px'}}>결석</span>}
                 </td>
                 <td>{getUserTypeText(attendance.userType)}</td>
                 <td>
@@ -663,7 +622,7 @@ const AdminAttendance = () => {
                 <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   {attendanceList.length === 0 
                     ? '등록된 출석 기록이 없습니다.' 
-                    : (filters.searchName || filters.selectedUser !== 'all' || filters.status !== 'all' || filters.userType !== 'all')
+                    : (filters.searchName || filters.selectedUser !== 'all' || filters.userType !== 'all')
                     ? '검색 조건에 맞는 출석 기록이 없습니다.'
                     : '출석 기록이 없습니다.'}
                 </td>

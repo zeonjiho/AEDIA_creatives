@@ -107,6 +107,36 @@
 }
 
 
+/* 위치 정보 콘텐츠 스타일 */
+
+.location_info_content {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.location_info_text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.location_info_note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.8;
+    font-style: italic;
+}
+
+
 /* 중앙 상태 카드 스타일 */
 
 .attendance_center {
@@ -337,13 +367,13 @@
     transition: all 0.3s ease;
 }
 
-.day_present {
+.day_completed {
     background-color: var(--success-color);
     color: white;
 }
 
-.day_late {
-    background-color: var(--warning-color);
+.day_working {
+    background-color: var(--info-color);
     color: white;
 }
 
@@ -355,6 +385,11 @@
 .day_future {
     background-color: var(--bg-tertiary);
     color: var(--text-secondary);
+}
+
+.day_absent {
+    background-color: #9ca3af;
+    color: white;
 }
 
 .day_status {
@@ -425,13 +460,18 @@
     font-weight: 600;
 }
 
-.status_normal {
+.status_completed {
     background-color: var(--success-color);
     color: white;
 }
 
-.status_late {
-    background-color: var(--warning-color);
+.status_working {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.status_absent {
+    background-color: var(--error-color);
     color: white;
 }
 
@@ -604,7 +644,9 @@
     transform: translateY(-1px);
 }
 
+
 /* 새로운 기능 스타일 */
+
 .attendance_buttons {
     display: flex;
     flex-direction: column;
@@ -641,7 +683,9 @@
     cursor: not-allowed;
 }
 
+
 /* 수정 모드 스타일 */
+
 .edit_mode {
     display: flex;
     flex-direction: column;
@@ -709,7 +753,9 @@
     background-color: var(--bg-secondary);
 }
 
+
 /* 오늘의 기록 섹션 */
+
 .today_record {
     margin-top: 20px;
     padding: 20px;
@@ -801,28 +847,39 @@
     transform: translateY(-1px);
 }
 
+
 /* 반응형 디자인 */
+
 @media (max-width: 768px) {
+    .location_info_content {
+        padding: 8px 12px;
+        gap: 10px;
+        flex-direction: column;
+        text-align: center;
+        margin-bottom: 12px;
+    }
+    .location_info_text {
+        font-size: 12px;
+    }
+    .location_info_note {
+        font-size: 10px;
+    }
     .today_record {
         margin-top: 15px;
         padding: 15px;
         max-width: 100%;
     }
-    
     .record_item {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
-    
     .record_actions {
         align-self: flex-end;
     }
-    
     .attendance_buttons {
         max-width: 100%;
     }
-    
     .edit_mode {
         max-width: 100%;
         padding: 15px;

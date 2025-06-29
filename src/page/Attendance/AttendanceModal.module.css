@@ -110,7 +110,9 @@
     flex: 1;
 }
 
+
 /* 주간 요약 탭 스타일 */
+
 .weekly_tab {
     display: flex;
     flex-direction: column;
@@ -142,13 +144,13 @@
     transition: all 0.3s ease;
 }
 
-.day_present {
+.day_completed {
     background-color: var(--success-color);
     color: white;
 }
 
-.day_late {
-    background-color: var(--warning-color);
+.day_working {
+    background-color: var(--info-color);
     color: white;
 }
 
@@ -162,11 +164,6 @@
     background-color: #e5e7eb;
     color: #6b7280;
     border: 2px dashed #d1d5db;
-}
-
-.day_incomplete {
-    background-color: var(--error-color);
-    color: white;
 }
 
 .day_absent {
@@ -212,32 +209,34 @@
 }
 
 .stat_value {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
 }
 
 .stat_success {
     color: var(--success-color);
 }
 
-.stat_warning {
-    color: var(--warning-color);
+.stat_info {
+    color: var(--info-color);
 }
 
 .stat_danger {
     color: var(--error-color);
 }
 
-/* 출근 기록 탭 스타일 */
+
+/* 기록 히스토리 탭 스타일 */
+
 .history_tab {
-    overflow-x: auto;
+    min-height: 300px;
 }
 
 .no_data {
     text-align: center;
-    padding: 40px;
     color: var(--text-secondary);
-    font-size: 16px;
+    padding: 40px;
+    font-style: italic;
 }
 
 .attendance_table {
@@ -246,16 +245,17 @@
     margin-top: 10px;
 }
 
-.attendance_table th, .attendance_table td {
-    padding: 15px;
+.attendance_table th,
+.attendance_table td {
+    padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
 
 .attendance_table th {
+    background-color: var(--bg-secondary);
     font-weight: 600;
     color: var(--text-primary);
-    background-color: var(--bg-secondary);
 }
 
 .attendance_table td {
@@ -263,68 +263,56 @@
 }
 
 .status_tag {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 20px;
+    padding: 4px 12px;
+    border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    display: inline-block;
 }
 
-.status_normal {
+.status_completed {
     background-color: var(--success-color);
     color: white;
 }
 
-.status_late {
-    background-color: var(--warning-color);
-    color: white;
-}
-
-.status_incomplete {
-    background-color: var(--error-color);
+.status_working {
+    background-color: var(--info-color);
     color: white;
 }
 
 .status_absent {
-    background-color: var(--text-muted);
+    background-color: var(--error-color);
     color: white;
 }
 
-.status_early {
-    background-color: var(--info-color);
-    color: white;
-}
+
+/* 반응형 스타일 */
 
 @media (max-width: 768px) {
     .modal_container {
         width: 95%;
         max-height: 95vh;
     }
-    
     .modal_header h2 {
         font-size: 20px;
     }
-    
     .tab_btn {
-        padding: 12px;
         font-size: 14px;
+        padding: 12px;
     }
-    
     .day_circle {
         width: 40px;
         height: 40px;
         font-size: 12px;
     }
-    
     .stat_value {
-        font-size: 20px;
+        font-size: 16px;
     }
-    
-    .attendance_table th, .attendance_table td {
-        padding: 10px;
+    .attendance_table th,
+    .attendance_table td {
+        padding: 8px;
         font-size: 14px;
     }
-    
     .day_time {
         font-size: 10px;
     }
@@ -333,33 +321,27 @@
 @media (max-width: 480px) {
     .week_summary {
         flex-wrap: wrap;
+        gap: 10px;
         justify-content: center;
-        gap: 15px;
     }
-    
     .week_stats {
         flex-direction: column;
         gap: 15px;
     }
-    
     .stat_item {
         flex-direction: row;
         justify-content: space-between;
-        width: 100%;
     }
-    
     .tab_btn {
-        font-size: 12px;
-        padding: 10px 5px;
+        flex-direction: column;
+        gap: 4px;
     }
-    
     .day_circle {
         width: 35px;
         height: 35px;
         font-size: 11px;
     }
-    
     .day_time {
         font-size: 9px;
     }
-} 
+}

@@ -424,72 +424,8 @@ const LocationPicker = ({ isOpen, onClose, onLocationSelect, initialLocation }) 
   return (
     <div className="location-picker-overlay">
       <div className="location-picker-modal">
-        <div className="location-picker-header">
-          <h3>위치 선택</h3>
-          <button className="close-btn" onClick={onClose}>×</button>
-        </div>
-        
-        <div className="location-picker-search">
-          <div className="map-type-selector">
-            <label>지도 타입:</label>
-            <div className="map-type-buttons">
-              <button 
-                className={`map-type-btn ${mapType === 'kakao' ? 'active' : ''}`}
-                onClick={() => {
-                  setMapType('kakao');
-                  setSearchResults([]);
-                  setMapKey(prev => prev + 1);
-                }}
-              >
-                카카오맵
-              </button>
-              <button 
-                className={`map-type-btn ${mapType === 'osm' ? 'active' : ''}`}
-                onClick={() => {
-                  setMapType('osm');
-                  setSearchResults([]);
-                  setMapKey(prev => prev + 1);
-                }}
-              >
-                OpenStreetMap
-              </button>
-            </div>
-          </div>
-          
-          <div className="search-input-container">
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={mapType === 'kakao' ? 
-                "장소명을 입력하세요 (예: 서울역, 스타벅스)" : 
-                "장소명이나 주소를 입력하세요 (예: 서울역, 강남구)"
-              }
-              className="search-input"
-            />
-            <button onClick={searchPlaces} className="search-btn">검색</button>
-          </div>
-          
-          {searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((place, index) => (
-                <div 
-                  key={index}
-                  className="search-result-item"
-                  onClick={() => selectSearchResult(place)}
-                >
-                  <div className="place-name">{place.place_name}</div>
-                  {place.category && <div className="place-category">{place.category}</div>}
-                  <div className="place-address korean">{place.korean_address}</div>
-                  <div className="place-address english">{place.english_address}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="location-picker-map">
+        {/* 풀스크린 지도 배경 */}
+        <div className="location-picker-map-background">
           {mapType === 'kakao' ? (
             <KakaoMap 
               selectedLocation={selectedLocation} 
@@ -522,28 +458,100 @@ const LocationPicker = ({ isOpen, onClose, onLocationSelect, initialLocation }) 
           )}
         </div>
 
-        <div className="location-picker-info">
-          <div className="selected-location">
-            <h4>선택된 위치</h4>
-            {selectedLocation.koreanAddress ? (
-              <div className="location-info">
-                <div className="location-name">{selectedLocation.name}</div>
-                <div className="address-group">
-                  <div className="location-address korean">{selectedLocation.koreanAddress}</div>
-                  <div className="location-address english">{selectedLocation.englishAddress}</div>
-                </div>
+        {/* 반투명 헤더 오버레이 */}
+        <div className="location-picker-header-overlay">
+          <div className="location-picker-header">
+            <h3>위치 선택</h3>
+            <button className="close-btn" onClick={onClose}>×</button>
+          </div>
+        </div>
+        
+        {/* 반투명 검색 오버레이 */}
+        <div className="location-picker-search-overlay">
+          <div className="location-picker-search">
+            <div className="map-type-selector">
+              <div className="map-type-buttons">
+                <button 
+                  className={`map-type-btn ${mapType === 'kakao' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMapType('kakao');
+                    setSearchResults([]);
+                    setMapKey(prev => prev + 1);
+                  }}
+                >
+                  카카오맵
+                </button>
+                <button 
+                  className={`map-type-btn ${mapType === 'osm' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMapType('osm');
+                    setSearchResults([]);
+                    setMapKey(prev => prev + 1);
+                  }}
+                >
+                  OpenStreetMap
+                </button>
               </div>
-            ) : (
-              <div className="no-location">지도를 클릭하거나 검색으로 위치를 선택할 수 있습니다</div>
+            </div>
+            <div className="search-input-container">
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={mapType === 'kakao' ? 
+                  "장소명을 입력하세요 (예: 서울역, 스타벅스)" : 
+                  "장소명이나 주소를 입력하세요 (예: 서울역, 강남구)"
+                }
+                className="search-input"
+              />
+              <button onClick={searchPlaces} className="search-btn">검색</button>
+            </div>
+            
+            {searchResults.length > 0 && (
+              <div className="search-results">
+                {searchResults.map((place, index) => (
+                  <div 
+                    key={index}
+                    className="search-result-item"
+                    onClick={() => selectSearchResult(place)}
+                  >
+                    <div className="place-name">{place.place_name}</div>
+                    {place.category && <div className="place-category">{place.category}</div>}
+                    <div className="place-address korean">{place.korean_address}</div>
+                    <div className="place-address english">{place.english_address}</div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
 
-        <div className="location-picker-actions">
-          <button className="cancel-btn" onClick={onClose}>취소</button>
-          <button className="confirm-btn" onClick={handleConfirm} disabled={!selectedLocation.lat}>
-            선택
-          </button>
+        {/* 반투명 정보 및 액션 통합 오버레이 */}
+        <div className="location-picker-bottom-overlay">
+          <div className="location-picker-bottom-content">
+            <div className="selected-location">
+              <h4>선택된 위치</h4>
+              {selectedLocation.koreanAddress ? (
+                <div className="location-info">
+                  <div className="location-name">{selectedLocation.name}</div>
+                  <div className="address-group">
+                    <div className="location-address korean">{selectedLocation.koreanAddress}</div>
+                    <div className="location-address english">{selectedLocation.englishAddress}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-location">지도를 클릭하거나 검색으로 위치를 선택할 수 있습니다</div>
+              )}
+            </div>
+            
+            <div className="location-picker-actions">
+              <button className="cancel-btn" onClick={onClose}>취소</button>
+              <button className="confirm-btn" onClick={handleConfirm} disabled={!selectedLocation.lat}>
+                선택
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

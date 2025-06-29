@@ -2495,7 +2495,7 @@ app.get('/company/settings', async(req, res) => {
 
 // 회사 기본 정보 업데이트
 app.put('/company/basic-info', async(req, res) => {
-    const { name, logo, address, phone, email, website } = req.body;
+    const { name, logo, address, latitude, longitude, phone, email, website } = req.body;
 
     try {
         let company = await Company.findOne({});
@@ -2509,6 +2509,8 @@ app.put('/company/basic-info', async(req, res) => {
         if (name !== undefined) updateData.name = name.trim();
         if (logo !== undefined) updateData.logo = logo;
         if (address !== undefined) updateData.address = address.trim();
+        if (latitude !== undefined) updateData.latitude = latitude ? parseFloat(latitude) : null;
+        if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
         if (phone !== undefined) updateData.phone = phone.trim();
         if (email !== undefined) updateData.email = email.trim();
         if (website !== undefined) updateData.website = website.trim();
@@ -2816,5 +2818,348 @@ app.get('/company/location', async(req, res) => {
     } catch (err) {
         console.error('회사 위치 정보 조회 실패:', err);
         res.status(500).json({ message: '회사 위치 정보 조회에 실패했습니다.' });
+    }
+});
+
+// Admin 출석 관리 API들
+
+// Admin 출석 목록 조회 API
+app.get('/admin/attendance/list', async(req, res) => {
+    const { startDate, endDate, userId, status, userType, searchName } = req.query;
+
+    try {
+        // 사용자 필터 조건 생성
+        let userFilter = { status: 'active' };
+
+        if (userType && userType !== 'all') {
+            userFilter.userType = userType;
+        }
+
+        if (searchName && searchName.trim()) {
+            userFilter.name = { $regex: searchName.trim(), $options: 'i' };
+        }
+
+        if (userId && userId !== 'all') {
+            userFilter._id = userId;
+        }
+
+        // 사용자 목록 조회
+        const users = await User.find(userFilter).select('name userType attendance');
+
+        const attendanceList = [];
+
+        // 각 사용자의 출석 데이터 처리
+        for (const user of users) {
+            if (!user.attendance || user.attendance.length === 0) continue;
+
+            // 날짜 필터링
+            let filteredAttendance = user.attendance;
+            if (startDate || endDate) {
+                filteredAttendance = user.attendance.filter(record => {
+                    const recordDate = new Date(record.date);
+                    let include = true;
+
+                    if (startDate) {
+                        include = include && recordDate >= new Date(startDate);
+                    }
+                    if (endDate) {
+                        include = include && recordDate <= new Date(endDate);
+                    }
+
+                    return include;
+                });
+            }
+
+            // 날짜별로 그룹화
+            const attendanceByDate = {};
+            filteredAttendance.forEach(record => {
+                if (!attendanceByDate[record.date]) {
+                    attendanceByDate[record.date] = [];
+                }
+                attendanceByDate[record.date].push(record);
+            });
+
+            // 날짜별 출석 데이터 생성
+            Object.keys(attendanceByDate).forEach(date => {
+                const records = attendanceByDate[date].sort((a, b) => new Date(a.time) - new Date(b.time));
+                const checkInRecords = records.filter(r => r.type === 'checkIn');
+                const checkOutRecords = records.filter(r => r.type === 'checkOut');
+
+                // 첫 번째 출근과 마지막 퇴근 시간
+                const firstCheckIn = checkInRecords.length > 0 ? checkInRecords[0] : null;
+                const lastCheckOut = checkOutRecords.length > 0 ? checkOutRecords[checkOutRecords.length - 1] : null;
+
+                // 상태 결정
+                let attendanceStatus = 'present';
+                if (firstCheckIn) {
+                    const checkInTime = new Date(firstCheckIn.time);
+                    const isLate = checkInTime.getHours() >= 9;
+                    if (isLate) attendanceStatus = 'late';
+                }
+                if (!lastCheckOut && firstCheckIn) attendanceStatus = 'present'; // 미퇴근도 출석으로 표시
+                if (checkInRecords.length === 0) attendanceStatus = 'absent';
+
+                // 상태 필터링
+                if (status && status !== 'all' && attendanceStatus !== status) {
+                    return;
+                }
+
+                // 총 근무시간 계산
+                let totalWorkMinutes = 0;
+                for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
+                    const checkInTime = new Date(checkInRecords[i].time);
+                    const checkOutTime = new Date(checkOutRecords[i].time);
+                    totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+                }
+
+                const workHours = totalWorkMinutes > 0 ? Math.round((totalWorkMinutes / 60) * 10) / 10 : 0;
+
+                attendanceList.push({
+                    _id: `${user._id}_${date}`,
+                    userId: user._id,
+                    userName: user.name,
+                    userType: user.userType,
+                    date: date,
+                    checkInTime: firstCheckIn ? firstCheckIn.time : null,
+                    checkOutTime: lastCheckOut ? lastCheckOut.time : null,
+                    workHours: workHours,
+                    status: attendanceStatus,
+                    note: firstCheckIn ? firstCheckIn.memo || '' : '',
+                    records: records
+                });
+            });
+        }
+
+        // 최신순으로 정렬
+        attendanceList.sort((a, b) => {
+            if (a.date === b.date) {
+                return new Date(a.checkInTime || '00:00') - new Date(b.checkInTime || '00:00');
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
+
+        res.status(200).json(attendanceList);
+
+    } catch (err) {
+        console.error('Admin 출석 목록 조회 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 목록 조회에 실패했습니다.' });
+    }
+});
+
+// Admin 사용자 목록 조회 API
+app.get('/admin/users/list', async(req, res) => {
+    try {
+        const users = await User.find({
+            status: { $ne: 'deleted' }
+        }).select('name email userType department status hireYear').sort({ name: 1 });
+
+        res.status(200).json(users);
+    } catch (err) {
+        console.error('Admin 사용자 목록 조회 실패:', err);
+        res.status(500).json({ message: 'Admin 사용자 목록 조회에 실패했습니다.' });
+    }
+});
+
+// Admin 출석 통계 조회 API
+app.get('/admin/attendance/summary', async(req, res) => {
+    const { year, month, userType } = req.query;
+
+    try {
+        // 사용자 필터 조건 생성
+        let userFilter = { status: 'active' };
+        if (userType && userType !== 'all') {
+            userFilter.userType = userType;
+        }
+
+        const users = await User.find(userFilter).select('name userType attendance');
+
+        const summaryList = [];
+
+        // 해당 년월의 근무일 계산 (주말 제외)
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+        const workingDays = [];
+
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 주말 제외
+                workingDays.push(d.toISOString().split('T')[0]);
+            }
+        }
+
+        const totalWorkingDays = workingDays.length;
+
+        // 각 사용자별 통계 계산
+        for (const user of users) {
+            if (!user.attendance || user.attendance.length === 0) {
+                summaryList.push({
+                    userId: { _id: user._id, name: user.name, userType: user.userType },
+                    workingDays: totalWorkingDays,
+                    present: 0,
+                    late: 0,
+                    absent: totalWorkingDays,
+                    vacation: 0,
+                    remote: 0,
+                    totalWorkHours: 0,
+                    avgWorkHours: 0,
+                    attendanceRate: 0,
+                    punctualityRate: 0
+                });
+                continue;
+            }
+
+            // 해당 월의 출석 기록 필터링
+            const monthlyAttendance = user.attendance.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate.getFullYear() === parseInt(year) &&
+                    recordDate.getMonth() === parseInt(month) - 1;
+            });
+
+            // 날짜별로 그룹화
+            const attendanceByDate = {};
+            monthlyAttendance.forEach(record => {
+                if (!attendanceByDate[record.date]) {
+                    attendanceByDate[record.date] = [];
+                }
+                attendanceByDate[record.date].push(record);
+            });
+
+            let present = 0;
+            let late = 0;
+            let absent = 0;
+            let totalWorkMinutes = 0;
+
+            // 각 근무일에 대해 상태 판정
+            workingDays.forEach(workDay => {
+                const dayRecords = attendanceByDate[workDay] || [];
+                const checkInRecords = dayRecords.filter(r => r.type === 'checkIn');
+                const checkOutRecords = dayRecords.filter(r => r.type === 'checkOut');
+
+                if (checkInRecords.length === 0) {
+                    absent++;
+                } else {
+                    const firstCheckIn = checkInRecords[0];
+                    const checkInTime = new Date(firstCheckIn.time);
+                    const isLate = checkInTime.getHours() >= 9;
+
+                    if (isLate) {
+                        late++;
+                    } else {
+                        present++;
+                    }
+
+                    // 근무시간 계산
+                    for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
+                        const checkInTime = new Date(checkInRecords[i].time);
+                        const checkOutTime = new Date(checkOutRecords[i].time);
+                        totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+                    }
+                }
+            });
+
+            const totalWorkHours = Math.round((totalWorkMinutes / 60) * 10) / 10;
+            const avgWorkHours = (present + late) > 0 ? Math.round((totalWorkHours / (present + late)) * 10) / 10 : 0;
+            const attendanceRate = Math.round(((present + late) / totalWorkingDays) * 100);
+            const punctualityRate = (present + late) > 0 ? Math.round((present / (present + late)) * 100) : 0;
+
+            summaryList.push({
+                userId: { _id: user._id, name: user.name, userType: user.userType },
+                workingDays: totalWorkingDays,
+                present: present,
+                late: late,
+                absent: absent,
+                vacation: 0, // 현재 휴가 정보가 없으므로 0
+                remote: 0, // 현재 재택근무 정보가 없으므로 0
+                totalWorkHours: totalWorkHours,
+                avgWorkHours: avgWorkHours,
+                attendanceRate: attendanceRate,
+                punctualityRate: punctualityRate
+            });
+        }
+
+        res.status(200).json(summaryList);
+
+    } catch (err) {
+        console.error('Admin 출석 통계 조회 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 통계 조회에 실패했습니다.' });
+    }
+});
+
+// Admin 출석 정보 수정 API
+app.patch('/admin/attendance/update/:attendanceId', async(req, res) => {
+    const { attendanceId } = req.params;
+    const { status, note } = req.body;
+
+    try {
+        // attendanceId 형식: userId_date
+        const [userId, date] = attendanceId.split('_');
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 해당 날짜의 출석 기록들 찾기
+        const attendanceRecords = user.attendance.filter(record => record.date === date);
+
+        if (attendanceRecords.length === 0) {
+            return res.status(404).json({ message: '해당 날짜의 출석 기록을 찾을 수 없습니다.' });
+        }
+
+        // 첫 번째 기록에 메모 업데이트 (status는 실제로는 출근 시간에 따라 자동 결정됨)
+        const firstRecord = attendanceRecords[0];
+        const recordIndex = user.attendance.findIndex(record =>
+            record._id.toString() === firstRecord._id.toString()
+        );
+
+        if (recordIndex !== -1) {
+            if (note !== undefined) {
+                user.attendance[recordIndex].memo = note;
+            }
+            await user.save();
+        }
+
+        res.status(200).json({
+            message: '출석 정보가 수정되었습니다.',
+            updatedRecord: user.attendance[recordIndex]
+        });
+
+    } catch (err) {
+        console.error('Admin 출석 정보 수정 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 정보 수정에 실패했습니다.' });
+    }
+});
+
+// Admin 출석 기록 삭제 API
+app.delete('/admin/attendance/delete/:attendanceId', async(req, res) => {
+    const { attendanceId } = req.params;
+
+    try {
+        // attendanceId 형식: userId_date
+        const [userId, date] = attendanceId.split('_');
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 해당 날짜의 모든 출석 기록 삭제
+        const originalLength = user.attendance.length;
+        user.attendance = user.attendance.filter(record => record.date !== date);
+
+        if (user.attendance.length === originalLength) {
+            return res.status(404).json({ message: '해당 날짜의 출석 기록을 찾을 수 없습니다.' });
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: '출석 기록이 삭제되었습니다.',
+            deletedCount: originalLength - user.attendance.length
+        });
+
+    } catch (err) {
+        console.error('Admin 출석 기록 삭제 실패:', err);
+        res.status(500).json({ message: 'Admin 출석 기록 삭제에 실패했습니다.' });
     }
 });

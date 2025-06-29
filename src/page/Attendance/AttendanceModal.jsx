@@ -39,10 +39,9 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
         const today = new Date().toISOString().split('T')[0]
         
         const weekStats = {
-            onTime: 0,
-            late: 0,
-            absent: 0,
-            early: 0 // 조기퇴근
+            completed: 0,
+            working: 0,
+            absent: 0
         }
         
         const weekDaysWithStatus = weekDays.map(day => {
@@ -53,47 +52,31 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
             if (day.date === today) {
                 status = 'today'
                 if (attendanceRecord) {
-                    if (attendanceRecord.status === '정상') {
+                    if (attendanceRecord.status === '퇴근') {
                         icon = <FaCheckCircle />
-                        weekStats.onTime++
-                    } else if (attendanceRecord.status === '지각') {
+                        weekStats.completed++
+                    } else if (attendanceRecord.status === '출근') {
                         icon = <FaClock />
-                        weekStats.late++
-                    } else if (attendanceRecord.status === '미퇴근') {
+                        weekStats.working++
+                    } else if (attendanceRecord.status === '미출근') {
                         icon = <FaExclamationTriangle />
-                        // 미퇴근도 일단 출근은 한 것이므로 onTime이나 late 중 하나로 카운트
-                        if (new Date(attendanceRecord.checkIn).getHours() >= 9) {
-                            weekStats.late++
-                        } else {
-                            weekStats.onTime++
-                        }
+                        // 오늘 날짜 미출근은 absent로 처리하지 않음
                     }
                 }
-                // 오늘 날짜에 출석 기록이 없어도 absent로 처리하지 않음 (아직 출근할 수 있음)
             } else if (day.date < today) {
                 // 과거 날짜만 absent 처리
                 if (attendanceRecord) {
-                    if (attendanceRecord.status === '정상') {
-                        status = 'present'
+                    if (attendanceRecord.status === '퇴근') {
+                        status = 'completed'
                         icon = <FaCheckCircle />
-                        weekStats.onTime++
-                    } else if (attendanceRecord.status === '지각') {
-                        status = 'late'
+                        weekStats.completed++
+                    } else if (attendanceRecord.status === '출근') {
+                        status = 'working'
                         icon = <FaClock />
-                        weekStats.late++
-                    } else if (attendanceRecord.status === '미퇴근') {
-                        status = 'incomplete'
-                        icon = <FaExclamationTriangle />
-                        // 미퇴근도 일단 출근은 한 것이므로 onTime이나 late 중 하나로 카운트
-                        if (new Date(attendanceRecord.checkIn).getHours() >= 9) {
-                            weekStats.late++
-                        } else {
-                            weekStats.onTime++
-                        }
-                    } else {
-                        status = 'present'
-                        icon = <FaCheckCircle />
-                        weekStats.onTime++
+                        weekStats.working++
+                    } else if (attendanceRecord.status === '미출근') {
+                        status = 'absent'
+                        weekStats.absent++
                     }
                 } else {
                     // 과거 날짜에 출석 기록이 없으면 결근
@@ -101,7 +84,6 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
                     weekStats.absent++
                 }
             }
-            // 미래 날짜(day.date > today)는 기본적으로 'future' 상태이며 통계에서 제외
             
             return {
                 ...day,
@@ -120,11 +102,9 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
     // 상태별 한글-영어 변환
     const getStatusText = (status) => {
         const statusMap = {
-            '정상': 'On Time',
-            '지각': 'Late', 
-            '미퇴근': 'Not Checked Out',
-            '결근': 'Absent',
-            '조기퇴근': 'Early Leave'
+            '퇴근': 'Completed',
+            '출근': 'Working',
+            '미출근': 'Not Checked In'
         }
         return statusMap[status] || status
     }
@@ -132,11 +112,9 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
     // 상태별 CSS 클래스 반환
     const getStatusClass = (status) => {
         const classMap = {
-            '정상': 'status_normal',
-            '지각': 'status_late',
-            '미퇴근': 'status_incomplete',
-            '결근': 'status_absent',
-            '조기퇴근': 'status_early'
+            '퇴근': 'status_completed',
+            '출근': 'status_working',
+            '미출근': 'status_absent'
         }
         return classMap[status] || 'status_normal'
     }
@@ -190,15 +168,15 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
                             </div>
                             <div className={styles.week_stats}>
                                 <div className={styles.stat_item}>
-                                    <span className={styles.stat_label}>On Time</span>
+                                    <span className={styles.stat_label}>Completed</span>
                                     <span className={`${styles.stat_value} ${styles.stat_success}`}>
-                                        {weeklyData.stats.onTime} days
+                                        {weeklyData.stats.completed} days
                                     </span>
                                 </div>
                                 <div className={styles.stat_item}>
-                                    <span className={styles.stat_label}>Late</span>
-                                    <span className={`${styles.stat_value} ${styles.stat_warning}`}>
-                                        {weeklyData.stats.late} days
+                                    <span className={styles.stat_label}>Working</span>
+                                    <span className={`${styles.stat_value} ${styles.stat_info}`}>
+                                        {weeklyData.stats.working} days
                                     </span>
                                 </div>
                                 <div className={styles.stat_item}>
