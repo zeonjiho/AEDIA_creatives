@@ -10,6 +10,7 @@ const CreditCardModal = ({
   onUpdate 
 }) => {
   const [cardName, setCardName] = useState('')
+  const [label, setLabel] = useState('')
   const [frontNumber, setFrontNumber] = useState('')
   const [backNumber, setBackNumber] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,11 +20,13 @@ const CreditCardModal = ({
     if (isAddMode) {
       // 새 카드 등록 모드
       setCardName('')
+      setLabel('')
       setFrontNumber('')
       setBackNumber('')
     } else if (card) {
       // 수정 모드
       setCardName(card.cardName || '')
+      setLabel(card.label || '')
       if (card.number && card.number.length === 8) {
         setFrontNumber(card.number.substring(0, 4))
         setBackNumber(card.number.substring(4, 8))
@@ -50,18 +53,27 @@ const CreditCardModal = ({
     })
   }
 
-  // 카드번호 마스킹 처리
-  const formatCardNumber = (number) => {
+  // 카드번호 마스킹 처리 (라벨 포함)
+  const formatCardNumber = (number, cardLabel) => {
     if (!number || number.length !== 8) return '-';
     const front = number.substring(0, 4);
     const back = number.substring(4, 8);
-    return `${front}-****-****-${back}`;
+    const labelPrefix = cardLabel ? `${cardLabel} ` : '';
+    return `${labelPrefix}${front}-****-****-${back}`;
   }
 
   // 입력 검증
   const validateInput = () => {
     if (!cardName.trim()) {
       alert('카드명을 입력해주세요.');
+      return false;
+    }
+    if (!label.trim()) {
+      alert('카드 라벨을 입력해주세요.');
+      return false;
+    }
+    if (!/^[A-Z]$/.test(label.trim())) {
+      alert('라벨은 알파벳 대문자 한 글자여야 합니다.');
       return false;
     }
     if (!frontNumber || frontNumber.length !== 4) {
@@ -93,7 +105,8 @@ const CreditCardModal = ({
     try {
       const submitData = {
         cardName: cardName.trim(),
-        number: frontNumber + backNumber
+        number: frontNumber + backNumber,
+        label: label.trim() || null
       }
 
       let response;
@@ -129,6 +142,14 @@ const CreditCardModal = ({
     setter(numbersOnly);
   }
 
+  // 라벨 입력 처리 (알파벳 대문자 한 글자만)
+  const handleLabelInput = (value) => {
+    const upperValue = value.toUpperCase();
+    if (upperValue.length <= 1 && /^[A-Z]*$/.test(upperValue)) {
+      setLabel(upperValue);
+    }
+  }
+
   return (
     <div className={ss.modal_overlay} onClick={onClose}>
       <div className={ss.modal_container} onClick={(e) => e.stopPropagation()}>
@@ -149,19 +170,19 @@ const CreditCardModal = ({
               <h3 className={ss.section_title}>현재 카드 정보</h3>
               <div className={ss.info_grid}>
                 <div className={ss.info_item}>
-                  <label>카드 ID</label>
-                  <div className={ss.info_value} style={{fontSize: '0.85rem', color: 'var(--text-tertiary)'}}>
-                    {card._id}
-                  </div>
-                </div>
-                <div className={ss.info_item}>
                   <label>등록일</label>
                   <div className={ss.info_value}>{formatDate(card.createdAt)}</div>
                 </div>
                 <div className={ss.info_item}>
+                  <label>현재 라벨</label>
+                  <div className={ss.info_value} style={{fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary-color)'}}>
+                    {card.label || '-'}
+                  </div>
+                </div>
+                <div className={ss.info_item}>
                   <label>현재 카드번호</label>
                   <div className={ss.info_value} style={{fontFamily: 'monospace', fontSize: '0.9rem'}}>
-                    {formatCardNumber(card.number)}
+                    {formatCardNumber(card.number, card.label)}
                   </div>
                 </div>
                 <div className={ss.info_item}>
@@ -194,6 +215,28 @@ const CreditCardModal = ({
                 />
                 <small style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>
                   카드를 구분할 수 있는 이름을 입력해주세요
+                </small>
+              </div>
+
+              <div className={ss.info_item} style={{marginTop: '20px'}}>
+                <label>카드 라벨 *</label>
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => handleLabelInput(e.target.value)}
+                  placeholder="A-Z 중 한 글자"
+                  className={ss.text_input}
+                  maxLength={1}
+                  style={{
+                    textAlign: 'center', 
+                    fontWeight: 'bold', 
+                    fontSize: '1.4rem',
+                    width: '80px',
+                    color: 'var(--primary-color)'
+                  }}
+                />
+                <small style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>
+                  알파벳 대문자 한 글자로 카드를 빠르게 식별할 수 있습니다 (예: A, B, C...)
                 </small>
               </div>
 
@@ -235,10 +278,11 @@ const CreditCardModal = ({
                   textAlign: 'center',
                   border: '2px dashed var(--border-color)'
                 }}>
+                  {label ? <span style={{color: 'var(--primary-color)', fontWeight: 'bold'}}>{label} </span> : ''}
                   {frontNumber || '0000'}-****-****-{backNumber || '0000'}
                 </div>
                 <small style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>
-                  보안을 위해 가운데 8자리는 마스킹 처리됩니다
+                  {label ? '라벨과 함께 표시됩니다. ' : ''}보안을 위해 가운데 8자리는 마스킹 처리됩니다
                 </small>
               </div>
             </div>
@@ -260,6 +304,7 @@ const CreditCardModal = ({
                 <li>가운데 8자리는 보안을 위해 시스템에 저장되지 않습니다</li>
                 <li>카드 전체 번호는 시스템 관리자도 확인할 수 없습니다</li>
                 <li>등록된 정보는 법인카드 관리 목적으로만 사용됩니다</li>
+                <li>라벨은 카드를 쉽게 구분하기 위한 식별자입니다</li>
               </ul>
             </div>
           </div>
