@@ -28,6 +28,7 @@ const Room = require('./models/Room')
 const Project = require('./models/Project')
 const SlackCode = require('./models/SlackCode')
 const CreditCard = require('./models/CreditCard')
+const Company = require('./models/Company')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -52,7 +53,7 @@ mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mon
 
 
 // 회의실 예약 정리 스케줄러 (매일 자정 실행)
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 0 * * *', async() => {
     try {
         console.log(`\x1b[33m[${new Date().toLocaleString()}] 데이터 정리 스케줄러 시작\x1b[0m`);
 
@@ -106,7 +107,7 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 // 자동 퇴근 처리 스케줄러 (매 10분마다 실행)
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/10 * * * *', async() => {
     try {
         const now = new Date();
         console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
@@ -265,7 +266,7 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/get-user-list', async (req, res) => {
+app.get('/get-user-list', async(req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
@@ -289,7 +290,7 @@ app.get('/get-user-list', async (req, res) => {
     }
 })
 
-app.post('/slack/code', async (req, res) => {
+app.post('/slack/code', async(req, res) => {
     const { slackId } = req.body;
     try {
         // 기존 코드가 있으면 삭제
@@ -322,7 +323,7 @@ app.post('/slack/code', async (req, res) => {
             // 슬랙 전송 실패 시 생성된 코드 삭제
             await SlackCode.findByIdAndDelete(newSlackCode._id);
 
-            if (slackError.data?.error === 'channel_not_found' || slackError.data?.error === 'user_not_found') {
+            if (slackError.data && slackError.data.error === 'channel_not_found' || slackError.data && slackError.data.error === 'user_not_found') {
                 res.status(404).json({ message: '해당 슬랙 멤버 ID를 찾을 수 없습니다.' });
             } else {
                 res.status(500).json({ message: '슬랙 메시지 전송에 실패했습니다.' });
@@ -334,7 +335,7 @@ app.post('/slack/code', async (req, res) => {
     }
 });
 
-app.post('/slack/code/verify', async (req, res) => {
+app.post('/slack/code/verify', async(req, res) => {
     const { slackId, code } = req.body;
     try {
         const slackCode = await SlackCode.findOne({ slackId });
@@ -369,7 +370,7 @@ app.post('/slack/code/verify', async (req, res) => {
     }
 });
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', async(req, res) => {
     const { password, name, slackId, phone, email, position } = req.body;
     try {
         const alreadyExists = await User.findOne({ email: email });
@@ -396,7 +397,7 @@ app.post('/signup', async (req, res) => {
     }
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', async(req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email: email });
@@ -433,7 +434,7 @@ app.post('/login', async (req, res) => {
 })
 
 // 유저 승인 API
-app.get('/admin/approve-user/:userId', async (req, res) => {
+app.get('/admin/approve-user/:userId', async(req, res) => {
     const { userId } = req.params;
     try {
         const updatedUser = await User.findByIdAndUpdate(
@@ -452,7 +453,7 @@ app.get('/admin/approve-user/:userId', async (req, res) => {
 })
 
 // 사용자 정보 업데이트 API (관리자용)
-app.put('/admin/update-user/:userId', async (req, res) => {
+app.put('/admin/update-user/:userId', async(req, res) => {
     const { userId } = req.params;
     const { status, userType, roles, hireYear, department, adminMemo } = req.body;
 
@@ -476,8 +477,7 @@ app.put('/admin/update-user/:userId', async (req, res) => {
         // 사용자 정보 업데이트
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            updateData,
-            { new: true }
+            updateData, { new: true }
         ).select('-password');
 
         if (!updatedUser) {
@@ -497,7 +497,7 @@ app.put('/admin/update-user/:userId', async (req, res) => {
 })
 
 // 사용자 삭제 API (관리자용) - status를 deleted로 변경
-app.delete('/admin/delete-user/:userId', async (req, res) => {
+app.delete('/admin/delete-user/:userId', async(req, res) => {
     const { userId } = req.params;
 
     try {
@@ -508,9 +508,7 @@ app.delete('/admin/delete-user/:userId', async (req, res) => {
 
         // status를 'deleted'로 변경 (실제 삭제가 아닌 논리적 삭제)
         const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { status: 'deleted' },
-            { new: true }
+            userId, { status: 'deleted' }, { new: true }
         ).select('-password');
 
         res.status(200).json({
@@ -523,7 +521,7 @@ app.delete('/admin/delete-user/:userId', async (req, res) => {
     }
 });
 
-app.post('/forgot-password', async (req, res) => {
+app.post('/forgot-password', async(req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email: email });
@@ -553,7 +551,7 @@ app.post('/forgot-password', async (req, res) => {
 })
 
 // 사용자 정보 불러오기 (메인 등에서 사용)
-app.get('/get-user-info', async (req, res) => {
+app.get('/get-user-info', async(req, res) => {
     const { userId } = req.query;
     try {
         const user = await User.findById(userId).select('-password');
@@ -571,7 +569,7 @@ app.get('/get-user-info', async (req, res) => {
 })
 
 // 사용자 프로필 업데이트 API
-app.put('/update-user-profile', async (req, res) => {
+app.put('/update-user-profile', async(req, res) => {
     const { userId } = req.query;
     const {
         name,
@@ -636,8 +634,7 @@ app.put('/update-user-profile', async (req, res) => {
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            updateData,
-            { new: true }
+            updateData, { new: true }
         ).select('-password');
 
         if (!updatedUser) {
@@ -656,7 +653,7 @@ app.put('/update-user-profile', async (req, res) => {
 });
 
 // 비밀번호 변경 API
-app.put('/change-password', async (req, res) => {
+app.put('/change-password', async(req, res) => {
     const { userId } = req.query;
     const { currentPassword, newPassword } = req.body;
 
@@ -683,7 +680,7 @@ app.put('/change-password', async (req, res) => {
 });
 
 // 출근 체크인 API
-app.post('/attendance/check-in', async (req, res) => {
+app.post('/attendance/check-in', async(req, res) => {
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
 
@@ -727,7 +724,7 @@ app.post('/attendance/check-in', async (req, res) => {
 });
 
 // 퇴근 체크아웃 API
-app.post('/attendance/check-out', async (req, res) => {
+app.post('/attendance/check-out', async(req, res) => {
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
 
@@ -778,7 +775,7 @@ app.post('/attendance/check-out', async (req, res) => {
 });
 
 // 출석 기록 조회 API
-app.get('/attendance/history', async (req, res) => {
+app.get('/attendance/history', async(req, res) => {
     const { userId } = req.query;
     const { limit = 30 } = req.query; // 기본 30개 기록
 
@@ -848,7 +845,7 @@ app.get('/attendance/history', async (req, res) => {
 });
 
 // 오늘 출석 상태 조회 API
-app.get('/attendance/today', async (req, res) => {
+app.get('/attendance/today', async(req, res) => {
     const { userId } = req.query;
 
     try {
@@ -896,7 +893,7 @@ app.get('/attendance/today', async (req, res) => {
 });
 
 // 출퇴근 기록 수정 API
-app.patch('/attendance/update/:userId', async (req, res) => {
+app.patch('/attendance/update/:userId', async(req, res) => {
     const { userId } = req.params;
     const { recordId, time } = req.body;
 
@@ -929,7 +926,7 @@ app.patch('/attendance/update/:userId', async (req, res) => {
 });
 
 // 출퇴근 기록 삭제 API
-app.delete('/attendance/delete/:userId', async (req, res) => {
+app.delete('/attendance/delete/:userId', async(req, res) => {
     const { userId } = req.params;
     const { recordId } = req.body;
 
@@ -958,7 +955,7 @@ app.delete('/attendance/delete/:userId', async (req, res) => {
 });
 
 // 새로운 출근 처리 (기존 퇴근 기록이 있어도 가능) - 이제 불필요하므로 기본 check-in과 동일
-app.post('/attendance/new-check-in', async (req, res) => {
+app.post('/attendance/new-check-in', async(req, res) => {
     // 기본 check-in API와 동일한 로직 사용
     const { location, method = 'manual' } = req.body;
     const { userId } = req.query;
@@ -1002,7 +999,7 @@ app.post('/attendance/new-check-in', async (req, res) => {
 
 // Todo 관련 API
 // 할 일 목록 조회
-app.get('/todos', async (req, res) => {
+app.get('/todos', async(req, res) => {
     const { userId } = req.query;
     try {
         const todos = await Todo.find({ poster: userId })
@@ -1017,7 +1014,7 @@ app.get('/todos', async (req, res) => {
 });
 
 // 할 일 추가
-app.post('/todos', async (req, res) => {
+app.post('/todos', async(req, res) => {
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
 
@@ -1044,7 +1041,7 @@ app.post('/todos', async (req, res) => {
 });
 
 // 할 일 수정
-app.put('/todos/:id', async (req, res) => {
+app.put('/todos/:id', async(req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     const { text, dueDate, dueTime, projectId } = req.body;
@@ -1057,12 +1054,12 @@ app.put('/todos/:id', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            text,
-            dueDate,
-            dueTime: dueTime || null,
-            projectId: projectId || null,
-            updatedAt: new Date()
-        }, { new: true }
+                text,
+                dueDate,
+                dueTime: dueTime || null,
+                projectId: projectId || null,
+                updatedAt: new Date()
+            }, { new: true }
         ).populate('poster', 'name email');
 
         res.status(200).json(updatedTodo);
@@ -1073,7 +1070,7 @@ app.put('/todos/:id', async (req, res) => {
 });
 
 // 할 일 완료/미완료 토글
-app.patch('/todos/:id/toggle', async (req, res) => {
+app.patch('/todos/:id/toggle', async(req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
 
@@ -1085,9 +1082,9 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 
         const updatedTodo = await Todo.findByIdAndUpdate(
             id, {
-            completed: !todo.completed,
-            updatedAt: new Date()
-        }, { new: true }
+                completed: !todo.completed,
+                updatedAt: new Date()
+            }, { new: true }
         ).populate('poster', 'name email');
 
         res.status(200).json(updatedTodo);
@@ -1098,7 +1095,7 @@ app.patch('/todos/:id/toggle', async (req, res) => {
 });
 
 // 할 일 삭제
-app.delete('/todos/:id', async (req, res) => {
+app.delete('/todos/:id', async(req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
 
@@ -1118,7 +1115,7 @@ app.delete('/todos/:id', async (req, res) => {
 
 // 대시보드 레이아웃 관련 API
 // 레이아웃 저장
-app.patch('/dashboard/layout', async (req, res) => {
+app.patch('/dashboard/layout', async(req, res) => {
     const { userId } = req.query;
     const { layouts } = req.body;
 
@@ -1143,7 +1140,7 @@ app.patch('/dashboard/layout', async (req, res) => {
 });
 
 // 레이아웃 불러오기
-app.get('/dashboard/layout', async (req, res) => {
+app.get('/dashboard/layout', async(req, res) => {
     const { userId } = req.query;
 
     try {
@@ -1164,7 +1161,7 @@ app.get('/dashboard/layout', async (req, res) => {
 // 회의실 관리 관련 API
 
 // 회의실 목록 조회
-app.get('/rooms', async (req, res) => {
+app.get('/rooms', async(req, res) => {
     try {
         const rooms = await Room.find({})
             .populate('reservations.participants.userId', 'name email')
@@ -1179,7 +1176,7 @@ app.get('/rooms', async (req, res) => {
 });
 
 // 회의실 추가
-app.post('/rooms', async (req, res) => {
+app.post('/rooms', async(req, res) => {
     const { roomName, location, tools } = req.body;
 
     try {
@@ -1205,7 +1202,7 @@ app.post('/rooms', async (req, res) => {
 });
 
 // 회의실 수정
-app.post('/rooms/:id/update', async (req, res) => {
+app.post('/rooms/:id/update', async(req, res) => {
     const { id } = req.params;
     const { roomName, location, tools } = req.body;
 
@@ -1216,12 +1213,12 @@ app.post('/rooms/:id/update', async (req, res) => {
         }
 
         const updatedRoom = await Room.findByIdAndUpdate(
-            id, {
-            roomName,
-            location: location || '',
-            tools: tools || []
-        }, { new: true }
-        ).populate('reservations.participants.userId', 'name email')
+                id, {
+                    roomName,
+                    location: location || '',
+                    tools: tools || []
+                }, { new: true }
+            ).populate('reservations.participants.userId', 'name email')
             .populate('reservations.project', 'title');
 
         res.status(200).json(updatedRoom);
@@ -1232,7 +1229,7 @@ app.post('/rooms/:id/update', async (req, res) => {
 });
 
 // 회의실 삭제
-app.post('/rooms/:id/delete', async (req, res) => {
+app.post('/rooms/:id/delete', async(req, res) => {
     const { id } = req.params;
 
     try {
@@ -1263,7 +1260,7 @@ app.post('/rooms/:id/delete', async (req, res) => {
 // 예약 관련 API
 
 // 예약 생성
-app.post('/rooms/:roomId/reservations', async (req, res) => {
+app.post('/rooms/:roomId/reservations', async(req, res) => {
     const { roomId } = req.params;
     const {
         meetingName,
@@ -1375,7 +1372,7 @@ app.post('/rooms/:roomId/reservations', async (req, res) => {
 });
 
 // 예약 수정
-app.put('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
+app.put('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
     const { roomId, reservationId } = req.params;
     const {
         meetingName,
@@ -1487,7 +1484,7 @@ app.put('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
 });
 
 // 예약 삭제 (상태를 '취소됨'으로 변경)
-app.delete('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
+app.delete('/rooms/:roomId/reservations/:reservationId', async(req, res) => {
     const { roomId, reservationId } = req.params;
 
     try {
@@ -1516,7 +1513,7 @@ app.delete('/rooms/:roomId/reservations/:reservationId', async (req, res) => {
 });
 
 // 특정 회의실의 예약 목록 조회
-app.get('/rooms/:roomId/reservations', async (req, res) => {
+app.get('/rooms/:roomId/reservations', async(req, res) => {
     const { roomId } = req.params;
     const { date } = req.query; // YYYY-MM-DD 형식
 
@@ -1548,7 +1545,7 @@ app.get('/rooms/:roomId/reservations', async (req, res) => {
 });
 
 // 스태프 추가 API
-app.post('/add-staff', async (req, res) => {
+app.post('/add-staff', async(req, res) => {
     const { name, email, phone, roles, department } = req.body;
     try {
         const newStaff = new User({
@@ -1567,7 +1564,7 @@ app.post('/add-staff', async (req, res) => {
     }
 })
 
-app.post('/modify-staff', async (req, res) => {
+app.post('/modify-staff', async(req, res) => {
     const { staffId, name, email, phone, roles, department } = req.body;
     try {
         const updatedStaff = await User.findByIdAndUpdate(staffId, { name, email, phone, roles, department }, { new: true });
@@ -1578,7 +1575,7 @@ app.post('/modify-staff', async (req, res) => {
     }
 })
 
-app.post('/delete-staff', async (req, res) => {
+app.post('/delete-staff', async(req, res) => {
     const { staffId } = req.body;
     try {
         const user = await User.findById(staffId);
@@ -1595,7 +1592,7 @@ app.post('/delete-staff', async (req, res) => {
 })
 
 // 스태프 삭제 API (관리자용) - status를 deleted로 변경
-app.delete('/admin/delete-staff/:staffId', async (req, res) => {
+app.delete('/admin/delete-staff/:staffId', async(req, res) => {
     const { staffId } = req.params;
 
     try {
@@ -1610,9 +1607,7 @@ app.delete('/admin/delete-staff/:staffId', async (req, res) => {
 
         // status를 'deleted'로 변경 (실제 삭제가 아닌 논리적 삭제)
         const updatedStaff = await User.findByIdAndUpdate(
-            staffId,
-            { status: 'deleted' },
-            { new: true }
+            staffId, { status: 'deleted' }, { new: true }
         ).select('-password');
 
         res.status(200).json({
@@ -1628,7 +1623,7 @@ app.delete('/admin/delete-staff/:staffId', async (req, res) => {
 // 프로젝트 관련 API
 
 // 썸네일 업로드 API
-app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
+app.post('/upload-thumbnail', upload.single('thumbnail'), async(req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
@@ -1671,7 +1666,7 @@ app.post('/upload-thumbnail', upload.single('thumbnail'), async (req, res) => {
 });
 
 // 프로필 사진 업로드 API
-app.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
+app.post('/upload-avatar', upload.single('avatar'), async(req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
@@ -1714,7 +1709,7 @@ app.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
 });
 
 // 프로젝트 생성 API
-app.post('/add-project', async (req, res) => {
+app.post('/add-project', async(req, res) => {
     const { title, description, status, deadline, thumbnail, staffList, team, tasks } = req.body;
 
     try {
@@ -1733,7 +1728,7 @@ app.post('/add-project', async (req, res) => {
             });
         }
 
-        console.log('프로젝트 생성 요청:', { title, status, deadline, staffListLength: staffList?.length });
+        console.log('프로젝트 생성 요청:', { title, status, deadline, staffListLength: staffList ? staffList.length : 0 });
 
         const newProject = new Project({
             title: title.trim(),
@@ -1798,7 +1793,7 @@ app.post('/add-project', async (req, res) => {
 });
 
 // 프로젝트 목록 조회 API
-app.get('/projects', async (req, res) => {
+app.get('/projects', async(req, res) => {
     try {
         const projects = await Project.find({})
             .populate('team', 'name email department')
@@ -1813,7 +1808,7 @@ app.get('/projects', async (req, res) => {
 });
 
 // 특정 프로젝트 조회 API
-app.get('/projects/:id', async (req, res) => {
+app.get('/projects/:id', async(req, res) => {
     try {
         const project = await Project.findById(req.params.id)
             .populate('team', 'name email department')
@@ -1831,7 +1826,7 @@ app.get('/projects/:id', async (req, res) => {
 });
 
 // 프로젝트 수정 API
-app.put('/projects/:id', async (req, res) => {
+app.put('/projects/:id', async(req, res) => {
     try {
         const { title, description, status, deadline, thumbnail, progress, team, staffList } = req.body;
 
@@ -1933,9 +1928,9 @@ app.put('/projects/:id', async (req, res) => {
         }
 
         const updatedProject = await Project.findByIdAndUpdate(
-            req.params.id,
-            updateData, { new: true }
-        )
+                req.params.id,
+                updateData, { new: true }
+            )
             .populate('team', 'name email department position')
             .populate('staffList.members.userId', 'name email department');
 
@@ -1952,16 +1947,26 @@ app.put('/projects/:id', async (req, res) => {
                 // 상태 한글화 함수
                 const getStatusText = (status) => {
                     switch (status) {
-                        case 'concept': return 'Concept';
-                        case 'development': return 'Development';
-                        case 'pre_production': return 'Pre-Production';
-                        case 'production': return 'Production';
-                        case 'post_production': return 'Post-Production';
-                        case 'vfx': return 'VFX/CG';
-                        case 'sound_design': return 'Sound Design';
-                        case 'quality_check': return 'Quality Check';
-                        case 'delivery': return 'Delivery';
-                        default: return status;
+                        case 'concept':
+                            return 'Concept';
+                        case 'development':
+                            return 'Development';
+                        case 'pre_production':
+                            return 'Pre-Production';
+                        case 'production':
+                            return 'Production';
+                        case 'post_production':
+                            return 'Post-Production';
+                        case 'vfx':
+                            return 'VFX/CG';
+                        case 'sound_design':
+                            return 'Sound Design';
+                        case 'quality_check':
+                            return 'Quality Check';
+                        case 'delivery':
+                            return 'Delivery';
+                        default:
+                            return status;
                     }
                 };
 
@@ -2000,7 +2005,7 @@ app.put('/projects/:id', async (req, res) => {
 });
 
 // 프로젝트 삭제 API
-app.delete('/projects/:id', async (req, res) => {
+app.delete('/projects/:id', async(req, res) => {
     try {
         const projectId = req.params.id;
 
@@ -2030,14 +2035,13 @@ app.delete('/projects/:id', async (req, res) => {
 // 캘린더 관련 API
 
 // 캘린더 연동 정보 조회
-app.get('/calendar/links', async (req, res) => {
+app.get('/calendar/links', async(req, res) => {
     try {
         const links = await Calendar.find({})
             .populate({
                 path: 'projectId',
                 select: 'title description status progress thumbnail deadline team staffList',
-                populate: [
-                    {
+                populate: [{
                         path: 'team',
                         select: 'name email department userType'
                     },
@@ -2093,7 +2097,7 @@ app.get('/calendar/links', async (req, res) => {
 });
 
 // 캘린더 이벤트와 프로젝트 연동
-app.post('/calendar/link', async (req, res) => {
+app.post('/calendar/link', async(req, res) => {
     const { linkId, projectId } = req.body;
 
     try {
@@ -2126,8 +2130,7 @@ app.post('/calendar/link', async (req, res) => {
             .populate({
                 path: 'projectId',
                 select: 'title description status progress thumbnail deadline team staffList',
-                populate: [
-                    {
+                populate: [{
                         path: 'team',
                         select: 'name email department userType'
                     },
@@ -2149,7 +2152,7 @@ app.post('/calendar/link', async (req, res) => {
 });
 
 // 캘린더 연동 해제
-app.delete('/calendar/link/:linkId', async (req, res) => {
+app.delete('/calendar/link/:linkId', async(req, res) => {
     const { linkId } = req.params;
 
     try {
@@ -2167,7 +2170,7 @@ app.delete('/calendar/link/:linkId', async (req, res) => {
 });
 
 // 특정 캘린더 이벤트의 연동 프로젝트 조회
-app.get('/calendar/link/:linkId', async (req, res) => {
+app.get('/calendar/link/:linkId', async(req, res) => {
     const { linkId } = req.params;
 
     try {
@@ -2175,8 +2178,7 @@ app.get('/calendar/link/:linkId', async (req, res) => {
             .populate({
                 path: 'projectId',
                 select: 'title description status progress thumbnail deadline team staffList',
-                populate: [
-                    {
+                populate: [{
                         path: 'team',
                         select: 'name email department userType'
                     },
@@ -2222,7 +2224,7 @@ app.get('/calendar/link/:linkId', async (req, res) => {
 });
 
 // 일괄 연동 생성 (여러 이벤트를 한 번에 연동)
-app.post('/calendar/links/batch', async (req, res) => {
+app.post('/calendar/links/batch', async(req, res) => {
     const { links } = req.body; // [{ linkId, projectId }, ...]
 
     try {
@@ -2276,7 +2278,7 @@ app.post('/calendar/links/batch', async (req, res) => {
 });
 
 // 외부 스태프 정보 업데이트 API (관리자용)
-app.put('/admin/update-staff/:staffId', async (req, res) => {
+app.put('/admin/update-staff/:staffId', async(req, res) => {
     const { staffId } = req.params;
     const { department, roles, snsId, adminMemo, status } = req.body;
 
@@ -2303,8 +2305,7 @@ app.put('/admin/update-staff/:staffId', async (req, res) => {
         // 스태프 정보 업데이트
         const updatedStaff = await User.findByIdAndUpdate(
             staffId,
-            updateData,
-            { new: true }
+            updateData, { new: true }
         ).select('-password');
 
         if (!updatedStaff) {
@@ -2326,7 +2327,7 @@ app.put('/admin/update-staff/:staffId', async (req, res) => {
 // 법인카드 관련 API
 
 // 법인카드 목록 조회
-app.get('/credit-cards', async (req, res) => {
+app.get('/credit-cards', async(req, res) => {
     try {
         const cards = await CreditCard.find({ status: 'active' }).sort({ createdAt: -1 });
         res.status(200).json(cards);
@@ -2337,7 +2338,7 @@ app.get('/credit-cards', async (req, res) => {
 });
 
 // 법인카드 등록
-app.post('/credit-cards', async (req, res) => {
+app.post('/credit-cards', async(req, res) => {
     const { cardName, number } = req.body;
 
     try {
@@ -2378,7 +2379,7 @@ app.post('/credit-cards', async (req, res) => {
 });
 
 // 법인카드 수정
-app.put('/credit-cards/:cardId', async (req, res) => {
+app.put('/credit-cards/:cardId', async(req, res) => {
     const { cardId } = req.params;
     const { cardName, number } = req.body;
 
@@ -2410,12 +2411,10 @@ app.put('/credit-cards/:cardId', async (req, res) => {
 
         // 카드 정보 업데이트
         const updatedCard = await CreditCard.findByIdAndUpdate(
-            cardId,
-            {
+            cardId, {
                 cardName: cardName.trim(),
                 number: number
-            },
-            { new: true }
+            }, { new: true }
         );
 
         console.log(`법인카드 수정: ${updatedCard.cardName} (${updatedCard.number})`);
@@ -2431,7 +2430,7 @@ app.put('/credit-cards/:cardId', async (req, res) => {
 });
 
 // 법인카드 삭제 (status를 deleted로 변경)
-app.delete('/credit-cards/:cardId', async (req, res) => {
+app.delete('/credit-cards/:cardId', async(req, res) => {
     const { cardId } = req.params;
 
     try {
@@ -2442,9 +2441,7 @@ app.delete('/credit-cards/:cardId', async (req, res) => {
 
         // status를 'deleted'로 변경 (논리적 삭제)
         const deletedCard = await CreditCard.findByIdAndUpdate(
-            cardId,
-            { status: 'deleted' },
-            { new: true }
+            cardId, { status: 'deleted' }, { new: true }
         );
 
         console.log(`법인카드 삭제: ${deletedCard.cardName} (${deletedCard.number})`);
@@ -2456,5 +2453,336 @@ app.delete('/credit-cards/:cardId', async (req, res) => {
     } catch (err) {
         console.error('법인카드 삭제 실패:', err);
         res.status(500).json({ message: '법인카드 삭제에 실패했습니다.' });
+    }
+});
+
+// Company/Advanced Setting 관련 API
+
+// 회사 설정 조회
+app.get('/company/settings', async(req, res) => {
+    try {
+        let company = await Company.findOne({})
+            .populate('adminUsers.userId', 'name email department userType')
+            .populate('adminUsers.addedBy', 'name email');
+
+        if (!company) {
+            // 기본 회사 설정 생성
+            company = new Company({
+                name: 'AEDIA STUDIO',
+                logo: 'AEDIALOGO.svg',
+                address: '',
+                phone: '',
+                email: '',
+                website: '',
+                adminUsers: [],
+                settings: {
+                    autoLogout: 24,
+                    slackIntegration: true,
+                    emailNotification: true
+                }
+            });
+            await company.save();
+        }
+
+        res.status(200).json(company);
+    } catch (err) {
+        console.error('회사 설정 조회 실패:', err);
+        res.status(500).json({ message: '회사 설정 조회에 실패했습니다.' });
+    }
+});
+
+// 회사 기본 정보 업데이트
+app.put('/company/basic-info', async(req, res) => {
+    const { name, logo, address, phone, email, website } = req.body;
+
+    try {
+        let company = await Company.findOne({});
+
+        if (!company) {
+            company = new Company({});
+        }
+
+        // 업데이트할 데이터 준비
+        const updateData = {};
+        if (name !== undefined) updateData.name = name.trim();
+        if (logo !== undefined) updateData.logo = logo;
+        if (address !== undefined) updateData.address = address.trim();
+        if (phone !== undefined) updateData.phone = phone.trim();
+        if (email !== undefined) updateData.email = email.trim();
+        if (website !== undefined) updateData.website = website.trim();
+
+        const updatedCompany = await Company.findByIdAndUpdate(
+                company._id,
+                updateData, { new: true, upsert: true }
+            ).populate('adminUsers.userId', 'name email department userType')
+            .populate('adminUsers.addedBy', 'name email');
+
+        console.log('회사 기본 정보 업데이트:', updateData);
+
+        res.status(200).json({
+            message: '회사 정보가 성공적으로 업데이트되었습니다.',
+            company: updatedCompany
+        });
+    } catch (err) {
+        console.error('회사 정보 업데이트 실패:', err);
+        res.status(500).json({ message: '회사 정보 업데이트에 실패했습니다.' });
+    }
+});
+
+// 어드민 사용자 추가
+app.post('/company/admin-users', async(req, res) => {
+    const { userId, role = 'admin', addedBy } = req.body;
+
+    try {
+        // 필수 필드 검증
+        if (!userId) {
+            return res.status(400).json({ message: '사용자 ID는 필수입니다.' });
+        }
+
+        // 사용자 존재 여부 확인
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        let company = await Company.findOne({});
+        if (!company) {
+            company = new Company({});
+            await company.save();
+        }
+
+        // 이미 어드민으로 등록되어 있는지 확인
+        const existingAdmin = company.adminUsers.find(
+            admin => admin.userId.toString() === userId.toString()
+        );
+
+        if (existingAdmin) {
+            return res.status(400).json({ message: '이미 어드민으로 등록된 사용자입니다.' });
+        }
+
+        // 새 어드민 사용자 추가
+        const newAdminUser = {
+            userId: userId,
+            role: role,
+            addedAt: new Date(),
+            addedBy: addedBy || null
+        };
+
+        company.adminUsers.push(newAdminUser);
+        await company.save();
+
+        // populate해서 반환
+        const updatedCompany = await Company.findById(company._id)
+            .populate('adminUsers.userId', 'name email department userType')
+            .populate('adminUsers.addedBy', 'name email');
+
+        console.log(`새 어드민 사용자 추가: ${user.name} (${user.email}) - Role: ${role}`);
+
+        res.status(200).json({
+            message: '어드민 사용자가 성공적으로 추가되었습니다.',
+            company: updatedCompany
+        });
+    } catch (err) {
+        console.error('어드민 사용자 추가 실패:', err);
+        res.status(500).json({ message: '어드민 사용자 추가에 실패했습니다.' });
+    }
+});
+
+// 어드민 사용자 삭제
+app.delete('/company/admin-users/:userId', async(req, res) => {
+    const { userId } = req.params;
+
+    try {
+        let company = await Company.findOne({});
+        if (!company) {
+            return res.status(404).json({ message: '회사 설정을 찾을 수 없습니다.' });
+        }
+
+        // 어드민 사용자 찾기
+        const adminIndex = company.adminUsers.findIndex(
+            admin => admin.userId.toString() === userId.toString()
+        );
+
+        if (adminIndex === -1) {
+            return res.status(404).json({ message: '해당 어드민 사용자를 찾을 수 없습니다.' });
+        }
+
+        // 어드민이 한 명만 남은 경우 삭제 방지
+        if (company.adminUsers.length === 1) {
+            return res.status(400).json({
+                message: '최소 한 명의 어드민 사용자가 필요합니다.'
+            });
+        }
+
+        // 어드민 사용자 삭제
+        const removedAdmin = company.adminUsers[adminIndex];
+        company.adminUsers.splice(adminIndex, 1);
+        await company.save();
+
+        console.log(`어드민 사용자 삭제: ${userId} - Role: ${removedAdmin.role}`);
+
+        res.status(200).json({
+            message: '어드민 사용자가 성공적으로 삭제되었습니다.'
+        });
+    } catch (err) {
+        console.error('어드민 사용자 삭제 실패:', err);
+        res.status(500).json({ message: '어드민 사용자 삭제에 실패했습니다.' });
+    }
+});
+
+// 어드민 사용자 역할 수정
+app.put('/company/admin-users/:userId', async(req, res) => {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    try {
+        if (!role || !['admin', 'super_admin'].includes(role)) {
+            return res.status(400).json({
+                message: '유효한 역할을 입력해주세요. (admin, super_admin)'
+            });
+        }
+
+        let company = await Company.findOne({});
+        if (!company) {
+            return res.status(404).json({ message: '회사 설정을 찾을 수 없습니다.' });
+        }
+
+        // 어드민 사용자 찾기
+        const adminUser = company.adminUsers.find(
+            admin => admin.userId.toString() === userId.toString()
+        );
+
+        if (!adminUser) {
+            return res.status(404).json({ message: '해당 어드민 사용자를 찾을 수 없습니다.' });
+        }
+
+        // 역할 업데이트
+        adminUser.role = role;
+        await company.save();
+
+        // populate해서 반환
+        const updatedCompany = await Company.findById(company._id)
+            .populate('adminUsers.userId', 'name email department userType')
+            .populate('adminUsers.addedBy', 'name email');
+
+        console.log(`어드민 사용자 역할 변경: ${userId} - 새 역할: ${role}`);
+
+        res.status(200).json({
+            message: '어드민 사용자 역할이 성공적으로 변경되었습니다.',
+            company: updatedCompany
+        });
+    } catch (err) {
+        console.error('어드민 사용자 역할 변경 실패:', err);
+        res.status(500).json({ message: '어드민 사용자 역할 변경에 실패했습니다.' });
+    }
+});
+
+// 회사 설정 업데이트
+app.put('/company/settings', async(req, res) => {
+    const { autoLogout, slackIntegration, emailNotification } = req.body;
+
+    try {
+        let company = await Company.findOne({});
+        if (!company) {
+            company = new Company({});
+            await company.save();
+        }
+
+        // 설정 업데이트
+        const updateData = {};
+        if (autoLogout !== undefined) updateData['settings.autoLogout'] = autoLogout;
+        if (slackIntegration !== undefined) updateData['settings.slackIntegration'] = slackIntegration;
+        if (emailNotification !== undefined) updateData['settings.emailNotification'] = emailNotification;
+
+        const updatedCompany = await Company.findByIdAndUpdate(
+                company._id,
+                updateData, { new: true }
+            ).populate('adminUsers.userId', 'name email department userType')
+            .populate('adminUsers.addedBy', 'name email');
+
+        console.log('회사 설정 업데이트:', updateData);
+
+        res.status(200).json({
+            message: '회사 설정이 성공적으로 업데이트되었습니다.',
+            company: updatedCompany
+        });
+    } catch (err) {
+        console.error('회사 설정 업데이트 실패:', err);
+        res.status(500).json({ message: '회사 설정 업데이트에 실패했습니다.' });
+    }
+});
+
+// 어드민 권한 확인 API
+app.get('/company/check-admin/:userId', async(req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const company = await Company.findOne({})
+            .populate('adminUsers.userId', 'name email');
+
+        if (!company) {
+            return res.status(200).json({ isAdmin: false, role: null });
+        }
+
+        const adminUser = company.adminUsers.find(
+            admin => admin.userId._id.toString() === userId.toString()
+        );
+
+        if (adminUser) {
+            res.status(200).json({
+                isAdmin: true,
+                role: adminUser.role,
+                addedAt: adminUser.addedAt
+            });
+        } else {
+            res.status(200).json({ isAdmin: false, role: null });
+        }
+    } catch (err) {
+        console.error('어드민 권한 확인 실패:', err);
+        res.status(500).json({ message: '어드민 권한 확인에 실패했습니다.' });
+    }
+});
+
+// 로고 업로드 API
+app.post('/company/upload-logo', upload.single('logo'), async(req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '로고 파일이 업로드되지 않았습니다.' });
+        }
+
+        console.log('로고 업로드 요청:', req.file.filename);
+
+        // 파일 경로 및 새 파일명 생성
+        const originalPath = req.file.path;
+        const fileExtension = path.extname(req.file.originalname);
+        const timestamp = Date.now();
+        const newFilename = `company_logo_${timestamp}${fileExtension}`;
+        const newPath = path.join('./uploads/product/', newFilename);
+
+        // 이미지 리사이징 및 최적화
+        if (req.file.mimetype.startsWith('image/')) {
+            await sharp(originalPath)
+                .resize(400, 200, {
+                    fit: 'contain',
+                    withoutEnlargement: true,
+                    background: { r: 255, g: 255, b: 255, alpha: 0 }
+                })
+                .png({ quality: 90 })
+                .toFile(newPath);
+
+            // 원본 파일 삭제
+            fs.unlinkSync(originalPath);
+        } else {
+            // 이미지가 아닌 경우 그대로 이동
+            fs.renameSync(originalPath, newPath);
+        }
+
+        res.status(200).json({
+            message: '로고 업로드 성공',
+            filename: newFilename
+        });
+    } catch (err) {
+        console.error('로고 업로드 실패:', err);
+        res.status(500).json({ message: '로고 업로드에 실패했습니다.' });
     }
 });

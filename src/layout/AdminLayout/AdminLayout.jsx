@@ -112,6 +112,7 @@ const AdminLayout = () => {
             icon: faCog,
             submenus: [
                 { id: 'room', name: '회의실 관리', path: '/admin/room' },
+                { id: 'advanced-setting', name: 'Advanced Setting', path: '/admin/advanced-setting' },
             ]
         }
         // {

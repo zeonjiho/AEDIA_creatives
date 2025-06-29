@@ -216,34 +216,7 @@ const AdminUser = () => {
         </div>
       </div>
 
-      {/* 차트 영역 */}
-      <div className={ss.chart_grid}>
-        <div className={ss.chart_card}>
-          <div className={ss.chart_title}>
-            <div className={`${ss.chart_icon} ${ss.user}`}></div>
-            유저 현황 차트
-          </div>
-          <div className={ss.chart_content}>
-            <div className={ss.chart_placeholder}>
-              유저 가입 추이 및 활동 현황을 시각화할 수 있습니다
-            </div>
-          </div>
-          <div className={ss.chart_legend}>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--success-color)'}}></div>
-              내부 직원 ({statusCounts.internal})
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
-              외부 스태프 ({statusCounts.external})
-            </div>
-            <div className={ss.legend_item}>
-              <div className={ss.legend_color} style={{backgroundColor: 'var(--warning-color)'}}></div>
-              승인 대기 ({statusCounts.waiting})
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* 데이터 테이블 */}
       <div className={ss.data_table_container}>

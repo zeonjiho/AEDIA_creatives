@@ -26,6 +26,7 @@ import AdminAttendance from './page/Admin/AdminAttendance/AdminAttendance';
 import AdminAttendanceSummary from './page/Admin/AdminAttendance/AdminAttendanceSummary';
 import AdminDeleted from './page/Admin/AdminUser/AdminDeleted';
 import AdminCreditCard from './page/Admin/AdminFinance/AdminCreditCard';
+import AdminAdvanced from './page/Admin/AdminAdvanced/AdminAdvanced';
 
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
           </Route>
           <Route path='project' element={<AdminProject />} />
           <Route path='room' element={<AdminRoom />} />
+          <Route path='advanced-setting' element={<AdminAdvanced />} />
         </Route>
       </Routes>
     </div>

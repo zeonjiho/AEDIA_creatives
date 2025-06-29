@@ -1,0 +1,613 @@
+.container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.header {
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0;
+}
+
+
+/* 탭 네비게이션 */
+
+.tabNavigation {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    gap: 4px;
+}
+
+.tabButton {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.tabButton.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.tabIcon {
+    font-size: 16px;
+}
+
+
+/* 탭 콘텐츠 */
+
+.tabContent {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.sectionDescription {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+    flex: 1;
+}
+
+
+/* 로고 섹션 */
+
+.logoSection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .logoSection {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+.currentLogo h3,
+.logoUpload h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 16px 0;
+}
+
+.logoPreview {
+    padding: 24px;
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.logoImage {
+    max-width: 200px;
+    max-height: 100px;
+    object-fit: contain;
+}
+
+.uploadArea {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.fileInput {
+    display: none;
+}
+
+.fileLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #f3f4f6;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #374151;
+    justify-content: center;
+}
+
+.fileLabel:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.uploadIcon {
+    font-size: 18px;
+}
+
+.previewContainer {
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.previewContainer h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.previewImage {
+    max-width: 150px;
+    max-height: 75px;
+    object-fit: contain;
+    margin-bottom: 16px;
+    border-radius: 4px;
+}
+
+
+/* 폼 스타일 */
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formRow:first-child .formGroup {
+    grid-column: 1 / -1;
+}
+
+.formRow:last-child .formGroup {
+    grid-column: 1 / -1;
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.labelIcon {
+    font-size: 16px;
+    color: #6b7280;
+}
+
+.input {
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    background: white;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input::placeholder {
+    color: #9ca3af;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+
+/* 버튼 스타일 */
+
+.saveButton,
+.addButton,
+.uploadButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.saveButton:hover,
+.addButton:hover,
+.uploadButton:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.saveButton:disabled,
+.addButton:disabled,
+.uploadButton:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.buttonIcon {
+    font-size: 16px;
+}
+
+
+/* 어드민 리스트 */
+
+.adminList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 48px 24px;
+    color: #6b7280;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.adminCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.adminCard:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.adminInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.adminAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.adminDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.adminName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.adminEmail {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+.adminDepartment {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.adminActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.roleSelect {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.roleSelect:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.removeButton {
+    padding: 8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.removeButton:hover {
+    background: #dc2626;
+}
+
+.removeButton:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+
+/* 설정 리스트 */
+
+.settingsList {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.settingItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .settingItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+.settingInfo {
+    flex: 1;
+}
+
+.settingInfo h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+}
+
+.settingInfo p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+.settingControl {
+    flex-shrink: 0;
+}
+
+.settingSelect {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.settingSelect:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+
+/* 토글 스위치 */
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #3b82f6;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #3b82f6;
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+input:disabled+.slider {
+    background-color: #e5e7eb;
+    cursor: not-allowed;
+}
+
+input:disabled+.slider:before {
+    background-color: #f3f4f6;
+}
+
+
+/* 반응형 디자인 */
+
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+    .title {
+        font-size: 24px;
+    }
+    .section {
+        padding: 20px;
+    }
+    .sectionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .tabNavigation {
+        padding: 6px;
+        gap: 2px;
+    }
+    .tabButton {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    .tabIcon {
+        font-size: 14px;
+    }
+    .adminCard {
+        padding: 16px;
+    }
+    .adminInfo {
+        gap: 12px;
+    }
+    .adminAvatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    .adminActions {
+        gap: 8px;
+    }
+}
