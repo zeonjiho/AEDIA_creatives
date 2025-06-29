@@ -224,7 +224,7 @@ const CreditCardModal = ({
                   type="text"
                   value={label}
                   onChange={(e) => handleLabelInput(e.target.value)}
-                  placeholder="A-Z 중 한 글자"
+                  placeholder="A-Z"
                   className={ss.text_input}
                   maxLength={1}
                   style={{
