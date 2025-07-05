@@ -144,7 +144,7 @@ const FinanceModal = ({
               </div>
               <div className={ss.info_item}>
                 <label>사용자</label>
-                <div className={ss.info_value}>{item.userName}</div>
+                <div className={ss.info_value}>{item.userId?.name || item.userName}</div>
               </div>
               <div className={ss.info_item}>
                 <label>날짜</label>
@@ -184,21 +184,16 @@ const FinanceModal = ({
               <div className={ss.info_item}>
                 <label>프로젝트</label>
                 <div className={ss.info_value}>
-                  {item.projectName ? (
+                  {item.projectId?.title || item.projectName ? (
                     <span className={ss.project_badge}>
-                      {item.projectName}
+                      {item.projectId?.title || item.projectName}
                     </span>
                   ) : (
                     <span style={{color: 'var(--text-tertiary)'}}>미배정</span>
                   )}
                 </div>
               </div>
-              {type === 'taxi' && item.route && (
-                <div className={ss.info_item}>
-                  <label>경로</label>
-                  <div className={ss.info_value}>{item.route}</div>
-                </div>
-              )}
+
             </div>
           </div>
 

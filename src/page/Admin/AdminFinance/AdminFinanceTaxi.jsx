@@ -211,7 +211,8 @@ const AdminFinanceTaxi = () => {
 
   // 개인별 이용 현황
   const userUsageData = taxiData.reduce((acc, item) => {
-    acc[item.userName] = (acc[item.userName] || 0) + item.amount;
+    const userName = item.userId?.name || item.userName;
+    acc[userName] = (acc[userName] || 0) + item.amount;
     return acc;
   }, {});
 
@@ -259,15 +260,14 @@ const AdminFinanceTaxi = () => {
 
   // 택시 테이블 데이터를 CSV로 변환하는 함수
   const generateTaxiTableCSV = (data) => {
-    let csvContent = '날짜,시간,제목,사용자,경로,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    let csvContent = '날짜,시간,제목,사용자,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
         formatDate(item.date) || '',
         formatTime(item.time) || '',
         item.title || '',
-        item.userName || '',
-        item.route || '', // 택시 경로가 없을 수 있음
+        item.userId?.name || item.userName || '',
         item.amount || 0,
         item.isSplitPayment ? (item.myAmount || 0) : (item.amount || 0),
         getPaymentMethodText(item.paymentMethod) || '',
@@ -471,7 +471,6 @@ const AdminFinanceTaxi = () => {
               <th>시간</th>
               <th>제목</th>
               <th>사용자</th>
-              <th>경로</th>
               <th>금액</th>
               <th>결제방법</th>
               <th>프로젝트</th>
@@ -496,8 +495,7 @@ const AdminFinanceTaxi = () => {
                     </div>
                   )}
                 </td>
-                <td style={{fontWeight: '500'}}>{item.userName}</td>
-                <td style={{fontSize: '0.85rem'}}>{item.route}</td>
+                <td style={{fontWeight: '500'}}>{item.userId?.name || item.userName}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
                   {/* 분할결제인 경우 내가 낸 금액 표시 */}
@@ -553,7 +551,7 @@ const AdminFinanceTaxi = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="10" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   택시 이용 내역이 없습니다.
                 </td>
               </tr>

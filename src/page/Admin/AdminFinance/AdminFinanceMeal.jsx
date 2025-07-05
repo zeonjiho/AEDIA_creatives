@@ -232,7 +232,7 @@ const AdminFinanceMeal = () => {
       const csvRow = [
         formatDate(item.date),
         item.title,
-        item.userName,
+        item.userId?.name || item.userName,
         getCategoryText(item.category),
         item.amount,
         item.isSplitPayment ? (item.myAmount || 0) : item.amount,
@@ -433,7 +433,7 @@ const AdminFinanceMeal = () => {
                     </div>
                   )}
                 </td>
-                <td style={{fontWeight: '500'}}>{item.userName}</td>
+                <td style={{fontWeight: '500'}}>{item.userId?.name || item.userName}</td>
                 <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
