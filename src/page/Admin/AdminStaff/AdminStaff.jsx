@@ -184,19 +184,6 @@ const AdminStaff = () => {
     ]
   };
 
-  // 월별 스태프 등록 현황 (예시 데이터)
-  const monthlyStaffData = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-    datasets: [
-      {
-        label: '신규 스태프',
-        data: [2, 4, 1, 3, 2, 1],
-        backgroundColor: 'rgba(64, 192, 87, 0.8)',
-        borderColor: 'rgba(64, 192, 87, 1)',
-        borderWidth: 2
-      }
-    ]
-  };
 
   // 역할별 스태프 분포
   const roleChartData = {
@@ -334,23 +321,6 @@ const AdminStaff = () => {
           </div>
           <div className={ss.chart_content} ref={(el) => chartRefs.current['role-chart'] = el}>
             <Bar data={roleChartData} options={barChartOptions} />
-          </div>
-        </div>
-
-        <div className={ss.chart_card}>
-          <div className={ss.chart_header}>
-            <div className={ss.chart_title}>
-              <div className={`${ss.chart_icon} ${ss.staff}`}></div>
-              월별 신규 스태프 등록
-            </div>
-            <ExportButton 
-              chartRef={{ current: chartRefs.current['monthly-chart'] }}
-              chartTitle="월별 신규 스태프 등록"
-              csvData={generateMonthlyStaffCSV()}
-            />
-          </div>
-          <div className={ss.chart_content} ref={(el) => chartRefs.current['monthly-chart'] = el}>
-            <Bar data={monthlyStaffData} options={barChartOptions} />
           </div>
         </div>
       </div>
