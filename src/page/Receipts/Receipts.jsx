@@ -18,6 +18,7 @@ import {
 import api from '../../utils/api';
 import { jwtDecode } from 'jwt-decode';
 import baseURL from '../../utils/baseURL';
+import { optimizeImage } from '../../utils/imageUtils';
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
@@ -262,10 +263,15 @@ const Receipts = () => {
     const uploadedUrls = [];
     
     for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      
       try {
+        console.log('이미지 최적화 시작:', file.name);
+        
+        // 이미지 최적화 (리사이징 및 압축)
+        const optimizedFile = await optimizeImage(file);
+        
+        const formData = new FormData();
+        formData.append('file', optimizedFile);
+        
         const response = await api.post('/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -276,8 +282,25 @@ const Receipts = () => {
           uploadedUrls.push(response.data.url);
         }
       } catch (error) {
-        console.error('이미지 업로드 실패:', error);
-        // 하나 실패해도 계속 진행
+        console.error('이미지 처리 또는 업로드 실패:', error);
+        // 최적화 실패 시 원본 파일로 재시도
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await api.post('/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          
+          if (response.status === 200 && response.data.url) {
+            uploadedUrls.push(response.data.url);
+          }
+        } catch (fallbackError) {
+          console.error('원본 파일 업로드도 실패:', fallbackError);
+          // 하나 실패해도 계속 진행
+        }
       }
     }
     

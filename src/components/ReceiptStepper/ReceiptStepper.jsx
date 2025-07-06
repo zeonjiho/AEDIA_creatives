@@ -6,6 +6,7 @@ import ProjectSelectModal from '../ProjectSelectModal/ProjectSelectModal';
 import styles from './ReceiptStepper.module.css';
 import { receiptCategories, receiptTypes, receiptStatuses, paymentMethods, projects } from '../../data/mockDatabase';
 import { takePicture, extractReceiptData, createImagePreview, revokeImagePreview, terminateWorker } from '../../utils/ocrUtils';
+import { optimizeImage } from '../../utils/imageUtils';
 
 /**
  * 단계별 영수증 입력 모달 컴포넌트
@@ -126,16 +127,40 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      // 기존 이미지에 추가
-      const newImage = file;
-      const newPreview = createImagePreview(file);
-      
-      setReceiptImages(prev => [...prev, newImage]);
-      setImagePreviews(prev => [...prev, newPreview]);
-      
-      // OCR 처리 (첫 번째 이미지가 없었을 때만)
-      if (receiptImages.length === 0) {
-        handleOcrProcessing(file);
+      try {
+        // 파일 형식 검증
+        if (!file.type.startsWith('image/')) {
+          setProcessingError('이미지 파일만 업로드 가능합니다.');
+          return;
+        }
+
+        // 이미지 최적화 시작 알림
+        setProcessingStatus('이미지 최적화 중...');
+        setIsProcessing(true);
+
+        // 이미지 최적화 (리사이징 및 압축)
+        const optimizedFile = await optimizeImage(file);
+        
+        // 최적화된 이미지 사용
+        const newImage = optimizedFile;
+        const newPreview = createImagePreview(optimizedFile);
+        
+        setReceiptImages(prev => [...prev, newImage]);
+        setImagePreviews(prev => [...prev, newPreview]);
+        
+        // OCR 처리 (첫 번째 이미지가 없었을 때만)
+        if (receiptImages.length === 0) {
+          handleOcrProcessing(optimizedFile);
+        } else {
+          setIsProcessing(false);
+          setProcessingStatus('');
+        }
+        
+      } catch (error) {
+        console.error('이미지 처리 오류:', error);
+        setProcessingError('이미지 처리 중 오류가 발생했습니다.');
+        setIsProcessing(false);
+        setProcessingStatus('');
       }
     }
     
@@ -203,18 +228,43 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     try {
       const file = await takePicture();
       if (file) {
-        const newPreview = createImagePreview(file);
-        
-        setReceiptImages(prev => [...prev, file]);
-        setImagePreviews(prev => [...prev, newPreview]);
-        
-        // OCR 처리 (첫 번째 이미지가 없었을 때만)
-        if (receiptImages.length === 0) {
-          handleOcrProcessing(file);
+        try {
+          // 이미지 최적화 시작 알림
+          setProcessingStatus('이미지 최적화 중...');
+          setIsProcessing(true);
+
+          // 이미지 최적화 (리사이징 및 압축)
+          const optimizedFile = await optimizeImage(file);
+          
+          const newPreview = createImagePreview(optimizedFile);
+          
+          setReceiptImages(prev => [...prev, optimizedFile]);
+          setImagePreviews(prev => [...prev, newPreview]);
+          
+          // OCR 처리 (첫 번째 이미지가 없었을 때만)
+          if (receiptImages.length === 0) {
+            handleOcrProcessing(optimizedFile);
+          } else {
+            setIsProcessing(false);
+            setProcessingStatus('');
+          }
+        } catch (optimizeError) {
+          console.error('이미지 최적화 오류:', optimizeError);
+          // 최적화 실패 시 원본 이미지 사용
+          const newPreview = createImagePreview(file);
+          
+          setReceiptImages(prev => [...prev, file]);
+          setImagePreviews(prev => [...prev, newPreview]);
+          
+          if (receiptImages.length === 0) {
+            handleOcrProcessing(file);
+          }
         }
       }
     } catch (error) {
       setProcessingError(error.message);
+      setIsProcessing(false);
+      setProcessingStatus('');
     }
   };
   
