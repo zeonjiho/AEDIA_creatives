@@ -975,7 +975,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       )}
 
       {/* 현금/계좌이체 상세 정보 */}
-      {formData.paymentMethod === '현금/계좌이체' && (
+      {/* {formData.paymentMethod === '현금/계좌이체' && (
         <div className={styles.input_group}>
           <label>계좌 정보 (선택사항)</label>
           <div className={styles.account_info_container}>
@@ -1006,7 +1006,6 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
             </div>
 
-            {/* 기타 은행 직접입력 */}
             {isOtherBank && (
               <div className={styles.other_input_wrapper}>
                 <label className={styles.account_label}>은행명 직접입력</label>
@@ -1025,7 +1024,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className={styles.input_group}>
         <div className={styles.split_payment_checkbox_container}>

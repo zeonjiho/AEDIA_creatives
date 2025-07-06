@@ -411,7 +411,7 @@ const AdminFinanceMeal = () => {
               <th>금액</th>
               <th>결제방법</th>
               <th>프로젝트</th>
-              <th>특이사항</th>
+              <th>메모</th>
               <th>상태</th>
             </tr>
           </thead>
@@ -466,7 +466,7 @@ const AdminFinanceMeal = () => {
                         다중인원 ({item.participants.length}명)
                       </span>
                     )}
-                    {/* 특이사항이 없는 경우 */}
+                    {/* 메모가 없는 경우 */}
                     {!item.isSplitPayment && !item.isMultiPersonPayment && (
                       <span style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>-</span>
                     )}

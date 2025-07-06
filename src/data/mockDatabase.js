@@ -622,7 +622,7 @@ export const receiptCategories = [
 export const paymentMethods = [
     { id: 'CORPORATE_CARD', name: '법인카드', nameEn: 'Corporate Card' },
     { id: 'PERSONAL_PAYMENT', name: '개인결제', nameEn: 'Personal Payment' },
-    { id: 'CASH', name: '현금', nameEn: 'Cash' },
+    { id: 'CASH', name: '현금/계좌이체', nameEn: 'Cash' },
     { id: 'BANK_TRANSFER', name: '계좌이체', nameEn: 'Bank Transfer' }
 ];
 

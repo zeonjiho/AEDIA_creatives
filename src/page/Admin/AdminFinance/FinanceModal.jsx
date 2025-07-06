@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import ss from '../CSS/AdminChart.module.css'
 import api from '../../../utils/api'
 import { jwtDecode } from 'jwt-decode'
+import baseURL from '../../../utils/baseURL'
 
 const FinanceModal = ({
   isOpen,
@@ -14,6 +15,8 @@ const FinanceModal = ({
   const [rejectionReason, setRejectionReason] = useState('')
   const [adminNote, setAdminNote] = useState(item?.adminNote || '')
   const [loading, setLoading] = useState(false)
+  const [imageViewerOpen, setImageViewerOpen] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState('')
 
   // item이 변경될 때마다 상태 업데이트
   useEffect(() => {
@@ -85,6 +88,43 @@ const FinanceModal = ({
     return time
   }
 
+  // 이미지 보기
+  const handleImageView = (imageUrl) => {
+    const fullUrl = `${baseURL}${imageUrl}`
+    setCurrentImageUrl(fullUrl)
+    setImageViewerOpen(true)
+  }
+
+  // 원본 파일명 추출
+  const getOriginalFileName = (imageUrl) => {
+    const pathSegments = imageUrl.split('/')
+    return pathSegments[pathSegments.length - 1]
+  }
+
+  // 이미지 다운로드
+  const handleImageDownload = async (imageUrl) => {
+    try {
+      const fullUrl = `${baseURL}${imageUrl}`
+      const response = await fetch(fullUrl)
+      const blob = await response.blob()
+      
+      const originalFileName = getOriginalFileName(imageUrl)
+      
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = originalFileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // 메모리 정리
+      URL.revokeObjectURL(link.href)
+    } catch (error) {
+      console.error('다운로드 실패:', error)
+      alert('이미지 다운로드에 실패했습니다.')
+    }
+  }
+
     // 상태 업데이트 처리
   const handleStatusUpdate = async () => {
     if (loading) return
@@ -135,17 +175,18 @@ const FinanceModal = ({
   }
 
   return (
-    <div className={ss.modal_overlay} onClick={onClose}>
-      <div className={ss.modal_container} onClick={(e) => e.stopPropagation()}>
-        <div className={ss.modal_header}>
-          <div className={ss.modal_title}>
-            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            {type === 'meal' ? '식비' : '택시비'} 상세 정보
+    <>
+      <div className={ss.modal_overlay} onClick={onClose}>
+        <div className={ss.modal_container} onClick={(e) => e.stopPropagation()}>
+          <div className={ss.modal_header}>
+            <div className={ss.modal_title}>
+              <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+              {type === 'meal' ? '식비' : '택시비'} 상세 정보
+            </div>
+            <button className={ss.modal_close} onClick={onClose}>
+              ✕
+            </button>
           </div>
-          <button className={ss.modal_close} onClick={onClose}>
-            ✕
-          </button>
-        </div>
 
         <div className={ss.modal_content}>
           {/* 기본 정보 섹션 */}
@@ -316,9 +357,22 @@ const FinanceModal = ({
                 {item.attachmentUrls.map((url, index) => (
                   <div key={index} className={ss.attachment_item}>
                     <span className={ss.attachment_name}>
-                      영수증_{index + 1}.jpg
+                      첨부파일_{index + 1}
                     </span>
-                    <button className={ss.attachment_view}>보기</button>
+                    <div className={ss.attachment_buttons}>
+                      <button 
+                        className={ss.attachment_view}
+                        onClick={() => handleImageView(url)}
+                      >
+                        보기
+                      </button>
+                      <button 
+                        className={ss.attachment_download}
+                        onClick={() => handleImageDownload(url)}
+                      >
+                        다운로드
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -341,9 +395,38 @@ const FinanceModal = ({
           >
             {loading ? '처리 중...' : '상태 업데이트'}
           </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* 이미지 뷰어 모달 */}
+      {imageViewerOpen && (
+        <div className={ss.image_viewer_overlay} onClick={() => setImageViewerOpen(false)}>
+          <div className={ss.image_viewer_container} onClick={(e) => e.stopPropagation()}>
+            <div className={ss.image_viewer_header}>
+              <h3>영수증 이미지</h3>
+              <button 
+                className={ss.image_viewer_close}
+                onClick={() => setImageViewerOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={ss.image_viewer_content}>
+              <img 
+                src={currentImageUrl} 
+                alt="영수증 이미지"
+                className={ss.receipt_image}
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.parentElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">이미지를 불러올 수 없습니다.</div>'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

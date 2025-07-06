@@ -17,6 +17,7 @@ import {
 } from '../../data/mockDatabase';
 import api from '../../utils/api';
 import { jwtDecode } from 'jwt-decode';
+import baseURL from '../../utils/baseURL';
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
@@ -31,6 +32,8 @@ const Receipts = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState('');
   
   // 새 영수증 또는 편집할 영수증 데이터
   const [formData, setFormData] = useState({
@@ -353,6 +356,43 @@ const Receipts = () => {
     return status ? status.name : statusId;
   };
 
+  // 이미지 보기
+  const handleImageView = (imageUrl) => {
+    const fullUrl = `${baseURL}${imageUrl}`
+    setCurrentImageUrl(fullUrl)
+    setImageViewerOpen(true)
+  }
+
+  // 원본 파일명 추출
+  const getOriginalFileName = (imageUrl) => {
+    const pathSegments = imageUrl.split('/')
+    return pathSegments[pathSegments.length - 1]
+  }
+
+  // 이미지 다운로드
+  const handleImageDownload = async (imageUrl) => {
+    try {
+      const fullUrl = `${baseURL}${imageUrl}`
+      const response = await fetch(fullUrl)
+      const blob = await response.blob()
+      
+      const originalFileName = getOriginalFileName(imageUrl)
+      
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = originalFileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // 메모리 정리
+      URL.revokeObjectURL(link.href)
+    } catch (error) {
+      console.error('다운로드 실패:', error)
+      alert('이미지 다운로드에 실패했습니다.')
+    }
+  };
+
   return (
     <div className={styles.receipts_container}>
       <header className={styles.dashboard_header}>
@@ -439,13 +479,13 @@ const Receipts = () => {
           <thead>
             <tr>
               {!isMobile && <th>날짜</th>}
-              <th>제목</th>
               <th>금액</th>
               {!isMobile && (
                 <>
                   <th>카테고리</th>
                   <th>결제방법</th>
                   <th>프로젝트</th>
+                  <th>메모</th>
                 </>
               )}
               <th>상태</th>
@@ -460,7 +500,6 @@ const Receipts = () => {
                   onClick={() => handleRowClick(receipt)}
                 >
                   {!isMobile && <td>{formatDate(receipt.date)}</td>}
-                  <td>{receipt.title}</td>
                   <td className={styles.amount}>{formatAmount(receipt.amount)}</td>
                   {!isMobile && (
                     <>
@@ -475,6 +514,17 @@ const Receipts = () => {
                           <span className={styles.no_project}>-</span>
                         )}
                       </td>
+                      <td className={styles.memo_cell}>
+                        {receipt.description ? (
+                          <span className={styles.memo_text} title={receipt.description}>
+                            {receipt.description.length > 20 
+                              ? `${receipt.description.substring(0, 20)}...` 
+                              : receipt.description}
+                          </span>
+                        ) : (
+                          <span className={styles.no_memo}>-</span>
+                        )}
+                      </td>
                     </>
                   )}
                   <td>
@@ -486,7 +536,7 @@ const Receipts = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={isMobile ? "3" : "7"} className={styles.no_data}>
+                <td colSpan={isMobile ? "2" : "7"} className={styles.no_data}>
                   검색 결과가 없습니다.
                 </td>
               </tr>
@@ -556,20 +606,73 @@ const Receipts = () => {
                     <p>{selectedReceipt.description}</p>
                   </div>
                 )}
+                {selectedReceipt.attachmentUrls && selectedReceipt.attachmentUrls.length > 0 && (
+                  <div className={styles.info_attachments}>
+                    <span>첨부파일:</span>
+                    <div className={styles.attachments_list}>
+                      {selectedReceipt.attachmentUrls.map((url, index) => (
+                        <div key={index} className={styles.attachment_item}>
+                          <span className={styles.attachment_name}>
+                            첨부{index + 1}
+                          </span>
+                          <div className={styles.attachment_buttons}>
+                            <button 
+                              className={styles.attachment_view}
+                              onClick={() => handleImageView(url)}
+                            >
+                              보기
+                            </button>
+                            <button 
+                              className={styles.attachment_download}
+                              onClick={() => handleImageDownload(url)}
+                            >
+                              다운로드
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className={styles.action_buttons}>
                 <button 
-                  className={styles.edit_button} 
+                  className={`${styles.edit_button} ${selectedReceipt.status === 'APPROVED' ? styles.disabled : ''}`}
                   onClick={() => openEditModal(selectedReceipt)}
+                  disabled={selectedReceipt.status === 'APPROVED'}
+                  title={selectedReceipt.status === 'APPROVED' ? '승인된 영수증은 편집할 수 없습니다' : ''}
                 >
-                  <FaEdit /> 편집
+                  <FaEdit /> {selectedReceipt.status === 'APPROVED' ? '승인 완료' : '편집'}
                 </button>
-                {selectedReceipt.attachmentUrls.length > 0 && (
-                  <button className={styles.download_button}>
-                    <FaFileDownload /> 첨부파일 다운로드
-                  </button>
-                )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이미지 뷰어 모달 */}
+      {imageViewerOpen && (
+        <div className={styles.image_viewer_overlay} onClick={() => setImageViewerOpen(false)}>
+          <div className={styles.image_viewer_container} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.image_viewer_header}>
+              <h3>영수증 이미지</h3>
+              <button 
+                className={styles.image_viewer_close}
+                onClick={() => setImageViewerOpen(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className={styles.image_viewer_content}>
+              <img 
+                src={currentImageUrl} 
+                alt="영수증 이미지"
+                className={styles.receipt_image}
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.parentElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">이미지를 불러올 수 없습니다.</div>'
+                }}
+              />
             </div>
           </div>
         </div>
