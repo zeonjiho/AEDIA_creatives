@@ -93,7 +93,7 @@ const AdminLayout = () => {
             icon: faCalendarCheck,
             submenus: [
                 { id: 'attendance-list', name: '출석 현황', path: '/admin/attendance' },
-                { id: 'attendance-summary', name: '출석 통계', path: '/admin/attendance/summary' },
+                // { id: 'attendance-summary', name: '출석 통계', path: '/admin/attendance/summary' },
             ]
         },
         {

@@ -3306,24 +3306,24 @@ app.get('/admin/attendance/list', async(req, res) => {
                     return acc;
                 }, []);
 
-                console.log(`날짜 ${date}, 사용자 ${user.name}: 수정여부=${isModified}, 수정이력=${allModificationHistory.length}개`);
+                // console.log(`날짜 ${date}, 사용자 ${user.name}: 수정여부=${isModified}, 수정이력=${allModificationHistory.length}개`);
 
                 // 외부 위치 정보 수집
                 const hasOffSiteRecord = records.some(record => record.isOffSite === true);
                 const offSiteRecords = records.filter(record => record.isOffSite === true);
 
-                console.log(`📊 ${user.name} (${date}) 외부위치 분석:`, {
-                    총기록수: records.length,
-                    외부기록여부: hasOffSiteRecord,
-                    외부기록수: offSiteRecords.length,
-                    첫출근외부여부: firstCheckIn ? firstCheckIn.isOffSite : false,
-                    마지막퇴근외부여부: lastCheckOut ? lastCheckOut.isOffSite : false,
-                    모든기록외부정보: records.map(r => ({
-                        type: r.type,
-                        isOffSite: r.isOffSite,
-                        offSiteReason: r.offSiteReason
-                    }))
-                });
+                // console.log(`📊 ${user.name} (${date}) 외부위치 분석:`, {
+                //     총기록수: records.length,
+                //     외부기록여부: hasOffSiteRecord,
+                //     외부기록수: offSiteRecords.length,
+                //     첫출근외부여부: firstCheckIn ? firstCheckIn.isOffSite : false,
+                //     마지막퇴근외부여부: lastCheckOut ? lastCheckOut.isOffSite : false,
+                //     모든기록외부정보: records.map(r => ({
+                //         type: r.type,
+                //         isOffSite: r.isOffSite,
+                //         offSiteReason: r.offSiteReason
+                //     }))
+                // });
 
                 const offSiteInfo = hasOffSiteRecord ? {
                     checkIn: firstCheckIn && firstCheckIn.isOffSite ? {
@@ -3336,9 +3336,9 @@ app.get('/admin/attendance/list', async(req, res) => {
                     } : null
                 } : null;
 
-                if (hasOffSiteRecord) {
-                    console.log(`📊 ${user.name} (${date}) 외부위치 정보:`, JSON.stringify(offSiteInfo, null, 2));
-                }
+                // if (hasOffSiteRecord) {
+                //     console.log(`📊 ${user.name} (${date}) 외부위치 정보:`, JSON.stringify(offSiteInfo, null, 2));
+                // }
 
                 const responseData = {
                     _id: `${user._id}_${date}`,
@@ -3359,11 +3359,11 @@ app.get('/admin/attendance/list', async(req, res) => {
                     offSiteCount: offSiteRecords.length
                 };
 
-                console.log(`🔍 응답 데이터 (${user.name}, ${date}):`, {
-                    hasOffSite: responseData.hasOffSite,
-                    offSiteCount: responseData.offSiteCount,
-                    recordsCount: responseData.records ? responseData.records.length : 0
-                });
+                // console.log(`🔍 응답 데이터 (${user.name}, ${date}):`, {
+                //     hasOffSite: responseData.hasOffSite,
+                //     offSiteCount: responseData.offSiteCount,
+                //     recordsCount: responseData.records ? responseData.records.length : 0
+                // });
 
                 attendanceList.push(responseData);
             });
@@ -4002,7 +4002,6 @@ app.put('/receipts/:id', async(req, res) => {
         const receiptId = req.params.id;
         const updateData = req.body;
 
-        // 승인된 영수증은 수정 불가
         const existingReceipt = await Receipt.findById(receiptId);
         if (!existingReceipt) {
             return res.status(404).json({
@@ -4011,11 +4010,20 @@ app.put('/receipts/:id', async(req, res) => {
             });
         }
 
-        if (existingReceipt.status === 'APPROVED') {
-            return res.status(403).json({
-                success: false,
-                message: '승인된 영수증은 수정할 수 없습니다.'
-            });
+        // 상태별 특별 처리
+        if (updateData.status === 'APPROVED') {
+            // 승인으로 변경하는 경우 승인 정보 추가
+            updateData.approvedAt = new Date();
+            updateData.rejectionReason = null;
+            // approvedBy는 프론트엔드에서 전달받음
+        } else if (updateData.status && updateData.status !== 'APPROVED') {
+            // 승인이 아닌 다른 상태로 변경하는 경우 승인 정보 제거
+            updateData.approvedBy = null;
+            updateData.approvedAt = null;
+            // 거절 상태가 아니라면 거절 사유도 제거
+            if (updateData.status !== 'REJECTED') {
+                updateData.rejectionReason = null;
+            }
         }
 
         // 금액이 있는 경우 숫자로 변환
@@ -4033,7 +4041,8 @@ app.put('/receipts/:id', async(req, res) => {
                 updateData, { new: true, runValidators: true }
             ).populate('userId', 'name email')
             .populate('projectId', 'title')
-            .populate('creditCardId', 'cardName number label');
+            .populate('creditCardId', 'cardName number label')
+            .populate('approvedBy', 'name email');
 
         res.status(200).json({
             success: true,

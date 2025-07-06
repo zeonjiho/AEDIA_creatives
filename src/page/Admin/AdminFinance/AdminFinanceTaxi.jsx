@@ -89,12 +89,17 @@ const AdminFinanceTaxi = () => {
     }
   }
 
+  // 카테고리 텍스트 변환
+  const getCategoryText = (category) => {
+    return category; // 이미 한글로 저장되어 있음
+  }
+
   // 결제 방법 텍스트 변환
   const getPaymentMethodText = (method) => {
     const methodMap = {
       'CORPORATE_CARD': '법인카드',
       'PERSONAL_CARD': '개인카드',
-      'CASH': '현금',
+      'CASH': '현금/계좌이체',
       'BANK_TRANSFER': '계좌이체'
     };
     return methodMap[method] || method;
@@ -260,14 +265,13 @@ const AdminFinanceTaxi = () => {
 
   // 택시 테이블 데이터를 CSV로 변환하는 함수
   const generateTaxiTableCSV = (data) => {
-    let csvContent = '날짜,시간,제목,사용자,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    let csvContent = '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
         formatDate(item.date) || '',
-        formatTime(item.time) || '',
-        item.title || '',
         item.userId?.name || item.userName || '',
+        getCategoryText(item.category) || '',
         item.amount || 0,
         item.isSplitPayment ? (item.myAmount || 0) : (item.amount || 0),
         getPaymentMethodText(item.paymentMethod) || '',
@@ -468,9 +472,8 @@ const AdminFinanceTaxi = () => {
           <thead>
             <tr>
               <th>날짜</th>
-              <th>시간</th>
-              <th>제목</th>
               <th>사용자</th>
+              <th>카테고리</th>
               <th>금액</th>
               <th>결제방법</th>
               <th>프로젝트</th>
@@ -486,16 +489,8 @@ const AdminFinanceTaxi = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <td>{formatDate(item.date)}</td>
-                <td>{formatTime(item.time)}</td>
-                <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>
-                  {item.title}
-                  {item.description && (
-                    <div style={{fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
-                      {item.description}
-                    </div>
-                  )}
-                </td>
                 <td style={{fontWeight: '500'}}>{item.userId?.name || item.userName}</td>
+                <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
                   {/* 분할결제인 경우 내가 낸 금액 표시 */}
@@ -551,7 +546,7 @@ const AdminFinanceTaxi = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   택시 이용 내역이 없습니다.
                 </td>
               </tr>

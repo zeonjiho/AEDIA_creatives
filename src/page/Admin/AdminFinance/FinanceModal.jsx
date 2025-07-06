@@ -1,18 +1,28 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ss from '../CSS/AdminChart.module.css'
 import api from '../../../utils/api'
+import { jwtDecode } from 'jwt-decode'
 
-const FinanceModal = ({ 
-  isOpen, 
-  onClose, 
-  item, 
+const FinanceModal = ({
+  isOpen,
+  onClose,
+  item,
   type, // 'meal' 또는 'taxi'
-  onUpdate 
+  onUpdate
 }) => {
   const [status, setStatus] = useState(item?.status || 'PENDING')
   const [rejectionReason, setRejectionReason] = useState('')
-  const [note, setNote] = useState('')
+  const [adminNote, setAdminNote] = useState(item?.adminNote || '')
   const [loading, setLoading] = useState(false)
+
+  // item이 변경될 때마다 상태 업데이트
+  useEffect(() => {
+    if (item) {
+      setStatus(item.status || 'PENDING')
+      setRejectionReason(item.rejectionReason || '')
+      setAdminNote(item.adminNote || '')
+    }
+  }, [item])
 
   if (!isOpen || !item) return null
 
@@ -47,7 +57,7 @@ const FinanceModal = ({
     const methodMap = {
       'CORPORATE_CARD': '법인카드',
       'PERSONAL_CARD': '개인카드',
-      'CASH': '현금',
+      'CASH': '현금/계좌이체',
       'BANK_TRANSFER': '계좌이체'
     }
     return methodMap[method] || method
@@ -75,31 +85,39 @@ const FinanceModal = ({
     return time
   }
 
-  // 상태 업데이트 처리
+    // 상태 업데이트 처리
   const handleStatusUpdate = async () => {
     if (loading) return
     
     setLoading(true)
     try {
+      // 모든 상태 변경을 PUT API로 통일
       const updateData = {
         status,
-        note,
+        adminNote,
         rejectionReason: status === 'REJECTED' ? rejectionReason : undefined
+      };
+
+      // 승인으로 변경하는 경우에만 approvedBy 추가
+      if (status === 'APPROVED') {
+        const token = localStorage.getItem('token');
+        const currentUserId = token ? jwtDecode(token).userId : null;
+        updateData.approvedBy = currentUserId;
       }
 
-      // API 호출 (실제 구현 시 엔드포인트 확인 필요)
-      await api.put(`/receipts/${item._id}`, updateData)
+      const response = await api.put(`/receipts/${item._id}`, updateData);
       
       // 성공 시 부모 컴포넌트 업데이트
-      if (onUpdate) {
-        onUpdate({ ...item, ...updateData })
+      if (onUpdate && response.data?.data) {
+        onUpdate(response.data.data);
       }
       
       alert('상태가 성공적으로 업데이트되었습니다.')
       onClose()
     } catch (error) {
       console.error('상태 업데이트 실패:', error)
-      alert('상태 업데이트에 실패했습니다.')
+      const errorMessage = error.response?.data?.message || '상태 업데이트에 실패했습니다.'
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -134,23 +152,23 @@ const FinanceModal = ({
           <div className={ss.modal_section}>
             <h3 className={ss.section_title}>기본 정보</h3>
             <div className={ss.info_grid}>
-              <div className={ss.info_item}>
+              {/* <div className={ss.info_item}>
                 <label>제목</label>
                 <div className={ss.info_value}>{item.title}</div>
-              </div>
-              <div className={ss.info_item}>
-                <label>설명</label>
-                <div className={ss.info_value}>{item.description || '설명 없음'}</div>
-              </div>
+              </div> */}
               <div className={ss.info_item}>
                 <label>사용자</label>
                 <div className={ss.info_value}>{item.userId?.name || item.userName}</div>
               </div>
               <div className={ss.info_item}>
+                <label>메모</label>
+                <div className={ss.info_value}>{item.description || '-'}</div>
+              </div>
+              <div className={ss.info_item}>
                 <label>날짜</label>
                 <div className={ss.info_value}>{formatDate(item.date)}</div>
               </div>
-              {type === 'taxi' && item.time && (
+              {item.time && (
                 <div className={ss.info_item}>
                   <label>시간</label>
                   <div className={ss.info_value}>{formatTime(item.time)}</div>
@@ -189,7 +207,7 @@ const FinanceModal = ({
                       {item.projectId?.title || item.projectName}
                     </span>
                   ) : (
-                    <span style={{color: 'var(--text-tertiary)'}}>미배정</span>
+                    <span style={{ color: 'var(--text-tertiary)' }}>미배정</span>
                   )}
                 </div>
               </div>
@@ -209,6 +227,11 @@ const FinanceModal = ({
                   <strong>거절 사유:</strong> {item.rejectionReason}
                 </div>
               )}
+              {item.adminNote && (
+                <div className={ss.admin_note}>
+                  <strong>관리자 메모:</strong> {item.adminNote}
+                </div>
+              )}
             </div>
           </div>
 
@@ -218,40 +241,40 @@ const FinanceModal = ({
             <div className={ss.status_controls}>
               <div className={ss.status_options}>
                 <label className={ss.radio_option}>
-                  <input 
-                    type="radio" 
-                    name="status" 
-                    value="APPROVED" 
+                  <input
+                    type="radio"
+                    name="status"
+                    value="APPROVED"
                     checked={status === 'APPROVED'}
                     onChange={(e) => setStatus(e.target.value)}
                   />
                   <span className={ss.radio_text}>승인</span>
                 </label>
                 <label className={ss.radio_option}>
-                  <input 
-                    type="radio" 
-                    name="status" 
-                    value="PENDING" 
+                  <input
+                    type="radio"
+                    name="status"
+                    value="PENDING"
                     checked={status === 'PENDING'}
                     onChange={(e) => setStatus(e.target.value)}
                   />
                   <span className={ss.radio_text}>승인 대기</span>
                 </label>
                 <label className={ss.radio_option}>
-                  <input 
-                    type="radio" 
-                    name="status" 
-                    value="PROCESSING" 
+                  <input
+                    type="radio"
+                    name="status"
+                    value="PROCESSING"
                     checked={status === 'PROCESSING'}
                     onChange={(e) => setStatus(e.target.value)}
                   />
                   <span className={ss.radio_text}>처리 중</span>
                 </label>
                 <label className={ss.radio_option}>
-                  <input 
-                    type="radio" 
-                    name="status" 
-                    value="REJECTED" 
+                  <input
+                    type="radio"
+                    name="status"
+                    value="REJECTED"
                     checked={status === 'REJECTED'}
                     onChange={(e) => setStatus(e.target.value)}
                   />
@@ -275,8 +298,8 @@ const FinanceModal = ({
               <div className={ss.note_input}>
                 <label>관리자 메모 (선택사항)</label>
                 <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  value={adminNote}
+                  onChange={(e) => setAdminNote(e.target.value)}
                   placeholder="추가 메모가 있으면 입력해주세요..."
                   className={ss.textarea_input}
                   rows="2"
@@ -304,15 +327,15 @@ const FinanceModal = ({
         </div>
 
         <div className={ss.modal_footer}>
-          <button 
-            className={ss.button_secondary} 
+          <button
+            className={ss.button_secondary}
             onClick={onClose}
             disabled={loading}
           >
             취소
           </button>
-          <button 
-            className={ss.button_primary} 
+          <button
+            className={ss.button_primary}
             onClick={handleStatusUpdate}
             disabled={loading || (status === 'REJECTED' && !rejectionReason.trim())}
           >

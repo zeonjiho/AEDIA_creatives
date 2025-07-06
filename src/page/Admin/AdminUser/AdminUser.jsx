@@ -230,7 +230,7 @@ const AdminUser = () => {
             chartTitle="유저_목록"
             csvData={generateTableCSV(
               userList.filter(user => user !== null && user !== undefined), 
-              ['이름', '전화번호', '이메일', '상태', '사용자 유형', '역할', '관리자 메모', '가입일']
+              ['이름', '전화번호', '이메일', '상태', '부서', '역할', '가입일']
             )}
           />
         </div>
@@ -241,9 +241,8 @@ const AdminUser = () => {
               <th>전화번호</th>
               <th>이메일</th>
               <th>상태</th>
-              <th>구분</th>
+              <th>부서</th>
               <th>역할</th>
-              <th>관리자 메모</th>
               <th>가입일</th>
               <th></th>
             </tr>
@@ -269,32 +268,12 @@ const AdminUser = () => {
                     {getStatusText(user.status)}
                   </span>
                 </td>
-                <td>{getUserTypeText(user.userType)}</td>
+                <td>{user.department || '-'}</td>
                 <td style={{maxWidth: '200px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
                   {user.roles && user.roles.length > 0 
                     ? user.roles.join(', ') 
                     : '-'
                   }
-                </td>
-                <td style={{maxWidth: '150px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
-                  {user.adminMemo ? (
-                    <span style={{
-                      backgroundColor: 'var(--bg-secondary)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontStyle: 'italic',
-                      color: 'var(--text-secondary)',
-                      display: 'inline-block',
-                      maxWidth: '100%',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {user.adminMemo}
-                    </span>
-                  ) : (
-                    <span style={{color: 'var(--text-tertiary)'}}>-</span>
-                  )}
                 </td>
                 <td>{formatDate(user.createdAt)}</td>
                 <td style={{textAlign: 'center', padding: '12px', verticalAlign: 'middle', width: '120px'}}>
@@ -332,7 +311,7 @@ const AdminUser = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   등록된 유저가 없습니다.
                 </td>
               </tr>

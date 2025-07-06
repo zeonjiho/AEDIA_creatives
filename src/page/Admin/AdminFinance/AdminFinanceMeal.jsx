@@ -96,7 +96,7 @@ const AdminFinanceMeal = () => {
     const methodMap = {
       'CORPORATE_CARD': '법인카드',
       'PERSONAL_CARD': '개인카드',
-      'CASH': '현금',
+      'CASH': '현금/계좌이체',
       'BANK_TRANSFER': '계좌이체'
     };
     return methodMap[method] || method;
@@ -226,12 +226,11 @@ const AdminFinanceMeal = () => {
 
   // 식비 테이블 데이터를 CSV로 변환하는 함수
   const generateMealTableCSV = (data) => {
-    let csvContent = '날짜,제목,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    let csvContent = '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
         formatDate(item.date),
-        item.title,
         item.userId?.name || item.userName,
         getCategoryText(item.category),
         item.amount,
@@ -407,7 +406,6 @@ const AdminFinanceMeal = () => {
           <thead>
             <tr>
               <th>날짜</th>
-              <th>제목</th>
               <th>사용자</th>
               <th>카테고리</th>
               <th>금액</th>
@@ -425,14 +423,6 @@ const AdminFinanceMeal = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <td>{formatDate(item.date)}</td>
-                <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>
-                  {item.title}
-                  {item.description && (
-                    <div style={{fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
-                      {item.description}
-                    </div>
-                  )}
-                </td>
                 <td style={{fontWeight: '500'}}>{item.userId?.name || item.userName}</td>
                 <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>

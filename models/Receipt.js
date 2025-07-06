@@ -8,6 +8,7 @@ const receiptSchema = new mongoose.Schema({
         trim: true
     },
 
+    // 등록하는 사람이 적는 메모
     description: {
         type: String,
         trim: true
@@ -154,6 +155,12 @@ const receiptSchema = new mongoose.Schema({
 
     rejectionReason: {
         type: String
+    },
+
+    // 관리자 메모
+    adminNote: {
+        type: String,
+        trim: true
     }
 }, {
     timestamps: true
