@@ -621,7 +621,7 @@ export const receiptCategories = [
 // 영수증 결제 방법 데이터
 export const paymentMethods = [
     { id: 'CORPORATE_CARD', name: '법인카드', nameEn: 'Corporate Card' },
-    { id: 'PERSONAL_PAYMENT', name: '개인결제', nameEn: 'Personal Payment' },
+    { id: 'PERSONAL_CARD', name: '개인카드', nameEn: 'Personal Card' },
     { id: 'CASH', name: '현금/계좌이체', nameEn: 'Cash' },
     { id: 'BANK_TRANSFER', name: '계좌이체', nameEn: 'Bank Transfer' }
 ];
@@ -680,7 +680,7 @@ export const receipts = [{
         title: '교통비 정산',
         amount: 45000,
         category: 'TRANSPORTATION',
-        paymentMethod: 'PERSONAL_PAYMENT',
+        paymentMethod: 'PERSONAL_CARD',
         status: 'APPROVED',
         attachmentUrl: null,
         type: 'TAXI',
@@ -760,7 +760,7 @@ export const receipts = [{
         title: '택시비 (출장)',
         amount: 35000,
         category: 'TRANSPORTATION',
-        paymentMethod: 'PERSONAL_PAYMENT',
+        paymentMethod: 'PERSONAL_CARD',
         status: 'PENDING',
         attachmentUrl: null,
         type: 'TAXI',

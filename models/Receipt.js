@@ -4,7 +4,6 @@ const receiptSchema = new mongoose.Schema({
     // 기본 정보
     title: {
         type: String,
-        required: true,
         trim: true
     },
 

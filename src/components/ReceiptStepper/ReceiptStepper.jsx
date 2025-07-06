@@ -7,6 +7,7 @@ import styles from './ReceiptStepper.module.css';
 import { receiptCategories, receiptTypes, receiptStatuses, paymentMethods, projects } from '../../data/mockDatabase';
 import { takePicture, extractReceiptData, createImagePreview, revokeImagePreview, terminateWorker } from '../../utils/ocrUtils';
 import { optimizeImage } from '../../utils/imageUtils';
+import baseURL from '../../utils/baseURL';
 
 /**
  * 단계별 영수증 입력 모달 컴포넌트
@@ -53,33 +54,57 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 편집 모드일 때 초기 데이터 로드
   useEffect(() => {
+    if (!isOpen) return; // 모달이 열려있지 않으면 실행하지 않음
+    
     if (mode === 'edit' && initialData && Object.keys(initialData).length > 0) {
-      setFormData({
-        date: new Date().toISOString().split('T')[0],
-        title: '',
-        amount: '',
-        category: '',
-        paymentMethod: 'CORPORATE_CARD',
-        status: 'PENDING',
-        type: 'OTHER',
-        attachmentUrls: [],
-        description: '',
-        project: '',
-        projectId: null,
-        ...initialData,
-        // amount는 문자열로 변환
-        amount: initialData.amount ? initialData.amount.toString() : ''
-      });
+      // 날짜 포맷 변환 (서버에서 온 ISO 날짜를 YYYY-MM-DD 형식으로)
+      let formattedDate = new Date().toISOString().split('T')[0];
+      if (initialData.date) {
+        try {
+          const date = new Date(initialData.date);
+          formattedDate = date.toISOString().split('T')[0];
+        } catch (error) {
+          console.error('날짜 변환 오류:', error);
+        }
+      }
+      
+      const editFormData = {
+        date: formattedDate,
+        title: initialData.title || '',
+        amount: initialData.amount ? initialData.amount.toString() : '',
+        category: initialData.category || '',
+        paymentMethod: initialData.paymentMethod || 'CORPORATE_CARD',
+        status: initialData.status || 'PENDING',
+        type: initialData.type || 'OTHER',
+        attachmentUrls: initialData.attachmentUrls || [],
+        description: initialData.description || '',
+        project: initialData.project || '',
+        projectId: initialData.projectId || null
+      };
+      
+      setFormData(editFormData);
       setCurrentStep(2); // 편집 모드에서는 폼 입력 단계부터 시작
       
       // 기존 프로젝트 설정
       if (initialData.project) {
         setSelectedProject(initialData.project);
+      } else {
+        setSelectedProject(null);
       }
       
-      // 기존 첨부 이미지가 있으면 미리보기 설정
+      // 기존 첨부 이미지가 있으면 미리보기 설정 (서버 URL을 풀 URL로 변환)
       if (initialData.attachmentUrls && initialData.attachmentUrls.length > 0) {
-        setImagePreviews(initialData.attachmentUrls);
+        const fullImageUrls = initialData.attachmentUrls.map(url => {
+          // 이미 전체 URL인지 확인
+          if (url.startsWith('http')) {
+            return url;
+          }
+          // 서버 URL이면 baseURL 추가
+          return `${baseURL}${url}`;
+        });
+        setImagePreviews(fullImageUrls);
+      } else {
+        setImagePreviews([]);
       }
     } else if (mode === 'add') {
       // 추가 모드일 때는 초기값으로 설정
@@ -98,25 +123,85 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       });
       setCurrentStep(1); // 이미지 업로드 단계부터 시작
       setSelectedProject(null); // 프로젝트 선택 초기화
+      setImagePreviews([]);
     }
   }, [mode, initialData, isOpen]);
+  
+  // 편집 모드에서 초기 데이터 변경 시 추가 업데이트
+  useEffect(() => {
+    if (mode === 'edit' && initialData && Object.keys(initialData).length > 0 && isOpen) {
+      // 프로젝트 설정 다시 확인
+      if (initialData.project && selectedProject !== initialData.project) {
+        setSelectedProject(initialData.project);
+      }
+      
+      // 폼 데이터 다시 확인
+      if (formData.title !== initialData.title || formData.amount !== initialData.amount?.toString()) {
+        setFormData(prev => ({
+          ...prev,
+          title: initialData.title || '',
+          amount: initialData.amount ? initialData.amount.toString() : '',
+          description: initialData.description || '',
+          category: initialData.category || '',
+          paymentMethod: initialData.paymentMethod || 'CORPORATE_CARD',
+          type: initialData.type || 'OTHER'
+        }));
+      }
+    }
+  }, [mode, initialData, isOpen, selectedProject, formData.title, formData.amount]);
   
   // 모달이 닫힐 때 상태 초기화
   useEffect(() => {
     if (!isOpen) {
+      // 모든 상태를 초기값으로 재설정
       setCurrentStep(mode === 'edit' ? 2 : 1);
-      if (imagePreviews && mode === 'add') {
-        // 추가 모드일 때만 이미지 미리보기 정리 (편집 모드에서는 기존 이미지일 수 있음)
-        revokeImagePreview(imagePreviews[0]);
-      }
+      
+      // 이미지 관련 상태 초기화
       if (mode === 'add') {
+        // 추가 모드일 때만 이미지 미리보기 정리 (편집 모드에서는 기존 이미지일 수 있음)
+        imagePreviews.forEach(preview => {
+          if (typeof preview === 'string' && preview.startsWith('blob:')) {
+            revokeImagePreview(preview);
+          }
+        });
         setImagePreviews([]);
         setReceiptImages([]);
+      } else if (mode === 'edit') {
+        // 편집 모드에서는 blob URL만 정리하고 상태는 유지
+        imagePreviews.forEach(preview => {
+          if (typeof preview === 'string' && preview.startsWith('blob:')) {
+            revokeImagePreview(preview);
+          }
+        });
       }
+      
+      // 처리 상태 초기화
       setIsProcessing(false);
       setProcessingError(null);
       setProcessingStatus('');
       setFormErrors({});
+      
+      // 프로젝트 선택 상태 초기화
+      if (mode === 'add') {
+        setSelectedProject(null);
+      }
+      
+      // 폼 데이터 초기화 (추가 모드일 때만)
+      if (mode === 'add') {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          title: '',
+          amount: '',
+          category: '',
+          paymentMethod: 'CORPORATE_CARD',
+          status: 'PENDING',
+          type: 'OTHER',
+          attachmentUrls: [],
+          description: '',
+          project: '',
+          projectId: null
+        });
+      }
       
       // Tesseract 워커 정리
       terminateWorker().catch(e => console.error('워커 정리 실패:', e));
@@ -170,7 +255,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 개별 이미지 제거
   const handleRemoveImage = (index) => {
-    if (mode === 'add' && imagePreviews[index]) {
+    // blob URL인 경우에만 revoke (추가 모드에서 새로 추가한 이미지)
+    if (mode === 'add' && imagePreviews[index] && imagePreviews[index].startsWith('blob:')) {
       revokeImagePreview(imagePreviews[index]);
     }
     
@@ -184,9 +270,12 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 모든 이미지 제거
   const handleRemoveAllImages = () => {
+    // blob URL인 경우에만 revoke (추가 모드에서 새로 추가한 이미지)
     if (mode === 'add') {
       imagePreviews.forEach(preview => {
-        revokeImagePreview(preview);
+        if (preview && preview.startsWith('blob:')) {
+          revokeImagePreview(preview);
+        }
       });
     }
     setImagePreviews([]);
@@ -277,9 +366,6 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       // 진행 상태 표시
       setProcessingStatus('이미지 처리 중...');
       
-      // 로그 활성화로 디버깅 정보 확인
-      console.log('OCR 처리 시작: ', file.name, file.size, file.type);
-      
       // 파일 형식 및 크기 검증
       if (!['image/jpeg', 'image/png', 'image/webp', 'image/heic'].includes(file.type.toLowerCase())) {
         throw new Error('지원되는 이미지 형식이 아닙니다. JPG, PNG, WebP, HEIC 형식만 사용 가능합니다.');
@@ -290,14 +376,12 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       }
       
       setProcessingStatus('OCR로 텍스트 인식 중...');
-      console.log('Tesseract OCR 처리 시작...');
       
       try {
         const extractedData = await extractReceiptData(file);
         
         // 인식 결과가 너무 적을 경우 처리
         if (!extractedData || !extractedData.amount) {
-          console.warn('OCR 인식 결과가 불충분합니다:', extractedData);
           // 기본 데이터 설정으로 시도
           setFormData(prev => ({
             ...prev,
@@ -310,7 +394,6 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
           }));
         } else {
           // 정상 인식 시 - 제목과 설명 제외
-          console.log('OCR 인식 성공:', extractedData);
           setFormData(prev => ({
             ...prev,
             date: extractedData.date || prev.date,
@@ -322,15 +405,14 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
           }));
         }
         
-        // 어떤 경우든 다음 단계로 진행
-        setCurrentStep(2);
+        // 어떤 경우든 다음 단계로 진행 (모달이 열려있을 때만)
+        if (isOpen) {
+          setCurrentStep(2);
+        }
       } catch (ocrError) {
-        console.error('Tesseract OCR 실행 중 오류:', ocrError);
         throw new Error(`OCR 처리 오류: ${ocrError.message}`);
       }
     } catch (error) {
-      console.error('OCR 처리 실패:', error);
-      
       // 자세한 오류 메시지 표시
       const errorMessage = error.message || '영수증 인식에 실패했습니다.';
       setProcessingError(`${errorMessage} 다시 시도하거나 직접 입력해주세요.`);
@@ -360,7 +442,9 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 직접 입력 이동
   const handleManualEntry = () => {
-    setCurrentStep(2);
+    if (isOpen) {
+      setCurrentStep(2);
+    }
   };
   
   // 폼 유효성 검사
@@ -382,6 +466,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 다음 단계 이동
   const handleNextStep = () => {
+    if (!isOpen) return; // 모달이 닫혀있으면 실행하지 않음
+    
     // 2단계(정보 입력) -> 3단계(정보 확인)로 넘어갈 때 유효성 검사
     if (currentStep === 2) {
       if (!validateForm()) {
@@ -396,6 +482,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
   
   // 이전 단계 이동
   const handlePrevStep = () => {
+    if (!isOpen) return; // 모달이 닫혀있으면 실행하지 않음
+    
     const minStep = mode === 'edit' ? 2 : 1; // 편집 모드에서는 2단계가 최소
     if (currentStep > minStep) {
       setCurrentStep(prev => prev - 1);
@@ -411,10 +499,30 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       return;
     }
 
+    // 첨부파일 처리
+    let attachmentData = [];
+    if (mode === 'edit') {
+      // 편집 모드에서는 기존 서버 URL과 새로운 파일을 구분
+      attachmentData = imagePreviews.map((preview, index) => {
+        // blob URL이면 새로 추가된 파일 (receiptImages에서 찾기)
+        if (preview.startsWith('blob:')) {
+          return receiptImages[index] || preview;
+        }
+        // 서버 URL이면 원본 서버 경로로 변환
+        if (preview.startsWith(baseURL)) {
+          return preview.replace(baseURL, '');
+        }
+        return preview;
+      });
+    } else {
+      // 추가 모드에서는 imagePreviews 그대로 사용
+      attachmentData = imagePreviews;
+    }
+
     const submittedData = {
       ...formData,
       amount: parseInt(formData.amount, 10) || 0,
-      attachmentUrls: imagePreviews
+      attachmentUrls: attachmentData
     };
 
     try {
@@ -631,7 +739,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
               )}
             </div>
             
-            <form className={styles.form}>
+            <form className={styles.form} key={`form-${mode}-${currentStep}`}>
               <div className={styles.form_grid}>
                 <div className={styles.form_column}>
                   <div className={styles.form_group}>
@@ -640,7 +748,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                       type="date"
                       id="date"
                       name="date"
-                      value={formData.date}
+                      value={formData.date || ''}
                       onChange={handleInputChange}
                       required
                       className={styles.form_input}
@@ -654,7 +762,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                       type="text"
                       id="title"
                       name="title"
-                      value={formData.title}
+                      value={formData.title || ''}
                       onChange={handleInputChange}
                       placeholder="영수증 제목을 입력하세요"
                       required
@@ -672,7 +780,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                       type="number"
                       id="amount"
                       name="amount"
-                      value={formData.amount}
+                      value={formData.amount || ''}
                       onChange={handleInputChange}
                       placeholder="금액을 입력하세요"
                       required
@@ -686,7 +794,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                     <select
                       id="category"
                       name="category"
-                      value={formData.category}
+                      value={formData.category || ''}
                       onChange={handleInputChange}
                       required
                       className={styles.form_select}
@@ -704,7 +812,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                     <select
                       id="type"
                       name="type"
-                      value={formData.type}
+                      value={formData.type || 'OTHER'}
                       onChange={handleInputChange}
                       required
                       className={styles.form_select}
@@ -721,7 +829,7 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                     <select
                       id="paymentMethod"
                       name="paymentMethod"
-                      value={formData.paymentMethod}
+                      value={formData.paymentMethod || 'CORPORATE_CARD'}
                       onChange={handleInputChange}
                       required
                       className={styles.form_select}
@@ -939,6 +1047,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={onSubmit}
+        mode={mode}
+        initialData={initialData}
         currentStep={currentStep}
         totalSteps={totalSteps}
         onPrevStep={handlePrevStep}

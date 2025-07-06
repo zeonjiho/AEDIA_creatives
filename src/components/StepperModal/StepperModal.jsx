@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './StepperModal.module.css';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
 import api from '../../utils/api';
+import baseURL from '../../utils/baseURL';
 
 /**
  * 단계별 모달 컴포넌트
@@ -20,7 +21,7 @@ import api from '../../utils/api';
  * @param {string} props.nextButtonText - 다음 버튼 텍스트 (기본값: '다음')
  * @param {string} props.prevButtonText - 이전 버튼 텍스트 (기본값: '이전')
  */
-const StepperModal = ({ isOpen, onClose, onSubmit }) => {
+const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode = 'add', initialData = {} }) => {
   // sessionStorage 키
   const STORAGE_KEY = 'stepperModal_formData';
   const STORAGE_STEP_KEY = 'stepperModal_currentStep';
@@ -100,6 +101,13 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
   const [projects, setProjects] = useState([]);
   const [corporateCards, setCorporateCards] = useState([]);
 
+  // ObjectId를 프로젝트 이름으로 변환하는 헬퍼 함수
+  const getProjectName = (projectId) => {
+    if (!projectId) return '';
+    const project = projects.find(p => p._id === projectId);
+    return project ? project.title : projectId;
+  };
+
   // 데이터 저장 함수
   const saveToStorage = (data, step = null) => {
     try {
@@ -162,26 +170,183 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     }
   }, [currentStep, isOpen]);
 
-  // 컴포넌트가 열릴 때 저장된 데이터 복원
+  // 컴포넌트가 열릴 때 저장된 데이터 복원 또는 편집 데이터 설정
   useEffect(() => {
     if (isOpen) {
-      const storedData = getStoredFormData();
-      const storedStep = getStoredStep();
+      if (mode === 'edit' && initialData && Object.keys(initialData).length > 0) {
+        // 편집 모드에서 초기 데이터 설정
+        const editDateTime = initialData.date ? 
+          (() => {
+            const date = new Date(initialData.date);
+            return {
+              year: date.getFullYear().toString(),
+              month: (date.getMonth() + 1).toString().padStart(2, '0'),
+              day: date.getDate().toString().padStart(2, '0'),
+              hour: date.getHours().toString().padStart(2, '0'),
+              minute: date.getMinutes().toString().padStart(2, '0')
+            };
+          })() : getCurrentDateTime();
+        
+        // 카테고리 매핑 (서버에서 온 카테고리를 StepperModal 형식으로 변환)
+        let mappedCategory = '';
+        if (initialData.category) {
+          switch (initialData.category) {
+            case 'MEAL':
+            case '식비':
+              mappedCategory = '식비';
+              break;
+            case 'TAXI':
+            case '교통비':
+              mappedCategory = '교통비';
+              break;
+            case 'OFFICE':
+            case '사무용품':
+              mappedCategory = '사무용품';
+              break;
+            case 'MARKETING':
+            case '마케팅':
+              mappedCategory = '마케팅';
+              break;
+            case 'ENTERTAINMENT':
+            case '접대비':
+              mappedCategory = '접대비';
+              break;
+            case 'EDUCATION':
+            case '교육비':
+              mappedCategory = '교육비';
+              break;
+            case 'OTHER':
+            case '기타':
+              mappedCategory = '기타';
+              break;
+            default:
+              mappedCategory = initialData.category;
+          }
+        }
 
-      // 저장된 데이터가 있으면 복원, 없으면 현재 시간으로 초기화
-      if (storedData.category || storedData.amount || storedData.project) {
-        // 기존에 입력된 데이터가 있으면 복원
-        setFormData(storedData);
-        setCurrentStep(storedStep);
+        // 기존 이미지 URL들을 가상의 파일 객체로 변환
+        let existingFiles = [];
+        if (initialData.attachmentUrls && initialData.attachmentUrls.length > 0) {
+          existingFiles = initialData.attachmentUrls.map((url, index) => {
+            // URL이 baseURL을 포함하지 않으면 추가
+            const fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`;
+            
+            // 가상의 파일 객체 생성 (기존 이미지임을 표시)
+            return {
+              name: `기존이미지_${index + 1}.jpg`,
+              size: 0,
+              type: 'image/jpeg',
+              isExistingImage: true,
+              url: fullUrl,
+              originalUrl: url // 원본 서버 URL 보존
+            };
+          });
+        }
+
+        // 프로젝트 ID 처리 (ObjectId._id 또는 projectId 자체)
+        const projectId = initialData.projectId?._id || initialData.projectId || '';
+        
+        // 결제 방법 변환
+        let paymentMethodText = '신용카드';
+        let cardTypeText = '법인카드';
+        
+        if (initialData.paymentMethod === 'CORPORATE_CARD') {
+          paymentMethodText = '신용카드';
+          cardTypeText = '법인카드';
+        } else if (initialData.paymentMethod === 'PERSONAL_CARD') {
+          paymentMethodText = '신용카드';
+          cardTypeText = '개인카드';
+        } else if (initialData.paymentMethod === 'CASH') {
+          paymentMethodText = '현금/계좌이체';
+          cardTypeText = '';
+        }
+
+        const editFormData = {
+          category: mappedCategory,
+          dateTime: editDateTime,
+          amount: initialData.amount ? initialData.amount.toString() : '',
+          project: projectId,
+          paymentMethod: paymentMethodText,
+          participants: [{ person: null, project: '' }],
+          attachedFiles: existingFiles, // 기존 이미지들을 포함
+          myAmount: '',
+          isSplitPayment: false,
+          isMultiPersonPayment: false,
+          cardType: cardTypeText,
+          creditCardId: '',
+          bankName: '',
+          bankNameOther: '',
+          accountNumber: '',
+          description: initialData.description || ''
+        };
+        
+        setFormData(editFormData);
+        setCurrentStep(2); // 편집 모드에서는 2단계부터 시작
       } else {
-        // 새로 시작하는 경우 현재 시간으로 초기화
-        setFormData(prev => ({
-          ...prev,
-          dateTime: getCurrentDateTime()
-        }));
+        // 추가 모드 - 기존 로직
+        const storedData = getStoredFormData();
+        const storedStep = getStoredStep();
+
+        // 저장된 데이터가 있으면 복원, 없으면 현재 시간으로 초기화
+        if (storedData.category || storedData.amount || storedData.project) {
+          // 기존에 입력된 데이터가 있으면 복원
+          setFormData(storedData);
+          setCurrentStep(storedStep);
+        } else {
+          // 새로 시작하는 경우 현재 시간으로 초기화
+          setFormData(prev => ({
+            ...prev,
+            dateTime: getCurrentDateTime()
+          }));
+        }
       }
     }
-  }, [isOpen]);
+  }, [isOpen, mode, initialData]);
+  
+  // 모달이 닫힐 때 모든 상태 초기화
+  useEffect(() => {
+    if (!isOpen) {
+      // sessionStorage 완전 삭제
+      clearStorage();
+      
+      // 폼 데이터 초기화
+      setFormData({
+        category: '',
+        dateTime: getCurrentDateTime(),
+        amount: '',
+        project: '',
+        paymentMethod: '',
+        participants: [{ person: null, project: '' }],
+        attachedFiles: [],
+        myAmount: '',
+        isSplitPayment: false,
+        isMultiPersonPayment: false,
+        cardType: '',
+        creditCardId: '',
+        bankName: '',
+        bankNameOther: '',
+        accountNumber: '',
+        description: ''
+      });
+      
+      // 단계 초기화
+      setCurrentStep(1);
+      
+      // 기타 상태 초기화
+      setToast({ show: false, message: '' });
+      setShowDateConfirm(false);
+      setShowCloseConfirm(false);
+      setShowStaffModal(false);
+      setEditingParticipantIndex(null);
+      setShowCorporateCardModal(false);
+      
+      // 카메라 정리 (안전하게)
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+    }
+  }, [isOpen, stream]);
 
   // 브라우저 창 크기 변경 감지
   useEffect(() => {
@@ -364,7 +529,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
     // 2단계 정보 (currentStep >= 2일 때)
     if (currentStep >= 2) {
       if (formData.project) {
-        info.push(formData.project);
+        info.push(getProjectName(formData.project));
       }
       if (formData.paymentMethod) {
         info.push(formData.paymentMethod);
@@ -385,6 +550,19 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
         ...prev,
         [field]: value
       };
+      
+      // 결제방법이 변경될 때 cardType도 함께 업데이트
+      if (field === 'paymentMethod') {
+        if (value === '현금/계좌이체') {
+          newData.cardType = ''; // 현금 선택 시 cardType 초기화
+        } else if (value === '신용카드') {
+          // 신용카드 선택 시 기본값 설정 (기존 값이 없으면 법인카드)
+          if (!prev.cardType || prev.cardType === '') {
+            newData.cardType = '법인카드';
+          }
+        }
+      }
+      
       return newData;
     });
   };
@@ -1109,7 +1287,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 >
                   <option value="">프로젝트 선택</option>
                   {formData.project && (
-                    <option value={formData.project}>{formData.project} (같음)</option>
+                    <option value={formData.project}>{getProjectName(formData.project)} (같음)</option>
                   )}
                   {projects.filter(p => p._id !== formData.project).map((project) => (
                     <option key={project._id} value={project._id}>{project.title}</option>
@@ -1203,7 +1381,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
             <div className={styles.summary_item}>
               <span className={styles.summary_label}>프로젝트:</span>
-              <span className={styles.summary_value}>{formData.project}</span>
+              <span className={styles.summary_value}>{getProjectName(formData.project)}</span>
             </div>
             {formData.description && (
               <div className={styles.summary_item}>
@@ -1276,7 +1454,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
                 <span className={styles.summary_value}>
                   {formData.participants
                     .filter(p => p.person && p.project)
-                    .map(p => `${p.person.name}(${p.project})`)
+                    .map(p => `${p.person.name}(${getProjectName(p.project)})`)
                     .join(', ')}
                 </span>
               </div>
@@ -1347,7 +1525,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
               {formData.attachedFiles.map((file, index) => (
                 <div key={index} className={styles.photo_item}>
                   <img
-                    src={URL.createObjectURL(file)}
+                    src={file.isExistingImage ? file.url : URL.createObjectURL(file)}
                     alt={`사진 ${index + 1}`}
                     className={styles.photo_preview}
                   />
@@ -1372,7 +1550,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit }) => {
       <div className={styles.modal}>
         <div className={styles.modal_header}>
           <div className={styles.header_left}>
-            <h2>지출 추가</h2>
+            <h2>{title}</h2>
             {getHeaderInfo() && (
               <div className={styles.header_info}>
                 {getHeaderInfo()}

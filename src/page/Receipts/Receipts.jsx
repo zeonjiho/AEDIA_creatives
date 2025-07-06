@@ -51,6 +51,9 @@ const Receipts = () => {
     projectId: null,
     userId: null // JWT에서 추출하도록 수정
   });
+  
+  // 편집 모달 전용 초기 데이터 상태 추가
+  const [editInitialData, setEditInitialData] = useState({});
 
   // 화면 크기 변경 감지
   useEffect(() => {
@@ -139,16 +142,35 @@ const Receipts = () => {
       projectId: null,
       userId: null // JWT에서 추출하도록 수정
     });
+    setEditInitialData({}); // 편집 데이터 초기화
     setIsModalOpen(true);
   };
 
   // 모달 열기 - 편집 모드
   const openEditModal = (receipt) => {
     setModalMode('edit');
-    setFormData({
-      ...receipt,
-      amount: receipt.amount.toString()
-    });
+    
+    // 편집용 데이터 포맷 변환
+    const editData = {
+      id: receipt._id || receipt.id,
+      title: receipt.title || '',
+      description: receipt.description || '',
+      amount: receipt.amount ? receipt.amount.toString() : '',
+      date: receipt.date ? new Date(receipt.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      category: receipt.category || '',
+      paymentMethod: receipt.paymentMethod || 'CORPORATE_CARD',
+      type: receipt.type || 'OTHER',
+      status: receipt.status || 'PENDING',
+      // 프로젝트 데이터 확인
+      project: receipt.projectId?.title || receipt.projectName || receipt.project || '',
+      projectId: receipt.projectId?._id || receipt.projectId || null,
+      // 첨부파일 URL 배열로 변환
+      attachmentUrls: receipt.attachmentUrls || [],
+      userId: receipt.userId || null
+    };
+    
+    setFormData(editData);
+    setEditInitialData(editData); // 편집 전용 초기 데이터 설정
     setSelectedReceipt(receipt);
     setIsModalOpen(true);
     setIsActionModalOpen(false); // 작업 모달 닫기
@@ -158,6 +180,7 @@ const Receipts = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedReceipt(null);
+    setEditInitialData({}); // 편집 데이터 초기화
   };
 
   // 입력 필드 변경 처리
@@ -179,15 +202,26 @@ const Receipts = () => {
         // 서버로 전송
         const response = await api.post('/receipts', serverData);
         if (response.status === 201) {
-          console.log('영수증 추가 성공:', response.data);
           loadReceipts();
           setIsModalOpen(false);
         }
       } else {
         // 기존 영수증 수정
-        updateReceipt(selectedReceipt.id, receiptData);
-        loadReceipts();
-        setIsModalOpen(false);
+        const updateData = await convertEditDataToServerFormat(receiptData);
+        
+        // 영수증 ID 확인
+        const receiptId = selectedReceipt._id || selectedReceipt.id;
+        
+        if (!receiptId) {
+          throw new Error('영수증 ID가 누락되었습니다.');
+        }
+        
+        // 서버로 수정 요청
+        const response = await api.put(`/receipts/${receiptId}`, updateData);
+        if (response.status === 200) {
+          loadReceipts();
+          setIsModalOpen(false);
+        }
       }
     } catch (error) {
       console.error('영수증 처리 실패:', error);
@@ -258,14 +292,91 @@ const Receipts = () => {
     };
   };
 
+  // 편집 데이터를 서버 형식으로 변환
+  const convertEditDataToServerFormat = async (editData) => {
+    const { attachedFiles, ...rest } = editData;
+    
+    // JWT 토큰에서 실제 사용자 ID 추출
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    const decodedToken = jwtDecode(token);
+    const actualUserId = decodedToken.userId;
+    
+    // 첨부파일 처리 (기존 이미지와 새 이미지 구분)
+    let finalAttachmentUrls = [];
+    if (attachedFiles && attachedFiles.length > 0) {
+      const filesToUpload = [];
+      const existingUrls = [];
+      
+      for (const item of attachedFiles) {
+        if (item.isExistingImage) {
+          // 기존 이미지는 originalUrl 사용
+          existingUrls.push(item.originalUrl);
+        } else {
+          // 새로 추가된 이미지는 업로드 필요
+          filesToUpload.push(item);
+        }
+      }
+      
+      // 새 파일이 있으면 업로드
+      if (filesToUpload.length > 0) {
+        const uploadedUrls = await uploadImages(filesToUpload);
+        finalAttachmentUrls = [...existingUrls, ...uploadedUrls];
+      } else {
+        finalAttachmentUrls = existingUrls;
+      }
+    }
+    
+    // 결제방법 변환 (paymentMethod와 cardType을 함께 고려)
+    let finalPaymentMethod = 'CORPORATE_CARD'; // 기본값
+    
+    if (rest.paymentMethod === '현금' || rest.paymentMethod === '현금/계좌이체' || rest.paymentMethod === 'CASH') {
+      finalPaymentMethod = 'CASH';
+    } else if (rest.paymentMethod === '신용카드') {
+      // 신용카드인 경우 cardType으로 법인카드/개인카드 구분
+      if (rest.cardType === '개인카드') {
+        finalPaymentMethod = 'PERSONAL_CARD';
+      } else {
+        finalPaymentMethod = 'CORPORATE_CARD'; // 기본값 또는 법인카드
+      }
+    } else {
+      // 기존 enum 값 그대로 사용
+      switch (rest.paymentMethod) {
+        case 'PERSONAL_CARD':
+          finalPaymentMethod = 'PERSONAL_CARD';
+          break;
+        case 'CORPORATE_CARD':
+          finalPaymentMethod = 'CORPORATE_CARD';
+          break;
+        case 'CASH':
+          finalPaymentMethod = 'CASH';
+          break;
+        default:
+          finalPaymentMethod = 'CORPORATE_CARD';
+      }
+    }
+
+    return {
+      title: rest.title || '',
+      description: rest.description || '',
+      amount: parseFloat(rest.amount) || 0,
+      date: rest.date ? new Date(rest.date).toISOString() : new Date().toISOString(),
+      category: rest.category || '',
+      paymentMethod: finalPaymentMethod,
+      projectId: rest.project || rest.projectId || null, // StepperModal에서 project 필드 사용
+      attachmentUrls: finalAttachmentUrls,
+      userId: actualUserId
+    };
+  };
+
   // 이미지 업로드 함수
   const uploadImages = async (files) => {
     const uploadedUrls = [];
     
     for (const file of files) {
       try {
-        console.log('이미지 최적화 시작:', file.name);
-        
         // 이미지 최적화 (리사이징 및 압축)
         const optimizedFile = await optimizeImage(file);
         
@@ -574,7 +685,7 @@ const Receipts = () => {
         onClose={closeModal}
         onSubmit={handleSubmit}
         mode={modalMode}
-        initialData={formData}
+        initialData={modalMode === 'edit' ? editInitialData : formData}
       />
 
       {/* 작업 모달 */}

@@ -136,19 +136,7 @@ export const optimizeImage = async (file, options = {}) => {
       ...options
     };
     
-    console.log(`이미지 최적화 시작:`, {
-      originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-      fileName: file.name,
-      quality: finalOptions.quality
-    });
-    
     const optimizedFile = await resizeImage(file, finalOptions);
-    
-    console.log(`이미지 최적화 완료:`, {
-      originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-      optimizedSize: `${(optimizedFile.size / (1024 * 1024)).toFixed(2)}MB`,
-      reduction: `${(((file.size - optimizedFile.size) / file.size) * 100).toFixed(1)}%`
-    });
     
     return optimizedFile;
     
