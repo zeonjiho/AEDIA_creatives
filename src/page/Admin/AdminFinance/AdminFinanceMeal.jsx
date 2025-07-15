@@ -107,6 +107,28 @@ const AdminFinanceMeal = () => {
     return new Intl.NumberFormat('ko-KR').format(amount) + '원';
   }
 
+  // 카드 번호 마스킹
+  const maskCardNumber = (number) => {
+    if (!number) return '';
+    const cleanNumber = number.replace(/\D/g, '');
+    if (cleanNumber.length < 8) return number;
+    
+    const first4 = cleanNumber.slice(0, 4);
+    const last4 = cleanNumber.slice(-4);
+    return `${first4} **** **** ${last4}`;
+  }
+
+  // 카드 정보 표시
+  const getCreditCardInfo = (item) => {
+    if (item.paymentMethod !== 'CORPORATE_CARD' || !item.creditCardId) return null;
+    
+    const cardName = item.creditCardId?.cardName || '';
+    const label = item.creditCardId?.label || '';
+    
+    if (!cardName && !label) return null;
+    return `${cardName} - ${label}`;
+  }
+
   // 날짜 포맷팅 (서버에서 한국 시간으로 저장되므로 그대로 사용)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -437,9 +459,9 @@ const AdminFinanceMeal = () => {
                 <td>
                   {getPaymentMethodText(item.paymentMethod)}
                   {/* 법인카드인 경우 카드 정보 표시 */}
-                  {item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId && (
+                  {item.paymentMethod === 'CORPORATE_CARD' && getCreditCardInfo(item) && (
                     <div style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
-                      법인카드
+                      {getCreditCardInfo(item)}
                     </div>
                   )}
                 </td>

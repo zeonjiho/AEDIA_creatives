@@ -66,6 +66,32 @@ const FinanceModal = ({
     return methodMap[method] || method
   }
 
+  // 카드 번호 마스킹
+  const maskCardNumber = (number) => {
+    if (!number) return '';
+    const cleanNumber = number.replace(/\D/g, '');
+    if (cleanNumber.length < 8) return number;
+    
+    const first4 = cleanNumber.slice(0, 4);
+    const last4 = cleanNumber.slice(-4);
+    return `${first4} **** **** ${last4}`;
+  }
+
+  // 법인카드 상세 정보 표시
+  const getCorporateCardFullInfo = (item) => {
+    if (item.paymentMethod !== 'CORPORATE_CARD' || !item.creditCardId) {
+      return getPaymentMethodText(item.paymentMethod);
+    }
+    
+    const cardName = item.creditCardId?.cardName || '';
+    const label = item.creditCardId?.label || '';
+    const number = item.creditCardId?.number || '';
+    
+    const maskedNumber = maskCardNumber(number);
+    
+    return `법인카드 - ${cardName} - ${label} ${maskedNumber}`;
+  }
+
   // 금액 포맷팅
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('ko-KR').format(amount) + '원'
@@ -238,7 +264,7 @@ const FinanceModal = ({
               </div>
               <div className={ss.info_item}>
                 <label>결제 방법</label>
-                <div className={ss.info_value}>{getPaymentMethodText(item.paymentMethod)}</div>
+                <div className={ss.info_value}>{getCorporateCardFullInfo(item)}</div>
               </div>
               <div className={ss.info_item}>
                 <label>프로젝트</label>
