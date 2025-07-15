@@ -129,6 +129,22 @@ const AdminFinanceMeal = () => {
     return `${cardName} - ${label}`;
   }
 
+  // CSV용 결제방법 표시
+  const getPaymentMethodForCSV = (item) => {
+    if (item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId) {
+      const cardName = item.creditCardId?.cardName || '';
+      const label = item.creditCardId?.label || '';
+      const number = item.creditCardId?.number || '';
+      
+      const maskedNumber = maskCardNumber(number);
+      
+      if (cardName || label) {
+        return `법인카드 - ${cardName} - ${label} ${maskedNumber}`;
+      }
+    }
+    return getPaymentMethodText(item.paymentMethod);
+  }
+
   // 날짜 포맷팅 (서버에서 한국 시간으로 저장되므로 그대로 사용)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -257,7 +273,7 @@ const AdminFinanceMeal = () => {
         getCategoryText(item.category),
         item.amount,
         item.isSplitPayment ? (item.myAmount || 0) : item.amount,
-        getPaymentMethodText(item.paymentMethod),
+        getPaymentMethodForCSV(item),
         getProjectDisplay(item),
         item.isSplitPayment ? 'Y' : 'N',
         item.isMultiPersonPayment ? 'Y' : 'N',
