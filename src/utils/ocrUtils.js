@@ -298,7 +298,7 @@ const parseReceiptText = (text) => {
   // 제목이 없거나 너무 짧을 경우 기본값 설정
   if (!result.title || result.title.length < 2) {
     result.title = result.category === 'MEAL' ? '식비 영수증' : 
-                   result.category === 'TRANSPORTATION' ? '교통비 영수증' : 
+                   result.category === 'TRANSPORTATION' ? '택시비 영수증' : 
                    '경비 영수증';
   }
   

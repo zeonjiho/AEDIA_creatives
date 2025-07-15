@@ -4291,3 +4291,22 @@ app.get('/receipts/stats/monthly', async(req, res) => {
         });
     }
 });
+
+const migrationTaxi = async () => {
+    try{
+        const receipts = await Receipt.find({ category: '교통비'});
+
+        for(const receipt of receipts){
+            receipt.category = '택시비';
+            await receipt.save();
+            console.log('receipt', receipt.title)
+        }
+
+        console.log('receipts', receipts.length)
+
+    }catch(err){
+        console.log('migrationTaxi error', err)
+    }
+}
+
+migrationTaxi();

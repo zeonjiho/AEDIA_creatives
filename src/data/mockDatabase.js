@@ -610,7 +610,7 @@ export const getTaskById = (projectId, taskId) => {
 export const receiptCategories = [
     { id: 'OFFICE_SUPPLIES', name: '사무용품', nameEn: 'Office Supplies' },
     { id: 'MEAL', name: '식비', nameEn: 'Meal Expenses' },
-    { id: 'TRANSPORTATION', name: '교통비', nameEn: 'Transportation' },
+    { id: 'TRANSPORTATION', name: '택시비', nameEn: 'Transportation' },
     { id: 'IT_SOFTWARE', name: 'IT/소프트웨어', nameEn: 'IT/Software' },
     { id: 'ENTERTAINMENT', name: '접대비', nameEn: 'Entertainment' },
     { id: 'ACCOMMODATION', name: '숙박비', nameEn: 'Accommodation' },
@@ -677,7 +677,7 @@ export const receipts = [{
         id: 3,
         userId: 2,
         date: '2023-03-10',
-        title: '교통비 정산',
+        title: '택시비 정산',
         amount: 45000,
         category: 'TRANSPORTATION',
         paymentMethod: 'PERSONAL_CARD',

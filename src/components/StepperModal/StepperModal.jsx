@@ -196,8 +196,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
               mappedCategory = '식비';
               break;
             case 'TAXI':
-            case '교통비':
-              mappedCategory = '교통비';
+            case '택시비':
+              mappedCategory = '택시비';
               break;
             case 'OFFICE':
             case '사무용품':
@@ -991,8 +991,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         >
           <option value="">카테고리 선택</option>
           <option value="식비">식비</option>
-          <option value="교통비">교통비</option>
-          <option value="숙박비">숙박비</option>
+          <option value="택시비">택시비</option>
+          {/* <option value="숙박비">숙박비</option> */}
           <option value="기타">기타</option>
         </select>
       </div>

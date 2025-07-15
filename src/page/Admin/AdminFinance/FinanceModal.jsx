@@ -199,7 +199,7 @@ const FinanceModal = ({
               </div> */}
               <div className={ss.info_item}>
                 <label>사용자</label>
-                <div className={ss.info_value}>{item.userId?.name || item.userName}</div>
+                <div className={ss.info_value}>{item.userId?.name || '알 수 없음'}</div>
               </div>
               <div className={ss.info_item}>
                 <label>메모</label>

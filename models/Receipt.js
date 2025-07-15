@@ -44,7 +44,7 @@ const receiptSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['식비', '교통비', '숙박비', '기타']
+        enum: ['식비', '택시비', '숙박비', '기타']
     },
 
     // 결제 정보

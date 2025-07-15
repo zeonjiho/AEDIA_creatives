@@ -270,7 +270,7 @@ const AdminFinanceTaxi = () => {
     data.forEach(item => {
       const csvRow = [
         formatDate(item.date) || '',
-        item.userId?.name || item.userName || '',
+        item.userId?.name || '알 수 없음' || '',
         getCategoryText(item.category) || '',
         item.amount || 0,
         item.isSplitPayment ? (item.myAmount || 0) : (item.amount || 0),
@@ -489,7 +489,7 @@ const AdminFinanceTaxi = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <td>{formatDate(item.date)}</td>
-                <td style={{fontWeight: '500'}}>{item.userId?.name || item.userName}</td>
+                <td style={{fontWeight: '500'}}>{item.userId?.name || '알 수 없음'}</td>
                 <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}

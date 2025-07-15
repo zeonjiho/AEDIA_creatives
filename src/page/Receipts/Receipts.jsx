@@ -270,7 +270,7 @@ const Receipts = () => {
       amount: parseFloat(rest.amount),
       date: koreaDateTime.toISOString(), // 한국 시간 기준 ISO 문자열
       time: timeString,
-      type: category === '교통비' ? 'TAXI' : (category === '식비' ? 'MEAL' : 'OTHER'),
+      type: category === '택시비' ? 'TAXI' : (category === '식비' ? 'MEAL' : 'OTHER'),
       category: category, // 한글 그대로 저장
       paymentMethod: finalPaymentMethod,
       userId: actualUserId,
