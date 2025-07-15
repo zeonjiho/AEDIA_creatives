@@ -1,0 +1,556 @@
+import React, { useEffect, useState } from 'react'
+import ss from '../CSS/AdminChart.module.css'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js'
+import { Bar, Doughnut, Line } from 'react-chartjs-2'
+import ExportButton from '../../../components/ExportButton/ExportButton'
+import FinanceModal from './FinanceModal'
+import api from '../../../utils/api'
+
+// Chart.js 등록
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+)
+
+const AdminFinanceOther = () => {
+  const [otherData, setOtherData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchOtherData();
+  }, []);
+
+  // 기타 데이터 가져오기 (실제 API 호출)
+  const fetchOtherData = async () => {
+    try {
+      setLoading(true);
+      // 카테고리가 '기타'인 영수증만 가져오기
+      const response = await api.get('/receipts?category=기타');
+      
+      // API 응답 구조에 맞게 데이터 추출
+      const receiptsData = response.data?.data || response.data || [];
+      // 카테고리가 '기타'인 것만 필터링 (서버에서 필터링이 안 될 경우 대비)
+      const filteredData = receiptsData.filter(item => item.category === '기타');
+      console.log('기타 데이터 로드 성공:', filteredData);
+      setOtherData(filteredData);
+    } catch (error) {
+      console.error('기타 데이터 로드 실패:', error);
+      // API 실패시 빈 배열로 설정
+      setOtherData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 통계 계산
+  const getOtherStats = () => {
+    const stats = {
+      total: otherData.reduce((sum, item) => sum + item.amount, 0),
+      approved: otherData.filter(item => item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0),
+      pending: otherData.filter(item => item.status === 'PENDING').reduce((sum, item) => sum + item.amount, 0),
+      rejected: otherData.filter(item => item.status === 'REJECTED').reduce((sum, item) => sum + item.amount, 0),
+      processing: otherData.filter(item => item.status === 'PROCESSING').reduce((sum, item) => sum + item.amount, 0),
+      count: otherData.length,
+      pendingCount: otherData.filter(item => item.status === 'PENDING').length,
+      approvedCount: otherData.filter(item => item.status === 'APPROVED').length,
+      rejectedCount: otherData.filter(item => item.status === 'REJECTED').length,
+      processingCount: otherData.filter(item => item.status === 'PROCESSING').length,
+      avgAmount: Math.round(otherData.reduce((sum, item) => sum + item.amount, 0) / otherData.length) || 0
+    };
+    return stats;
+  }
+
+  // 상태에 따른 스타일 클래스 반환
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'APPROVED': return ss.status_active;
+      case 'PENDING': return ss.status_warning;
+      case 'REJECTED': return ss.status_danger;
+      case 'PROCESSING': return ss.status_info;
+      default: return ss.status_info;
+    }
+  }
+
+  // 상태 텍스트 변환
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'APPROVED': return '승인';
+      case 'PENDING': return '승인 대기';
+      case 'REJECTED': return '거절';
+      case 'PROCESSING': return '처리 중';
+      default: return status;
+    }
+  }
+
+  // 카테고리 텍스트 변환
+  const getCategoryText = (category) => {
+    return category; // 이미 한글로 저장되어 있음
+  }
+
+  // 결제 방법 텍스트 변환
+  const getPaymentMethodText = (method) => {
+    const methodMap = {
+      'CORPORATE_CARD': '법인카드',
+      'PERSONAL_CARD': '개인카드',
+      'CASH': '현금/계좌이체',
+      'BANK_TRANSFER': '계좌이체'
+    };
+    return methodMap[method] || method;
+  }
+
+  // 금액 포맷팅
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+  }
+
+  // 날짜 포맷팅 (서버에서 한국 시간으로 저장되므로 그대로 사용)
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    return `${year}년 ${month}월 ${day}일 ${hours}시 ${minutes.toString().padStart(2, '0')}분`;
+  }
+
+  // 프로젝트명 표시
+  const getProjectDisplay = (item) => {
+    return item.projectId?.title || item.projectName || item.project || '미배정';
+  }
+
+  const stats = getOtherStats();
+
+  // 상태별 금액 도넛 차트
+  const statusAmountChartData = {
+    labels: ['승인', '승인 대기', '거절', '처리 중'],
+    datasets: [
+      {
+        data: [stats.approved, stats.pending, stats.rejected, stats.processing],
+        backgroundColor: [
+          'rgba(64, 192, 87, 0.8)',
+          'rgba(253, 126, 20, 0.8)',
+          'rgba(250, 82, 82, 0.8)',
+          'rgba(74, 144, 226, 0.8)'
+        ],
+        borderColor: [
+          'rgba(64, 192, 87, 1)',
+          'rgba(253, 126, 20, 1)',
+          'rgba(250, 82, 82, 1)',
+          'rgba(74, 144, 226, 1)'
+        ],
+        borderWidth: 2
+      }
+    ]
+  };
+
+  // 결제 방법별 분포
+  const paymentData = otherData.reduce((acc, item) => {
+    const paymentMethod = getPaymentMethodText(item.paymentMethod);
+    acc[paymentMethod] = (acc[paymentMethod] || 0) + item.amount;
+    return acc;
+  }, {});
+
+  const paymentChartData = {
+    labels: Object.keys(paymentData),
+    datasets: [
+      {
+        label: '결제 방법별 금액',
+        data: Object.values(paymentData),
+        backgroundColor: [
+          'rgba(74, 144, 226, 0.8)',
+          'rgba(253, 126, 20, 0.8)',
+          'rgba(64, 192, 87, 0.8)',
+          'rgba(134, 142, 150, 0.8)'
+        ],
+        borderColor: [
+          'rgba(74, 144, 226, 1)',
+          'rgba(253, 126, 20, 1)',
+          'rgba(64, 192, 87, 1)',
+          'rgba(134, 142, 150, 1)'
+        ],
+        borderWidth: 2
+      }
+    ]
+  };
+
+  // 월별 기타비 트렌드 (예시)
+  const monthlyTrendData = {
+    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+    datasets: [
+      {
+        label: '기타비 지출',
+        data: [150000, 280000, 190000, 350000, 420000, 320000],
+        borderColor: 'rgba(155, 89, 182, 1)',
+        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+        tension: 0.4,
+        fill: true
+      }
+    ]
+  };
+
+  // 개인별 이용 현황
+  const userUsageData = otherData.reduce((acc, item) => {
+    const userName = item.userId?.name || item.userName;
+    acc[userName] = (acc[userName] || 0) + item.amount;
+    return acc;
+  }, {});
+
+  const userChartData = {
+    labels: Object.keys(userUsageData),
+    datasets: [
+      {
+        label: '개인별 기타비',
+        data: Object.values(userUsageData),
+        backgroundColor: 'rgba(155, 89, 182, 0.8)',
+        borderColor: 'rgba(155, 89, 182, 1)',
+        borderWidth: 2
+      }
+    ]
+  };
+
+  // 차트 옵션
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          usePointStyle: true
+        }
+      }
+    }
+  };
+
+  const barChartOptions = {
+    ...chartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return new Intl.NumberFormat('ko-KR').format(value) + '원';
+          }
+        }
+      }
+    }
+  };
+
+  // 기타 테이블 데이터를 CSV로 변환하는 함수
+  const generateOtherTableCSV = (data) => {
+    let csvContent = '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    
+    data.forEach(item => {
+      const csvRow = [
+        formatDate(item.date) || '',
+        item.userId?.name || '알 수 없음' || '',
+        getCategoryText(item.category) || '',
+        item.amount || 0,
+        item.isSplitPayment ? (item.myAmount || 0) : (item.amount || 0),
+        getPaymentMethodText(item.paymentMethod) || '',
+        getProjectDisplay(item) || '',
+        item.isSplitPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? 'Y' : 'N',
+        item.isMultiPersonPayment ? (item.participants?.length || 0) : 1,
+        getStatusText(item.status) || '',
+        item.description || ''
+      ];
+      
+      csvContent += csvRow.map(value => {
+        // null이나 undefined 값을 안전하게 처리
+        const safeValue = value !== null && value !== undefined ? value : '';
+        const stringValue = safeValue.toString();
+        
+        if (stringValue.includes(',') || stringValue.includes('"')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',') + '\n';
+    });
+    
+    return csvContent;
+  };
+
+  // 모달 열기
+  const handleRowClick = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  // 상태 업데이트 처리
+  const handleStatusUpdate = (updatedItem) => {
+    setOtherData(prevData => 
+      prevData.map(item => 
+        item._id === updatedItem._id ? updatedItem : item
+      )
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className={ss.admin_chart_container}>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <div className={ss.spinner}></div>
+          <p>기타 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={ss.admin_chart_container}>
+      <div className={ss.header}>
+        <h1>기타 관리</h1>
+        <div className={ss.summary_stats}>
+          <div className={`${ss.stat_item} ${ss.stat_finance}`}>
+            <span className={ss.stat_number}>{formatAmount(stats.total)}</span>
+            <div className={ss.stat_label}>총 기타비</div>
+          </div>
+          <div className={ss.stat_item}>
+            <span className={ss.stat_number} style={{color: 'var(--warning-color)'}}>{stats.pendingCount + stats.processingCount}</span>
+            <div className={ss.stat_label}>처리 대기</div>
+          </div>
+          <div className={ss.stat_item}>
+            <span className={ss.stat_number} style={{color: 'var(--accent-color)'}}>{formatAmount(stats.avgAmount)}</span>
+            <div className={ss.stat_label}>평균 금액</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 메트릭 카드 */}
+      <div className={ss.metrics_row}>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--success-color)'}}>{formatAmount(stats.approved)}</div>
+          <div className={ss.metric_label}>승인된 금액</div>
+          <div className={`${ss.metric_change} ${ss.positive}`}>
+            {stats.approvedCount}건 승인
+          </div>
+        </div>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--warning-color)'}}>{formatAmount(stats.pending)}</div>
+          <div className={ss.metric_label}>대기 중인 금액</div>
+          <div className={`${ss.metric_change} ${stats.pendingCount > 0 ? ss.negative : ss.neutral}`}>
+            {stats.pendingCount}건 대기
+          </div>
+        </div>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--danger-color)'}}>{formatAmount(stats.rejected)}</div>
+          <div className={ss.metric_label}>거절된 금액</div>
+          <div className={`${ss.metric_change} ${ss.neutral}`}>
+            {stats.rejectedCount}건 거절
+          </div>
+        </div>
+        <div className={ss.metric_card}>
+          <div className={ss.metric_value} style={{color: 'var(--accent-color)'}}>{stats.count}</div>
+          <div className={ss.metric_label}>총 이용 건수</div>
+          <div className={`${ss.metric_change} ${ss.neutral}`}>
+            월간 집계
+          </div>
+        </div>
+      </div>
+
+      {/* 필터 액션 */}
+      <div className={ss.filter_actions}>
+        <button className={`${ss.filter_button} ${ss.active}`}>전체</button>
+        <button className={ss.filter_button}>승인</button>
+        <button className={ss.filter_button}>대기</button>
+        <button className={ss.filter_button}>거절</button>
+        <button className={ss.filter_button}>고액(10만원↑)</button>
+        <button className={ss.filter_button}>법인카드</button>
+      </div>
+
+      {/* 차트 영역 */}
+      <div className={ss.chart_grid}>
+        <div className={ss.chart_card}>
+          <div className={ss.chart_title}>
+            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+            승인 상태별 금액 분포
+          </div>
+          <div className={ss.chart_content}>
+            <Doughnut data={statusAmountChartData} options={chartOptions} />
+          </div>
+          <div className={ss.chart_legend}>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--success-color)'}}></div>
+              승인 ({formatAmount(stats.approved)})
+            </div>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--warning-color)'}}></div>
+              대기 ({formatAmount(stats.pending)})
+            </div>
+            <div className={ss.legend_item}>
+              <div className={ss.legend_color} style={{backgroundColor: 'var(--danger-color)'}}></div>
+              거절 ({formatAmount(stats.rejected)})
+            </div>
+            {stats.processing > 0 && (
+              <div className={ss.legend_item}>
+                <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
+                처리 중 ({formatAmount(stats.processing)})
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={ss.chart_card}>
+          <div className={ss.chart_title}>
+            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+            결제 방법별 분포
+          </div>
+          <div className={ss.chart_content}>
+            <Bar data={paymentChartData} options={barChartOptions} />
+          </div>
+        </div>
+
+        <div className={ss.chart_card}>
+          <div className={ss.chart_title}>
+            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+            월별 기타비 트렌드
+          </div>
+          <div className={ss.chart_content}>
+            <Line data={monthlyTrendData} options={chartOptions} />
+          </div>
+        </div>
+
+        <div className={ss.chart_card}>
+          <div className={ss.chart_title}>
+            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+            개인별 이용 현황
+          </div>
+          <div className={ss.chart_content}>
+            <Bar data={userChartData} options={barChartOptions} />
+          </div>
+        </div>
+      </div>
+
+      {/* 데이터 테이블 */}
+      <div className={ss.data_table_container}>
+        <div className={ss.table_header}>
+          <div className={ss.table_title}>
+            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
+            기타 지출 내역
+          </div>
+          <ExportButton 
+            chartRef={{ current: null }}
+            chartTitle="기타_지출_내역"
+            csvData={generateOtherTableCSV(otherData)}
+          />
+        </div>
+        <table className={ss.data_table}>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>사용자</th>
+              <th>카테고리</th>
+              <th>금액</th>
+              <th>결제방법</th>
+              <th>프로젝트</th>
+              <th>메모</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {otherData && otherData.length > 0 ? otherData.map((item) => (
+              <tr 
+                key={item._id}
+                onClick={() => handleRowClick(item)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td>{formatDate(item.date)}</td>
+                <td style={{fontWeight: '500'}}>{item.userId?.name || '알 수 없음'}</td>
+                <td>{getCategoryText(item.category)}</td>
+                <td style={{fontWeight: '600'}}>
+                  {formatAmount(item.amount)}
+                  {/* 분할결제인 경우 내가 낸 금액 표시 */}
+                  {item.isSplitPayment && item.myAmount && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
+                      내가 낸 금액: {formatAmount(item.myAmount)}
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {getPaymentMethodText(item.paymentMethod)}
+                  {/* 법인카드인 경우 카드 정보 표시 */}
+                  {item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId && (
+                    <div style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
+                      법인카드
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {getProjectDisplay(item) !== '미배정' ? (
+                    <span className={ss.status_badge} style={{backgroundColor: 'var(--accent-color)', color: 'white'}}>
+                      {getProjectDisplay(item)}
+                    </span>
+                  ) : (
+                    <span style={{color: 'var(--text-tertiary)'}}>미배정</span>
+                  )}
+                </td>
+                <td>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                    {/* 분할결제 표시 */}
+                    {item.isSplitPayment && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--info-color)', color: 'white', fontSize: '0.7rem'}}>
+                        분할결제
+                      </span>
+                    )}
+                    {/* 다중인원 결제 표시 */}
+                    {item.isMultiPersonPayment && item.participants && item.participants.length > 0 && (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem'}}>
+                        다중인원 ({item.participants.length}명)
+                      </span>
+                    )}
+                    {/* 메모가 없는 경우 */}
+                    {!item.isSplitPayment && !item.isMultiPersonPayment && (
+                      <span style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>-</span>
+                    )}
+                  </div>
+                </td>
+                <td>
+                  <span className={`${ss.status_badge} ${getStatusClass(item.status)}`}>
+                    {getStatusText(item.status)}
+                  </span>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                  기타 지출 내역이 없습니다.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Finance Modal */}
+      <FinanceModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        item={selectedItem}
+        type="other"
+        onUpdate={handleStatusUpdate}
+      />
+    </div>
+  )
+}
+
+export default AdminFinanceOther 

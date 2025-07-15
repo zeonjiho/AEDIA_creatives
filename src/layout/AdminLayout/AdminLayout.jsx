@@ -103,6 +103,7 @@ const AdminLayout = () => {
             submenus: [
                 { id: 'finance-meal', name: '식사 영수증 관리', path: '/admin/finance/meal' },
                 { id: 'finance-taxi', name: '택시비 영수증 관리', path: '/admin/finance/taxi' },
+                { id: 'finance-other', name: '기타 영수증 관리', path: '/admin/finance/other' },
                 { id: 'finance-credit-card', name: '법인카드 관리', path: '/admin/finance/credit-card' }
             ]
         },
@@ -145,6 +146,7 @@ const AdminLayout = () => {
         { id: 'attendance', name: '출석', icon: faCalendarCheck, path: '/admin/attendance' },
         { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal' },
         { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi' },
+        { id: 'finance-other', name: '기타', icon: faCoins, path: '/admin/finance/other' },
     ];
 
     // 현재 활성화된 대메뉴 확인
