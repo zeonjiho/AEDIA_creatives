@@ -28,6 +28,7 @@ import AdminAttendance from './page/Admin/AdminAttendance/AdminAttendance';
 import AdminDeleted from './page/Admin/AdminUser/AdminDeleted';
 import AdminCreditCard from './page/Admin/AdminFinance/AdminCreditCard';
 import AdminAdvanced from './page/Admin/AdminAdvanced/AdminAdvanced';
+import AdminDepartment from './page/Admin/AdminDepartment/AdminDepartment';
 
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
           <Route path='user-list' element={<AdminUser />} />
           <Route path='deleted-list' element={<AdminDeleted />} />
           <Route path='staff-list' element={<AdminStaff />} />
+          <Route path='department' element={<AdminDepartment />} />
           <Route path='attendance' element={<AdminAttendance />} />
           {/* <Route path='attendance/summary' element={<AdminAttendanceSummary />} /> */}
           <Route path='finance'>

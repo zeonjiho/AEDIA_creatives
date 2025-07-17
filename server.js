@@ -30,6 +30,7 @@ const SlackCode = require('./models/SlackCode')
 const CreditCard = require('./models/CreditCard')
 const Company = require('./models/Company')
 const Receipt = require('./models/Receipt')
+const Department = require('./models/Department')
 
 //로컬 버전 http 서버
 app.listen(port, () => {
@@ -4292,21 +4293,100 @@ app.get('/receipts/stats/monthly', async(req, res) => {
     }
 });
 
-const migrationTaxi = async () => {
-    try{
-        const receipts = await Receipt.find({ category: '교통비'});
 
-        for(const receipt of receipts){
-            receipt.category = '택시비';
-            await receipt.save();
-            console.log('receipt', receipt.title)
+// ============================================
+// Department API 엔드포인트들
+// ============================================
+
+// 부서 목록 조회
+app.get('/departments', async(req, res) => {
+    try {
+        const departments = await Department.find({}).sort({ name: 1 });
+        res.status(200).json(departments);
+    } catch (error) {
+        console.error('부서 목록 조회 실패:', error);
+        res.status(500).json({ message: '부서 목록 조회에 실패했습니다.' });
+    }
+});
+
+// 부서 추가
+app.post('/departments', async(req, res) => {
+    try {
+        const { name } = req.body;
+        
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: '부서명을 입력해주세요.' });
         }
 
-        console.log('receipts', receipts.length)
+        // 중복 부서명 확인
+        const existingDept = await Department.findOne({ name: name.trim() });
+        if (existingDept) {
+            return res.status(400).json({ message: '이미 존재하는 부서명입니다.' });
+        }
 
-    }catch(err){
-        console.log('migrationTaxi error', err)
+        const newDepartment = new Department({
+            name: name.trim()
+        });
+
+        await newDepartment.save();
+        res.status(201).json(newDepartment);
+    } catch (error) {
+        console.error('부서 추가 실패:', error);
+        res.status(500).json({ message: '부서 추가에 실패했습니다.' });
     }
-}
+});
 
-migrationTaxi();
+// 부서 수정
+app.put('/departments/:id', async(req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: '부서명을 입력해주세요.' });
+        }
+
+        // 중복 부서명 확인 (자기 자신 제외)
+        const existingDept = await Department.findOne({ 
+            name: name.trim(), 
+            _id: { $ne: id } 
+        });
+        if (existingDept) {
+            return res.status(400).json({ message: '이미 존재하는 부서명입니다.' });
+        }
+
+        const updatedDepartment = await Department.findByIdAndUpdate(
+            id,
+            { name: name.trim() },
+            { new: true }
+        );
+
+        if (!updatedDepartment) {
+            return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json(updatedDepartment);
+    } catch (error) {
+        console.error('부서 수정 실패:', error);
+        res.status(500).json({ message: '부서 수정에 실패했습니다.' });
+    }
+});
+
+// 부서 삭제 (나중에 구현)
+app.delete('/departments/:id', async(req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // 실제 삭제 기능은 나중에 구현
+        res.status(200).json({ message: '삭제 기능은 준비 중입니다.' });
+        
+        // const deletedDepartment = await Department.findByIdAndDelete(id);
+        // if (!deletedDepartment) {
+        //     return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
+        // }
+        // res.status(200).json({ message: '부서가 삭제되었습니다.' });
+    } catch (error) {
+        console.error('부서 삭제 실패:', error);
+        res.status(500).json({ message: '부서 삭제에 실패했습니다.' });
+    }
+});

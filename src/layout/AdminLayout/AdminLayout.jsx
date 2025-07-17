@@ -85,6 +85,7 @@ const AdminLayout = () => {
                 { id: 'user-list', name: '직원 목록', path: '/admin/user-list' },
                 { id: 'staff-list', name: '스태프 목록', path: '/admin/staff-list' },
                 { id: 'deleted-list', name: '삭제된 인력', path: '/admin/deleted-list' },
+                { id: 'department', name: '부서 관리', path: '/admin/department' },
             ]
         },
         {
@@ -143,6 +144,7 @@ const AdminLayout = () => {
         { id: 'dashboard', name: '대시보드', icon: faTachometerAlt, path: '/admin' },
         { id: 'user-list', name: '직원', icon: faUsers, path: '/admin/user-list' },
         { id: 'staff-list', name: '스태프', icon: faUsers, path: '/admin/staff-list' },
+        { id: 'department', name: '부서관리', icon: faUsers, path: '/admin/department' },
         { id: 'attendance', name: '출석', icon: faCalendarCheck, path: '/admin/attendance' },
         { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal' },
         { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi' },
