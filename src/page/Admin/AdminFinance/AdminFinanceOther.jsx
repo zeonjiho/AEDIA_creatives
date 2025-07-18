@@ -24,9 +24,20 @@ const AdminFinanceOther = () => {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // 필터링 상태
+  const [filters, setFilters] = useState({
+    month: '',
+    employee: '',
+    project: ''
+  });
+  const [employees, setEmployees] = useState([]);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
     fetchOtherData();
+    fetchEmployees();
+    fetchProjects();
   }, []);
 
   // 기타 데이터 가져오기 (실제 API 호출)
@@ -48,6 +59,31 @@ const AdminFinanceOther = () => {
       setOtherData([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 내부 직원 목록 가져오기
+  const fetchEmployees = async () => {
+    try {
+      const response = await api.get('/users?role=INTERNAL');
+      const employeesData = response.data?.data || response.data || [];
+      console.log('기타 - 직원 목록 로드 성공:', employeesData);
+      setEmployees(employeesData);
+    } catch (error) {
+      console.error('기타 - 직원 목록 로드 실패:', error);
+      setEmployees([]);
+    }
+  };
+
+  // 프로젝트 목록 가져오기
+  const fetchProjects = async () => {
+    try {
+      const response = await api.get('/projects');
+      const projectsData = response.data?.data || response.data || [];
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('프로젝트 목록 로드 실패:', error);
+      setProjects([]);
     }
   };
 
@@ -168,6 +204,53 @@ const AdminFinanceOther = () => {
     return item.projectId?.title || item.projectName || item.project || '미배정';
   }
 
+  // 실제 데이터가 있는 월 목록 생성 (최신 순)
+  const getAvailableMonths = () => {
+    const monthSet = new Set();
+    
+    otherData.forEach(item => {
+      const date = new Date(item.date);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      monthSet.add(`${year}-${month.toString().padStart(2, '0')}`);
+    });
+    
+    // 최신 순으로 정렬
+    return Array.from(monthSet).sort((a, b) => b.localeCompare(a));
+  };
+
+  // 필터링된 데이터 계산
+  const getFilteredData = () => {
+    let filteredData = [...otherData];
+
+    // 월별 필터링
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      filteredData = filteredData.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate.getFullYear() === parseInt(year) && 
+               itemDate.getMonth() + 1 === parseInt(month);
+      });
+    }
+
+    // 직원별 필터링
+    if (filters.employee) {
+      filteredData = filteredData.filter(item => 
+        item.userId?._id === filters.employee || item.userId?.id === filters.employee
+      );
+    }
+
+    // 프로젝트별 필터링
+    if (filters.project) {
+      filteredData = filteredData.filter(item => 
+        item.projectId?._id === filters.project || item.projectId?.id === filters.project
+      );
+    }
+
+    return filteredData;
+  };
+
+  const filteredData = getFilteredData();
   const stats = getOtherStats();
 
   // 상태별 금액 도넛 차트
@@ -268,7 +351,15 @@ const AdminFinanceOther = () => {
 
   // 기타 테이블 데이터를 CSV로 변환하는 함수
   const generateOtherTableCSV = (data) => {
-    let csvContent = '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    let csvContent = '';
+    
+    // 필터 정보 추가
+    if (hasActiveFilters()) {
+      csvContent += `필터 적용: ${getFilterInfo()}\n`;
+      csvContent += `필터링된 데이터: ${data.length}건\n\n`;
+    }
+    
+    csvContent += '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
     
     data.forEach(item => {
       const csvRow = [
@@ -311,6 +402,50 @@ const AdminFinanceOther = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedItem(null);
+  };
+
+  // 필터 변경 핸들러
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  // 필터 초기화
+  const clearFilters = () => {
+    setFilters({
+      month: '',
+      employee: '',
+      project: ''
+    });
+  };
+
+  // 필터 적용 여부 확인
+  const hasActiveFilters = () => {
+    return filters.month || filters.employee || filters.project;
+  };
+
+  // 필터 정보 문자열 생성
+  const getFilterInfo = () => {
+    const filterInfo = [];
+    
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      filterInfo.push(`${year}년 ${month}월`);
+    }
+    
+    if (filters.employee) {
+      const employee = employees.find(emp => emp._id === filters.employee || emp.id === filters.employee);
+      filterInfo.push(`직원: ${employee?.name || '알 수 없음'}`);
+    }
+    
+    if (filters.project) {
+      const project = projects.find(proj => proj._id === filters.project || proj.id === filters.project);
+      filterInfo.push(`프로젝트: ${project?.title || '알 수 없음'}`);
+    }
+    
+    return filterInfo.join(', ');
   };
 
   // 상태 업데이트 처리
@@ -440,6 +575,81 @@ const AdminFinanceOther = () => {
 
       {/* 데이터 테이블 */}
       <div className={ss.data_table_container}>
+        {/* 필터 섹션 */}
+        <div className={ss.filter_section}>
+          <div className={ss.filter_row}>
+            <div className={ss.filter_group}>
+              <label className={ss.filter_label}>월별 필터</label>
+              <select 
+                className={ss.filter_select}
+                value={filters.month}
+                onChange={(e) => handleFilterChange('month', e.target.value)}
+              >
+                <option value="">전체</option>
+                {getAvailableMonths().map(monthKey => {
+                  const [year, month] = monthKey.split('-');
+                  return (
+                    <option key={monthKey} value={monthKey}>
+                      {year}년 {parseInt(month)}월
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            
+            <div className={ss.filter_group}>
+              <label className={ss.filter_label}>직원별 필터</label>
+              <select 
+                className={ss.filter_select}
+                value={filters.employee}
+                onChange={(e) => handleFilterChange('employee', e.target.value)}
+              >
+                <option value="">전체</option>
+                {employees.map(employee => (
+                  <option key={employee._id || employee.id} value={employee._id || employee.id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className={ss.filter_group}>
+              <label className={ss.filter_label}>프로젝트별 필터</label>
+              <select 
+                className={ss.filter_select}
+                value={filters.project}
+                onChange={(e) => handleFilterChange('project', e.target.value)}
+              >
+                <option value="">전체</option>
+                {projects.map(project => (
+                  <option key={project._id || project.id} value={project._id || project.id}>
+                    {project.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className={ss.filter_actions}>
+              {hasActiveFilters() && (
+                <button 
+                  className={ss.clear_filter_button}
+                  onClick={clearFilters}
+                >
+                  필터 초기화
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {hasActiveFilters() && (
+            <div className={ss.filter_info}>
+              <span className={ss.filter_info_text}>
+                필터 적용: {getFilterInfo()} ({filteredData.length}건)
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className={ss.table_header}>
           <div className={ss.table_title}>
             <div className={`${ss.chart_icon} ${ss.finance}`}></div>
@@ -447,8 +657,9 @@ const AdminFinanceOther = () => {
           </div>
           <ExportButton 
             chartRef={{ current: null }}
-            chartTitle="기타_지출_내역"
-            csvData={generateOtherTableCSV(otherData)}
+            chartTitle={hasActiveFilters() ? `기타_지출_내역_${getFilterInfo().replace(/[^a-zA-Z0-9가-힣]/g, '_')}` : "기타_지출_내역"}
+            csvData={generateOtherTableCSV(filteredData)}
+            buttonText={hasActiveFilters() ? "선택 Export" : "Export"}
           />
         </div>
         <table className={ss.data_table}>
@@ -465,7 +676,7 @@ const AdminFinanceOther = () => {
             </tr>
           </thead>
           <tbody>
-            {otherData && otherData.length > 0 ? otherData.map((item) => (
+            {filteredData && filteredData.length > 0 ? filteredData.map((item) => (
               <tr 
                 key={item._id}
                 onClick={() => handleRowClick(item)}
@@ -530,7 +741,7 @@ const AdminFinanceOther = () => {
             )) : (
               <tr>
                 <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
-                  기타 지출 내역이 없습니다.
+                  {hasActiveFilters() ? '필터 조건에 맞는 기타 지출 내역이 없습니다.' : '기타 지출 내역이 없습니다.'}
                 </td>
               </tr>
             )}

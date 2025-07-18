@@ -3386,6 +3386,28 @@ app.get('/admin/attendance/list', async(req, res) => {
     }
 });
 
+// 사용자 목록 조회 API (영수증 관리용)
+app.get('/users', async(req, res) => {
+    try {
+        const { role } = req.query;
+        let filter = {};
+        
+        // role 파라미터가 있으면 필터링 (INTERNAL -> internal 변환)
+        if (role) {
+            filter.userType = role.toLowerCase();
+        }
+        
+        const users = await User.find(filter)
+            .select('_id name userType department status')
+            .sort({ name: 1 });
+
+        res.status(200).json({ data: users });
+    } catch (err) {
+        console.error('사용자 목록 조회 실패:', err);
+        res.status(500).json({ message: '사용자 목록 조회에 실패했습니다.' });
+    }
+});
+
 // Admin 사용자 목록 조회 API
 app.get('/admin/users/list', async(req, res) => {
     try {

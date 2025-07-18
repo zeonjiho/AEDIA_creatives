@@ -393,10 +393,10 @@
 .filter_actions {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     flex-wrap: wrap;
     overflow-x: auto;
-    padding-bottom: 5px;
+    padding-bottom: 2px;
 }
 
 .filter_button {
@@ -421,6 +421,100 @@
     background-color: var(--accent-color);
     color: white;
     border-color: var(--accent-color);
+}
+
+/* 필터 섹션 스타일 */
+.filter_section {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.filter_row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter_row .filter_actions {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+}
+
+.filter_row .filter_actions .clear_filter_button {
+    align-self: flex-end;
+    /* margin-bottom: 8px; */
+}
+
+.filter_group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 150px;
+}
+
+.filter_label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.filter_select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter_select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.filter_select:hover {
+    border-color: var(--accent-color);
+}
+
+.clear_filter_button {
+    padding: 8px 16px;
+    border: 1px solid var(--danger-color);
+    background-color: transparent;
+    color: var(--danger-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.clear_filter_button:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.filter_info {
+    margin-top: 15px;
+    padding: 12px 16px;
+    background-color: rgba(74, 144, 226, 0.1);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    border-radius: 6px;
+}
+
+.filter_info_text {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 500;
 }
 
 
@@ -568,6 +662,17 @@
     .filter_button {
         width: 100%;
         text-align: center;
+    }
+    .filter_section {
+        padding: 15px;
+    }
+    .filter_row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .filter_group {
+        min-width: auto;
+        width: 100%;
     }
     .export_dropdown {
         right: auto;

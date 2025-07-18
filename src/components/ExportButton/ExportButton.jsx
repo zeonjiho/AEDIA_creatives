@@ -9,6 +9,7 @@ const ExportButton = ({
   chartTitle, 
   csvData, 
   reportInfo,
+  buttonText = "Export",
   onExportStart, 
   onExportComplete 
 }) => {
@@ -65,7 +66,7 @@ const ExportButton = ({
         onClick={() => setShowDropdown(!showDropdown)}
       >
         <FontAwesomeIcon icon={faDownload} />
-        Export
+        {buttonText}
         <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: '0.7rem' }} />
       </button>
       <div className={`${ss.export_dropdown} ${showDropdown ? ss.show : ''}`}>
