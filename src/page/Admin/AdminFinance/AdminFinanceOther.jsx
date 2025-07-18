@@ -193,37 +193,7 @@ const AdminFinanceOther = () => {
     ]
   };
 
-  // 결제 방법별 분포
-  const paymentData = otherData.reduce((acc, item) => {
-    const paymentMethod = getPaymentMethodText(item.paymentMethod);
-    acc[paymentMethod] = (acc[paymentMethod] || 0) + item.amount;
-    return acc;
-  }, {});
-
-  const paymentChartData = {
-    labels: Object.keys(paymentData),
-    datasets: [
-      {
-        label: '결제 방법별 금액',
-        data: Object.values(paymentData),
-        backgroundColor: [
-          'rgba(74, 144, 226, 0.8)',
-          'rgba(253, 126, 20, 0.8)',
-          'rgba(64, 192, 87, 0.8)',
-          'rgba(134, 142, 150, 0.8)'
-        ],
-        borderColor: [
-          'rgba(74, 144, 226, 1)',
-          'rgba(253, 126, 20, 1)',
-          'rgba(64, 192, 87, 1)',
-          'rgba(134, 142, 150, 1)'
-        ],
-        borderWidth: 2
-      }
-    ]
-  };
-
-  // 월별 기타비 트렌드 (예시)
+  // 월별 트렌드 (예시)
   const monthlyTrendData = {
     labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
     datasets: [
@@ -234,26 +204,6 @@ const AdminFinanceOther = () => {
         backgroundColor: 'rgba(155, 89, 182, 0.1)',
         tension: 0.4,
         fill: true
-      }
-    ]
-  };
-
-  // 개인별 이용 현황
-  const userUsageData = otherData.reduce((acc, item) => {
-    const userName = item.userId?.name || item.userName;
-    acc[userName] = (acc[userName] || 0) + item.amount;
-    return acc;
-  }, {});
-
-  const userChartData = {
-    labels: Object.keys(userUsageData),
-    datasets: [
-      {
-        label: '개인별 기타비',
-        data: Object.values(userUsageData),
-        backgroundColor: 'rgba(155, 89, 182, 0.8)',
-        borderColor: 'rgba(155, 89, 182, 1)',
-        borderWidth: 2
       }
     ]
   };
@@ -451,30 +401,10 @@ const AdminFinanceOther = () => {
         <div className={ss.chart_card}>
           <div className={ss.chart_title}>
             <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            결제 방법별 분포
-          </div>
-          <div className={ss.chart_content}>
-            <Bar data={paymentChartData} options={barChartOptions} />
-          </div>
-        </div>
-
-        <div className={ss.chart_card}>
-          <div className={ss.chart_title}>
-            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            월별 기타비 트렌드
+            월별 트렌드
           </div>
           <div className={ss.chart_content}>
             <Line data={monthlyTrendData} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className={ss.chart_card}>
-          <div className={ss.chart_title}>
-            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            개인별 이용 현황
-          </div>
-          <div className={ss.chart_content}>
-            <Bar data={userChartData} options={barChartOptions} />
           </div>
         </div>
       </div>

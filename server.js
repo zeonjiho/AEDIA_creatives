@@ -342,16 +342,16 @@ app.get('/get-user-list', async(req, res) => {
     const { userType } = req.query;
     try {
         if (userType === 'all') {
-            const userList = await User.find({ status: { $ne: 'deleted' } }).select('-password');
+            const userList = await User.find({ status: { $ne: 'deleted' } }).select('-password').populate('department', 'name');
             res.status(200).json(userList);
         } else if (userType === 'all-deleted') {
-            const userList = await User.find({ status: 'deleted' }).select('-password');
+            const userList = await User.find({ status: 'deleted' }).select('-password').populate('department', 'name');
             res.status(200).json(userList);
         } else if (userType === 'internal') {
-            const userList = await User.find({ userType: 'internal', status: { $ne: 'deleted' } }).select('-password');
+            const userList = await User.find({ userType: 'internal', status: { $ne: 'deleted' } }).select('-password').populate('department', 'name');
             res.status(200).json(userList);
         } else if (userType === 'external') {
-            const userList = await User.find({ userType: 'external', status: { $ne: 'deleted' } }).select('-password');
+            const userList = await User.find({ userType: 'external', status: { $ne: 'deleted' } }).select('-password').populate('department', 'name');
             res.status(200).json(userList);
         } else {
             res.status(400).json({ message: '잘못된 userType 파라미터입니다.' });
@@ -626,7 +626,7 @@ app.post('/forgot-password', async(req, res) => {
 app.get('/get-user-info', async(req, res) => {
     const { userId } = req.query;
     try {
-        const user = await User.findById(userId).select('-password');
+        const user = await User.findById(userId).select('-password').populate('department', 'name');
         if (user) {
             res.status(200).json(user);
             return
@@ -4346,23 +4346,43 @@ app.put('/departments/:id', async(req, res) => {
             return res.status(400).json({ message: '부서명을 입력해주세요.' });
         }
 
+        // 기존 부서 정보 조회 (이름 변경 전)
+        const oldDepartment = await Department.findById(id);
+        if (!oldDepartment) {
+            return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
+        }
+
+        const oldName = oldDepartment.name;
+        const newName = name.trim();
+
         // 중복 부서명 확인 (자기 자신 제외)
         const existingDept = await Department.findOne({ 
-            name: name.trim(), 
+            name: newName, 
             _id: { $ne: id } 
         });
         if (existingDept) {
             return res.status(400).json({ message: '이미 존재하는 부서명입니다.' });
         }
 
+        // 부서 정보 업데이트
         const updatedDepartment = await Department.findByIdAndUpdate(
             id,
-            { name: name.trim() },
+            { name: newName },
             { new: true }
         );
 
-        if (!updatedDepartment) {
-            return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
+        // 해당 부서에 속한 모든 사용자의 department 값도 업데이트
+        if (oldName !== newName) {
+            await User.updateMany(
+                { 
+                    $or: [
+                        { department: oldName },
+                        { 'department.name': oldName }
+                    ]
+                },
+                { department: newName }
+            );
+            console.log(`부서명 변경: "${oldName}" → "${newName}" - 관련 사용자들의 department 값도 업데이트됨`);
         }
 
         res.status(200).json(updatedDepartment);
@@ -4372,19 +4392,37 @@ app.put('/departments/:id', async(req, res) => {
     }
 });
 
-// 부서 삭제 (나중에 구현)
+// 부서 삭제
 app.delete('/departments/:id', async(req, res) => {
     try {
         const { id } = req.params;
         
-        // 실제 삭제 기능은 나중에 구현
-        res.status(200).json({ message: '삭제 기능은 준비 중입니다.' });
-        
-        // const deletedDepartment = await Department.findByIdAndDelete(id);
-        // if (!deletedDepartment) {
-        //     return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
-        // }
-        // res.status(200).json({ message: '부서가 삭제되었습니다.' });
+        // 부서 정보 조회
+        const department = await Department.findById(id);
+        if (!department) {
+            return res.status(404).json({ message: '부서를 찾을 수 없습니다.' });
+        }
+
+        // 해당 부서에 속한 사용자가 있는지 확인
+        const usersInDepartment = await User.countDocuments({
+            $or: [
+                { department: department.name },
+                { 'department.name': department.name }
+            ]
+        });
+
+        if (usersInDepartment > 0) {
+            return res.status(400).json({ 
+                message: `해당 부서에 속한 직원이 ${usersInDepartment}명 있습니다. 모든 직원을 다른 부서로 이동하거나 부서를 해제한 후 삭제해주세요.` 
+            });
+        }
+
+        // 부서 삭제
+        const deletedDepartment = await Department.findByIdAndDelete(id);
+        res.status(200).json({ 
+            message: '부서가 성공적으로 삭제되었습니다.',
+            deletedDepartment 
+        });
     } catch (error) {
         console.error('부서 삭제 실패:', error);
         res.status(500).json({ message: '부서 삭제에 실패했습니다.' });

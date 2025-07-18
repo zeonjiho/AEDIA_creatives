@@ -65,8 +65,32 @@ const Profile = () => {
     isSlackIdChanged: false
   });
 
+  // 부서 목록 상태
+  const [departments, setDepartments] = useState([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+
   useEffect(() => {
     loadUserProfile();
+  }, []);
+
+  // 부서 목록 가져오기
+  const loadDepartments = async () => {
+    try {
+      setDepartmentsLoading(true);
+      const response = await api.get('/departments');
+      if (response.status === 200) {
+        setDepartments(response.data || []);
+      }
+    } catch (error) {
+      console.error('부서 목록 로드 실패:', error);
+    } finally {
+      setDepartmentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUserProfile();
+    loadDepartments(); // 부서 목록도 함께 로드
   }, []);
 
   const loadUserProfile = async () => {
@@ -87,7 +111,8 @@ const Profile = () => {
         setUser(userInfo);
         setFormData({
           ...userInfo,
-          slackId: userInfo.slackId || '' // 슬랙 ID 기본값 설정
+          slackId: userInfo.slackId || '', // 슬랙 ID 기본값 설정
+          department: userInfo.department?.name || userInfo.department || '' // 부서명 설정
         });
         
         // 슬랙 ID 원본 저장
@@ -141,6 +166,12 @@ const Profile = () => {
       setFormData({
         ...formData,
         roles: updatedRoles
+      });
+    } else if (name === 'department') {
+      // 부서명 저장
+      setFormData({
+        ...formData,
+        department: value
       });
     } else {
       setFormData({
@@ -669,7 +700,7 @@ const Profile = () => {
             <h2 className={styles.user_name}>{user.name || '이름 없음'}</h2>
             <p className={styles.user_role}>
               <FaBriefcase className={styles.role_icon} />
-              {(user.roles && user.roles.length > 0) ? user.roles[0] : user.department || '직책 없음'}
+              {(user.roles && user.roles.length > 0) ? user.roles[0] : (user.department?.name || '직책 없음')}
             </p>
             <div className={styles.user_stats}>
               <div className={styles.stat_item}>
@@ -678,7 +709,7 @@ const Profile = () => {
               </div>
               <div className={styles.stat_item}>
                 <FaIdCard />
-                <span>{user.department || '부서 미지정'}</span>
+                <span>{user.department?.name || '부서 미지정'}</span>
               </div>
             </div>
           </div>
@@ -862,13 +893,20 @@ const Profile = () => {
                         <FaBriefcase className={styles.input_icon} />
                         부서
                       </label>
-                      <input
-                        type="text"
+                      <select
                         name="department"
                         value={formData.department || ''}
                         onChange={handleInputChange}
-                        placeholder="예: 개발팀"
-                      />
+                        className={styles.select_input}
+                        disabled={departmentsLoading}
+                      >
+                        <option value="">부서를 선택하세요</option>
+                        {departments.map((dept) => (
+                          <option key={dept._id} value={dept.name}>
+                            {dept.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className={styles.form_group}>
                       <label>
@@ -1082,7 +1120,7 @@ const Profile = () => {
                     <FaBriefcase className={styles.info_icon} />
                     <div className={styles.info_content}>
                       <label>부서</label>
-                      <p>{user.department || '미설정'}</p>
+                      <p>{user.department?.name || user.department || '미설정'}</p>
                     </div>
                   </div>
                   <div className={styles.info_card}>

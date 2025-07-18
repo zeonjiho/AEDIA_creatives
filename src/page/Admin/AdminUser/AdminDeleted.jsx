@@ -301,7 +301,7 @@ const AdminDeleted = () => {
                     {user.name}
                     <span style={{backgroundColor: 'var(--danger-color)', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px'}}>DELETED</span>
                   </td>
-                  <td style={{fontWeight: '500', color: 'var(--accent-color)'}}>{user.department || '미정'}</td>
+                  <td style={{fontWeight: '500', color: 'var(--accent-color)'}}>{user.department?.name || user.department || '미정'}</td>
                   <td>{formatPhoneNumber(user.phone)}</td>
                   <td>{user.email || '-'}</td>
                   <td>

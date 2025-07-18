@@ -40,21 +40,6 @@
   background: #2f9e44;
 }
 
-.refresh_btn {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.refresh_btn:hover {
-  background: var(--accent-hover);
-}
-
 /* 섹션 스타일 */
 .section {
   background: var(--bg-secondary);

@@ -16,6 +16,10 @@ const UserModal = ({
   const [note, setNote] = useState(user?.adminMemo || '')
   const [loading, setLoading] = useState(false)
 
+  // 부서 목록 상태
+  const [departments, setDepartments] = useState([])
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
+
   // 모달이 열릴 때마다 사용자 정보로 상태 초기화
   useEffect(() => {
     if (user) {
@@ -23,10 +27,32 @@ const UserModal = ({
       setUserType(user.userType || 'external')
       setRoles(user.roles?.join(', ') || '')
       setHireYear(user.hireYear || '')
-      setDepartment(user.department || '')
+      setDepartment(user.department?.name || user.department || '')
       setNote(user.adminMemo || '')
     }
   }, [user])
+
+  // 부서 목록 가져오기
+  const loadDepartments = async () => {
+    try {
+      setDepartmentsLoading(true)
+      const response = await api.get('/departments')
+      if (response.status === 200) {
+        setDepartments(response.data || [])
+      }
+    } catch (error) {
+      console.error('부서 목록 로드 실패:', error)
+    } finally {
+      setDepartmentsLoading(false)
+    }
+  }
+
+  // 모달이 열릴 때 부서 목록도 함께 로드
+  useEffect(() => {
+    if (isOpen) {
+      loadDepartments()
+    }
+  }, [isOpen])
 
   if (!isOpen || !user) return null
 
@@ -84,7 +110,7 @@ const UserModal = ({
         userType,
         roles: roles ? roles.split(',').map(role => role.trim()).filter(role => role) : [],
         hireYear: hireYear ? parseInt(hireYear) : null,
-        department: department.trim(),
+        department: department.trim() || null, // 부서 ID 저장
         adminMemo: note
       }
 
@@ -225,7 +251,7 @@ const UserModal = ({
               </div>
               <div className={ss.info_item}>
                 <label>부서</label>
-                <div className={ss.info_value}>{user.department || '-'}</div>
+                <div className={ss.info_value}>{user.department?.name || user.department || '-'}</div>
               </div>
               {/* <div className={ss.info_item}>
                 <label>최근 로그인</label>
@@ -289,14 +315,20 @@ const UserModal = ({
                 </div>
                 <div className={ss.info_item}>
                   <label>부서</label>
-                  <input
-                    type="text"
+                  <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="직원의 소속 부서를 입력해 주세요."
-                    className={ss.text_input}
+                    className={ss.select_input}
+                    disabled={departmentsLoading}
                     style={{width: '100%'}}
-                  />
+                  >
+                    <option value="">부서를 선택하세요</option>
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept.name}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className={ss.info_item}>
                   <label>입사 년도</label>

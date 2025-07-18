@@ -268,7 +268,7 @@ const AdminUser = () => {
                     {getStatusText(user.status)}
                   </span>
                 </td>
-                <td>{user.department || '-'}</td>
+                <td>{user.department?.name || user.department || '-'}</td>
                 <td style={{maxWidth: '200px', wordWrap: 'break-word', fontSize: '0.85rem'}}>
                   {user.roles && user.roles.length > 0 
                     ? user.roles.join(', ') 

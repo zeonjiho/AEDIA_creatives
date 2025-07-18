@@ -172,15 +172,23 @@ const DeletedUserModal = ({
                 <label>등록일</label>
                 <div className={ss.info_value}>{formatDate(user.createdAt)}</div>
               </div>
+              {user.userType === 'external' && (
+                <div className={ss.info_item}>
+                  <label>경력</label>
+                  <div className={ss.info_value}>
+                    {user.experience ? (
+                      <span className={ss.category_badge}>
+                        {user.experience}
+                      </span>
+                    ) : (
+                      <span style={{color: 'var(--text-tertiary)'}}>미정</span>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className={ss.info_item}>
                 <label>삭제일</label>
                 <div className={ss.info_value}>{formatDate(user.updatedAt)}</div>
-              </div>
-              <div className={ss.info_item}>
-                <label>사용자 ID</label>
-                <div className={ss.info_value} style={{fontSize: '0.85rem', color: 'var(--text-tertiary)'}}>
-                  {user._id}
-                </div>
               </div>
             </div>
           </div>
@@ -268,6 +276,18 @@ const DeletedUserModal = ({
                       </span>
                     ) : (
                       <span style={{color: 'var(--text-tertiary)'}}>미등록</span>
+                    )}
+                  </div>
+                </div>
+                <div className={ss.info_item}>
+                  <label>경력</label>
+                  <div className={ss.info_value}>
+                    {user.experience ? (
+                      <span className={ss.category_badge}>
+                        {user.experience}
+                      </span>
+                    ) : (
+                      <span style={{color: 'var(--text-tertiary)'}}>미정</span>
                     )}
                   </div>
                 </div>

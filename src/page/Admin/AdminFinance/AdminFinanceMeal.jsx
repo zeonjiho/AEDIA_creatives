@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ss from '../CSS/AdminChart.module.css'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js'
-import { Bar, Doughnut, Line } from 'react-chartjs-2'
+import { Doughnut, Line } from 'react-chartjs-2'
 import ExportButton from '../../../components/ExportButton/ExportButton'
 import FinanceModal from './FinanceModal'
 import api from '../../../utils/api'
@@ -186,37 +186,7 @@ const AdminFinanceMeal = () => {
     ]
   };
 
-  // 카테고리별 금액 비교 바 차트
-  const categoryData = mealData.reduce((acc, item) => {
-    const categoryName = getCategoryText(item.category);
-    acc[categoryName] = (acc[categoryName] || 0) + item.amount;
-    return acc;
-  }, {});
 
-  const categoryChartData = {
-    labels: Object.keys(categoryData),
-    datasets: [
-      {
-        label: '총 금액',
-        data: Object.values(categoryData),
-        backgroundColor: [
-          'rgba(74, 144, 226, 0.8)',
-          'rgba(253, 126, 20, 0.8)',
-          'rgba(64, 192, 87, 0.8)',
-          'rgba(250, 82, 82, 0.8)',
-          'rgba(155, 89, 182, 0.8)'
-        ],
-        borderColor: [
-          'rgba(74, 144, 226, 1)',
-          'rgba(253, 126, 20, 1)',
-          'rgba(64, 192, 87, 1)',
-          'rgba(250, 82, 82, 1)',
-          'rgba(155, 89, 182, 1)'
-        ],
-        borderWidth: 2
-      }
-    ]
-  };
 
   // 월별 식비 트렌드 (예시)
   const monthlyTrendData = {
@@ -248,19 +218,7 @@ const AdminFinanceMeal = () => {
     }
   };
 
-  const barChartOptions = {
-    ...chartOptions,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return new Intl.NumberFormat('ko-KR').format(value) + '원';
-          }
-        }
-      }
-    }
-  };
+
 
   // 식비 테이블 데이터를 CSV로 변환하는 함수
   const generateMealTableCSV = (data) => {
@@ -406,15 +364,7 @@ const AdminFinanceMeal = () => {
           </div>
         </div>
 
-        <div className={ss.chart_card}>
-          <div className={ss.chart_title}>
-            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            카테고리별 금액 비교
-          </div>
-          <div className={ss.chart_content}>
-            <Bar data={categoryChartData} options={barChartOptions} />
-          </div>
-        </div>
+
 
         <div className={ss.chart_card}>
           <div className={ss.chart_title}>

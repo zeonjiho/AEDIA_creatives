@@ -151,6 +151,20 @@ const StaffModal = ({
                 <label>등록일</label>
                 <div className={ss.info_value}>{formatDate(staff.createdAt)}</div>
               </div>
+              {staff.userType === 'external' && (
+                <div className={ss.info_item}>
+                  <label>경력</label>
+                  <div className={ss.info_value}>
+                    {staff.experience ? (
+                      <span className={ss.category_badge}>
+                        {staff.experience}
+                      </span>
+                    ) : (
+                      <span style={{color: 'var(--text-tertiary)'}}>미정</span>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* <div className={ss.info_item}>
                 <label>최근 로그인</label>
                 <div className={ss.info_value}>{formatDate(staff.lastLogin)}</div>
@@ -192,6 +206,20 @@ const StaffModal = ({
                   )}
                 </div>
               </div>
+              {staff.userType === 'external' && (
+                <div className={ss.info_item}>
+                  <label>경력</label>
+                  <div className={ss.info_value}>
+                    {staff.experience ? (
+                      <span className={ss.category_badge}>
+                        {staff.experience}
+                      </span>
+                    ) : (
+                      <span style={{color: 'var(--text-tertiary)'}}>미정</span>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className={ss.info_item} style={{gridColumn: '1 / -1'}}>
                 <label>역할</label>
                 <div className={ss.info_value}>

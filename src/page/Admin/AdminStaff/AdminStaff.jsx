@@ -364,7 +364,7 @@ const AdminStaff = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <td style={{fontWeight: '600', color: 'var(--text-primary)'}}>{user.name || '-'}</td>
-                <td style={{fontWeight: '500', color: 'var(--accent-color)'}}>{user.department || '미정'}</td>
+                <td style={{fontWeight: '500', color: 'var(--accent-color)'}}>{user.department?.name || user.department || '미정'}</td>
                 <td>{formatPhoneNumber(user.phone)}</td>
                 <td>{user.email || '-'}</td>
                 <td>

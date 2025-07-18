@@ -252,25 +252,7 @@ const AdminFinanceTaxi = () => {
     ]
   };
 
-  // 개인별 이용 현황
-  const userUsageData = taxiData.reduce((acc, item) => {
-    const userName = item.userId?.name || item.userName;
-    acc[userName] = (acc[userName] || 0) + item.amount;
-    return acc;
-  }, {});
 
-  const userChartData = {
-    labels: Object.keys(userUsageData),
-    datasets: [
-      {
-        label: '개인별 택시비',
-        data: Object.values(userUsageData),
-        backgroundColor: 'rgba(253, 126, 20, 0.8)',
-        borderColor: 'rgba(253, 126, 20, 1)',
-        borderWidth: 2
-      }
-    ]
-  };
 
   // 차트 옵션
   const chartOptions = {
@@ -482,15 +464,7 @@ const AdminFinanceTaxi = () => {
           </div>
         </div>
 
-        <div className={ss.chart_card}>
-          <div className={ss.chart_title}>
-            <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            개인별 이용 현황
-          </div>
-          <div className={ss.chart_content}>
-            <Bar data={userChartData} options={barChartOptions} />
-          </div>
-        </div>
+
       </div>
 
       {/* 데이터 테이블 */}
