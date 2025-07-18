@@ -56,10 +56,12 @@ const AdminFinanceMeal = () => {
       approved: mealData.filter(item => item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0),
       pending: mealData.filter(item => item.status === 'PENDING').reduce((sum, item) => sum + item.amount, 0),
       rejected: mealData.filter(item => item.status === 'REJECTED').reduce((sum, item) => sum + item.amount, 0),
+      processing: mealData.filter(item => item.status === 'PROCESSING').reduce((sum, item) => sum + item.amount, 0),
       count: mealData.length,
       pendingCount: mealData.filter(item => item.status === 'PENDING').length,
       approvedCount: mealData.filter(item => item.status === 'APPROVED').length,
-      rejectedCount: mealData.filter(item => item.status === 'REJECTED').length
+      rejectedCount: mealData.filter(item => item.status === 'REJECTED').length,
+      processingCount: mealData.filter(item => item.status === 'PROCESSING').length
     };
     return stats;
   }
@@ -167,19 +169,21 @@ const AdminFinanceMeal = () => {
 
   // 상태별 금액 도넛 차트
   const statusAmountChartData = {
-    labels: ['승인', '승인 대기', '거절'],
+    labels: ['승인', '승인 대기', '거절', '처리 중'],
     datasets: [
       {
-        data: [stats.approved, stats.pending, stats.rejected],
+        data: [stats.approved, stats.pending, stats.rejected, stats.processing],
         backgroundColor: [
           'rgba(64, 192, 87, 0.8)',
           'rgba(253, 126, 20, 0.8)',
-          'rgba(250, 82, 82, 0.8)'
+          'rgba(250, 82, 82, 0.8)',
+          'rgba(74, 144, 226, 0.8)'
         ],
         borderColor: [
           'rgba(64, 192, 87, 1)',
           'rgba(253, 126, 20, 1)',
-          'rgba(250, 82, 82, 1)'
+          'rgba(250, 82, 82, 1)',
+          'rgba(74, 144, 226, 1)'
         ],
         borderWidth: 2
       }
@@ -188,20 +192,49 @@ const AdminFinanceMeal = () => {
 
 
 
-  // 월별 식비 트렌드 (예시)
-  const monthlyTrendData = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-    datasets: [
-      {
-        label: '식비 지출',
-        data: [320000, 450000, 280000, 380000, 520000, 400000],
-        borderColor: 'rgba(253, 126, 20, 1)',
-        backgroundColor: 'rgba(253, 126, 20, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ]
+  // 월별 식비 트렌드 (실제 데이터)
+  const getMonthlyTrendData = () => {
+    const months = [];
+    const data = [];
+    
+    // 현재 월을 기준으로 최근 6개월 계산
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      
+      // 해당 월의 데이터 필터링
+      const monthData = mealData.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate.getFullYear() === year && itemDate.getMonth() + 1 === month;
+      });
+      
+      // 해당 월의 총 금액 계산 (거절된 항목 제외)
+      const monthTotal = monthData
+        .filter(item => item.status !== 'REJECTED')
+        .reduce((sum, item) => sum + item.amount, 0);
+      
+      months.push(`${month}월`);
+      data.push(monthTotal);
+    }
+    
+    return {
+      labels: months,
+      datasets: [
+        {
+          label: '식비 지출',
+          data: data,
+          borderColor: 'rgba(253, 126, 20, 1)',
+          backgroundColor: 'rgba(253, 126, 20, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
   };
+
+  const monthlyTrendData = getMonthlyTrendData();
 
   // 차트 옵션
   const chartOptions = {
@@ -361,6 +394,12 @@ const AdminFinanceMeal = () => {
               <div className={ss.legend_color} style={{backgroundColor: 'var(--danger-color)'}}></div>
               거절 ({formatAmount(stats.rejected)})
             </div>
+            {stats.processing > 0 && (
+              <div className={ss.legend_item}>
+                <div className={ss.legend_color} style={{backgroundColor: 'var(--accent-color)'}}></div>
+                처리 중 ({formatAmount(stats.processing)})
+              </div>
+            )}
           </div>
         </div>
 

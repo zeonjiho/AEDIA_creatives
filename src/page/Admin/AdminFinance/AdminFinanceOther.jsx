@@ -193,20 +193,49 @@ const AdminFinanceOther = () => {
     ]
   };
 
-  // 월별 트렌드 (예시)
-  const monthlyTrendData = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-    datasets: [
-      {
-        label: '기타비 지출',
-        data: [150000, 280000, 190000, 350000, 420000, 320000],
-        borderColor: 'rgba(155, 89, 182, 1)',
-        backgroundColor: 'rgba(155, 89, 182, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ]
+  // 월별 기타 지출 (실제 데이터)
+  const getMonthlyTrendData = () => {
+    const months = [];
+    const data = [];
+    
+    // 현재 월을 기준으로 최근 6개월 계산
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      
+      // 해당 월의 데이터 필터링
+      const monthData = otherData.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate.getFullYear() === year && itemDate.getMonth() + 1 === month;
+      });
+      
+      // 해당 월의 총 금액 계산 (거절된 항목 제외)
+      const monthTotal = monthData
+        .filter(item => item.status !== 'REJECTED')
+        .reduce((sum, item) => sum + item.amount, 0);
+      
+      months.push(`${month}월`);
+      data.push(monthTotal);
+    }
+    
+    return {
+      labels: months,
+      datasets: [
+        {
+          label: '기타비 지출',
+          data: data,
+          borderColor: 'rgba(155, 89, 182, 1)',
+          backgroundColor: 'rgba(155, 89, 182, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
   };
+
+  const monthlyTrendData = getMonthlyTrendData();
 
   // 차트 옵션
   const chartOptions = {
@@ -401,7 +430,7 @@ const AdminFinanceOther = () => {
         <div className={ss.chart_card}>
           <div className={ss.chart_title}>
             <div className={`${ss.chart_icon} ${ss.finance}`}></div>
-            월별 트렌드
+            월별 기타 지출
           </div>
           <div className={ss.chart_content}>
             <Line data={monthlyTrendData} options={chartOptions} />
