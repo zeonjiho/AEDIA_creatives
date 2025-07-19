@@ -34,7 +34,8 @@ const StaffSearchModal = ({
   multiSelect = true,
   from,
   title = "스탭/직원 검색",
-  initialFilterType = 'all'
+  initialFilterType = 'all',
+  disabledUsers = []
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState(initialFilterType);
@@ -169,13 +170,18 @@ const StaffSearchModal = ({
       event.stopPropagation();
     }
 
+    const personId = getPersonId(person);
+    
+    // 비활성화된 사용자인지 확인
+    if (disabledUsers.includes(personId)) {
+      return; // 클릭 무시
+    }
+
     console.log('=== 선택/해제 시도 ===');
     console.log('대상:', person.name, 'ID:', getPersonId(person));
     console.log('멀티선택 모드:', multiSelect);
 
     if (multiSelect) {
-      const personId = getPersonId(person);
-
       // 현재 선택된 상태를 안전하게 확인
       setLocalSelected(prevSelected => {
         const isSelected = prevSelected.some(p => getPersonId(p) === personId);
@@ -521,8 +527,8 @@ const StaffSearchModal = ({
             </div>
           )}
 
-          {/* 선택된 인원 표시 */}
-          {localSelected.length > 0 && (
+          {/* 선택된 인원 표시 - 어드민 추가 모달에서는 숨김 */}
+          {localSelected.length > 0 && from !== 'only_internal' && (
             <div className={styles.selected_section}>
               <h4>선택된 인원 ({localSelected.length}명)</h4>
               <div className={styles.selected_list}>
@@ -556,49 +562,54 @@ const StaffSearchModal = ({
                   <p>검색 결과가 없습니다.</p>
                 </div>
               ) : (
-                filteredPeople.map(person => (
-                  <div
-                    key={getPersonId(person)}
-                    className={`${styles.person_card} ${isPersonSelected(person) ? styles.selected : ''}`}
-                    onClick={(e) => handlePersonToggle(person, e)}
-                  >
-                    <div className={styles.person_avatar}>
-                      {(person.name && person.name.length > 0) ? person.name.charAt(0) : '?'}
-                    </div>
-                    <div className={styles.person_info}>
-                      <div className={styles.person_main}>
-                        <span className={styles.person_name}>{person.name || '이름 없음'}</span>
-                        <div className={styles.person_badges}>
-                          <span className={`${styles.person_type} ${styles[person.userType]}`}>
-                            {person.userType === 'external' ? '스탭' : '직원'}
+                filteredPeople.map(person => {
+                  const personId = getPersonId(person);
+                  const isDisabled = disabledUsers.includes(personId);
+                  
+                  return (
+                    <div
+                      key={personId}
+                      className={`${styles.person_card} ${isPersonSelected(person) ? styles.selected : ''} ${isDisabled ? styles.disabled : ''}`}
+                      onClick={(e) => handlePersonToggle(person, e)}
+                    >
+                      <div className={styles.person_avatar}>
+                        {(person.name && person.name.length > 0) ? person.name.charAt(0) : '?'}
+                      </div>
+                      <div className={styles.person_info}>
+                        <div className={styles.person_main}>
+                          <span className={styles.person_name}>{person.name || '이름 없음'}</span>
+                          <div className={styles.person_badges}>
+                            <span className={`${styles.person_type} ${styles[person.userType]}`}>
+                              {person.userType === 'external' ? '스탭' : '직원'}
+                            </span>
+                            {person.isExternal && (
+                              <span className={styles.external_badge}>외부</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.person_details}>
+                          <span className={styles.person_position}>
+                            {person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'}
                           </span>
-                          {person.isExternal && (
-                            <span className={styles.external_badge}>외부</span>
+                          <span className={styles.person_department}>
+                            {person.department || '소속 없음'}
+                          </span>
+                          {person.phone && (
+                            <span className={styles.person_phone}>{person.phone}</span>
+                          )}
+                          {person.email && (
+                            <span className={styles.person_email}>{person.email}</span>
                           )}
                         </div>
                       </div>
-                      <div className={styles.person_details}>
-                        <span className={styles.person_position}>
-                          {person.roles && person.roles.length > 0 ? person.roles[0] : '직책 없음'}
-                        </span>
-                        <span className={styles.person_department}>
-                          {person.department || '소속 없음'}
-                        </span>
-                        {person.phone && (
-                          <span className={styles.person_phone}>{person.phone}</span>
-                        )}
-                        {person.email && (
-                          <span className={styles.person_email}>{person.email}</span>
-                        )}
-                      </div>
+                      {isPersonSelected(person) && (
+                        <div className={styles.check_icon}>
+                          <HiCheck />
+                        </div>
+                      )}
                     </div>
-                    {isPersonSelected(person) && (
-                      <div className={styles.check_icon}>
-                        <HiCheck />
-                      </div>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

@@ -459,6 +459,35 @@
     box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
 }
 
+.person_card.disabled {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+    position: relative;
+}
+
+.person_card.disabled::after {
+    content: "이미 추가됨";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--text-tertiary);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.person_card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
 .person_avatar {
     width: 48px;
     height: 48px;

@@ -3003,9 +3003,9 @@ app.put('/company/admin-users/:userId', async(req, res) => {
     const { role } = req.body;
 
     try {
-        if (!role || !['admin', 'super_admin'].includes(role)) {
+        if (!role || !['admin', 'super_admin', 'pd'].includes(role)) {
             return res.status(400).json({
-                message: '유효한 역할을 입력해주세요. (admin, super_admin)'
+                message: '유효한 역할을 입력해주세요. (admin, super_admin, pd)'
             });
         }
 

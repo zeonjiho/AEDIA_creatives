@@ -284,14 +284,13 @@ const AdminFinanceTaxi = () => {
     ]
   };
 
-  // 시간대별 이용 현황
+  // 시간대별 이용 현황 (택시 할증 시간 기준)
   const timeData = taxiData.reduce((acc, item) => {
     const hour = parseInt(item.time.split(':')[0]);
     let timeRange;
-    if (hour >= 6 && hour < 12) timeRange = '오전';
-    else if (hour >= 12 && hour < 18) timeRange = '오후';
-    else if (hour >= 18 && hour < 22) timeRange = '저녁';
-    else timeRange = '야간';
+    // 22시부터 04시까지는 야간 할증 시간
+    if (hour >= 22 || hour < 4) timeRange = '야간(할증)';
+    else timeRange = '할증 시간 외';
     
     acc[timeRange] = (acc[timeRange] || 0) + item.amount;
     return acc;
@@ -304,16 +303,12 @@ const AdminFinanceTaxi = () => {
         label: '이용 금액',
         data: Object.values(timeData),
         backgroundColor: [
-          'rgba(74, 144, 226, 0.8)',
-          'rgba(253, 126, 20, 0.8)',
-          'rgba(64, 192, 87, 0.8)',
-          'rgba(134, 142, 150, 0.8)'
+          'rgba(134, 142, 150, 0.8)',  // 야간(할증) - 회색
+          'rgba(74, 144, 226, 0.8)'    // 할증 시간 외 - 파란색
         ],
         borderColor: [
-          'rgba(74, 144, 226, 1)',
-          'rgba(253, 126, 20, 1)',
-          'rgba(64, 192, 87, 1)',
-          'rgba(134, 142, 150, 1)'
+          'rgba(134, 142, 150, 1)',
+          'rgba(74, 144, 226, 1)'
         ],
         borderWidth: 2
       }
@@ -566,15 +561,7 @@ const AdminFinanceTaxi = () => {
         </div>
       </div>
 
-      {/* 필터 액션 */}
-      <div className={ss.filter_actions}>
-        <button className={`${ss.filter_button} ${ss.active}`}>전체</button>
-        <button className={ss.filter_button}>승인</button>
-        <button className={ss.filter_button}>대기</button>
-        <button className={ss.filter_button}>거절</button>
-        <button className={ss.filter_button}>고액(5만원↑)</button>
-        <button className={ss.filter_button}>야간(22시↑)</button>
-      </div>
+
 
       {/* 차트 영역 */}
       <div className={ss.chart_grid}>

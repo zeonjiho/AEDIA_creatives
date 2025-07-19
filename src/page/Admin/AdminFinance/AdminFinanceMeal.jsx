@@ -496,15 +496,7 @@ const AdminFinanceMeal = () => {
         </div>
       </div>
 
-      {/* 필터 액션 */}
-      <div className={ss.filter_actions}>
-        <button className={`${ss.filter_button} ${ss.active}`}>전체</button>
-        <button className={ss.filter_button}>승인</button>
-        <button className={ss.filter_button}>대기</button>
-        <button className={ss.filter_button}>거절</button>
-        <button className={ss.filter_button}>점심</button>
-        <button className={ss.filter_button}>저녁</button>
-      </div>
+
 
       {/* 차트 영역 */}
       <div className={ss.chart_grid}>

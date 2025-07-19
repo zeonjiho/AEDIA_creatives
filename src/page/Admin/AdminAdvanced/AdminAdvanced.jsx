@@ -171,18 +171,35 @@ const AdminAdvanced = () => {
 
         setLoading(true);
         try {
-            const promises = selectedUsers.map(user => 
-                api.post('/company/admin-users', {
-                    userId: user.id || user._id,
-                    role: 'admin',
-                    addedBy: null // 현재 사용자 ID로 설정 가능
-                })
-            );
+            // 각 사용자를 순차적으로 추가하여 중복 에러 처리
+            const results = [];
+            for (const user of selectedUsers) {
+                try {
+                    const response = await api.post('/company/admin-users', {
+                        userId: user.id || user._id,
+                        role: 'admin',
+                        addedBy: null // 현재 사용자 ID로 설정 가능
+                    });
+                    results.push({ success: true, user: user.name });
+                } catch (err) {
+                    // 이미 추가된 사용자인 경우 무시하고 계속 진행
+                    if (err.response?.status === 400 && err.response?.data?.message?.includes('이미 어드민으로 등록된 사용자')) {
+                        results.push({ success: false, user: user.name, reason: '이미 추가됨' });
+                    } else {
+                        throw err; // 다른 에러는 다시 던지기
+                    }
+                }
+            }
 
-            await Promise.all(promises);
             await fetchCompanySettings(); // 새로고침
             setShowAddAdmin(false);
-            alert(`${selectedUsers.length}명의 어드민 사용자가 추가되었습니다.`);
+            
+            // 결과 요약
+            const successCount = results.filter(r => r.success).length;
+            
+            if (successCount > 0) {
+                alert(`${successCount}명의 어드민 사용자가 추가되었습니다.`);
+            }
         } catch (err) {
             console.error('어드민 사용자 추가 실패:', err);
             alert('어드민 사용자 추가에 실패했습니다.');
@@ -267,6 +284,12 @@ const AdminAdvanced = () => {
 
     return (
         <div className={styles.container}>
+            {/* 전체 화면 로딩 스피너 */}
+            {loading && (
+                <div className={styles.fullscreenLoader}>
+                    <div className={styles.spinner}></div>
+                </div>
+            )}
             <div className={styles.header}>
                 <h1 className={styles.title}>Advanced Settings</h1>
                 <p className={styles.subtitle}>회사 정보 및 시스템 설정을 관리합니다</p>
@@ -300,6 +323,7 @@ const AdminAdvanced = () => {
             {/* 기본 정보 탭 */}
             {activeTab === 'basic' && (
                 <div className={styles.tabContent}>
+                    {/* 회사 로고 섹션 - 임시 비활성화
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <h2 className={styles.sectionTitle}>회사 로고</h2>
@@ -360,6 +384,7 @@ const AdminAdvanced = () => {
                             </div>
                         </div>
                     </div>
+                    */}
 
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
@@ -566,6 +591,7 @@ const AdminAdvanced = () => {
                                             >
                                                 <option value="admin">관리자</option>
                                                 <option value="super_admin">슈퍼 관리자</option>
+                                                <option value="pd">PD</option>
                                             </select>
                                             
                                             <button
@@ -617,6 +643,8 @@ const AdminAdvanced = () => {
                                 </div>
                             </div>
 
+                            {/* 슬랙 연동 설정 - 임시 비활성화 (나중에 다시 사용할 예정이므로 지우지 말 것) */}
+                            {/* 
                             <div className={styles.settingItem}>
                                 <div className={styles.settingInfo}>
                                     <h3>슬랙 연동</h3>
@@ -634,7 +662,10 @@ const AdminAdvanced = () => {
                                     </label>
                                 </div>
                             </div>
+                            */}
 
+                            {/* 이메일 알림 설정 - 임시 비활성화 (나중에 다시 사용할 예정이므로 지우지 말 것) */}
+                            {/* 
                             <div className={styles.settingItem}>
                                 <div className={styles.settingInfo}>
                                     <h3>이메일 알림</h3>
@@ -652,6 +683,7 @@ const AdminAdvanced = () => {
                                     </label>
                                 </div>
                             </div>
+                            */}
                         </div>
                     </div>
                 </div>
@@ -663,10 +695,12 @@ const AdminAdvanced = () => {
                     isOpen={showAddAdmin}
                     onClose={() => setShowAddAdmin(false)}
                     onSelect={handleAddAdmin}
-                    selectedPeople={[]}
+                    selectedPeople={companyData.adminUsers.map(admin => admin.userId)}
                     multiSelect={true}
+                    from="only_internal"
                     title="어드민 사용자 추가"
                     initialFilterType="internal"
+                    disabledUsers={companyData.adminUsers.map(admin => admin.userId._id || admin.userId.id)}
                 />
             )}
 

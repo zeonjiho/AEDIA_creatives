@@ -42,7 +42,7 @@ const companySchema = new Schema({
         },
         role: {
             type: String,
-            enum: ['super_admin', 'admin'],
+            enum: ['super_admin', 'admin', 'pd'],
             default: 'admin'
         },
         addedAt: {
