@@ -14,6 +14,8 @@ import {
     faCog,
     faCalendarCheck,
 } from '@fortawesome/free-solid-svg-icons';
+import { jwtDecode } from 'jwt-decode';
+import api from '../../utils/api';
 
 const AdminLayout = () => {
 
@@ -23,15 +25,18 @@ const AdminLayout = () => {
     const [expandedMenus, setExpandedMenus] = useState({});
     const [refreshKey, setRefreshKey] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [adminRole, setAdminRole] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!sessionStorage.getItem('adminPasswordOk')) {
-            setIsAdmin(false);
-        } else {
-            setIsAdmin(true);
-        }
-
+        checkAdminAuth();
+        
+        // 10분마다 권한 재확인 (600,000ms = 10분)
+        const authInterval = setInterval(() => {
+            checkAdminAuth();
+        }, 600000);
+        
         // 모바일 여부 체크
         const checkMobile = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -44,13 +49,57 @@ const AdminLayout = () => {
         checkMobile();
         window.addEventListener('resize', checkMobile);
 
-        return () => window.removeEventListener('resize', checkMobile);
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            clearInterval(authInterval);
+        };
     }, [])
+
+    // 관리자 권한 확인
+    const checkAdminAuth = async () => {
+        try {
+            // 1. 토큰에서 userId 추출
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setIsAdmin(false);
+                setIsLoading(false);
+                return;
+            }
+
+            const decoded = jwtDecode(token);
+            const userId = decoded.userId;
+
+            // 2. 서버에서 실제 권한 확인
+            const response = await api.get(`/company/check-admin/${userId}`);
+            
+            if (response.data.isAdmin) {
+                setIsAdmin(true);
+                setAdminRole(response.data.role);
+            } else {
+                // 권한이 없으면 즉시 로그아웃 처리
+                setIsAdmin(false);
+                setAdminRole(null);
+                alert('관리자 권한이 해제되었습니다.');
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('관리자 권한 확인 실패:', error);
+            // 에러 발생 시에도 권한 해제로 처리
+            setIsAdmin(false);
+            setAdminRole(null);
+            alert('관리자 권한 확인에 실패했습니다.');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // 로그아웃 처리
     const handleLogout = () => {
-        sessionStorage.removeItem('adminPasswordOk');
-        window.location.reload();
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     };
 
     // 메뉴 토글 처리
@@ -64,6 +113,20 @@ const AdminLayout = () => {
     // 메뉴 접기/펼치기 토글
     const toggleSidebar = () => {
         setMenuCollapsed(!menuCollapsed);
+    };
+
+    // 권한에 따른 메뉴 접근 제어 함수
+    const hasMenuAccess = (menuId) => {
+        // super_admin은 모든 메뉴 접근 가능
+        if (adminRole === 'super_admin') return true;
+        
+        // admin과 pd는 제한된 메뉴만 접근 가능
+        if (adminRole === 'admin' || adminRole === 'pd') {
+            const allowedMenus = ['user', 'attendance', 'finance'];
+            return allowedMenus.includes(menuId);
+        }
+        
+        return false;
     };
 
     // 계층적 메뉴 데이터
@@ -142,13 +205,15 @@ const AdminLayout = () => {
     // 모바일 네비게이션용 메뉴 데이터 (평면화)
     const mobileMenuData = [
         { id: 'dashboard', name: '대시보드', icon: faTachometerAlt, path: '/admin' },
-        { id: 'user-list', name: '직원', icon: faUsers, path: '/admin/user-list' },
-        { id: 'staff-list', name: '스태프', icon: faUsers, path: '/admin/staff-list' },
-        { id: 'department', name: '부서관리', icon: faUsers, path: '/admin/department' },
-        { id: 'attendance', name: '출석', icon: faCalendarCheck, path: '/admin/attendance' },
-        { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal' },
-        { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi' },
-        { id: 'finance-other', name: '기타', icon: faCoins, path: '/admin/finance/other' },
+        { id: 'user-list', name: '직원', icon: faUsers, path: '/admin/user-list', menuGroup: 'user' },
+        { id: 'staff-list', name: '스태프', icon: faUsers, path: '/admin/staff-list', menuGroup: 'user' },
+        { id: 'department', name: '부서관리', icon: faUsers, path: '/admin/department', menuGroup: 'user' },
+        { id: 'attendance', name: '출석', icon: faCalendarCheck, path: '/admin/attendance', menuGroup: 'attendance' },
+        { id: 'finance-meal', name: '식비', icon: faCoins, path: '/admin/finance/meal', menuGroup: 'finance' },
+        { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi', menuGroup: 'finance' },
+        { id: 'finance-other', name: '기타', icon: faCoins, path: '/admin/finance/other', menuGroup: 'finance' },
+        { id: 'room', name: '회의실', icon: faCog, path: '/admin/room', menuGroup: 'etc' },
+        { id: 'advanced-setting', name: '설정', icon: faCog, path: '/admin/advanced-setting', menuGroup: 'etc' },
     ];
 
     // 현재 활성화된 대메뉴 확인
@@ -211,18 +276,28 @@ const AdminLayout = () => {
         // 다른 경로면 기본 링크 동작 수행 (navigate는 자동으로 진행됨)
     };
 
+    // 로딩 중일 때
+    if (isLoading) {
+        return (
+            <div className={ss.authError}>
+                <h2>권한 확인 중...</h2>
+                <p>잠시만 기다려주세요.</p>
+            </div>
+        );
+    }
+
     // 관리자 인증이 안 된 경우
-    // if (!isAdmin) {
-    //     return (
-    //         <div className={ss.authError}>
-    //             <h2>접근 권한이 없습니다</h2>
-    //             <p>관리자 인증이 필요합니다.</p>
-    //             <button onClick={() => window.location.href = '/admin-login'}>
-    //                 로그인 페이지로 이동
-    //             </button>
-    //         </div>
-    //     );
-    // }
+    if (!isAdmin) {
+        return (
+            <div className={ss.authError}>
+                <h2>접근 권한이 없습니다</h2>
+                <p>관리자 권한이 필요합니다.</p>
+                <button onClick={() => window.location.href = '/'}>
+                    메인 페이지로 이동
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className={ss.adminContainer}>
@@ -261,47 +336,49 @@ const AdminLayout = () => {
                             </li>
 
                             {menuData.map((menu) => (
-                                <li
-                                    key={menu.id}
-                                    className={`${isActiveMainMenu(menu.id) ? ss.active : ''} ${expandedMenus[menu.id] ? ss.expanded : ''} ${ss.menuLi}`}
-                                >
-                                    <div
-                                        className={ss.menuItem}
-                                        onClick={() => menuCollapsed ? navigate(menu.submenus[0].path) : toggleMenu(menu.id)}
+                                hasMenuAccess(menu.id) && (
+                                    <li
+                                        key={menu.id}
+                                        className={`${isActiveMainMenu(menu.id) ? ss.active : ''} ${expandedMenus[menu.id] ? ss.expanded : ''} ${ss.menuLi}`}
                                     >
-                                        <div className={ss.iconWrapper}>
-                                            <FontAwesomeIcon icon={menu.icon} />
+                                        <div
+                                            className={ss.menuItem}
+                                            onClick={() => menuCollapsed ? navigate(menu.submenus[0].path) : toggleMenu(menu.id)}
+                                        >
+                                            <div className={ss.iconWrapper}>
+                                                <FontAwesomeIcon icon={menu.icon} />
+                                            </div>
+                                            {!menuCollapsed && (
+                                                <>
+                                                    <span className={ss.menuText}>{menu.name}</span>
+                                                    <FontAwesomeIcon
+                                                        className={ss.chevron}
+                                                        icon={expandedMenus[menu.id] ? faChevronDown : faChevronRight}
+                                                    />
+                                                </>
+                                            )}
                                         </div>
-                                        {!menuCollapsed && (
-                                            <>
-                                                <span className={ss.menuText}>{menu.name}</span>
-                                                <FontAwesomeIcon
-                                                    className={ss.chevron}
-                                                    icon={expandedMenus[menu.id] ? faChevronDown : faChevronRight}
-                                                />
-                                            </>
-                                        )}
-                                    </div>
 
-                                    {!menuCollapsed && expandedMenus[menu.id] && (
-                                        <ul className={ss.submenu}>
-                                            {menu.submenus.map(submenu => (
-                                                <li
-                                                    key={submenu.id}
-                                                    className={`${location.pathname === submenu.path ? ss.active : ''} ${ss.submenuItem}`}
-                                                >
-                                                    <Link
-                                                        to={submenu.path}
-                                                        className={ss.submenuLink}
-                                                        onClick={(e) => handleMenuClick(submenu.path, e)}
+                                        {!menuCollapsed && expandedMenus[menu.id] && (
+                                            <ul className={ss.submenu}>
+                                                {menu.submenus.map(submenu => (
+                                                    <li
+                                                        key={submenu.id}
+                                                        className={`${location.pathname === submenu.path ? ss.active : ''} ${ss.submenuItem}`}
                                                     >
-                                                        <span>{submenu.name}</span>
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </li>
+                                                        <Link
+                                                            to={submenu.path}
+                                                            className={ss.submenuLink}
+                                                            onClick={(e) => handleMenuClick(submenu.path, e)}
+                                                        >
+                                                            <span>{submenu.name}</span>
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </li>
+                                )
                             ))}
                         </ul>
                     </nav>
@@ -346,7 +423,11 @@ const AdminLayout = () => {
                         </div>
                         <div className={ss.headerRight}>
                             <div className={ss.adminInfo}>
-                                <span className={ss.adminName}>관리자</span>
+                                <span className={ss.adminName}>
+                                    {adminRole === 'super_admin' ? '슈퍼 관리자' : 
+                                     adminRole === 'admin' ? '관리자' : 
+                                     adminRole === 'pd' ? 'PD' : '관리자'}
+                                </span>
                             </div>
                         </div>
                     </header>
@@ -362,17 +443,39 @@ const AdminLayout = () => {
             {isMobile && (
                 <nav className={ss.mobileNav}>
                     <div className={ss.mobileNavContent}>
-                        {mobileMenuData.map((item) => (
-                            <Link
-                                key={item.id}
-                                to={item.path}
-                                className={`${ss.mobileNavItem} ${location.pathname === item.path ? ss.active : ''}`}
-                                onClick={(e) => handleMenuClick(item.path, e)}
-                            >
-                                <FontAwesomeIcon icon={item.icon} className={ss.mobileNavIcon} />
-                                <span className={ss.mobileNavText}>{item.name}</span>
-                            </Link>
-                        ))}
+                        {mobileMenuData.map((item) => {
+                            // 대시보드는 항상 접근 가능
+                            if (item.id === 'dashboard') {
+                                return (
+                                    <Link
+                                        key={item.id}
+                                        to={item.path}
+                                        className={`${ss.mobileNavItem} ${location.pathname === item.path ? ss.active : ''}`}
+                                        onClick={(e) => handleMenuClick(item.path, e)}
+                                    >
+                                        <FontAwesomeIcon icon={item.icon} className={ss.mobileNavIcon} />
+                                        <span className={ss.mobileNavText}>{item.name}</span>
+                                    </Link>
+                                );
+                            }
+                            
+                            // 다른 메뉴는 권한 체크
+                            if (hasMenuAccess(item.menuGroup)) {
+                                return (
+                                    <Link
+                                        key={item.id}
+                                        to={item.path}
+                                        className={`${ss.mobileNavItem} ${location.pathname === item.path ? ss.active : ''}`}
+                                        onClick={(e) => handleMenuClick(item.path, e)}
+                                    >
+                                        <FontAwesomeIcon icon={item.icon} className={ss.mobileNavIcon} />
+                                        <span className={ss.mobileNavText}>{item.name}</span>
+                                    </Link>
+                                );
+                            }
+                            
+                            return null;
+                        })}
                     </div>
                 </nav>
             )}
