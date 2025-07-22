@@ -120,10 +120,14 @@ const AdminLayout = () => {
         // super_admin은 모든 메뉴 접근 가능
         if (adminRole === 'super_admin') return true;
         
-        // admin과 pd는 제한된 메뉴만 접근 가능
-        if (adminRole === 'admin' || adminRole === 'pd') {
-            const allowedMenus = ['user', 'attendance', 'finance'];
-            return allowedMenus.includes(menuId);
+        // admin은 Advanced Setting 제외하고 모든 메뉴 접근 가능
+        if (adminRole === 'admin') {
+            return menuId !== 'etc'; // etc는 Advanced Setting을 포함하는 메뉴
+        }
+        
+        // pd는 finance만 접근 가능
+        if (adminRole === 'pd') {
+            return menuId === 'finance';
         }
         
         return false;
