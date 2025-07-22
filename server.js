@@ -33,17 +33,17 @@ const Receipt = require('./models/Receipt')
 const Department = require('./models/Department')
 
 //로컬 버전 http 서버
-// app.listen(port, () => {
-//     console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-// })
+app.listen(port, () => {
+    console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+})
 
 //배포 버전 https 서버
-const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
-const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
-const credentials = { key: sslKey, cert: sslCert };
-https.createServer(credentials, app).listen(port, () => {
-    console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-});
+// const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
+// const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
+// const credentials = { key: sslKey, cert: sslCert };
+// https.createServer(credentials, app).listen(port, () => {
+//     console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+// });
 
 //MongoDB 연결
 mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mongodb.net/aedia')
@@ -4062,10 +4062,38 @@ app.put('/receipts/:id', async(req, res) => {
         const updatedReceipt = await Receipt.findByIdAndUpdate(
                 receiptId,
                 updateData, { new: true, runValidators: true }
-            ).populate('userId', 'name email')
+            ).populate('userId', 'name email slackId')
             .populate('projectId', 'title')
             .populate('creditCardId', 'cardName number label')
             .populate('approvedBy', 'name email');
+
+        // === 슬랙 알림 추가 ===
+        try {
+            const user = updatedReceipt.userId;
+            if (user && user.slackId) {
+                let statusText = '';
+                switch (updatedReceipt.status) {
+                    case 'APPROVED': statusText = '승인'; break;
+                    case 'REJECTED': statusText = '거절'; break;
+                    case 'PROCESSING': statusText = '처리 중'; break;
+                    case 'PENDING': statusText = '승인 대기'; break;
+                    default: statusText = updatedReceipt.status;
+                }
+                // 등록일 포맷 (YYYY-MM-DD)
+                const registeredDate = updatedReceipt.date ? new Date(updatedReceipt.date).toISOString().split('T')[0] : '-';
+                let message = `📄 *${registeredDate}*에 등록한 영수증의 상태가 *${statusText}*(으)로 변경되었습니다.\n`
+                if (updatedReceipt.status === 'REJECTED' && updatedReceipt.rejectionReason) {
+                    message += `\n거절 사유: ${updatedReceipt.rejectionReason}`;
+                }
+                message += '\n\nhttps://aedia.app/receipts 에서 상세 내역을 확인하세요.';
+                await slackBot.chat.postMessage({
+                    channel: user.slackId,
+                    text: message
+                });
+            }
+        } catch (slackError) {
+            console.error('영수증 상태 변경 슬랙 알림 실패:', slackError);
+        }
 
         res.status(200).json({
             success: true,
@@ -4113,10 +4141,23 @@ app.patch('/receipts/:id/approve', async(req, res) => {
                     approvedAt: new Date(),
                     rejectionReason: null
                 }, { new: true }
-            ).populate('userId', 'name email')
+            ).populate('userId', 'name email slackId')
             .populate('projectId', 'title')
             .populate('creditCardId', 'cardName number label')
             .populate('approvedBy', 'name email');
+
+        // === 슬랙 알림 추가 ===
+        try {
+            const user = updatedReceipt.userId;
+            if (user && user.slackId) {
+                await slackBot.chat.postMessage({
+                    channel: user.slackId,
+                    text: `📄 등록하신 영수증의 상태가 **승인**(으)로 변경되었습니다.\n\n제목: ${updatedReceipt.title}\n금액: ${updatedReceipt.amount}원\n\nAEDIA 시스템에서 상세 내역을 확인하세요.`
+                });
+            }
+        } catch (slackError) {
+            console.error('영수증 승인 슬랙 알림 실패:', slackError);
+        }
 
         res.status(200).json({
             success: true,
@@ -4162,9 +4203,22 @@ app.patch('/receipts/:id/reject', async(req, res) => {
                     approvedBy: null,
                     approvedAt: null
                 }, { new: true }
-            ).populate('userId', 'name email')
+            ).populate('userId', 'name email slackId')
             .populate('projectId', 'title')
             .populate('creditCardId', 'cardName number label');
+
+        // === 슬랙 알림 추가 ===
+        try {
+            const user = updatedReceipt.userId;
+            if (user && user.slackId) {
+                await slackBot.chat.postMessage({
+                    channel: user.slackId,
+                    text: `📄 등록하신 영수증의 상태가 **거절**(으)로 변경되었습니다.\n\n제목: ${updatedReceipt.title}\n금액: ${updatedReceipt.amount}원\n사유: ${updatedReceipt.rejectionReason}\n\nAEDIA 시스템에서 상세 내역을 확인하세요.`
+                });
+            }
+        } catch (slackError) {
+            console.error('영수증 거절 슬랙 알림 실패:', slackError);
+        }
 
         res.status(200).json({
             success: true,
