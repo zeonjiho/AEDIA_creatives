@@ -31,6 +31,7 @@ import AdminCreditCard from './page/Admin/AdminFinance/AdminCreditCard';
 import AdminAdvanced from './page/Admin/AdminAdvanced/AdminAdvanced';
 import AdminDepartment from './page/Admin/AdminDepartment/AdminDepartment';
 import { startSessionCheck, stopSessionCheck, checkInitialSession } from './utils/api';
+import AttendanceExtend from './page/AttendanceExtend/AttendanceExtend';
 
 function App() {
   // 자동 로그아웃 세션 체크 설정
@@ -71,6 +72,7 @@ function App() {
         <Route path='/' element={<AppLayout />}>
           <Route index element={<Home />} />
           <Route path='attendance' element={<Attendance />} />
+          <Route path='attendance-extend' element={<AttendanceExtend />} />
           <Route path='todo' element={<TodoList />} />
           <Route path='calendar' element={<Calendar />} />
           <Route path='room-reservation' element={<RoomReservation />} />

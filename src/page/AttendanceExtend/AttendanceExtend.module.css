@@ -1,0 +1,387 @@
+/* 메인 컨테이너 */
+.attendance_extend_wrap {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+    padding: 20px 20px 0;
+    margin: 0 auto;
+    height: calc(100vh - 110px);
+    background-color: var(--bg-primary);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+}
+
+.attendance_extend_wrap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 헤더 스타일 */
+.dashboard_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.header_content {
+    display: flex;
+    flex-direction: column;
+}
+
+.attendance_title {
+    font-size: 50px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    text-align: left;
+    transition: color 0.3s ease;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-primary);
+}
+
+.dashboard_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+}
+
+/* 중앙 상태 카드 스타일 */
+.attendance_center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    margin: 50px auto 160px;
+    width: 100%;
+}
+
+.status_card {
+    background-color: var(--card-bg);
+    border-radius: 3rem;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.05);
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    margin: -10px auto 0;
+}
+
+/* 사용자 인사말 스타일 */
+.user_greeting {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.user_icon {
+    font-size: 60px;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+.greeting_text {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 15px 0;
+    line-height: 1.2;
+}
+
+.greeting_subtext {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 시간 표시 스타일 */
+.status_time {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.current_date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    font-family: var(--font-mono);
+}
+
+.current_time {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+/* 버튼 스타일 */
+.attendance_buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.check_out_button,
+.extend_button {
+    padding: 18px 40px;
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 56px;
+}
+
+.check_out_button {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.check_out_button:hover:not(:disabled) {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.extend_button {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.extend_button:hover:not(:disabled) {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+}
+
+.check_out_button:disabled,
+.extend_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 로딩 메시지 스타일 */
+.loading_message {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.loading_icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    animation: spin 2s linear infinite;
+}
+
+.loading_message p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 상태 메시지 스타일 */
+.status_message {
+    margin-top: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success {
+    background-color: rgba(var(--success-color-rgb), 0.15);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.error {
+    background-color: rgba(var(--danger-color-rgb), 0.15);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 1024px) {
+    .attendance_extend_wrap {
+        padding: 40px 0;
+        height: calc(100vh - 150px);
+        overflow-y: hidden;
+    }
+    
+    .dashboard_header {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+    
+    .attendance_title {
+        display: none;
+    }
+    
+    .attendance_center {
+        margin: 0 auto;
+        margin-top: 0px;
+    }
+    
+    .status_card {
+        padding: 30px;
+        max-width: 450px;
+        margin: -60px auto 0;
+    }
+    
+    .user_icon {
+        font-size: 50px;
+    }
+    
+    .greeting_text {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 639px) {
+    .attendance_extend_wrap {
+        padding: 20px 15px 0;
+    }
+    
+    .dashboard_header {
+        margin-bottom: 15px;
+    }
+    
+    .attendance_center {
+        margin: 0 auto;
+    }
+    
+    .status_card {
+        padding: 25px 20px;
+        max-width: 100%;
+        border-radius: 2rem;
+        margin: 0 auto;
+    }
+    
+    .user_icon {
+        font-size: 45px;
+        margin-bottom: 12px;
+    }
+    
+    .greeting_text {
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+    
+    .greeting_subtext {
+        font-size: 14px;
+    }
+    
+    .current_time {
+        font-size: 28px;
+    }
+    
+    .check_out_button,
+    .extend_button {
+        padding: 16px 30px;
+        font-size: 15px;
+        min-height: 52px;
+    }
+    
+    .attendance_buttons {
+        gap: 12px;
+    }
+}
+
+/* 작은 모바일 화면 */
+@media (max-width: 480px) {
+    .attendance_extend_wrap {
+        padding: 15px 10px 0;
+    }
+    
+    .status_card {
+        padding: 20px 15px;
+        border-radius: 1.5rem;
+    }
+    
+    .user_icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+    
+    .greeting_text {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .greeting_subtext {
+        font-size: 13px;
+    }
+    
+    .current_time {
+        font-size: 24px;
+    }
+    
+    .check_out_button,
+    .extend_button {
+        padding: 14px 25px;
+        font-size: 14px;
+        min-height: 48px;
+    }
+}
