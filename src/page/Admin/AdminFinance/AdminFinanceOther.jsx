@@ -233,18 +233,56 @@ const AdminFinanceOther = () => {
       });
     }
 
-    // 직원별 필터링
+    // 직원별 필터링 (등록자 + 다중인원 결제 참가자 포함)
     if (filters.employee) {
-      filteredData = filteredData.filter(item => 
-        item.userId?._id === filters.employee || item.userId?.id === filters.employee
-      );
+      filteredData = filteredData.filter(item => {
+        // 등록자 확인
+        if (item.userId?._id === filters.employee || item.userId?.id === filters.employee) {
+          return true;
+        }
+        
+        // 다중인원 결제 참가자 확인
+        if (item.isMultiPersonPayment && item.participants && item.participants.length > 0) {
+          return item.participants.some(participant => 
+            participant.person && (
+              participant.person._id === filters.employee || 
+              participant.person.id === filters.employee
+            )
+          );
+        }
+        
+        return false;
+      });
     }
 
-    // 프로젝트별 필터링
+    // 프로젝트별 필터링 (메인 프로젝트 + 다중인원 결제 프로젝트 포함)
     if (filters.project) {
-      filteredData = filteredData.filter(item => 
-        item.projectId?._id === filters.project || item.projectId?.id === filters.project
-      );
+      filteredData = filteredData.filter(item => {
+        // 메인 프로젝트 확인
+        if (item.projectId?._id === filters.project || item.projectId?.id === filters.project) {
+          return true;
+        }
+        
+        // 다중인원 결제 프로젝트 확인
+        if (item.isMultiPersonPayment && item.participants && item.participants.length > 0) {
+          return item.participants.some(participant => {
+            if (!participant.project) return false;
+            
+            // ObjectId 형태인지 확인
+            const isObjectId = /^[0-9a-fA-F]{24}$/.test(participant.project);
+            
+            if (isObjectId) {
+              // ObjectId인 경우 직접 비교
+              return participant.project === filters.project;
+            } else {
+              // 프로젝트명인 경우 (현재는 ObjectId만 저장되므로 이 부분은 거의 사용되지 않음)
+              return participant.project === filters.project;
+            }
+          });
+        }
+        
+        return false;
+      });
     }
 
     return filteredData;
@@ -675,7 +713,20 @@ const AdminFinanceOther = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <td>{formatDate(item.date)}</td>
-                <td style={{fontWeight: '500'}}>{item.userId?.name || '알 수 없음'}</td>
+                <td style={{fontWeight: '500'}}>
+                  {item.userId?.name || '알 수 없음'}
+                  {item.isMultiPersonPayment && (
+                    <span className={ss.status_badge} style={{
+                      backgroundColor: 'var(--accent-color)', 
+                      color: 'white', 
+                      fontSize: '0.7rem',
+                      marginLeft: '6px',
+                      padding: '2px 6px'
+                    }}>
+                      다중
+                    </span>
+                  )}
+                </td>
                 <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
