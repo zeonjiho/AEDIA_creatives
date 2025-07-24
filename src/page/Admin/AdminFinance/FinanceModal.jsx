@@ -11,6 +11,8 @@ const FinanceModal = ({
   type, // 'meal' 또는 'taxi'
   onUpdate
 }) => {
+  const [projectMap, setProjectMap] = useState({});
+  const [loadingProjects, setLoadingProjects] = useState(false);
   const [status, setStatus] = useState(item?.status || 'PENDING')
   const [rejectionReason, setRejectionReason] = useState('')
   const [adminNote, setAdminNote] = useState(item?.adminNote || '')
@@ -18,12 +20,39 @@ const FinanceModal = ({
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState('')
 
+  // 프로젝트 목록 가져오기
+  const fetchProjects = async () => {
+    if (!isMultiPersonPayment() || loadingProjects) return;
+    
+    try {
+      setLoadingProjects(true);
+      const response = await api.get('/projects');
+      const projects = response.data || [];
+      
+      const map = {};
+      projects.forEach(project => {
+        map[project._id] = project.title;
+      });
+      
+      setProjectMap(map);
+    } catch (error) {
+      console.error('프로젝트 목록 가져오기 실패:', error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
   // item이 변경될 때마다 상태 업데이트
   useEffect(() => {
     if (item) {
       setStatus(item.status || 'PENDING')
       setRejectionReason(item.rejectionReason || '')
       setAdminNote(item.adminNote || '')
+      
+      // 다중인원 결제인 경우 프로젝트 목록 가져오기
+      if (isMultiPersonPayment()) {
+        fetchProjects();
+      }
     }
   }, [item])
 
@@ -200,6 +229,63 @@ const FinanceModal = ({
     }
   }
 
+  // 다중인원 결제인지 확인
+  const isMultiPersonPayment = () => {
+    return item.participants && item.participants.length > 0;
+  }
+
+  // 프로젝트별로 인원들을 그룹화
+  const getParticipantsByProject = () => {
+    if (!isMultiPersonPayment()) return null;
+
+    const projectGroups = {};
+    
+    console.log('다중인원 결제 데이터:', item.participants);
+    console.log('메인 프로젝트 정보:', item.projectId);
+    console.log('전체 영수증 데이터:', item);
+    
+    item.participants.forEach(participant => {
+      if (participant.person) {
+        // 프로젝트 정보 가져오기
+        let projectName = '미배정';
+        
+        if (participant.project) {
+          console.log('참가자 프로젝트 정보:', participant.project);
+          
+          // ObjectId 형태인지 확인 (24자리 영숫자)
+          const isObjectId = /^[0-9a-fA-F]{24}$/.test(participant.project);
+          
+          if (isObjectId) {
+            // ObjectId인 경우 - 프로젝트 매핑에서 찾기
+            if (projectMap[participant.project]) {
+              projectName = projectMap[participant.project];
+              console.log('프로젝트 매핑에서 찾음:', projectName);
+            } else if (item.projectId && item.projectId._id === participant.project) {
+              projectName = item.projectId.title;
+              console.log('메인 프로젝트와 일치:', item.projectId.title);
+            } else {
+              // 프로젝트 매핑에 없는 경우 - 임시로 "프로젝트 ID" 형태로 표시
+              projectName = `프로젝트 (${participant.project.substring(0, 8)}...)`;
+              console.log('프로젝트 매핑에 없음:', participant.project);
+            }
+          } else {
+            // 직접 프로젝트명이 저장된 경우
+            projectName = participant.project;
+            console.log('프로젝트명 직접 사용:', participant.project);
+          }
+        }
+        
+        if (!projectGroups[projectName]) {
+          projectGroups[projectName] = [];
+        }
+        projectGroups[projectName].push(participant.person);
+      }
+    });
+
+    console.log('그룹화된 프로젝트:', projectGroups);
+    return projectGroups;
+  }
+
   return (
     <>
       <div className={ss.modal_overlay} onClick={onClose}>
@@ -269,12 +355,38 @@ const FinanceModal = ({
               <div className={ss.info_item}>
                 <label>프로젝트</label>
                 <div className={ss.info_value}>
-                  {item.projectId?.title || item.projectName ? (
-                    <span className={ss.project_badge}>
-                      {item.projectId?.title || item.projectName}
-                    </span>
+                  {isMultiPersonPayment() ? (
+                    <div className={ss.multi_project_container}>
+                      {Object.entries(getParticipantsByProject()).map(([projectName, participants], index) => (
+                        <div key={index} className={ss.project_group}>
+                          <div className={ss.project_header}>
+                            <span className={ss.project_badge}>
+                              {projectName}
+                            </span>
+                            <span className={ss.participant_count}>
+                              {participants.length}명
+                            </span>
+                          </div>
+                          <div className={ss.participants_list}>
+                            {participants.map((person, personIndex) => (
+                              <span key={personIndex} className={ss.participant_name}>
+                                {person.name}
+                                {personIndex < participants.length - 1 && ', '}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <span style={{ color: 'var(--text-tertiary)' }}>미배정</span>
+                    // 단일 프로젝트인 경우
+                    item.projectId?.title || item.projectName || item.project ? (
+                      <span className={ss.project_badge}>
+                        {item.projectId?.title || item.projectName || item.project}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-tertiary)' }}>미배정</span>
+                    )
                   )}
                 </div>
               </div>
