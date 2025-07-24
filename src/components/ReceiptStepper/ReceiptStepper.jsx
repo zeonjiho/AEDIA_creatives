@@ -8,6 +8,7 @@ import { receiptCategories, receiptTypes, receiptStatuses, paymentMethods, proje
 import { takePicture, extractReceiptData, createImagePreview, revokeImagePreview, terminateWorker } from '../../utils/ocrUtils';
 import { optimizeImage } from '../../utils/imageUtils';
 import baseURL from '../../utils/baseURL';
+import { jwtDecode } from 'jwt-decode';
 
 /**
  * 단계별 영수증 입력 모달 컴포넌트
@@ -464,14 +465,63 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     return Object.keys(errors).length === 0;
   };
   
+  // 택시비 근무 시간 확인 함수
+  const checkTaxiWorkHours = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('로그인이 필요합니다.');
+      }
+
+      // JWT에서 userId 추출
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // 영수증 날짜를 기준으로 근무 시간 확인
+      const response = await fetch(`${baseURL}/attendance/work-hours-for-taxi?userId=${userId}&date=${formData.date}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('근무 시간 확인에 실패했습니다.');
+      }
+
+      const data = await response.json();
+      
+      if (!data.isEligibleForTaxi) {
+        const message = `택시비 영수증 등록이 불가능합니다.\n\n현재 근무 시간: ${data.workHoursFormatted}\n필요 근무 시간: 9시간 이상\n\n9시간 이상 근무한 경우에만 택시비 영수증을 등록할 수 있습니다.`;
+        alert(message);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('택시비 근무 시간 확인 실패:', error);
+      alert('근무 시간 확인 중 오류가 발생했습니다.');
+      return false;
+    }
+  };
+
   // 다음 단계 이동
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (!isOpen) return; // 모달이 닫혀있으면 실행하지 않음
     
     // 2단계(정보 입력) -> 3단계(정보 확인)로 넘어갈 때 유효성 검사
     if (currentStep === 2) {
       if (!validateForm()) {
         return; // 유효성 검사 실패 시 다음 단계로 넘어가지 않음
+      }
+
+      // 택시비 카테고리인 경우 근무 시간 확인
+      if (formData.category === '택시비' || formData.category === 'TAXI') {
+        const isEligible = await checkTaxiWorkHours();
+        if (!isEligible) {
+          return; // 근무 시간 부족 시 다음 단계로 넘어가지 않음
+        }
       }
     }
     

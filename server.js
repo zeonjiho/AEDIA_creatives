@@ -33,17 +33,17 @@ const Receipt = require('./models/Receipt')
 const Department = require('./models/Department')
 
 //로컬 버전 http 서버
-app.listen(port, () => {
-    console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-})
+// app.listen(port, () => {
+//     console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+// })
 
 //배포 버전 https 서버
-// const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
-// const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
-// const credentials = { key: sslKey, cert: sslCert };
-// https.createServer(credentials, app).listen(port, () => {
-//     console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-// });
+const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
+const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
+const credentials = { key: sslKey, cert: sslCert };
+https.createServer(credentials, app).listen(port, () => {
+    console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+});
 
 //MongoDB 연결
 mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mongodb.net/aedia')
@@ -1124,6 +1124,86 @@ app.post('/attendance/check-out', async(req, res) => {
         res.status(500).json({ message: '퇴근 처리 중 오류가 발생했습니다.' });
     }
 });
+
+// 택시비 영수증용 근무 시간 계산 API (9시간 이상 근무 판별)
+app.get('/attendance/work-hours-for-taxi', async(req, res) => {
+    const { userId, date } = req.query; // date는 퇴근 날짜
+
+    try {
+        const user = await User.findById(userId).select('attendance');
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 연속 근무 시간 계산 (전날 체크인 포함)
+        const workMinutes = calculateContinuousWorkHours(date, user.attendance);
+        const workHours = workMinutes / 60;
+
+        res.status(200).json({
+            workMinutes: workMinutes,
+            workHours: workHours,
+            isEligibleForTaxi: workHours >= 9, // 9시간 이상이면 택시비 가능
+            workHoursFormatted: `${Math.floor(workHours)}시간 ${workMinutes % 60}분`
+        });
+
+    } catch (err) {
+        console.error('택시비용 근무 시간 계산 중 오류:', err);
+        res.status(500).json({ message: '근무 시간 계산 중 오류가 발생했습니다.' });
+    }
+});
+
+// 연속 근무 시간 계산 함수 (전날 체크인 포함)
+const calculateContinuousWorkHours = (date, attendance) => {
+    const today = new Date(date);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const todayStr = date;
+    
+    // 어제 체크인 기록 찾기 (최신순)
+    const yesterdayRecords = attendance.filter(record => record.date === yesterdayStr);
+    const yesterdayCheckIns = yesterdayRecords
+        .filter(r => r.type === 'checkIn')
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // 오늘 퇴근 기록 찾기 (최신순)
+    const todayRecords = attendance.filter(record => record.date === todayStr);
+    const todayCheckOuts = todayRecords
+        .filter(r => r.type === 'checkOut')
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // 오늘 체크인 기록 찾기 (최신순)
+    const todayCheckIns = todayRecords
+        .filter(r => r.type === 'checkIn')
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    let totalWorkMinutes = 0;
+    
+    // 1. 오늘 내에서의 출퇴근 쌍 계산
+    for (let i = 0; i < Math.min(todayCheckIns.length, todayCheckOuts.length); i++) {
+        const checkInTime = new Date(todayCheckIns[i].time);
+        const checkOutTime = new Date(todayCheckOuts[i].time);
+        totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+    }
+    
+    // 2. 어제 체크인과 오늘 퇴근이 연결된 경우 계산
+    if (yesterdayCheckIns.length > 0 && todayCheckOuts.length > 0) {
+        const lastYesterdayCheckIn = yesterdayCheckIns[0]; // 가장 최근 어제 체크인
+        const firstTodayCheckOut = todayCheckOuts[todayCheckOuts.length - 1]; // 가장 오래된 오늘 퇴근
+        
+        const checkInTime = new Date(lastYesterdayCheckIn.time);
+        const checkOutTime = new Date(firstTodayCheckOut.time);
+        
+        // 오늘 퇴근이 어제 체크인보다 늦은 경우에만 계산
+        if (checkOutTime > checkInTime) {
+            const continuousWorkMinutes = Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+            totalWorkMinutes += continuousWorkMinutes;
+        }
+    }
+    
+    return totalWorkMinutes;
+};
 
 // 출석 기록 조회 API
 app.get('/attendance/history', async(req, res) => {
