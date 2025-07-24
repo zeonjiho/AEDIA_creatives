@@ -242,6 +242,15 @@ const RoomReservation = () => {
         })
     }
     
+    // 모바일용 짧은 날짜 포맷
+    const formatDateMobile = (date) => {
+        return date.toLocaleDateString('ko-KR', { 
+            month: 'short', 
+            day: 'numeric',
+            weekday: 'short'
+        })
+    }
+    
     const formatTime = (dateString) => {
         const date = new Date(dateString)
         return date.toLocaleTimeString('ko-KR', { 
@@ -742,8 +751,11 @@ const RoomReservation = () => {
                             >
                                 <HiChevronLeft />
                             </button>
-                            <span className={styles.current_date}>
+                            <span className={`${styles.current_date} ${styles.desktop_date}`}>
                                 {formatDate(currentDate)}
+                            </span>
+                            <span className={`${styles.current_date} ${styles.mobile_date}`}>
+                                {formatDateMobile(currentDate)}
                             </span>
                             <button 
                                 className={styles.nav_button} 
@@ -776,11 +788,11 @@ const RoomReservation = () => {
                         </div>
                         <div className={styles.stat_item}>
                             <div className={styles.stat_value}>{stats.reservedRooms}</div>
-                            <div className={styles.stat_label}>오늘 사용중</div>
+                            <div className={styles.stat_label}>사용중</div>
                         </div>
                         <div className={styles.stat_item}>
                             <div className={styles.stat_value}>{stats.totalReservations}</div>
-                            <div className={styles.stat_label}>오늘 예약</div>
+                            <div className={styles.stat_label}>예약</div>
                         </div>
                     </div>
 

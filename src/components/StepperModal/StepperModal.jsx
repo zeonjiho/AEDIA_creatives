@@ -1520,57 +1520,28 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       <div className={styles.input_group}>
         <label>사진 촬영/첨부 <span className={styles.required}>*</span></label>
 
-        {!isCamera ? (
-          <div className={styles.photo_actions}>
-            <button
-              type="button"
-              className={styles.camera_btn}
-              onClick={startCamera}
-            >
-              📷 카메라로 촬영
-            </button>
+        <div className={styles.photo_actions}>
+          <button
+            type="button"
+            className={styles.camera_btn}
+            onClick={startCamera}
+          >
+            📷 카메라로 촬영
+          </button>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              id="file-upload"
-              multiple
-              accept="image/*"
-              onChange={handleFileAttach}
-              className={styles.file_input}
-            />
-            <label htmlFor="file-upload" className={styles.file_upload_btn}>
-              📁 파일에서 선택
-            </label>
-          </div>
-        ) : (
-          <div className={styles.camera_container}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className={styles.camera_video}
-            />
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-            <div className={styles.camera_controls}>
-              <button
-                type="button"
-                className={styles.capture_btn}
-                onClick={capturePhoto}
-              >
-                📷 촬영
-              </button>
-              <button
-                type="button"
-                className={styles.cancel_camera_btn}
-                onClick={stopCamera}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            id="file-upload"
+            multiple
+            accept="image/*"
+            onChange={handleFileAttach}
+            className={styles.file_input}
+          />
+          <label htmlFor="file-upload" className={styles.file_upload_btn}>
+            📁 파일에서 선택
+          </label>
+        </div>
 
         {formData.attachedFiles.length > 0 && (
           <div className={styles.attached_files}>
@@ -1790,6 +1761,50 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         initialFilterType="all"
         disabledUsers={getSelectedPeople().map(p => p._id ? p._id.toString() : (p.id ? p.id.toString() : null))}
       />
+
+      {/* 카메라 모달 */}
+      {isCamera && (
+        <div className={styles.camera_modal_overlay}>
+          <div className={styles.camera_modal}>
+            <div className={styles.camera_modal_header}>
+              <h3>사진 촬영</h3>
+              <button
+                className={styles.camera_close_btn}
+                onClick={stopCamera}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.camera_modal_content}>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className={styles.camera_modal_video}
+              />
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </div>
+
+            <div className={styles.camera_modal_footer}>
+              <button
+                type="button"
+                className={styles.camera_cancel_btn}
+                onClick={stopCamera}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className={styles.camera_capture_btn}
+                onClick={capturePhoto}
+              >
+                📷 촬영
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

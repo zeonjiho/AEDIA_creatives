@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import api from '../../utils/api'
 import ss from './TodoList.module.css'
-import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaCalendarAlt, FaClipboardCheck, FaRegClock, FaInfoCircle, FaProjectDiagram, FaFilter, FaShare, FaUser } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaClipboardCheck, FaRegClock, FaInfoCircle, FaUser } from 'react-icons/fa'
 import { parseNaturalLanguageTodo, formatParsedTodo } from '../../utils/naturalLanguageUtils'
-import ProjectSelectModal from '../../components/ProjectSelectModal/ProjectSelectModal'
 
 const TodoList = () => {
     const navigate = useNavigate()
@@ -25,19 +24,22 @@ const TodoList = () => {
     const [showParsedPreview, setShowParsedPreview] = useState(false)
     const [loading, setLoading] = useState(false)
 
-    // 프로젝트 관련 상태
-    const [projects, setProjects] = useState([])
-    const [selectedProject, setSelectedProject] = useState('')
-    const [selectedProjectName, setSelectedProjectName] = useState('') // 프로젝트 이름 표시용
-    const [editProject, setEditProject] = useState('')
-    const [projectFilter, setProjectFilter] = useState('all') // 프로젝트별 필터링
-    const [showProjectDropdown, setShowProjectDropdown] = useState(false)
-    const [showProjectModal, setShowProjectModal] = useState(false) // 프로젝트 선택 모달
-    const [projectsLoading, setProjectsLoading] = useState(false)
+    // 화면 크기 상태
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
     // 현재 날짜 및 시간 상태
     const [currentDate, setCurrentDate] = useState(new Date())
     const [currentTime, setCurrentTime] = useState(new Date())
+
+    // 화면 크기 감지
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768)
+        }
+
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     // JWT 토큰에서 사용자 ID 추출
     useEffect(() => {
@@ -76,7 +78,6 @@ const TodoList = () => {
     useEffect(() => {
         if (userId) {
             fetchTodos()
-            fetchProjects() // 프로젝트 목록도 함께 로드
         }
     }, [userId])
 
@@ -110,15 +111,8 @@ const TodoList = () => {
     // 시간 포맷팅 - 영어로 변경 (초 단위 포함)
     const formattedTime = currentTime.toLocaleTimeString('en-US');
 
-    // 프로젝트별로 필터링된 할 일 목록
-    const projectFilteredTodos = todos.filter(todo => {
-        if (projectFilter === 'all') return true
-        if (projectFilter === 'no-project') return !todo.projectId
-        return todo.projectId === projectFilter
-    });
-
     // 상태별로 필터링된 할 일 목록
-    const filteredTodos = projectFilteredTodos.filter(todo => {
+    const filteredTodos = todos.filter(todo => {
         if (filter === 'all') return true
         if (filter === 'active') return !todo.completed
         if (filter === 'completed') return todo.completed
@@ -136,8 +130,7 @@ const TodoList = () => {
         const todoData = {
             text: todoInfo.text,
             dueDate: todoInfo.dueDate || new Date().toISOString().split('T')[0],
-            dueTime: todoInfo.dueTime || null,
-            projectId: selectedProject || null
+            dueTime: todoInfo.dueTime || null
         }
 
         setLoading(true)
@@ -148,8 +141,6 @@ const TodoList = () => {
             // 폼 초기화
             setNewTodoText('')
             setDueDate('')
-            setSelectedProject('')
-            setSelectedProjectName('')
             setParsedTodo(null)
             setShowParsedPreview(false)
         } catch (error) {
@@ -195,7 +186,6 @@ const TodoList = () => {
         setEditingId(todo._id)
         setEditText(todo.text)
         setDueDate(todo.dueDate || '')
-        setEditProject(todo.projectId || '')
         // 편집 중인 할 일의 시간 정보 저장
         if (todo.dueTime) {
             setEditTime(todo.dueTime)
@@ -211,8 +201,7 @@ const TodoList = () => {
         const todoData = {
             text: editText,
             dueDate: dueDate || new Date().toISOString().split('T')[0],
-            dueTime: editTime || null,
-            projectId: editProject || null
+            dueTime: editTime || null
         }
 
         setLoading(true)
@@ -225,7 +214,6 @@ const TodoList = () => {
             setEditText('')
             setDueDate('')
             setEditTime('')
-            setEditProject('')
         } catch (error) {
             console.error('할 일 수정 실패:', error)
             alert('할 일 수정에 실패했습니다.')
@@ -240,7 +228,6 @@ const TodoList = () => {
         setEditText('')
         setDueDate('')
         setEditTime('')
-        setEditProject('')
     }
 
     // 날짜 포맷팅
@@ -339,53 +326,7 @@ const TodoList = () => {
         setShowParsedPreview(false);
     };
 
-    // 프로젝트 이름 가져오기
-    const getProjectName = (projectId) => {
-        if (!projectId) return null;
-        const project = projects.find(p => p.id === projectId);
-        return project ? project.title : `Project ${projectId}`;
-    };
 
-    // 프로젝트 색상 가져오기
-    const getProjectColor = (projectId) => {
-        if (!projectId) return '';
-        // 프로젝트 상태에 따른 색상 반환
-        const project = projects.find(p => p.id === projectId);
-        if (!project) return '#007bff';
-
-        const statusColors = {
-            'concept': '#6c757d',
-            'development': '#17a2b8',
-            'pre_production': '#ffc107',
-            'production': '#fd7e14',
-            'post_production': '#20c997',
-            'vfx': '#e83e8c',
-            'sound_design': '#6f42c1',
-            'quality_check': '#dc3545',
-            'delivery': '#28a745'
-        };
-
-        return statusColors[project.status] || '#007bff';
-    };
-
-    // 프로젝트 드롭다운 토글
-    const toggleProjectDropdown = () => {
-        setShowProjectDropdown(!showProjectDropdown);
-    };
-
-    // 프로젝트 ID로 참여자 목록 가져오기
-    const getProjectMembers = (projectId) => {
-        // 프로젝트 기능이 아직 미개발이므로 빈 배열 반환
-        return [];
-    };
-
-    // 공유 처리 함수
-    const handleShareTodo = () => {
-        if (!selectedProject) return;
-
-        // 프로젝트 기능이 아직 미개발이므로 일단 알림만
-        alert('프로젝트 기능은 아직 개발 중입니다.');
-    };
 
     // 작성자 이름 가져오기
     const getAuthorName = (poster) => {
@@ -396,56 +337,7 @@ const TodoList = () => {
         return 'Unknown';
     };
 
-    // 프로젝트 모달 핸들러
-    const handleProjectSelect = (project) => {
-        if (project) {
-            setSelectedProject(project.id);
-            setSelectedProjectName(project.title);
-            console.log('프로젝트 선택:', project.title, project.id);
-        } else {
-            setSelectedProject('');
-            setSelectedProjectName('');
-            console.log('프로젝트 선택 해제');
-        }
-        setShowProjectModal(false);
-    };
 
-    const handleOpenProjectModal = () => {
-        console.log('프로젝트 모달 열기 - 현재 프로젝트 수:', projects.length);
-        setShowProjectModal(true);
-    };
-
-    const handleCloseProjectModal = () => {
-        setShowProjectModal(false);
-    };
-
-    // 프로젝트 목록 로드
-    const fetchProjects = async () => {
-        setProjectsLoading(true)
-        try {
-            console.log('프로젝트 목록 조회 시작')
-            const response = await api.get('/projects')
-            console.log('프로젝트 목록 조회 성공:', response.data.length, '개')
-
-            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환
-            const formattedProjects = response.data.map(project => ({
-                id: project._id || project.id,
-                title: project.title,
-                description: project.description || '',
-                status: project.status,
-                deadline: project.deadline,
-                client: project.client || '', // 클라이언트 정보가 있다면
-                thumbnail: project.thumbnail
-            }))
-
-            setProjects(formattedProjects)
-        } catch (error) {
-            console.error('프로젝트 목록 조회 실패:', error)
-            alert('프로젝트 목록을 불러오는데 실패했습니다.')
-        } finally {
-            setProjectsLoading(false)
-        }
-    }
 
     return (
         <div className={ss.todoListContainer}>
@@ -456,150 +348,7 @@ const TodoList = () => {
                     <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                 </div>
 
-                <div className={ss.header_controls}>
-                    {/* 프로젝트 필터 드롭다운 */}
-                    <div className={ss.projectFilterContainer}>
-                        <button
-                            className={`${ss.customize_btn} ${ss.projectFilterButton}`}
-                            onClick={toggleProjectDropdown}
-                        >
-                            <FaFilter />
-                            <span>{projectFilter === 'all' ? '모든 프로젝트' :
-                                projectFilter === 'no-project' ? '프로젝트 없음' :
-                                    getProjectName(projectFilter)}</span>
-                        </button>
-
-                        {showProjectDropdown && (
-                            <div className={ss.projectDropdown}>
-                                <div
-                                    className={`${ss.projectOption} ${projectFilter === 'all' ? ss.selected : ''}`}
-                                    onClick={() => {
-                                        setProjectFilter('all');
-                                        setShowProjectDropdown(false);
-                                    }}
-                                >
-                                    모든 프로젝트
-                                </div>
-                                <div
-                                    className={`${ss.projectOption} ${projectFilter === 'no-project' ? ss.selected : ''}`}
-                                    onClick={() => {
-                                        setProjectFilter('no-project');
-                                        setShowProjectDropdown(false);
-                                    }}
-                                >
-                                    프로젝트 없음
-                                </div>
-                                {/* 실제 프로젝트 목록 표시 */}
-                                {projects.map(project => (
-                                    <div
-                                        key={project.id}
-                                        className={`${ss.projectOption} ${projectFilter === project.id ? ss.selected : ''}`}
-                                        onClick={() => {
-                                            setProjectFilter(project.id);
-                                            setShowProjectDropdown(false);
-                                        }}
-                                    >
-                                        <span
-                                            className={ss.projectColor}
-                                            style={{ backgroundColor: getProjectColor(project.id) }}
-                                        ></span>
-                                        {project.title}
-                                        <span className={ss.projectStatus}>({project.status})</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            {/* 할 일 추가 폼 */}
-            <form className={ss.addTodoForm} onSubmit={handleAddTodo}>
-                <div className={ss.inputGroup}>
-                    <input
-                        type="text"
-                        className={ss.todoInput}
-                        placeholder="자연어로 할 일을 입력하세요 (예: 오후 2시 미팅가기)"
-                        value={newTodoText}
-                        onChange={handleNaturalLanguageInput}
-                    />
-                    <div className={ss.buttonGroup}>
-                        <button type="submit" className={ss.addButton} disabled={loading}>
-                            <FaPlus />
-                            <span className={ss.addButtonText}>{loading ? '추가 중...' : '추가'}</span>
-                        </button>
-
-                        {/* 공유 버튼 - 프로젝트가 선택된 경우에만 활성화 */}
-                        {/* <button 
-                            type="button" 
-                            className={`${ss.shareButton} ${!selectedProject ? ss.disabled : ''}`}
-                            onClick={handleShareTodo}
-                            disabled={!selectedProject || loading}
-                        >
-                            <FaShare />
-                            <span className={ss.shareButtonText}>공유</span>
-                        </button> */}
-                    </div>
-                </div>
-
-                <div className={ss.inputOptionsContainer}>
-                    <div className={ss.dateTimePickerContainer}>
-                        <div className={ss.datePickerContainer}>
-                            <FaCalendarAlt className={ss.calendarIcon} />
-                            <input
-                                type="date"
-                                className={ss.datePicker}
-                                value={dueDate}
-                                onChange={(e) => setDueDate(e.target.value)}
-                            />
-                        </div>
-                        <div className={ss.timePickerContainer}>
-                            <FaRegClock className={ss.clockIcon} />
-                            <input
-                                type="time"
-                                className={ss.timePicker}
-                                value={parsedTodo?.dueTime || ''}
-                                onChange={(e) => {
-                                    if (parsedTodo) {
-                                        setParsedTodo({ ...parsedTodo, dueTime: e.target.value });
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* 프로젝트 선택 버튼 */}
-                    <div className={ss.projectSelectContainer}>
-                        <FaProjectDiagram className={ss.projectIcon} />
-                        <button
-                            type="button"
-                            className={ss.projectSelectButton}
-                            onClick={handleOpenProjectModal}
-                            disabled={projectsLoading}
-                        >
-                            {projectsLoading ? '프로젝트 로딩 중...' :
-                                selectedProjectName || '프로젝트 선택 (옵션)'}
-                        </button>
-                    </div>
-                </div>
-
-                {/* 자연어 처리 미리보기 */}
-                {showParsedPreview && parsedTodo && (
-                    <div className={ss.parsedPreview}>
-                        <p>
-                            <strong>인식된 할 일:</strong> {formatParsedTodo(parsedTodo)}
-                        </p>
-                        <button
-                            type="button"
-                            className={ss.previewCloseBtn}
-                            onClick={handleClosePreview}
-                        >
-                            <FaTimes />
-                        </button>
-                    </div>
-                )}
-
-                {/* How to use 버튼 */}
+                {/* How to use 버튼 - 헤더로 이동 */}
                 <div className={ss.howToUseContainer}>
                     <button type="button" className={ss.howToUseBtn}>
                         <FaInfoCircle className={ss.howToUseIcon} />
@@ -628,6 +377,63 @@ const TodoList = () => {
                         </ul>
                     </div>
                 </div>
+            </header>
+
+            {/* 할 일 추가 폼 */}
+            <form className={ss.addTodoForm} onSubmit={handleAddTodo}>
+                <div className={ss.inputGroup}>
+                    <input
+                        type="text"
+                        className={ss.todoInput}
+                        placeholder={isMobile ? "할 일 추가..." : "자연어로 할 일을 입력하세요 (예: 오후 2시 미팅가기)"}
+                        value={newTodoText}
+                        onChange={handleNaturalLanguageInput}
+                    />
+                    <button type="submit" className={ss.addButton} disabled={loading}>
+                        <FaPlus />
+                        {!isMobile && <span className={ss.addButtonText}>{loading ? '추가 중...' : '추가'}</span>}
+                    </button>
+                </div>
+
+                {/* PC에서만 표시할 요소들 */}
+                {!isMobile && (
+                    <>
+                        <div className={ss.dateTimeGroup}>
+                            <input
+                                type="date"
+                                className={ss.datePicker}
+                                value={dueDate}
+                                onChange={(e) => setDueDate(e.target.value)}
+                            />
+                            <input
+                                type="time"
+                                className={ss.timePicker}
+                                value={parsedTodo?.dueTime || ''}
+                                onChange={(e) => {
+                                    if (parsedTodo) {
+                                        setParsedTodo({ ...parsedTodo, dueTime: e.target.value });
+                                    }
+                                }}
+                            />
+                        </div>
+                    </>
+                )}
+
+                {/* 자연어 처리 미리보기 - PC에서만 표시 */}
+                {!isMobile && showParsedPreview && parsedTodo && (
+                    <div className={ss.parsedPreview}>
+                        <p>
+                            <strong>인식된 할 일:</strong> {formatParsedTodo(parsedTodo)}
+                        </p>
+                        <button
+                            type="button"
+                            className={ss.previewCloseBtn}
+                            onClick={handleClosePreview}
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                )}
             </form>
 
             {/* 필터 버튼 */}
@@ -689,37 +495,19 @@ const TodoList = () => {
                                         value={editText}
                                         onChange={(e) => setEditText(e.target.value)}
                                     />
-                                    <div className={ss.editOptionsContainer}>
-                                        <div className={ss.editDateTimeContainer}>
-                                            <input
-                                                type="date"
-                                                className={ss.editDatePicker}
-                                                value={dueDate}
-                                                onChange={(e) => setDueDate(e.target.value)}
-                                            />
-                                            <input
-                                                type="time"
-                                                className={ss.editTimePicker}
-                                                value={editTime}
-                                                onChange={(e) => setEditTime(e.target.value)}
-                                            />
-                                        </div>
-
-                                    </div>
-
-                                    <div className={ss.editProjectContainer}>
-                                        <select
-                                            className={ss.editProjectSelect}
-                                            value={editProject}
-                                            onChange={(e) => setEditProject(e.target.value)}
-                                        >
-                                            <option value="">프로젝트 선택 (옵션)</option>
-                                            {projects.map(project => (
-                                                <option key={project.id} value={project.id}>
-                                                    {project.title} ({project.status})
-                                                </option>
-                                            ))}
-                                        </select>
+                                    <div className={ss.editDateTimeContainer}>
+                                        <input
+                                            type="date"
+                                            className={ss.editDatePicker}
+                                            value={dueDate}
+                                            onChange={(e) => setDueDate(e.target.value)}
+                                        />
+                                        <input
+                                            type="time"
+                                            className={ss.editTimePicker}
+                                            value={editTime}
+                                            onChange={(e) => setEditTime(e.target.value)}
+                                        />
                                     </div>
 
                                     <div className={ss.editActions}>
@@ -765,20 +553,6 @@ const TodoList = () => {
                                                 <FaUser />
                                                 {getAuthorName(todo.poster)}
                                             </div>
-
-                                            {/* 프로젝트 태그 */}
-                                            {todo.projectId && (
-                                                <div
-                                                    className={ss.todoProject}
-                                                    style={{
-                                                        backgroundColor: `${getProjectColor(todo.projectId)}20`,
-                                                        color: getProjectColor(todo.projectId),
-                                                        borderColor: getProjectColor(todo.projectId)
-                                                    }}
-                                                >
-                                                    <FaProjectDiagram /> {getProjectName(todo.projectId)}
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                     <div className={ss.todoActions}>
@@ -809,14 +583,7 @@ const TodoList = () => {
                 ) : null}
             </div>
 
-            {/* 프로젝트 선택 모달 */}
-            <ProjectSelectModal
-                isOpen={showProjectModal}
-                projects={projects}
-                selectedProject={selectedProjectName}
-                onSelect={handleProjectSelect}
-                onClose={handleCloseProjectModal}
-            />
+
         </div>
     )
 }

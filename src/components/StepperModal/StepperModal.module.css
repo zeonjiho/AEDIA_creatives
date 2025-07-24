@@ -657,54 +657,142 @@
 }
 
 
-/* 카메라 관련 */
+/* 카메라 모달 */
 
-.camera_container {
+.camera_modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.camera_modal {
+    background: #000;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUpCamera 0.4s ease-out;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    align-items: center;
 }
 
-.camera_video {
-    width: 100%;
-    max-width: 400px;
-    border-radius: 8px;
-    background: #000;
-}
-
-.camera_controls {
+.camera_modal_header {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-.capture_btn,
-.cancel_camera_btn {
-    padding: 12px 20px;
+.camera_modal_header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.camera_close_btn {
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    border-radius: 8px;
+    color: white;
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
 }
 
-.capture_btn {
-    background: #28a745;
+.camera_close_btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.camera_modal_content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 300px;
+}
+
+.camera_modal_video {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    max-height: 60vh;
+    object-fit: cover;
+}
+
+.camera_modal_footer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.camera_cancel_btn,
+.camera_capture_btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.camera_cancel_btn {
+    background: rgba(255, 255, 255, 0.1);
     color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.capture_btn:hover {
-    background: #218838;
+.camera_cancel_btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
 
-.cancel_camera_btn {
-    background: #6c757d;
+.camera_capture_btn {
+    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
     color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
 }
 
-.cancel_camera_btn:hover {
-    background: #5a6268;
+.camera_capture_btn:hover {
+    background: linear-gradient(45deg, #ff5252, #ff7979);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+@keyframes slideUpCamera {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 
@@ -1029,6 +1117,9 @@
         max-height: 100%;
         border-radius: 0;
     }
+    .step {
+        font-size: 12px;
+    }
     .modal_overlay {
         padding: 0;
     }
@@ -1058,7 +1149,7 @@
         justify-content: center;
     }
     .current_datetime {
-        font-size: 20px;
+        font-size: 15px;
     }
     .confirm_modal {
         width: 95%;
@@ -1078,8 +1169,42 @@
     .photo_actions {
         flex-direction: column;
     }
-    .camera_video {
+    /* 모바일 카메라 모달 */
+    .camera_modal {
+        width: 100%;
         max-width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+    }
+    .camera_modal_header {
+        padding: 16px 20px;
+    }
+    .camera_modal_header h3 {
+        font-size: 16px;
+    }
+    .camera_close_btn {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+    .camera_modal_content {
+        padding: 16px;
+        min-height: 250px;
+    }
+    .camera_modal_video {
+        max-height: 70vh;
+        border-radius: 8px;
+    }
+    .camera_modal_footer {
+        padding: 20px;
+        gap: 16px;
+    }
+    .camera_cancel_btn,
+    .camera_capture_btn {
+        padding: 16px 24px;
+        font-size: 15px;
+        min-width: 100px;
     }
     .photo_grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));

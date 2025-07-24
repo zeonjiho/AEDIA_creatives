@@ -9,6 +9,7 @@ import {
     FaProjectDiagram,
     FaUserClock,
     FaAddressBook,
+    FaReceipt,
 } from 'react-icons/fa'
 import { users, currentUser } from '../../data/mockDatabase'
 import AediaLogo from '../../components/AediaLogo/AediaLogo'
@@ -71,6 +72,7 @@ const MobileLayout = ({ user }) => {
         { path: '/attendance', label: '출석', icon: <FaUserClock /> },
         { path: '/todo', label: '할일', icon: <FaTasks /> },
         { path: '/room-reservation', label: '회의실', icon: <FaDoorOpen /> },
+        { path: '/receipts', label: '영수증', icon: <FaReceipt /> },
         { path: '/projects', label: '프로젝트', icon: <FaProjectDiagram /> },
         { path: '/contact', label: '연락처', icon: <FaAddressBook /> },
     ]

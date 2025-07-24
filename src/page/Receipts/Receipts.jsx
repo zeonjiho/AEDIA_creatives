@@ -554,9 +554,11 @@ const Receipts = () => {
               className={styles.search_input}
             />
           </div>
-          <button className={`${styles.customize_btn} ${styles.save_btn}`} onClick={openAddModal}>
-            <FaPlus /> 영수증 추가
-          </button>
+          {!isMobile && (
+            <button className={`${styles.customize_btn} ${styles.save_btn}`} onClick={openAddModal}>
+              <FaPlus /> 영수증 추가
+            </button>
+          )}
         </div>
       </header>
 
@@ -782,6 +784,14 @@ const Receipts = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 모바일 플로팅 버튼 */}
+      {isMobile && (
+        <button className={styles.floating_add_button} onClick={openAddModal}>
+          <FaPlus className={styles.floating_icon} />
+          <span className={styles.floating_text}>영수증 추가</span>
+        </button>
       )}
 
       {/* 이미지 뷰어 모달 */}

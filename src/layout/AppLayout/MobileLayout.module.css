@@ -19,7 +19,7 @@
 .header {
     width: 100%;
     height: 50px;
-    background-color: var(--bg-glass);
+    background-color: var(--glass-effect);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -463,7 +463,7 @@
 /* 프로필 메뉴 */
 
 .profile_menu {
-    padding: 8px 0;
+    /* padding: 8px 0; */
 }
 
 .profile_menu_item {

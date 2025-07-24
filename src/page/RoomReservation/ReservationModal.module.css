@@ -32,13 +32,13 @@
     width: 90%;
     max-width: 700px;
     max-height: 90vh;
-    overflow-y: auto;
     animation: slideUp 0.3s ease;
     display: flex;
     flex-direction: column;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 .panel_header {
@@ -91,6 +91,21 @@
 .panel_content {
     padding: 32px;
     overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+
+/* 고정 푸터 */
+
+.panel_footer {
+    padding: 20px 32px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    flex-shrink: 0;
 }
 
 
@@ -649,9 +664,6 @@
     justify-content: flex-end;
     align-items: center;
     gap: 12px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
 }
 
 .permission_message {
@@ -739,11 +751,14 @@
 
 @media (max-width: 768px) {
     .modal_panel {
-        width: 95%;
-        max-height: 95vh;
+        width: 90%;
+        max-width: 400px;
+        max-height: 85vh;
+        border-radius: 16px;
     }
     .panel_header,
-    .panel_content {
+    .panel_content,
+    .panel_footer {
         padding: 20px;
     }
     .form_section {
@@ -756,9 +771,23 @@
     }
     .participants_grid {
         grid-template-columns: 1fr;
+        max-height: 150px;
+    }
+    .participants_preview {
+        min-height: 30px;
+        padding: 10px;
+    }
+    .participant_chip {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    .participant_chip .participant_avatar {
+        width: 20px;
+        height: 20px;
     }
     .button_group {
-        flex-direction: column;
+        /* flex-direction: column; */
+        gap: 8px;
     }
     .cancel_button,
     .delete_button,
@@ -777,6 +806,99 @@
     .created_time {
         text-align: left;
         width: 100%;
+    }
+    /* 모바일에서 푸터 버튼 간격 조정 */
+    .permission_message {
+        margin: 0;
+        text-align: center;
+    }
+}
+
+
+/* 작은 모바일 화면 최적화 */
+
+@media (max-width: 480px) {
+    .modal_panel {
+        width: 95%;
+        max-width: 350px;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+    .panel_header,
+    .panel_content,
+    .panel_footer {
+        padding: 16px;
+    }
+    .form_section {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .section_title {
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+    .panel_title h2 {
+        font-size: 1.3rem;
+    }
+    .room_preview {
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+    .room_preview h3 {
+        font-size: 1.2rem;
+    }
+    .participants_grid {
+        max-height: 120px;
+        grid-template-columns: 1fr;
+    }
+    .participant_option {
+        padding: 10px;
+    }
+    .participant_option .participant_avatar {
+        width: 30px;
+        height: 30px;
+    }
+    .participant_name {
+        font-size: 0.85rem;
+    }
+    .participant_role {
+        font-size: 0.75rem;
+    }
+    .participants_preview {
+        min-height: 25px;
+        padding: 8px;
+    }
+    .participant_chip {
+        padding: 3px 6px;
+        font-size: 0.75rem;
+    }
+    .participant_chip .participant_avatar {
+        width: 18px;
+        height: 18px;
+    }
+    .title_input,
+    .description_input,
+    .date_input,
+    .time_input {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+    }
+    .description_input {
+        min-height: 60px;
+    }
+    .project_display {
+        padding: 12px 14px;
+        min-height: 42px;
+    }
+    .select_project_btn {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+    .cancel_button,
+    .delete_button,
+    .submit_button {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 }
 

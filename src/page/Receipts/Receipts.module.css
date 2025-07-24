@@ -89,6 +89,7 @@
     margin-bottom: 20px;
     padding-bottom: 10px;
     flex-wrap: wrap;
+    flex-direction: row;
 }
 
 .tab_button {
@@ -818,15 +819,15 @@
         order: 2;
     }
     .tabs_container {
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
         margin-bottom: 16px;
     }
     .tab_button {
-        width: 100%;
+        flex: 1;
         height: 44px;
         padding: 0 16px;
-        justify-content: flex-start;
+        justify-content: center;
         border-radius: 8px;
     }
     .tab_icon {
@@ -835,8 +836,7 @@
     }
     .tab_text {
         font-size: 16px;
-        flex: 1;
-        text-align: left;
+        text-align: center;
     }
     .tab_badge {
         margin-left: auto;
@@ -905,7 +905,6 @@
         justify-content: center;
         padding: 12px 16px;
     }
-    
     .edit_button:disabled,
     .edit_button.disabled {
         width: 100%;
@@ -928,8 +927,10 @@
         gap: 6px;
     }
     .tab_button {
+        flex: 1;
         height: 40px;
         padding: 0 12px;
+        justify-content: center;
     }
     .tab_text {
         font-size: 14px;
@@ -967,12 +968,13 @@
 }
 
 .dashboard_title {
-    font-size: 28px;
+    font-size: 3rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
     margin-bottom: 4px;
     line-height: 1.2;
+    font-family: var(--font-primary);
 }
 
 .dashboard_date {
@@ -980,6 +982,7 @@
     color: var(--text-secondary);
     margin: 0;
     line-height: 1.4;
+    display: none;
 }
 
 .header_controls {
@@ -1062,7 +1065,9 @@
     font-size: 14px;
 }
 
+
 /* 메모 관련 스타일 */
+
 .memo_cell {
     min-width: 100px;
     max-width: 150px;
@@ -1083,14 +1088,16 @@
     font-size: 13px;
 }
 
+
 /* 첨부파일 관련 스타일 */
+
 .info_attachments {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid var(--border-color);
 }
 
-.info_attachments > span {
+.info_attachments>span {
     display: block;
     font-weight: 600;
     color: var(--text-secondary);
@@ -1155,7 +1162,9 @@
     background-color: #2d8f47;
 }
 
+
 /* 이미지 뷰어 모달 스타일 */
+
 .image_viewer_overlay {
     position: fixed;
     top: 0;
@@ -1172,8 +1181,12 @@
 }
 
 @keyframes imageViewerOverlayFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .image_viewer_container {
@@ -1250,22 +1263,96 @@
     object-fit: contain;
 }
 
+
 /* 모바일 첨부파일 스타일 */
+
 @media (max-width: 768px) {
     .attachment_item {
         flex-direction: column;
         gap: 12px;
         align-items: flex-start;
     }
-    
     .attachment_buttons {
         width: 100%;
         justify-content: center;
     }
-    
     .attachment_view,
     .attachment_download {
         flex: 1;
         padding: 8px 12px;
+    }
+}
+
+
+/* 플로팅 추가 버튼 스타일 */
+
+.floating_add_button {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 25px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 14px;
+    min-width: 140px;
+    animation: floatingButtonPulse 2s infinite;
+}
+
+.floating_add_button:hover {
+    background-color: var(--accent-hover);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.floating_add_button:active {
+    transform: translateX(-50%) translateY(0px) scale(0.95);
+}
+
+.floating_icon {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.floating_text {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+@keyframes floatingButtonPulse {
+    0%,
+    100% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(var(--accent-color-rgb), 0.1);
+    }
+}
+
+
+/* 더 작은 모바일 화면에서 플로팅 버튼 조정 */
+
+@media (max-width: 480px) {
+    .floating_add_button {
+        padding: 10px 16px;
+        min-width: 120px;
+    }
+    .floating_icon {
+        font-size: 14px;
+    }
+    .floating_text {
+        font-size: 13px;
     }
 }

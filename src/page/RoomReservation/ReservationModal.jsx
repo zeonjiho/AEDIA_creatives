@@ -425,33 +425,36 @@ const ReservationModal = ({
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div className={styles.button_group}>
-                                <button type="button" className={styles.cancel_button} onClick={onClose}>
-                                    취소
-                                </button>
-                                {selectedReservation && canEditReservation() && (
-                                    <button type="button" className={styles.delete_button} onClick={onDelete}>
-                                        삭제
-                                    </button>
-                                )}
-                                {selectedReservation ? (
-                                    canEditReservation() ? (
-                                        <button type="submit" className={styles.submit_button}>
-                                            수정하기
-                                        </button>
-                                    ) : (
-                                        <div className={styles.permission_message}>
-                                            예약 참여자만 수정/삭제할 수 있습니다.
-                                        </div>
-                                    )
-                                ) : (
-                                    <button type="submit" className={styles.submit_button}>
-                                        예약 등록
-                                    </button>
-                                )}
-                            </div>
                         </form>
+                    </div>
+                    
+                    {/* 고정 푸터 */}
+                    <div className={styles.panel_footer}>
+                        <div className={styles.button_group}>
+                            <button type="button" className={styles.cancel_button} onClick={onClose}>
+                                취소
+                            </button>
+                            {selectedReservation && canEditReservation() && (
+                                <button type="button" className={styles.delete_button} onClick={onDelete}>
+                                    삭제
+                                </button>
+                            )}
+                            {selectedReservation ? (
+                                canEditReservation() ? (
+                                    <button type="submit" className={styles.submit_button} onClick={handleSubmit}>
+                                        수정하기
+                                    </button>
+                                ) : (
+                                    <div className={styles.permission_message}>
+                                        예약 참여자만 수정/삭제할 수 있습니다.
+                                    </div>
+                                )
+                            ) : (
+                                <button type="submit" className={styles.submit_button} onClick={handleSubmit}>
+                                    예약 등록
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
