@@ -114,10 +114,10 @@ cron.schedule('*/10 * * * *', async() => {
         const now = new Date();
         console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
 
-        // 모든 활성 사용자 조회 (slackId 유무와 관계없이)
+        // 모든 활성 사용자 조회 (연장 정보 포함)
         const users = await User.find({
             status: 'active'
-        }).select('_id name slackId attendance');
+        }).select('_id name slackId attendance lastExtensionTime');
 
         let notificationsSent = 0;
         let autoCheckoutsProcessed = 0;
@@ -135,9 +135,26 @@ cron.schedule('*/10 * * * *', async() => {
                 const elapsedHours = (now - checkInTime) / (1000 * 60 * 60); // 시간 단위
                 const elapsedMinutes = (now - checkInTime) / (1000 * 60); // 분 단위
 
-                // 12시간 경과 시 자동 퇴근 처리 (모든 사용자 대상)
-                if (elapsedHours >= 12) {
-                    console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${elapsedHours.toFixed(1)}시간)\x1b[0m`);
+                // 연장 시간이 있는지 확인
+                const hasExtension = user.lastExtensionTime;
+                let targetHours = 12; // 기본 12시간
+                let baseTime = checkInTime;
+
+                if (hasExtension) {
+                    // 연장 시간이 있으면 연장 시간을 기준으로 계산
+                    const extensionTime = new Date(user.lastExtensionTime);
+                    const extensionElapsedHours = (now - extensionTime) / (1000 * 60 * 60);
+                    targetHours = 12; // 연장 후에도 12시간
+                    baseTime = extensionTime;
+                    
+                    console.log(`\x1b[33m연장 사용자: ${user.name} (연장시간: ${extensionTime.toLocaleString()})\x1b[0m`);
+                }
+
+                const totalElapsedHours = (now - baseTime) / (1000 * 60 * 60);
+
+                // 12시간 경과 시 자동 퇴근 처리
+                if (totalElapsedHours >= targetHours) {
+                    console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${totalElapsedHours.toFixed(1)}시간${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
 
                     // 자동 퇴근 기록 추가
                     const autoCheckoutRecord = {
@@ -148,6 +165,10 @@ cron.schedule('*/10 * * * *', async() => {
                     };
 
                     user.attendance.push(autoCheckoutRecord);
+                    
+                            // 연장 정보 초기화
+        user.lastExtensionTime = null;
+                    
                     await user.save();
 
                     // 자동 퇴근 처리 슬랙 알림 (slackId가 있는 경우만)
@@ -170,9 +191,9 @@ cron.schedule('*/10 * * * *', async() => {
 
                     autoCheckoutsProcessed++;
                 }
-                // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - slackId가 있는 경우만
-                else if (elapsedHours >= 11 && user.slackId) {
-                    const remainingMinutes = 12 * 60 - elapsedMinutes; // 자동 퇴근까지 남은 분
+                // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - 연장 시간 고려
+                else if (totalElapsedHours >= 11 && user.slackId) {
+                    const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60); // 자동 퇴근까지 남은 분
 
                     // 알림 시점들 (60, 30, 20, 10분 전)
                     const notificationPoints = [60, 30, 20, 10];
@@ -180,12 +201,12 @@ cron.schedule('*/10 * * * *', async() => {
                     for (const notificationMinutes of notificationPoints) {
                         // 알림 시점에 근접한지 확인 (±5분 오차 허용)
                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
-                            console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림)\x1b[0m`);
+                            console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
 
                             try {
                                 await slackBot.chat.postMessage({
                                     channel: user.slackId,
-                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(elapsedHours)}시간 ${Math.floor(elapsedMinutes % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
+                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(totalElapsedHours)}시간 ${Math.floor((totalElapsedHours * 60) % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
                                 });
                                 console.log(`\x1b[32m퇴근 예정 알림 전송 성공: ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
                                 notificationsSent++;
@@ -198,13 +219,13 @@ cron.schedule('*/10 * * * *', async() => {
                     }
                 }
                 // 슬랙ID가 없는 사용자의 경우 알림 없이 로그만 출력
-                else if (elapsedHours >= 11 && !user.slackId) {
-                    const remainingMinutes = 12 * 60 - elapsedMinutes;
+                else if (totalElapsedHours >= 11 && !user.slackId) {
+                    const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60);
                     const notificationPoints = [60, 30, 20, 10];
 
                     for (const notificationMinutes of notificationPoints) {
                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
-                            console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
+                            console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
                             break;
                         }
                     }
@@ -711,6 +732,22 @@ app.get('/get-user-info', async(req, res) => {
     }
 })
 
+// 개별 사용자 정보 조회 (AttendanceExtend용)
+app.get('/attendance-extend/users/:userId', async(req, res) => {
+    const { userId } = req.params;
+    try {
+        const user = await User.findById(userId).select('name userType status');
+        if (user) {
+            res.status(200).json(user);
+        } else {
+            res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+    } catch (err) {
+        console.error('사용자 정보 조회 실패:', err);
+        res.status(500).json({ message: '사용자 정보 조회에 실패했습니다.' });
+    }
+})
+
 // 사용자 프로필 업데이트 API
 app.put('/update-user-profile', async(req, res) => {
     const { userId } = req.query;
@@ -1033,6 +1070,11 @@ app.post('/attendance/check-out', async(req, res) => {
 
         console.log('🔴 데이터베이스 업데이트 결과:', updateResult ? '성공' : '실패');
 
+        // 연장 시간 초기화 (퇴근 시 연장 정보 삭제)
+        await User.findByIdAndUpdate(userId, {
+            $unset: { lastExtensionTime: 1 }
+        });
+
         // 저장 후 실제 데이터 확인
         const updatedUser = await User.findById(userId).select('attendance');
         const latestRecord = updatedUser.attendance[updatedUser.attendance.length - 1];
@@ -1258,6 +1300,50 @@ app.patch('/attendance/update/:userId', async(req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: '출석 기록 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+// 연장 API
+app.post('/attendance/extend', async(req, res) => {
+    const { userId } = req.query;
+
+    console.log('🟡 연장 API 호출:', {
+        userId,
+        timestamp: new Date().toISOString()
+    });
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const now = new Date();
+
+        // 현재 출근 상태인지 확인
+        const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
+        if (sortedAttendance.length === 0 || sortedAttendance[0].type !== 'checkIn') {
+            return res.status(400).json({ message: '출근 상태가 아닙니다.' });
+        }
+
+        // 연장 시간 업데이트
+        await User.findByIdAndUpdate(userId, {
+            lastExtensionTime: now
+        });
+
+        console.log('🟡 연장 처리 완료:', {
+            userId,
+            extensionTime: now
+        });
+
+        res.status(200).json({
+            message: '연장이 처리되었습니다.',
+            extensionTime: now
+        });
+
+    } catch (err) {
+        console.error('연장 처리 중 오류:', err);
+        res.status(500).json({ message: '연장 처리 중 오류가 발생했습니다.' });
     }
 });
 

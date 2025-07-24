@@ -142,6 +142,11 @@ const userSchema = new Schema({
     adminSlackMessage: {
         type: Boolean,
         default: true
+    },
+    // 연장 관련 필드 추가
+    lastExtensionTime: {
+        type: Date,
+        default: null
     }
 }, {
     suppressReservedKeysWarning: true // Mongoose 예약 키워드 경고 억제

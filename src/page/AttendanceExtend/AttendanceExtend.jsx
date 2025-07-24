@@ -3,7 +3,7 @@ import ss from './AttendanceExtend.module.css'
 import { FaClock, FaSignOutAlt, FaHourglassHalf, FaUser } from 'react-icons/fa'
 import api from '../../utils/api'
 import { jwtDecode } from 'jwt-decode'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 
 const AttendanceExtend = () => {
     const navigate = useNavigate()
@@ -32,38 +32,24 @@ const AttendanceExtend = () => {
         const validateAndLoadUser = async () => {
             try {
                 const urlUserId = searchParams.get('userId')
-                const code = searchParams.get('code')
                 
                 // URL 파라미터가 없는 경우 홈으로 리다이렉트
-                if (!urlUserId || !code) {
-                    console.log('URL 파라미터가 없습니다. 홈으로 리다이렉트합니다.')
+                if (!urlUserId) {
+                    console.log('userId 파라미터가 없습니다. 홈으로 리다이렉트합니다.')
                     navigate('/')
                     return
                 }
                 
-                // 서버에 검증 요청 (추후 서버 API 구현 예정)
+                // 사용자 정보 조회
                 try {
-                    const response = await api.post('/attendance/validate-extend', {
-                        userId: urlUserId,
-                        code: code
-                    })
-                    
-                    if (response.data.valid) {
-                        setUserId(urlUserId)
-                        setUserName(response.data.userName || '사용자')
-                        setIsValidated(true)
-                    } else {
-                        console.log('유효하지 않은 코드입니다. 홈으로 리다이렉트합니다.')
-                        navigate('/')
-                    }
-                } catch (error) {
-                    console.error('검증 요청 실패:', error)
-                    // 서버 API가 아직 구현되지 않은 경우를 위한 임시 처리
-                    // 실제로는 이 부분을 제거하고 서버 응답만 사용해야 함
-                    console.log('서버 API 미구현으로 인한 임시 처리')
+                    const response = await api.get(`/attendance-extend/users/${urlUserId}`)
                     setUserId(urlUserId)
-                    setUserName('사용자')
+                    setUserName(response.data.name || '사용자')
                     setIsValidated(true)
+                } catch (error) {
+                    console.error('사용자 정보 조회 실패:', error)
+                    console.log('유효하지 않은 사용자입니다. 홈으로 리다이렉트합니다.')
+                    navigate('/')
                 }
                 
             } catch (error) {
@@ -77,40 +63,12 @@ const AttendanceExtend = () => {
         validateAndLoadUser()
     }, [searchParams, navigate])
 
-    // 지금 퇴근하기 처리
-    const handleCheckOut = async () => {
-        if (!userId) {
-            setStatusMessage('사용자 정보를 찾을 수 없습니다.')
-            setMessageType('error')
-            return
-        }
 
-        setLoading(true)
-        setStatusMessage('퇴근 처리 중...')
-        
-        try {
-            const response = await api.post(`/attendance/check-out?userId=${userId}`, {
-                location: null,
-                method: 'manual',
-                isOffSite: false
-            })
-            
-            setStatusMessage('퇴근 처리되었습니다.')
-            setMessageType('success')
-            
-            // 3초 후 메시지 숨기기
-            setTimeout(() => {
-                setStatusMessage('')
-                setMessageType('')
-            }, 3000)
-            
-        } catch (error) {
-            console.error('퇴근 처리 실패:', error)
-            setStatusMessage(error.response?.data?.message || '퇴근 처리 중 오류가 발생했습니다')
-            setMessageType('error')
-        } finally {
-            setLoading(false)
-        }
+
+    // 지금 퇴근하기 처리
+    const handleCheckOut = () => {
+        // /attendance 페이지로 이동
+        navigate('/attendance')
     }
 
     // 연장하기 처리
@@ -125,10 +83,8 @@ const AttendanceExtend = () => {
         setStatusMessage('연장 처리 중...')
         
         try {
-            // 연장 API 호출 (서버에 연장 API가 있다고 가정)
-            const response = await api.post(`/attendance/extend?userId=${userId}`, {
-                reason: '사용자 요청 연장'
-            })
+            // 연장 API 호출
+            const response = await api.post(`/attendance/extend?userId=${userId}`)
             
             setStatusMessage('연장이 처리되었습니다.')
             setMessageType('success')
@@ -202,15 +158,13 @@ const AttendanceExtend = () => {
                             {userName}님 안녕하세요!
                         </h2>
                         <p className={ss.greeting_subtext}>
-                            현재 시간이 늦어졌습니다.<br />
-                            어떻게 하시겠습니까?
+                            지금 퇴근하시겠습니까?
                         </p>
                     </div>
 
-                    {/* 현재 시간 표시 */}
+                    {/* 현재 날짜 표시 */}
                     <div className={ss.status_time}>
                         <div className={ss.current_date}>{formatDate(currentTime)}</div>
-                        <div className={ss.current_time}>{formatTime(currentTime)}</div>
                     </div>
 
                     {/* 액션 버튼들 */}

@@ -139,6 +139,8 @@
     font-family: var(--font-mono);
 }
 
+
+
 /* 버튼 스타일 */
 .attendance_buttons {
     display: flex;
