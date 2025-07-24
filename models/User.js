@@ -138,6 +138,10 @@ const userSchema = new Schema({
     lastActivity: {
         type: Date,
         default: Date.now
+    },
+    adminSlackMessage: {
+        type: Boolean,
+        default: true
     }
 }, {
     suppressReservedKeysWarning: true // Mongoose 예약 키워드 경고 억제

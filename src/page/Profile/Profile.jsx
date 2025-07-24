@@ -69,6 +69,10 @@ const Profile = () => {
   const [departments, setDepartments] = useState([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
 
+  // 관리자 권한 확인 상태
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminRole, setAdminRole] = useState(null);
+
   useEffect(() => {
     loadUserProfile();
   }, []);
@@ -88,9 +92,28 @@ const Profile = () => {
     }
   };
 
+  // 관리자 권한 확인
+  const checkAdminAuth = async () => {
+    try {
+      const response = await api.get(`/company/check-admin/${userId}`);
+      if (response.data.isAdmin) {
+        setIsAdmin(true);
+        setAdminRole(response.data.role);
+      } else {
+        setIsAdmin(false);
+        setAdminRole(null);
+      }
+    } catch (error) {
+      console.error('관리자 권한 확인 실패:', error);
+      setIsAdmin(false);
+      setAdminRole(null);
+    }
+  };
+
   useEffect(() => {
     loadUserProfile();
     loadDepartments(); // 부서 목록도 함께 로드
+    checkAdminAuth(); // 관리자 권한 확인
   }, []);
 
   const loadUserProfile = async () => {
@@ -157,7 +180,7 @@ const Profile = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
     if (name === 'role') {
       // roles 배열의 첫 번째 요소 업데이트
@@ -172,6 +195,12 @@ const Profile = () => {
       setFormData({
         ...formData,
         department: value
+      });
+    } else if (name === 'adminSlackMessage') {
+      // 관리자 슬랙 알림 토글
+      setFormData({
+        ...formData,
+        adminSlackMessage: checked
       });
     } else {
       setFormData({
@@ -873,6 +902,35 @@ const Profile = () => {
                             확인
                           </button>
                         </div>
+                      </div>
+                    )}
+
+                    {/* 관리자 슬랙 알림 설정 */}
+                    {isAdmin && (
+                      <div className={styles.form_group}>
+                        <label>
+                          <FaShieldAlt className={styles.input_icon} />
+                          관리자 슬랙 알림 수신
+                        </label>
+                        <div className={styles.toggle_container}>
+                          <input
+                            type="checkbox"
+                            name="adminSlackMessage"
+                            checked={formData.adminSlackMessage || false}
+                            onChange={handleInputChange}
+                            className={styles.toggle_input}
+                            id="adminSlackMessage"
+                          />
+                          <label htmlFor="adminSlackMessage" className={styles.toggle_label}>
+                            <span className={styles.toggle_slider}></span>
+                          </label>
+                          <span className={styles.toggle_text}>
+                            {formData.adminSlackMessage ? '수신함' : '수신안함'}
+                          </span>
+                        </div>
+                        <small className={styles.field_note}>
+                          <FaInfoCircle /> 관리자 권한이 있는 경우에만 표시됩니다.
+                        </small>
                       </div>
                     )}
                   </div>

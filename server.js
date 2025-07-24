@@ -710,6 +710,7 @@ app.put('/update-user-profile', async(req, res) => {
         if (roles !== undefined) updateData.roles = roles;
         if (avatar !== undefined) updateData.avatar = avatar;
         if (slackId !== undefined) updateData.slackId = slackId;
+        if (req.body.adminSlackMessage !== undefined) updateData.adminSlackMessage = req.body.adminSlackMessage;
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
