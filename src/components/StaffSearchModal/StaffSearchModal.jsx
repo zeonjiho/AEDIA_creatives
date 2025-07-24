@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './StaffSearchModal.module.css';
 import { HiX, HiSearch, HiUser, HiUserGroup, HiCheck, HiPlus, HiSave } from 'react-icons/hi';
 import api from '../../utils/api';
+import { jwtDecode } from 'jwt-decode';
 
 // 샘플 스탭 데이터
 // const initialStaff = [
@@ -59,9 +60,22 @@ const StaffSearchModal = ({
     try {
       const response = await api.get('/get-user-list?userType=all');
       if (response.status === 200) {
+        // 현재 로그인한 사용자 ID 가져오기
+        const currentUserId = localStorage.getItem('token') ? 
+          jwtDecode(localStorage.getItem('token')).userId : null;
+
         // MongoDB _id를 id로 통일화하고 안전성 확보
         const peopleWithIds = response.data
           .filter(person => person && person.name) // name이 있는 사람만 필터링
+          .filter(person => {
+            // 본인 제외
+            const personId = person._id ? person._id.toString() : (person.id ? person.id.toString() : null);
+            if (currentUserId && personId === currentUserId.toString()) {
+              console.log('본인 제외:', person.name);
+              return false;
+            }
+            return true;
+          })
           .map(person => ({
             ...person,
             id: person._id || person.id, // _id가 있으면 _id를 사용, 없으면 기존 id 사용
@@ -146,7 +160,8 @@ const StaffSearchModal = ({
 
   // 안전한 ID 비교 함수
   const getPersonId = (person) => {
-    return person._id || person.id;
+    // MongoDB ObjectId를 문자열로 변환하여 정확한 비교
+    return person._id ? person._id.toString() : (person.id ? person.id.toString() : null);
   };
 
   // 선택 상태 변화 추적
@@ -172,8 +187,8 @@ const StaffSearchModal = ({
 
     const personId = getPersonId(person);
     
-    // 비활성화된 사용자인지 확인
-    if (disabledUsers.includes(personId)) {
+    // 비활성화된 사용자인지 확인 (문자열 비교)
+    if (disabledUsers.some(disabledId => disabledId.toString() === personId)) {
       return; // 클릭 무시
     }
 
@@ -191,13 +206,19 @@ const StaffSearchModal = ({
 
         let newSelected;
         if (isSelected) {
-          // 선택 해제
+          // 선택 해제 - 해당 인원만 제거
           newSelected = prevSelected.filter(p => getPersonId(p) !== personId);
           console.log('선택 해제 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
         } else {
-          // 선택 추가
-          newSelected = [...prevSelected, person];
-          console.log('선택 추가 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
+          // 선택 추가 - 중복 방지
+          const isAlreadySelected = prevSelected.some(p => getPersonId(p) === personId);
+          if (!isAlreadySelected) {
+            newSelected = [...prevSelected, person];
+            console.log('선택 추가 후:', newSelected.map(p => ({ name: p.name, id: getPersonId(p) })));
+          } else {
+            newSelected = prevSelected; // 이미 선택된 경우 변경 없음
+            console.log('이미 선택된 인원 - 변경 없음');
+          }
         }
 
         return newSelected;

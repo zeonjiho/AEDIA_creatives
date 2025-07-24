@@ -3,6 +3,7 @@ import styles from './StepperModal.module.css';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
 import api from '../../utils/api';
 import baseURL from '../../utils/baseURL';
+import { jwtDecode } from 'jwt-decode';
 
 /**
  * 단계별 모달 컴포넌트
@@ -563,6 +564,17 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         }
       }
       
+      // 프로젝트가 변경될 때 모든 인원의 프로젝트도 함께 업데이트
+      if (field === 'project') {
+        if (prev.participants && prev.participants.length > 0) {
+          newData.participants = prev.participants.map(participant => ({
+            ...participant,
+            project: value // 모든 인원의 프로젝트를 새로 선택된 프로젝트로 업데이트
+          }));
+          console.log('프로젝트 변경으로 모든 인원의 프로젝트 업데이트:', value);
+        }
+      }
+      
       return newData;
     });
   };
@@ -602,15 +614,57 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       const newParticipants = [...formData.participants];
 
       if (editingParticipantIndex !== null) {
-        // 기존 참가자 항목 교체 (첫 번째 선택된 인물로)
-        newParticipants[editingParticipantIndex].person = selectedStaff[0];
+        // 현재 로그인한 사용자 ID 가져오기
+        const currentUserId = localStorage.getItem('token') ? 
+          jwtDecode(localStorage.getItem('token')).userId : null;
 
-        // 나머지 선택된 인물들은 새로운 참가자로 추가
-        for (let i = 1; i < selectedStaff.length; i++) {
-          newParticipants.push({
-            person: selectedStaff[i],
-            project: formData.project || ''
+        // 중복 제거된 새로운 인원들만 필터링
+        const uniqueNewStaff = selectedStaff.filter(newPerson => {
+          const newPersonId = newPerson._id ? newPerson._id.toString() : (newPerson.id ? newPerson.id.toString() : null);
+          
+          // 본인인지 확인
+          if (currentUserId && newPersonId === currentUserId.toString()) {
+            console.log('본인 제외:', newPerson.name);
+            return false;
+          }
+          
+          // 이미 추가된 인원인지 확인
+          const isAlreadyAdded = newParticipants.some(p => {
+            if (!p.person) return false;
+            const existingPersonId = p.person._id ? p.person._id.toString() : (p.person.id ? p.person.id.toString() : null);
+            return existingPersonId === newPersonId;
           });
+          
+          if (isAlreadyAdded) {
+            console.log('이미 추가된 인원 제외:', newPerson.name);
+            return false;
+          }
+          
+          return true;
+        });
+
+        if (uniqueNewStaff.length > 0) {
+          // 현재 선택된 프로젝트 가져오기
+          const currentProject = formData.project || '';
+          
+          // 첫 번째 인원은 현재 편집 중인 항목에 교체 (프로젝트도 함께 설정)
+          newParticipants[editingParticipantIndex] = {
+            person: uniqueNewStaff[0],
+            project: currentProject
+          };
+          
+          // 나머지 인원들은 새로 추가
+          for (let i = 1; i < uniqueNewStaff.length; i++) {
+            newParticipants.push({
+              person: uniqueNewStaff[i],
+              project: currentProject
+            });
+          }
+          
+          console.log('추가된 인원들:', uniqueNewStaff.map(p => p.name));
+          console.log('설정된 프로젝트:', currentProject);
+        } else {
+          console.log('추가할 수 있는 새로운 인원이 없습니다.');
         }
       }
 
@@ -1734,6 +1788,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         multiSelect={true}
         title="인물 선택"
         initialFilterType="all"
+        disabledUsers={getSelectedPeople().map(p => p._id ? p._id.toString() : (p.id ? p.id.toString() : null))}
       />
     </div>
   );

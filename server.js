@@ -223,7 +223,7 @@ cron.schedule('*/10 * * * *', async() => {
     timezone: "Asia/Seoul"
 });
 
-// 영수증 처리 알림 스케줄러 (평일 점심 12시에 실행)
+// 영수증 처리 알림 스케줄러 (평일 점심 12시에 실행 -> 이 아니고 테스트 용도로 1분마다 실행.)
 cron.schedule('* * * * *', async() => {
 // cron.schedule('0 12 * * 1-5', async() => {
     try {
