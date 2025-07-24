@@ -18,13 +18,13 @@
 
 .header {
     width: 100%;
-    height: 60px;
-    background-color: var(--bg-primary);
+    height: 50px;
+    background-color: var(--bg-glass);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 15px;
-    position: sticky;
+    position: fixed;
     top: 0;
     z-index: 100;
     transition: all 0.3s ease;
@@ -53,8 +53,8 @@
 }
 
 .logo {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
 }
 
@@ -299,12 +299,12 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    padding: 6px 8px;
-    border-radius: var(--border-radius-lg);
+    /* padding: 0.2rem 0.5rem; */
+    /* border-radius: var(--border-radius-lg); */
     transition: all 0.3s ease;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* background: var(--bg-secondary); */
+    /* border: 1px solid var(--border-color); */
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
 }
 
 .profile_button:hover {
@@ -512,12 +512,13 @@
 .content_area {
     flex: 1;
     padding: 10px;
-    overflow-y: auto;
+    overflow-y: hidden;
     width: 100%;
-    margin-bottom: 60px;
+    margin-bottom: 70px;
+    margin-top: 50px;
     /* 하단 네비게이션 바 높이만큼 여백 추가 */
     height: auto;
-    min-height: calc(100vh - 130px);
+    min-height: calc(100vh - 120px);
     /* 헤더와 하단 네비게이션 높이를 뺀 전체 높이 */
 }
 

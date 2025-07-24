@@ -23,6 +23,9 @@ const Home = () => {
     // 사용자 ID 상태 추가
     const [userId, setUserId] = useState(null)
     
+    // 사용자 정보 상태 추가
+    const [user, setUser] = useState(null)
+    
     // 화면 크기 감지를 위한 상태 추가
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
     
@@ -75,7 +78,7 @@ const Home = () => {
     // 위젯 레이아웃 상태 관리 - 초기값을 null로 설정
     const [layouts, setLayouts] = useState(null)
     
-    // JWT 토큰에서 사용자 ID 추출
+    // JWT 토큰에서 사용자 ID 추출 및 사용자 정보 가져오기
     useEffect(() => {
         const token = localStorage.getItem('token')
         if (!token) {
@@ -86,6 +89,18 @@ const Home = () => {
         try {
             const decoded = jwtDecode(token)
             setUserId(decoded.userId)
+            
+            // 사용자 정보 가져오기
+            const getUserInfo = async () => {
+                try {
+                    const response = await api.get(`/get-user-info?userId=${decoded.userId}`)
+                    setUser(response.data)
+                } catch (error) {
+                    console.error('사용자 정보 가져오기 실패:', error)
+                }
+            }
+            
+            getUserInfo()
         } catch (error) {
             console.error('토큰 디코딩 실패:', error)
             navigate('/login')
@@ -332,126 +347,136 @@ const Home = () => {
 
     return (
         <div className={ss.home_container}>
-            {/* 대시보드 헤더 */}
-            <header className={ss.dashboard_header}>
-                <div className={ss.header_content}>
-                    <h1 className={ss.dashboard_title}>
-                        {isCustomizeMode ? 'Edit Mode' : 'My Dashboard'}
-                    </h1>
-                    <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
+            {/* 모바일일 경우 간단한 환영 메시지만 표시 */}
+            {isMobile ? (
+                <div className={ss.mobile_welcome}>
+                    <h1 className={ss.welcome_title}>Welcome, {user?.name || 'Guest'}!</h1>
+                    <p className={ss.welcome_subtitle}>{formattedDate} {formattedTime}</p>
                 </div>
-                
-                {/* 커스터마이징 모드 컨트롤 - 모바일에서는 표시하지 않음 */}
-                <div className={ss.header_controls}>
-                    {isCustomizeMode ? (
-                        <div className={ss.customize_controls}>
-                            <button 
-                                className={`${ss.customize_btn} ${ss.save_btn}`} 
-                                onClick={saveCustomization}
-                            >
-                                저장
-                            </button>
-                            <button 
-                                className={`${ss.customize_btn} ${ss.cancel_btn}`} 
-                                onClick={cancelCustomization}
-                            >
-                                취소
-                            </button>
+            ) : (
+                <>
+                    {/* 대시보드 헤더 */}
+                    <header className={ss.dashboard_header}>
+                        <div className={ss.header_content}>
+                            <h1 className={ss.dashboard_title}>
+                                {isCustomizeMode ? 'Edit Mode' : 'My Dashboard'}
+                            </h1>
+                            <p className={ss.dashboard_date}>{formattedDate} {formattedTime}</p>
                         </div>
-                    ) : (
-                        !isMobile && (
-                            <button 
-                                className={`${ss.customize_btn} ${ss.edit_btn}`} 
-                                onClick={() => handleCustomizeModeChange(true)}
+                        
+                        {/* 커스터마이징 모드 컨트롤 - 모바일에서는 표시하지 않음 */}
+                        <div className={ss.header_controls}>
+                            {isCustomizeMode ? (
+                                <div className={ss.customize_controls}>
+                                    <button 
+                                        className={`${ss.customize_btn} ${ss.save_btn}`} 
+                                        onClick={saveCustomization}
+                                    >
+                                        저장
+                                    </button>
+                                    <button 
+                                        className={`${ss.customize_btn} ${ss.cancel_btn}`} 
+                                        onClick={cancelCustomization}
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            ) : (
+                                !isMobile && (
+                                    <button 
+                                        className={`${ss.customize_btn} ${ss.edit_btn}`} 
+                                        onClick={() => handleCustomizeModeChange(true)}
+                                    >
+                                        Change Layout
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    </header>
+                    
+                    {/* 위젯 그리드 레이아웃 */}
+                    <main className={ss.dashboard_content}>
+                        {loading ? (
+                            <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                height: '400px',
+                                fontSize: '1.2rem',
+                                color: '#6b7280'
+                            }}>
+                                데이터를 불러오는 중...
+                            </div>
+                        ) : layouts ? (
+                            <WidgetGrid 
+                                columns={2} 
+                                gap="15px" 
+                                className={ss.dashboard_grid}
+                                layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
+                                onLayoutChange={handleLayoutChange}
+                                isCustomizeMode={isCustomizeMode}
+                                onCustomizeModeChange={handleCustomizeModeChange}
                             >
-                                Change Layout
-                            </button>
-                        )
-                    )}
-                </div>
-            </header>
-            
-            {/* 위젯 그리드 레이아웃 */}
-            <main className={ss.dashboard_content}>
-                {loading ? (
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        height: '400px',
-                        fontSize: '1.2rem',
-                        color: '#6b7280'
-                    }}>
-                        데이터를 불러오는 중...
-                    </div>
-                ) : layouts ? (
-                    <WidgetGrid 
-                        columns={2} 
-                        gap="15px" 
-                        className={ss.dashboard_grid}
-                        layouts={isCustomizeMode ? tempLayouts || layouts : layouts}
-                        onLayoutChange={handleLayoutChange}
-                        isCustomizeMode={isCustomizeMode}
-                        onCustomizeModeChange={handleCustomizeModeChange}
-                    >
-                        {/* 투두 리스트 위젯 */}
-                        <WidgetGridItem 
-                            key="todo-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <TodoWidget 
-                                todos={todoList}
-                                onToggleTodo={toggleTodo}
-                                onViewAllClick={() => navigate('/todo')}
-                                formatDate={formatDate}
-                            />
-                        </WidgetGridItem>
+                                {/* 투두 리스트 위젯 */}
+                                <WidgetGridItem 
+                                    key="todo-widget"
+                                    onCustomizeModeChange={handleCustomizeModeChange}
+                                >
+                                    <TodoWidget 
+                                        todos={todoList}
+                                        onToggleTodo={toggleTodo}
+                                        onViewAllClick={() => navigate('/todo')}
+                                        formatDate={formatDate}
+                                    />
+                                </WidgetGridItem>
 
 
 
-                        {/* 스튜디오 현황 위젯 */}
-                        <WidgetGridItem 
-                            key="studio-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <StudioWidget 
-                                rooms={rooms.slice(0, 4)}
-                                reservations={roomReservations}
-                                onReservationClick={() => navigate('/room-reservation')}
-                            />
-                        </WidgetGridItem>
+                                {/* 스튜디오 현황 위젯 */}
+                                <WidgetGridItem 
+                                    key="studio-widget"
+                                    onCustomizeModeChange={handleCustomizeModeChange}
+                                >
+                                    <StudioWidget 
+                                        rooms={rooms.slice(0, 4)}
+                                        reservations={roomReservations}
+                                        onReservationClick={() => navigate('/room-reservation')}
+                                    />
+                                </WidgetGridItem>
 
-                        {/* 프로젝트 현황 위젯 */}
-                        <WidgetGridItem 
-                            key="project-widget"
-                            onCustomizeModeChange={handleCustomizeModeChange}
-                        >
-                            <ProjectWidget 
-                                projects={userProjects}
-                                calculateProgress={calculateProgress}
-                                calculateRemainingDays={calculateRemainingDays}
-                                formatDate={formatDate}
-                                onViewAllClick={() => navigate('/projects')}
-                            />
-                        </WidgetGridItem>
+                                {/* 프로젝트 현황 위젯 */}
+                                <WidgetGridItem 
+                                    key="project-widget"
+                                    onCustomizeModeChange={handleCustomizeModeChange}
+                                >
+                                    <ProjectWidget 
+                                        projects={userProjects}
+                                        calculateProgress={calculateProgress}
+                                        calculateRemainingDays={calculateRemainingDays}
+                                        formatDate={formatDate}
+                                        onViewAllClick={() => navigate('/projects')}
+                                    />
+                                </WidgetGridItem>
 
 
 
 
-                    </WidgetGrid>
-                ) : (
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        height: '400px',
-                        fontSize: '1.2rem',
-                        color: '#6b7280'
-                    }}>
-                        대시보드 레이아웃을 불러오는 중...
-                    </div>
-                )}
-            </main>
+                            </WidgetGrid>
+                        ) : (
+                            <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                height: '400px',
+                                fontSize: '1.2rem',
+                                color: '#6b7280'
+                            }}>
+                                대시보드 레이아웃을 불러오는 중...
+                            </div>
+                        )}
+                    </main>
+                </>
+            )}
         </div>
     )
 }

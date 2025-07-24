@@ -4,13 +4,9 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
     FaUserCircle,
     FaSearch,
-    FaHome,
-    FaCalendarAlt,
     FaTasks,
     FaDoorOpen,
     FaProjectDiagram,
-    FaFileInvoiceDollar,
-    FaEllipsisH,
     FaUserClock,
     FaAddressBook,
 } from 'react-icons/fa'
@@ -68,24 +64,18 @@ const MobileLayout = ({ user }) => {
 
 
 
-    // 더보기 메뉴 토글
-    const [showMoreMenu, setShowMoreMenu] = useState(false)
+
 
     // 메뉴 아이템 (하단 네비게이션용)
     const menuItems = [
-        { path: '/', label: '홈', icon: <FaHome /> },
         { path: '/attendance', label: '출석', icon: <FaUserClock /> },
         { path: '/todo', label: '할일', icon: <FaTasks /> },
-        { path: '/calendar', label: '일정', icon: <FaCalendarAlt /> },
-        { path: '/receipts', label: '영수증', icon: <FaFileInvoiceDollar /> },
-    ]
-
-    // 더보기 메뉴 아이템
-    const moreMenuItems = [
+        { path: '/room-reservation', label: '회의실', icon: <FaDoorOpen /> },
         { path: '/projects', label: '프로젝트', icon: <FaProjectDiagram /> },
         { path: '/contact', label: '연락처', icon: <FaAddressBook /> },
-        { path: '/room-reservation', label: '회의실 예약', icon: <FaDoorOpen /> },
     ]
+
+
 
     // 프로필 메뉴 아이템
     const profileMenuItems = [
@@ -130,15 +120,12 @@ const MobileLayout = ({ user }) => {
 
 
 
-            // 더보기 메뉴 외부 클릭 시 닫기
-            if (showMoreMenu && !hasParentWithClass(event.target, ss.more_menu_container)) {
-                setShowMoreMenu(false);
-            }
+
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showProfileMenu, showMoreMenu, ss]);
+    }, [showProfileMenu, ss]);
 
 
 
@@ -189,7 +176,7 @@ const MobileLayout = ({ user }) => {
                             ) : (
                                 <FaUserCircle className={ss.avatar_icon} />
                             )}
-                            <span className={ss.user_name}>{user?.name}</span>
+                            {/* <span className={ss.user_name}>{user?.name}</span> */}
                         </div>
 
                         {/* 프로필 드롭다운 */}
@@ -253,41 +240,6 @@ const MobileLayout = ({ user }) => {
                         <span className={ss.bottom_nav_label}></span>
                     </NavLink>
                 ))}
-
-                {/* 더보기 버튼 */}
-                <div
-                    className={`${ss.bottom_nav_item} ${ss.more_menu_container} ${showMoreMenu ? ss.active : ''}`}
-                    onClick={() => setShowMoreMenu(!showMoreMenu)}
-                >
-                    <div className={ss.bottom_nav_icon}>
-                        <FaEllipsisH />
-                    </div>
-                    <span className={ss.bottom_nav_label}></span>
-
-                    {/* 더보기 메뉴 */}
-                    {showMoreMenu && (
-                        <div className={ss.more_menu}>
-                            {moreMenuItems.map((item, index) => (
-                                <NavLink
-                                    key={index}
-                                    to={item.path}
-                                    className={({ isActive }) =>
-                                        `${ss.more_menu_item} ${isActive ? ss.active : ''}`
-                                    }
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMoreMenu(false);
-                                    }}
-                                >
-                                    <div className={ss.more_menu_icon}>
-                                        {item.icon}
-                                    </div>
-                                    <span className={ss.more_menu_label}>{item.label}</span>
-                                </NavLink>
-                            ))}
-                        </div>
-                    )}
-                </div>
             </nav>
         </div>
     )

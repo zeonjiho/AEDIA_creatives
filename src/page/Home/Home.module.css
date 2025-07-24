@@ -184,36 +184,12 @@
 
 /* 반응형 스타일 */
 
-@media (max-width: 1024px) {
-    .home_container {
-        padding: 15px;
-    }
-    .dashboard_title {
-        font-size: 36px;
-        margin-bottom: 5px;
-    }
-    .dashboard_date {
-        font-size: 14px;
-    }
-    .customize_controls {
-        flex-direction: column;
-        gap: 5px;
-    }
-    .customize_btn {
-        padding: 8px 15px;
-        font-size: 12px;
-    }
-    .edit_btn::before {
-        font-size: 14px;
-    }
-    .dashboard_header {
-        margin-bottom: 15px;
-    }
-}
-
 @media (max-width: 768px) {
     .home_container {
-        padding: 10px;
+        padding: 0px;
+        height: calc(98vh - 130px);
+        overflow-y: hidden;
+        margin: 0 auto;
     }
     .dashboard_title {
         font-size: 28px;
@@ -236,4 +212,31 @@
     .edit_btn {
         display: none;
     }
+}
+
+
+/* 모바일 환영 메시지 스타일 */
+
+.mobile_welcome {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(98vh - 130px);
+    text-align: center;
+    padding: 20px;
+}
+
+.welcome_title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-family: var(--font-primary);
+}
+
+.welcome_subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
 }

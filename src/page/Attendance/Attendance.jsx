@@ -905,10 +905,10 @@ const Attendance = () => {
             {/* 출근 인증 헤더 */}
             <header className={ss.dashboard_header}>
                 <div className={ss.header_content}>
-                    <h1 className={ss.dashboard_title}>Attendance</h1>
-                    <p className={ss.dashboard_date}>
+                    <h1 className={ss.attendance_title}>Attendance</h1>
+                    {/* <p className={ss.dashboard_date}>
                         {formattedDate} {formattedTime}
-                    </p>
+                    </p> */}
                 </div>
                 
                 <div className={ss.header_controls}>
@@ -1139,22 +1139,22 @@ const Attendance = () => {
                                      {offSiteReason.length}/500자 (최소 10자 필요)
                                  </div>
                              </div>
-                            
-                            <div className={ss.offsite_modal_actions}>
-                                <button 
-                                    className={ss.cancel_button}
-                                    onClick={closeOffSiteModal}
-                                >
-                                    취소
-                                </button>
-                                                                 <button 
-                                     className={ss.confirm_button}
-                                     onClick={handleOffSiteAction}
-                                     disabled={!offSiteReason.trim() || offSiteReason.trim().length < 10}
-                                 >
-                                     {offSiteMode === 'checkin' ? '출근' : '퇴근'} 처리
-                                 </button>
-                            </div>
+                        </div>
+                        
+                        <div className={ss.offsite_modal_actions}>
+                            <button 
+                                className={ss.cancel_button}
+                                onClick={closeOffSiteModal}
+                            >
+                                취소
+                            </button>
+                            <button 
+                                className={ss.confirm_button}
+                                onClick={handleOffSiteAction}
+                                disabled={!offSiteReason.trim() || offSiteReason.trim().length < 10}
+                            >
+                                {offSiteMode === 'checkin' ? '출근' : '퇴근'} 처리
+                            </button>
                         </div>
                     </div>
                 </div>
