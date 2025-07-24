@@ -929,31 +929,6 @@ app.post('/attendance/check-in', async(req, res) => {
             distance: distance
         };
 
-        // 외부 위치 출근 시 관리자에게 슬랙 알림
-        if (isOffSite && distance !== null) {
-            try {
-                // 관리자 목록 조회
-                const company = await Company.findOne({}).populate('adminUsers.userId', 'name slackId');
-                if (company && company.adminUsers) {
-                    const adminUsers = company.adminUsers.map(admin => admin.userId).filter(admin => admin && admin.slackId);
-
-                    for (const admin of adminUsers) {
-                        try {
-                            await slackBot.chat.postMessage({
-                                channel: admin.slackId,
-                                text: `⚠️ **외부 위치 출근 알림**\n\n사용자: ${user.name}\n출근 시간: ${now.toLocaleString('ko-KR')}\n회사로부터 거리: ${distance}m\n사유: ${offSiteReason}\n\n관리자 페이지에서 자세한 내용을 확인하실 수 있습니다.`
-                            });
-                            console.log(`외부 출근 관리자 알림 전송 성공: ${admin.name}`);
-                        } catch (slackError) {
-                            console.error(`외부 출근 관리자 알림 전송 실패 - ${admin.name}:`, slackError);
-                        }
-                    }
-                }
-            } catch (adminNotificationError) {
-                console.error('관리자 알림 처리 중 오류:', adminNotificationError);
-            }
-        }
-
         res.status(200).json(responseData);
 
     } catch (err) {
