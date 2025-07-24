@@ -636,7 +636,7 @@ const AdminFinanceMeal = () => {
           <thead>
             <tr>
               <th>날짜</th>
-              <th>사용자</th>
+              <th>등록자</th>
               <th>카테고리</th>
               <th>금액</th>
               <th>결제방법</th>

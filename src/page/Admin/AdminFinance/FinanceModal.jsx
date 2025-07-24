@@ -224,7 +224,7 @@ const FinanceModal = ({
                 <div className={ss.info_value}>{item.title}</div>
               </div> */}
               <div className={ss.info_item}>
-                <label>사용자</label>
+                <label>등록자</label>
                 <div className={ss.info_value}>{item.userId?.name || '알 수 없음'}</div>
               </div>
               <div className={ss.info_item}>
