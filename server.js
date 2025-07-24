@@ -206,7 +206,7 @@ cron.schedule('*/10 * * * *', async() => {
                             try {
                                 await slackBot.chat.postMessage({
                                     channel: user.slackId,
-                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(totalElapsedHours)}시간 ${Math.floor((totalElapsedHours * 60) % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
+                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(totalElapsedHours)}시간 ${Math.floor((totalElapsedHours * 60) % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n\n🔗 <https://aedia.app/attendance-extend?userId=${user._id} | 지금 퇴근하거나 연장하기>\n\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
                                 });
                                 console.log(`\x1b[32m퇴근 예정 알림 전송 성공: ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
                                 notificationsSent++;
