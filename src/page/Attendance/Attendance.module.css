@@ -2,17 +2,15 @@
     width: 100%;
     max-width: 1200px;
     box-sizing: border-box;
-    padding: 20px 20px 0;
+    padding: 20px 20px 20px;
     margin: 0 auto;
-    height: calc(100vh - 110px);
+    min-height: calc(100vh - 110px);
     background-color: var(--bg-primary);
     transition: all 0.3s ease;
-    overflow: hidden;
+    overflow-y: auto;
     position: relative;
     display: flex;
     flex-direction: column;
-    /* min-height: 100vh; */
-    padding-bottom: 0;
 }
 
 .attendance_wrap::before {
@@ -142,12 +140,13 @@
 .attendance_center {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     flex: 1;
     position: relative;
     z-index: 1;
-    margin: 50px auto 160px;
+    margin: 50px auto 20px;
     width: 100%;
+    padding-bottom: 20px;
 }
 
 .status_card {
@@ -514,9 +513,9 @@
 
 @media (max-width: 1024px) {
     .attendance_wrap {
-        padding: 40px 0;
-        height: calc(100vh - 150px);
-        overflow-y: hidden;
+        padding: 40px 20px 20px;
+        min-height: calc(100vh - 150px);
+        overflow-y: auto;
     }
     .customize_btn {
         display: none;
@@ -537,14 +536,14 @@
         font-size: 14px;
     }
     .attendance_center {
-        margin: 0 auto;
+        margin: 0 auto 20px;
         margin-top: 0px;
+        padding-bottom: 20px;
     }
     .status_card {
         padding: 30px;
         max-width: 450px;
-        margin: -60px auto 0;
-        /* margin-top: 100px; */
+        margin: 0 auto;
     }
     .status_icon {
         font-size: 50px;
