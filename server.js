@@ -33,17 +33,17 @@ const Receipt = require('./models/Receipt')
 const Department = require('./models/Department')
 
 //로컬 버전 http 서버
-app.listen(port, () => {
-    console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-})
+// app.listen(port, () => {
+//     console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+// })
 
 //배포 버전 https 서버
-// const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
-// const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
-// const credentials = { key: sslKey, cert: sslCert };
-// https.createServer(credentials, app).listen(port, () => {
-//     console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-// });
+const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
+const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
+const credentials = { key: sslKey, cert: sslCert };
+https.createServer(credentials, app).listen(port, () => {
+    console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+});
 
 //MongoDB 연결
 mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mongodb.net/aedia')
@@ -224,8 +224,8 @@ cron.schedule('*/10 * * * *', async() => {
 });
 
 // 영수증 처리 알림 스케줄러 (평일 점심 12시에 실행 -> 이 아니고 테스트 용도로 1분마다 실행.)
-cron.schedule('* * * * *', async() => {
-// cron.schedule('0 12 * * 1-5', async() => {
+// cron.schedule('* * * * *', async() => {
+cron.schedule('0 12 * * 1-5', async() => {
     try {
         const now = new Date();
         console.log(`\x1b[33m[${now.toLocaleString()}] 영수증 처리 알림 스케줄러 시작\x1b[0m`);
