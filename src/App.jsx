@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
 import './App.css';
 import AppLayout from './layout/AppLayout/AppLayout';
 import Home from './page/Home/Home';
@@ -29,9 +30,32 @@ import AdminDeleted from './page/Admin/AdminUser/AdminDeleted';
 import AdminCreditCard from './page/Admin/AdminFinance/AdminCreditCard';
 import AdminAdvanced from './page/Admin/AdminAdvanced/AdminAdvanced';
 import AdminDepartment from './page/Admin/AdminDepartment/AdminDepartment';
-
+import { startSessionCheck, stopSessionCheck, checkInitialSession } from './utils/api';
 
 function App() {
+  // 자동 로그아웃 세션 체크 설정
+  useEffect(() => {
+    const initializeSession = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token && window.location.pathname !== '/login') {
+        // 초기 세션 체크 먼저 수행
+        const isSessionValid = await checkInitialSession();
+        
+        // 세션이 유효한 경우에만 주기적 체크 시작
+        if (isSessionValid) {
+          startSessionCheck();
+        }
+      }
+    };
+    
+    initializeSession();
+    
+    // 컴포넌트 언마운트 시 세션 체크 정리
+    return () => {
+      stopSessionCheck();
+    };
+  }, []);
 
   if (window.location.pathname !== '/login' && !localStorage.getItem('token')) {
     window.location.href = '/login'

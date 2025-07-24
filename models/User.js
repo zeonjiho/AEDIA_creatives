@@ -134,6 +134,10 @@ const userSchema = new Schema({
     mainLayout: {
         type: Object,
         default: {}
+    },
+    lastActivity: {
+        type: Date,
+        default: Date.now
     }
 }, {
     suppressReservedKeysWarning: true // Mongoose 예약 키워드 경고 억제

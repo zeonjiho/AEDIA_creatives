@@ -493,6 +493,11 @@ app.post('/login', async(req, res) => {
             res.status(401).json({ message: '외부 사용자는 로그인할 수 없습니다.' });
             return;
         }
+        
+        // 로그인 시 lastActivity 초기화
+        user.lastActivity = new Date();
+        await user.save();
+        
         // JWT 토큰 생성 - userId만 포함 (시크릿 키 없이)
         const token = jwt.sign({ userId: user._id },
             tokenSecretKey,
@@ -4502,5 +4507,83 @@ app.delete('/departments/:id', async(req, res) => {
     } catch (error) {
         console.error('부서 삭제 실패:', error);
         res.status(500).json({ message: '부서 삭제에 실패했습니다.' });
+    }
+});
+
+// ----------------------------------------------------------
+// 자동 로그아웃 관련 API
+// ----------------------------------------------------------
+
+// 마지막 활동 시간 업데이트
+app.post('/update-last-activity', async(req, res) => {
+    const { userId } = req.body;
+    
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 마지막 활동 시간 업데이트
+        user.lastActivity = new Date();
+        await user.save();
+
+        res.status(200).json({ 
+            message: '활동 시간이 업데이트되었습니다.',
+            lastActivity: user.lastActivity
+        });
+    } catch (error) {
+        console.error('활동 시간 업데이트 실패:', error);
+        res.status(500).json({ message: '활동 시간 업데이트에 실패했습니다.' });
+    }
+});
+
+// 세션 유효성 검사 (자동 로그아웃 체크)
+app.get('/check-session/:userId', async(req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        // 사용자 정보 조회
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ 
+                isValid: false, 
+                message: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+
+        // 회사 설정 조회 (자동 로그아웃 시간)
+        const company = await Company.findOne({});
+        const autoLogoutHours = company?.settings?.autoLogout || 24; // 기본값 24시간
+
+        // 마지막 활동 시간으로부터 경과 시간 계산
+        const now = new Date();
+        const lastActivity = new Date(user.lastActivity);
+        const hoursDiff = (now - lastActivity) / (1000 * 60 * 60); // 시간 단위
+
+        // 자동 로그아웃 시간을 초과했는지 확인
+        if (hoursDiff >= autoLogoutHours) {
+            return res.status(200).json({
+                isValid: false,
+                message: '장시간 미사용으로 자동 로그아웃되었습니다.',
+                hoursDiff: Math.round(hoursDiff * 100) / 100
+            });
+        }
+
+        // 세션 유효함
+        res.status(200).json({
+            isValid: true,
+            message: '세션이 유효합니다.',
+            lastActivity: user.lastActivity,
+            hoursDiff: Math.round(hoursDiff * 100) / 100,
+            autoLogoutHours: autoLogoutHours
+        });
+
+    } catch (error) {
+        console.error('세션 검사 실패:', error);
+        res.status(500).json({ 
+            isValid: false, 
+            message: '세션 검사에 실패했습니다.' 
+        });
     }
 });
