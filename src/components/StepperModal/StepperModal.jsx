@@ -1554,9 +1554,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
             {getHeaderInfo() && (
               <div className={styles.header_info}>
                 {getHeaderInfo()}
-                {(formData.category || formData.amount || formData.project) && (
+                {/* {(formData.category || formData.amount || formData.project) && (
                   <span className={styles.saved_indicator}> • 자동저장됨</span>
-                )}
+                )} */}
               </div>
             )}
           </div>
