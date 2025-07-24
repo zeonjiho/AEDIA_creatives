@@ -244,6 +244,19 @@ const FinanceModal = ({
     console.log('메인 프로젝트 정보:', item.projectId);
     console.log('전체 영수증 데이터:', item);
     
+    // 먼저 등록자 본인의 프로젝트 추가
+    if (item.projectId && item.projectId.title) {
+      projectGroups[item.projectId.title] = [];
+      // 등록자 본인 추가
+      if (item.userId) {
+        projectGroups[item.projectId.title].push({
+          _id: item.userId._id,
+          name: item.userId.name,
+          userType: 'internal' // 등록자는 내부 직원으로 가정
+        });
+      }
+    }
+    
     item.participants.forEach(participant => {
       if (participant.person) {
         // 프로젝트 정보 가져오기
