@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import ss from './Attendance.module.css'
 import { FaCalendarCheck, FaUserClock, FaHistory, FaCheckCircle, FaRegListAlt, FaMapMarkerAlt, FaEdit, FaTrash, FaPlus, FaTimes, FaExclamationTriangle } from 'react-icons/fa'
 import AttendanceModal from './AttendanceModal'
@@ -1088,7 +1089,7 @@ const Attendance = () => {
             )}
 
             {/* 외부 위치 체크아웃 모달 */}
-            {showOffSiteModal && (
+            {showOffSiteModal && createPortal(
                 <div className={ss.modal_overlay} onClick={closeOffSiteModal}>
                     <div className={ss.offsite_modal} onClick={(e) => e.stopPropagation()}>
                         <div className={ss.offsite_modal_header}>
@@ -1158,7 +1159,8 @@ const Attendance = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     )

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { FaCalendarCheck, FaHistory, FaCheckCircle, FaTimes, FaClock, FaExclamationTriangle } from 'react-icons/fa'
 import styles from './AttendanceModal.module.css'
 
@@ -119,7 +120,7 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
         return classMap[status] || 'status_normal'
     }
 
-    return (
+    return createPortal(
         <div className={styles.modal_overlay}>
             <div className={styles.modal_container}>
                 <div className={styles.modal_header}>
@@ -225,7 +226,8 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }
 
