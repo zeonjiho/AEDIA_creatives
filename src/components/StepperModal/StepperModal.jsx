@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './StepperModal.module.css';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
 import api from '../../utils/api';
@@ -1795,7 +1796,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     </div>
   );
 
-  return (
+  return createPortal(
     <div className={styles.modal_overlay}>
       <div className={styles.modal}>
         <div className={styles.modal_header}>
@@ -2030,7 +2031,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 
