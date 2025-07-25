@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Receipts.module.css';
-import { FaPlus, FaSearch, FaFileDownload, FaEdit, FaReceipt, FaUtensils, FaTaxi, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFileDownload, FaEdit, FaReceipt, FaUtensils, FaTaxi, FaTimes, FaList } from 'react-icons/fa';
 import ReceiptStepper from '../../components/ReceiptStepper/ReceiptStepper';
 import { 
   receipts as initialReceiptsData, 
@@ -110,6 +110,10 @@ const Receipts = () => {
       {
         id: 'TAXI', 
         total: receipts.filter(r => r.type === 'TAXI').reduce((sum, receipt) => sum + receipt.amount, 0)
+      },
+      {
+        id: 'OTHER', 
+        total: receipts.filter(r => r.type === 'OTHER').reduce((sum, receipt) => sum + receipt.amount, 0)
       }
     ];
     setTypeStats(stats);
@@ -121,8 +125,9 @@ const Receipts = () => {
                          receipt.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || receipt.status === filterStatus;
     const matchesCategory = filterCategory === 'all' || receipt.category === filterCategory;
+    const matchesTab = activeTab === 'all' || receipt.type === activeTab; // 탭 필터링 추가
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesStatus && matchesCategory && matchesTab;
   });
 
   // 모달 열기 - 추가 모드
@@ -473,6 +478,10 @@ const Receipts = () => {
     TAXI: { 
       title: isMobile ? 'Taxi' : 'Taxi Expenses', 
       icon: <FaTaxi className={styles.tab_icon} /> 
+    },
+    OTHER: { 
+      title: isMobile ? 'Other' : 'Other Expenses', 
+      icon: <FaList className={styles.tab_icon} /> 
     }
   };
 
@@ -643,7 +652,55 @@ const Receipts = () => {
                   <td className={styles.amount}>{formatAmount(receipt.amount)}</td>
                   {!isMobile && (
                     <>
-                      <td>{getCategoryName(receipt.category)}</td>
+                      <td>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                          {getCategoryName(receipt.category)}
+                          {/* 택시비 사유 뱃지 */}
+                          {receipt.category === '택시비' && (
+                            receipt.taxiReason && receipt.taxiReason.trim() !== '' ? (
+                              <span className={styles.status_badge} style={{
+                                backgroundColor: '#ffc107', 
+                                color: '#212529', 
+                                fontSize: '0.7rem',
+                                padding: '2px 6px'
+                              }}>
+                                사유있음
+                              </span>
+                            ) : (
+                              <span className={styles.status_badge} style={{
+                                backgroundColor: '#28a745', 
+                                color: 'white', 
+                                fontSize: '0.7rem',
+                                padding: '2px 6px'
+                              }}>
+                                정상
+                              </span>
+                            )
+                          )}
+                          {/* 식비 사유 뱃지 */}
+                          {receipt.category === '식비' && (
+                            receipt.mealReason && receipt.mealReason.trim() !== '' ? (
+                              <span className={styles.status_badge} style={{
+                                backgroundColor: '#ffc107', 
+                                color: '#212529', 
+                                fontSize: '0.7rem',
+                                padding: '2px 6px'
+                              }}>
+                                사유있음
+                              </span>
+                            ) : (
+                              <span className={styles.status_badge} style={{
+                                backgroundColor: '#28a745', 
+                                color: 'white', 
+                                fontSize: '0.7rem',
+                                padding: '2px 6px'
+                              }}>
+                                정상
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </td>
                       <td>{getPaymentMethodName(receipt.paymentMethod)}</td>
                       <td className={styles.project_cell}>
                         {receipt.projectId?.title || receipt.projectName || receipt.project ? (
@@ -716,7 +773,53 @@ const Receipts = () => {
                 </div>
                 <div className={styles.info_row}>
                   <span>카테고리:</span>
-                  <span>{getCategoryName(selectedReceipt.category)}</span>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <span>{getCategoryName(selectedReceipt.category)}</span>
+                    {/* 택시비 사유 뱃지 */}
+                    {selectedReceipt.category === '택시비' && (
+                      selectedReceipt.taxiReason && selectedReceipt.taxiReason.trim() !== '' ? (
+                        <span className={styles.status_badge} style={{
+                          backgroundColor: '#ffc107', 
+                          color: '#212529', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          사유있음
+                        </span>
+                      ) : (
+                        <span className={styles.status_badge} style={{
+                          backgroundColor: '#28a745', 
+                          color: 'white', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          정상
+                        </span>
+                      )
+                    )}
+                    {/* 식비 사유 뱃지 */}
+                    {selectedReceipt.category === '식비' && (
+                      selectedReceipt.mealReason && selectedReceipt.mealReason.trim() !== '' ? (
+                        <span className={styles.status_badge} style={{
+                          backgroundColor: '#ffc107', 
+                          color: '#212529', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          사유있음
+                        </span>
+                      ) : (
+                        <span className={styles.status_badge} style={{
+                          backgroundColor: '#28a745', 
+                          color: 'white', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          정상
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
                 <div className={styles.info_row}>
                   <span>결제방법:</span>
@@ -740,6 +843,40 @@ const Receipts = () => {
                     )}
                   </span>
                 </div>
+                {/* 택시비 첨부 사유 */}
+                {selectedReceipt.category === '택시비' && selectedReceipt.taxiReason && selectedReceipt.taxiReason.trim() !== '' && (
+                  <div className={styles.info_row}>
+                    <span>첨부 사유:</span>
+                    <div style={{
+                      backgroundColor: '#fff3cd',
+                      border: '1px solid #ffeaa7',
+                      borderRadius: '4px',
+                      padding: '8px',
+                      color: '#856404',
+                      fontSize: '14px',
+                      lineHeight: '1.4'
+                    }}>
+                      {selectedReceipt.taxiReason}
+                    </div>
+                  </div>
+                )}
+                {/* 식비 첨부 사유 */}
+                {selectedReceipt.category === '식비' && selectedReceipt.mealReason && selectedReceipt.mealReason.trim() !== '' && (
+                  <div className={styles.info_row}>
+                    <span>첨부 사유:</span>
+                    <div style={{
+                      backgroundColor: '#fff3cd',
+                      border: '1px solid #ffeaa7',
+                      borderRadius: '4px',
+                      padding: '8px',
+                      color: '#856404',
+                      fontSize: '14px',
+                      lineHeight: '1.4'
+                    }}>
+                      {selectedReceipt.mealReason}
+                    </div>
+                  </div>
+                )}
                 {selectedReceipt.description && (
                   <div className={styles.info_description}>
                     <span>메모:</span>

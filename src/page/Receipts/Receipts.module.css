@@ -819,16 +819,18 @@
         order: 2;
     }
     .tabs_container {
-        flex-direction: row;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2x2 그리드 */
+        grid-gap: 8px;
         margin-bottom: 16px;
+        width: 100%;
     }
     .tab_button {
-        flex: 1;
         height: 44px;
         padding: 0 16px;
         justify-content: center;
         border-radius: 8px;
+        width: 100%; /* grid 아이템이 전체 너비 차지 */
     }
     .tab_icon {
         margin-right: 10px;
@@ -924,13 +926,16 @@
         font-size: 20px;
     }
     .tabs_container {
-        gap: 6px;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2x2 그리드 */
+        grid-gap: 6px;
+        width: 100%;
     }
     .tab_button {
-        flex: 1;
         height: 40px;
         padding: 0 12px;
         justify-content: center;
+        width: 100%; /* grid 아이템이 전체 너비 차지 */
     }
     .tab_text {
         font-size: 14px;
