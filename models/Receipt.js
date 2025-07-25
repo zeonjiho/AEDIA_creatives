@@ -96,6 +96,9 @@ const receiptSchema = new mongoose.Schema({
     // 택시비 사유 (9시간 미만 근무 시)
     taxiReason: String,
 
+    // 식비 사유 (출퇴근 기록 없을 시)
+    mealReason: String,
+
     // StepperModal dateTime 객체
     stepperDateTime: {
         year: String,

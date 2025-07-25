@@ -289,7 +289,8 @@ const Receipts = () => {
       bankName: rest.bankName,
       bankNameOther: rest.bankNameOther,
       accountNumber: rest.accountNumber,
-      taxiReason: rest.taxiReason // 택시비 사유 추가
+      taxiReason: rest.taxiReason, // 택시비 사유 추가
+      mealReason: rest.mealReason // 식비 사유 추가
     };
   };
 
@@ -369,7 +370,8 @@ const Receipts = () => {
       projectId: rest.project || rest.projectId || null, // StepperModal에서 project 필드 사용
       attachmentUrls: finalAttachmentUrls,
       userId: actualUserId,
-      taxiReason: rest.taxiReason // 택시비 사유 추가
+      taxiReason: rest.taxiReason, // 택시비 사유 추가
+      mealReason: rest.mealReason // 식비 사유 추가
     };
   };
 

@@ -1152,6 +1152,36 @@ app.get('/attendance/work-hours-for-taxi', async(req, res) => {
     }
 });
 
+// 식비 영수증용 출퇴근 기록 확인 API
+app.get('/attendance/check-attendance-for-meal', async(req, res) => {
+    const { userId, date } = req.query;
+
+    try {
+        const user = await User.findById(userId).select('attendance');
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 해당 날짜의 출퇴근 기록 확인
+        const attendanceRecords = user.attendance.filter(record => record.date === date);
+        const hasCheckIn = attendanceRecords.some(record => record.type === 'checkIn');
+        const hasCheckOut = attendanceRecords.some(record => record.type === 'checkOut');
+        const hasAnyRecord = hasCheckIn || hasCheckOut;
+
+        res.status(200).json({
+            hasAttendanceRecord: hasAnyRecord,
+            hasCheckIn: hasCheckIn,
+            hasCheckOut: hasCheckOut,
+            recordCount: attendanceRecords.length,
+            isEligibleForMeal: hasAnyRecord // 출퇴근 기록이 있으면 식비 가능
+        });
+
+    } catch (err) {
+        console.error('식비용 출퇴근 기록 확인 중 오류:', err);
+        res.status(500).json({ message: '출퇴근 기록 확인 중 오류가 발생했습니다.' });
+    }
+});
+
 // 연속 근무 시간 계산 함수 (전날 체크인 포함)
 const calculateContinuousWorkHours = (date, attendance) => {
     const today = new Date(date);
@@ -4158,7 +4188,8 @@ app.post('/receipts', async(req, res) => {
             bankName,
             bankNameOther,
             accountNumber,
-            taxiReason
+            taxiReason,
+            mealReason
         } = req.body;
 
         // 필수 필드 검증
@@ -4214,7 +4245,8 @@ app.post('/receipts', async(req, res) => {
             bankName: bankName || null,
             bankNameOther: bankNameOther || null,
             accountNumber: accountNumber || null,
-            taxiReason: taxiReason || null
+            taxiReason: taxiReason || null,
+            mealReason: mealReason || null
         });
 
         const savedReceipt = await receipt.save();

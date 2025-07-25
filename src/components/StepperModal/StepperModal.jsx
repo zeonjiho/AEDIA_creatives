@@ -71,7 +71,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       bankNameOther: '', // 기타 은행 직접입력 추가
       accountNumber: '', // 계좌번호 추가
       description: '', // 메모 필드 추가
-      taxiReason: '' // 택시비 사유 추가
+      taxiReason: '', // 택시비 사유 추가
+      mealReason: '' // 식비 사유 추가
     };
   };
 
@@ -108,6 +109,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
   const [isEligibleForTaxi, setIsEligibleForTaxi] = useState(true);
   const [taxiReason, setTaxiReason] = useState('');
   const [checkingWorkHours, setCheckingWorkHours] = useState(false);
+
+  // 식비 관련 상태 추가
+  const [mealAttendanceStatus, setMealAttendanceStatus] = useState(null);
+  const [isEligibleForMeal, setIsEligibleForMeal] = useState(true);
+  const [mealReason, setMealReason] = useState('');
+  const [checkingAttendance, setCheckingAttendance] = useState(false);
 
   // ObjectId를 프로젝트 이름으로 변환하는 헬퍼 함수
   const getProjectName = (projectId) => {
@@ -154,6 +161,47 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       showToast('근무 시간 확인 중 오류가 발생했습니다.');
     } finally {
       setCheckingWorkHours(false);
+    }
+  };
+
+  // 식비 출퇴근 기록 체크 함수
+  const checkMealAttendance = async () => {
+    try {
+      setCheckingAttendance(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('토큰이 없습니다.');
+        return;
+      }
+
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.userId;
+      
+      // 선택된 날짜
+      const { year, month, day } = formData.dateTime;
+      const checkDate = `${year}-${month}-${day}`;
+
+      const response = await api.get('/attendance/check-attendance-for-meal', {
+        params: {
+          userId: userId,
+          date: checkDate
+        }
+      });
+
+      if (response.status === 200) {
+        const data = response.data;
+        setMealAttendanceStatus(data);
+        setIsEligibleForMeal(data.isEligibleForMeal);
+        
+        if (!data.isEligibleForMeal) {
+          showToast('해당 날짜에 출퇴근 기록이 없습니다. 사유를 입력해주세요.');
+        }
+      }
+    } catch (error) {
+      console.error('식비 출퇴근 기록 체크 실패:', error);
+      showToast('출퇴근 기록 확인 중 오류가 발생했습니다.');
+    } finally {
+      setCheckingAttendance(false);
     }
   };
 
@@ -469,6 +517,13 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
             return false;
           }
         }
+        // 식비 선택 시 출퇴근 기록이 없으면 사유 필수
+        if (formData.category === '식비' && !isEligibleForMeal) {
+          if (!formData.mealReason || formData.mealReason.trim() === '') {
+            showToast('출퇴근 기록이 없을 시 식비 사용 사유를 입력해주세요.');
+            return false;
+          }
+        }
         return true;
 
       case 2:
@@ -607,17 +662,34 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         [field]: value
       };
       
-      // 카테고리가 변경될 때 택시비 관련 처리
+      // 카테고리가 변경될 때 택시비/식비 관련 처리
       if (field === 'category') {
         if (value === '택시비') {
           // 택시비 선택 시 근무 시간 체크
           setTimeout(() => checkTaxiWorkHours(), 100); // 상태 업데이트 후 실행
-        } else {
-          // 다른 카테고리 선택 시 택시비 관련 상태 초기화
+          // 식비 관련 상태 초기화
+          setMealAttendanceStatus(null);
+          setIsEligibleForMeal(true);
+          setMealReason('');
+          newData.mealReason = '';
+        } else if (value === '식비') {
+          // 식비 선택 시 출퇴근 기록 체크
+          setTimeout(() => checkMealAttendance(), 100); // 상태 업데이트 후 실행
+          // 택시비 관련 상태 초기화
           setTaxiWorkHours(null);
           setIsEligibleForTaxi(true);
           setTaxiReason('');
-          newData.taxiReason = ''; // formData에서도 초기화
+          newData.taxiReason = '';
+        } else {
+          // 다른 카테고리 선택 시 모든 관련 상태 초기화
+          setTaxiWorkHours(null);
+          setIsEligibleForTaxi(true);
+          setTaxiReason('');
+          newData.taxiReason = '';
+          setMealAttendanceStatus(null);
+          setIsEligibleForMeal(true);
+          setMealReason('');
+          newData.mealReason = '';
         }
       }
       
@@ -908,12 +980,17 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       bankNameOther: '',
       accountNumber: '',
       description: '',
-      taxiReason: ''
+      taxiReason: '',
+      mealReason: ''
     });
     // 택시비 관련 상태 초기화
     setTaxiWorkHours(null);
     setIsEligibleForTaxi(true);
     setCheckingWorkHours(false);
+    // 식비 관련 상태 초기화
+    setMealAttendanceStatus(null);
+    setIsEligibleForMeal(true);
+    setCheckingAttendance(false);
     
     setCurrentStep(1);
     onClose();
@@ -1242,6 +1319,43 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
                  rows="2"
                  className={styles.taxi_reason_textarea}
                />
+            </div>
+                     )}
+         </div>
+       )}
+
+      {/* 식비 선택 시 출퇴근 기록 정보 및 사유 입력 */}
+      {formData.category === '식비' && (
+        <div className={styles.taxi_section}>
+          {checkingAttendance ? (
+            <div className={styles.checking_status}>
+              출퇴근 기록을 확인하고 있습니다...
+            </div>
+          ) : mealAttendanceStatus ? (
+            <div className={styles.work_hours_info}>
+              <div className={`${styles.work_hours_status} ${isEligibleForMeal ? styles.eligible : styles.not_eligible}`}>
+                <strong>출퇴근 기록:</strong> 
+                {mealAttendanceStatus.hasCheckIn && ' 출근'}{mealAttendanceStatus.hasCheckOut && ' 퇴근'}
+                {!mealAttendanceStatus.hasCheckIn && !mealAttendanceStatus.hasCheckOut && ' 없음'}
+                {isEligibleForMeal ? (
+                  <span className={styles.eligible_text}> ✓ 식비 지원 가능</span>
+                ) : (
+                  <span className={styles.not_eligible_text}> ⚠ 출퇴근 기록 없음 (사유 필요)</span>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {formData.category === '식비' && !isEligibleForMeal && (
+            <div className={styles.input_group}>
+              <label>사유 <span className={styles.required}>*</span></label>
+              <textarea
+                placeholder="출퇴근 기록이 없을 시 식비 사용 사유를 입력해주세요"
+                value={formData.mealReason || ''}
+                onChange={(e) => handleInputChange('mealReason', e.target.value)}
+                rows="2"
+                className={styles.taxi_reason_textarea}
+              />
             </div>
           )}
         </div>
