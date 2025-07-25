@@ -70,7 +70,8 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       bankName: '', // 은행명 추가
       bankNameOther: '', // 기타 은행 직접입력 추가
       accountNumber: '', // 계좌번호 추가
-      description: '' // 메모 필드 추가
+      description: '', // 메모 필드 추가
+      taxiReason: '' // 택시비 사유 추가
     };
   };
 
@@ -102,11 +103,58 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
   const [projects, setProjects] = useState([]);
   const [corporateCards, setCorporateCards] = useState([]);
 
+  // 택시비 관련 상태 추가
+  const [taxiWorkHours, setTaxiWorkHours] = useState(null);
+  const [isEligibleForTaxi, setIsEligibleForTaxi] = useState(true);
+  const [taxiReason, setTaxiReason] = useState('');
+  const [checkingWorkHours, setCheckingWorkHours] = useState(false);
+
   // ObjectId를 프로젝트 이름으로 변환하는 헬퍼 함수
   const getProjectName = (projectId) => {
     if (!projectId) return '';
     const project = projects.find(p => p._id === projectId);
     return project ? project.title : projectId;
+  };
+
+  // 택시비 근무 시간 체크 함수
+  const checkTaxiWorkHours = async () => {
+    try {
+      setCheckingWorkHours(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('토큰이 없습니다.');
+        return;
+      }
+
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.userId;
+      
+      // 퇴근 날짜는 선택된 날짜로 설정
+      const { year, month, day } = formData.dateTime;
+      const checkDate = `${year}-${month}-${day}`;
+
+      const response = await api.get('/attendance/work-hours-for-taxi', {
+        params: {
+          userId: userId,
+          date: checkDate
+        }
+      });
+
+      if (response.status === 200) {
+        const data = response.data;
+        setTaxiWorkHours(data.workHoursFormatted);
+        setIsEligibleForTaxi(data.isEligibleForTaxi);
+        
+        if (!data.isEligibleForTaxi) {
+          showToast(`근무 시간이 ${data.workHoursFormatted}으로 9시간 미만입니다. 사유를 입력해주세요.`);
+        }
+      }
+    } catch (error) {
+      console.error('택시비 근무 시간 체크 실패:', error);
+      showToast('근무 시간 확인 중 오류가 발생했습니다.');
+    } finally {
+      setCheckingWorkHours(false);
+    }
   };
 
   // 데이터 저장 함수
@@ -414,6 +462,13 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
           showToast('금액을 올바르게 입력해주세요.');
           return false;
         }
+        // 택시비 선택 시 9시간 미만이면 사유 필수
+        if (formData.category === '택시비' && !isEligibleForTaxi) {
+          if (!formData.taxiReason || formData.taxiReason.trim() === '') {
+            showToast('9시간 미만 근무 시 택시비 사용 사유를 입력해주세요.');
+            return false;
+          }
+        }
         return true;
 
       case 2:
@@ -551,6 +606,20 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         ...prev,
         [field]: value
       };
+      
+      // 카테고리가 변경될 때 택시비 관련 처리
+      if (field === 'category') {
+        if (value === '택시비') {
+          // 택시비 선택 시 근무 시간 체크
+          setTimeout(() => checkTaxiWorkHours(), 100); // 상태 업데이트 후 실행
+        } else {
+          // 다른 카테고리 선택 시 택시비 관련 상태 초기화
+          setTaxiWorkHours(null);
+          setIsEligibleForTaxi(true);
+          setTaxiReason('');
+          newData.taxiReason = ''; // formData에서도 초기화
+        }
+      }
       
       // 결제방법이 변경될 때 cardType도 함께 업데이트
       if (field === 'paymentMethod') {
@@ -807,6 +876,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     try {
       stopCamera(); // 제출 시 카메라 정리
       clearStorage(); // 성공적으로 제출하면 저장된 데이터 삭제
+      
       await onSubmit(formData);
       // 성공적인 제출이므로 경고창 없이 바로 닫기
       handleCloseAfterSubmit();
@@ -837,8 +907,14 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       bankName: '',
       bankNameOther: '',
       accountNumber: '',
-      description: ''
+      description: '',
+      taxiReason: ''
     });
+    // 택시비 관련 상태 초기화
+    setTaxiWorkHours(null);
+    setIsEligibleForTaxi(true);
+    setCheckingWorkHours(false);
+    
     setCurrentStep(1);
     onClose();
     
@@ -1135,6 +1211,41 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
           rows="3"
         />
       </div>
+
+      {/* 택시비 선택 시 근무 시간 정보 및 사유 입력 */}
+      {formData.category === '택시비' && (
+        <div className={styles.taxi_section}>
+          {checkingWorkHours ? (
+            <div className={styles.checking_status}>
+              근무 시간을 확인하고 있습니다...
+            </div>
+          ) : taxiWorkHours ? (
+            <div className={styles.work_hours_info}>
+              <div className={`${styles.work_hours_status} ${isEligibleForTaxi ? styles.eligible : styles.not_eligible}`}>
+                <strong>근무 시간:</strong> {taxiWorkHours}
+                {isEligibleForTaxi ? (
+                  <span className={styles.eligible_text}> ✓ 택시비 지원 가능</span>
+                ) : (
+                  <span className={styles.not_eligible_text}> ⚠ 9시간 미만 (사유 필요)</span>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {formData.category === '택시비' && !isEligibleForTaxi && (
+            <div className={styles.input_group}>
+              <label>사유 <span className={styles.required}>*</span></label>
+                             <textarea
+                 placeholder="9시간 미만 근무 시 택시비 사용 사유를 입력해주세요"
+                 value={formData.taxiReason || ''}
+                 onChange={(e) => handleInputChange('taxiReason', e.target.value)}
+                 rows="2"
+                 className={styles.taxi_reason_textarea}
+               />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 

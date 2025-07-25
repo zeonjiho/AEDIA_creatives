@@ -93,6 +93,9 @@ const receiptSchema = new mongoose.Schema({
     bankNameOther: String,
     accountNumber: String,
 
+    // 택시비 사유 (9시간 미만 근무 시)
+    taxiReason: String,
+
     // StepperModal dateTime 객체
     stepperDateTime: {
         year: String,

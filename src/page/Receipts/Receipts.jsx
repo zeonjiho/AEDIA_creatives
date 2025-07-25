@@ -288,7 +288,8 @@ const Receipts = () => {
       creditCardId: rest.creditCardId, // 법인카드 ID
       bankName: rest.bankName,
       bankNameOther: rest.bankNameOther,
-      accountNumber: rest.accountNumber
+      accountNumber: rest.accountNumber,
+      taxiReason: rest.taxiReason // 택시비 사유 추가
     };
   };
 
@@ -367,7 +368,8 @@ const Receipts = () => {
       paymentMethod: finalPaymentMethod,
       projectId: rest.project || rest.projectId || null, // StepperModal에서 project 필드 사용
       attachmentUrls: finalAttachmentUrls,
-      userId: actualUserId
+      userId: actualUserId,
+      taxiReason: rest.taxiReason // 택시비 사유 추가
     };
   };
 

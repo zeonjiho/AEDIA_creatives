@@ -1714,3 +1714,80 @@
     word-break: break-word;
     flex: 1;
 }
+
+/* 택시비 관련 스타일 */
+
+.taxi_section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.checking_status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+.work_hours_info {
+    margin-bottom: 12px;
+}
+
+.work_hours_status {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.work_hours_status.eligible {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.work_hours_status.not_eligible {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.eligible_text {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.not_eligible_text {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.taxi_reason_textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.taxi_reason_textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.taxi_reason_textarea::placeholder {
+    color: #999;
+}
