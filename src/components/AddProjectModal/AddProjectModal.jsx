@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './AddProjectModal.module.css';
 import { HiX, HiPlus, HiUserGroup, HiPhotograph, HiTrash } from 'react-icons/hi';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
@@ -218,7 +219,7 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
 
   console.log('AddProjectModal 렌더:', { isOpen, showStaffModal, currentStaffCategory });
 
-  return (
+  return createPortal(
     <div className={styles.modal_wrapper}>
       <div className={styles.modal_background} onClick={handleClose}></div>
       <div className={styles.modal_panel}>
@@ -419,7 +420,8 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
           initialFilterType="external"
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 

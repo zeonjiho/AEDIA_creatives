@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './StaffSearchModal.module.css';
 import { HiX, HiSearch, HiUser, HiUserGroup, HiCheck, HiPlus, HiSave } from 'react-icons/hi';
 import api from '../../utils/api';
@@ -348,7 +349,7 @@ const StaffSearchModal = ({
     e.stopPropagation();
   };
 
-  return (
+  return createPortal(
     <div className={styles.modal_wrapper}>
       <div className={styles.modal_background} onClick={handleBackgroundClick}></div>
       <div className={styles.modal_panel} onClick={handlePanelClick}>
@@ -649,7 +650,8 @@ const StaffSearchModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './ProjectDetailModal.module.css';
 import { 
   HiX, HiPencil, HiSave, HiPlus,
@@ -651,7 +652,7 @@ const ProjectDetailModal = ({
     '미술감독', '지미집', 'CG', '클리닝', 'DI'
   ];
 
-  return (
+  return createPortal(
     <div className={styles.modal_wrapper}>
       <div className={styles.modal_background} onClick={onClose}></div>
       <div className={styles.modal_panel}>
@@ -1111,7 +1112,8 @@ const ProjectDetailModal = ({
         multiSelect={true}
         initialFilterType="staff"
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 
