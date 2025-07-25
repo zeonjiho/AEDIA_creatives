@@ -330,6 +330,21 @@ const FinanceModal = ({
                 <label>메모</label>
                 <div className={ss.info_value}>{item.description || '-'}</div>
               </div>
+              {/* 택시비 사유 표시 */}
+              {type === 'taxi' && item.taxiReason && item.taxiReason.trim() !== '' && (
+                <div className={ss.info_item}>
+                  <label>첨부 사유</label>
+                  <div className={ss.info_value} style={{
+                    backgroundColor: '#fff3cd',
+                    border: '1px solid #ffeaa7',
+                    borderRadius: '4px',
+                    padding: '8px',
+                    color: '#856404'
+                  }}>
+                    {item.taxiReason}
+                  </div>
+                </div>
+              )}
               <div className={ss.info_item}>
                 <label>날짜</label>
                 <div className={ss.info_value}>{formatDate(item.date)}</div>

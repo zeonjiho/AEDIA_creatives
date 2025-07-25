@@ -438,7 +438,7 @@ const AdminFinanceTaxi = () => {
       csvContent += `필터링된 데이터: ${data.length}건\n\n`;
     }
     
-    csvContent += '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모\n';
+    csvContent += '날짜,사용자,카테고리,금액,내가_낸_금액,결제방법,프로젝트,분할결제,다중인원,참가자수,상태,메모,사유\n';
     
     data.forEach(item => {
       const csvRow = [
@@ -453,7 +453,8 @@ const AdminFinanceTaxi = () => {
         item.isMultiPersonPayment ? 'Y' : 'N',
         item.isMultiPersonPayment ? (item.participants?.length || 0) : 1,
         getStatusText(item.status) || '',
-        item.description || ''
+        item.description || '',
+        item.taxiReason || ''
       ];
       
       csvContent += csvRow.map(value => {
@@ -780,7 +781,33 @@ const AdminFinanceTaxi = () => {
                     </span>
                   )}
                 </td>
-                <td>{getCategoryText(item.category)}</td>
+                <td>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    {getCategoryText(item.category)}
+                    {/* 택시비 사유 배지 */}
+                    {item.category === '택시비' && (
+                      item.taxiReason && item.taxiReason.trim() !== '' ? (
+                        <span className={ss.status_badge} style={{
+                          backgroundColor: '#ffc107', 
+                          color: '#212529', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          사유있음
+                        </span>
+                      ) : (
+                        <span className={ss.status_badge} style={{
+                          backgroundColor: '#28a745', 
+                          color: 'white', 
+                          fontSize: '0.7rem',
+                          padding: '2px 6px'
+                        }}>
+                          정상
+                        </span>
+                      )
+                    )}
+                  </div>
+                </td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
                   {/* 분할결제인 경우 내가 낸 금액 표시 */}
