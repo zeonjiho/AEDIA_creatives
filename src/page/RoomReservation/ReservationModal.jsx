@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './ReservationModal.module.css';
 import { HiX, HiCalendar, HiClock, HiOfficeBuilding, HiDocumentText, HiBookmark, HiUserGroup, HiPencilAlt } from 'react-icons/hi';
 import ProjectSelectModal from '../../components/ProjectSelectModal';
@@ -143,7 +144,7 @@ const ReservationModal = ({
         }
     };
     
-    return (
+    return createPortal(
         <>
             <div className={styles.modal_wrapper}>
                 <div className={styles.modal_background} onClick={onClose}></div>
@@ -467,7 +468,8 @@ const ReservationModal = ({
                 onSelect={handleProjectSelect}
                 onClose={() => setShowProjectModal(false)}
             />
-        </>
+        </>,
+        document.body
     );
 };
 

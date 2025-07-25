@@ -6,7 +6,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 1000;
+    z-index: 10000; /* 기존 1000에서 10000으로 증가 */
     display: flex;
     align-items: center;
     justify-content: center;
