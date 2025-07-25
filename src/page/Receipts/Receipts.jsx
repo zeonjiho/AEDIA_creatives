@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './Receipts.module.css';
 import { FaPlus, FaSearch, FaFileDownload, FaEdit, FaReceipt, FaUtensils, FaTaxi, FaTimes, FaList } from 'react-icons/fa';
 import ReceiptStepper from '../../components/ReceiptStepper/ReceiptStepper';
@@ -752,7 +753,7 @@ const Receipts = () => {
       />
 
       {/* 작업 모달 */}
-      {isActionModalOpen && selectedReceipt && (
+      {isActionModalOpen && selectedReceipt && createPortal(
         <div className={styles.modal_overlay} onClick={closeActionModal}>
           <div className={styles.action_modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.action_modal_header}>
@@ -924,7 +925,8 @@ const Receipts = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 모바일 플로팅 버튼 */}
