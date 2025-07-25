@@ -274,9 +274,7 @@ const Home = () => {
         const todo = todoList.find(todo => todo._id === id)
         if (todo) {
             try {
-                const response = await api.patch(`/todos/${id}`, { 
-                    completed: !todo.completed 
-                })
+                const response = await api.patch(`/todos/${id}/toggle?userId=${userId}`)
                 if (response.data) {
                     setTodoList(todoList.map(t => t._id === id ? response.data : t))
                 }
