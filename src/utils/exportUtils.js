@@ -94,14 +94,35 @@ export const generateFinanceCSV = (financeStats) => {
     return csvContent;
 };
 
-export const generateTrendCSV = () => {
+export const generateTrendCSV = (userList = [], receipts = []) => {
     let csvContent = '월,신규 가입자,재무 지출\n';
-    const months = ['1월', '2월', '3월', '4월', '5월', '6월'];
-    const newUsers = [12, 19, 3, 5, 2, 3];
-    const expenses = [65, 59, 80, 81, 56, 55];
-    months.forEach((month, index) => {
-        csvContent += `${month},${newUsers[index]},${expenses[index]}\n`;
-    });
+    
+    // 현재 월을 기준으로 최근 6개월 계산
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      
+      // 해당 월의 신규 가입자 수 계산 (내부 직원만)
+      const monthNewUsers = userList.filter(user => {
+        if (user.userType !== 'internal') return false;
+        const userDate = new Date(user.createdAt);
+        return userDate.getFullYear() === year && userDate.getMonth() + 1 === month;
+      }).length;
+      
+      // 해당 월의 재무 지출 계산 (거절된 항목 제외)
+      const monthExpenses = receipts
+        .filter(item => {
+          const itemDate = new Date(item.date);
+          return itemDate.getFullYear() === year && itemDate.getMonth() + 1 === month;
+        })
+        .filter(item => item.status !== 'REJECTED')
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+      
+      csvContent += `${month}월,${monthNewUsers},${monthExpenses}\n`;
+    }
+    
     return csvContent;
 };
 

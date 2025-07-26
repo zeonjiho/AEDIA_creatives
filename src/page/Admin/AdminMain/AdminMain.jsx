@@ -26,12 +26,13 @@ ChartJS.register(
 
 const AdminMain = () => {
   const [userList, setUserList] = useState([]);
+  const [receipts, setReceipts] = useState([]);
   const chartRefs = useRef({});
   const [dashboardStats, setDashboardStats] = useState({
     users: { total: 0, active: 0, waiting: 0, internal: 0, external: 0 },
     finance: { 
-      meal: { total: 108000, approved: 73000, pending: 15000, rejected: 20000 },
-      taxi: { total: 265000, approved: 111000, pending: 99000, rejected: 55000 }
+      meal: { total: 0, approved: 0, pending: 0, rejected: 0 },
+      taxi: { total: 0, approved: 0, pending: 0, rejected: 0 }
     }
   });
 
@@ -41,24 +42,50 @@ const AdminMain = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await api.get('/get-user-list?userType=all');
-      setUserList(response.data);
+      // 1. 사용자 데이터 가져오기
+      const userResponse = await api.get('/get-user-list?userType=all');
+      setUserList(userResponse.data);
       
-      // 사용자 통계 계산
+      // 2. 영수증 데이터 가져오기
+      const receiptsResponse = await api.get('/receipts?limit=1000');
+      setReceipts(receiptsResponse.data.data || []);
+      
+      // 3. 사용자 통계 계산
       const userStats = {
-        total: response.data.length,
-        active: response.data.filter(user => user.status === 'active').length,
-        waiting: response.data.filter(user => user.status === 'waiting').length,
-        internal: response.data.filter(user => user.userType === 'internal').length,
-        external: response.data.filter(user => user.userType === 'external').length
+        total: userResponse.data.filter(user => user.userType === 'internal').length,
+        active: userResponse.data.filter(user => user.status === 'active' && user.userType === 'internal').length,
+        waiting: userResponse.data.filter(user => user.status === 'waiting' && user.userType === 'internal').length,
+        internal: userResponse.data.filter(user => user.userType === 'internal').length,
+        external: userResponse.data.filter(user => user.userType === 'external').length
       };
-
-      setDashboardStats(prev => ({
-        ...prev,
-        users: userStats
-      }));
+      
+      // 4. 재무 통계 계산
+      const mealReceipts = receipts.filter(r => r.category === '식비');
+      const taxiReceipts = receipts.filter(r => r.category === '택시비');
+      
+      const mealStats = {
+        total: mealReceipts.reduce((sum, r) => sum + (r.amount || 0), 0),
+        approved: mealReceipts.filter(r => r.status === 'APPROVED').reduce((sum, r) => sum + (r.amount || 0), 0),
+        pending: mealReceipts.filter(r => r.status === 'PENDING').reduce((sum, r) => sum + (r.amount || 0), 0),
+        rejected: mealReceipts.filter(r => r.status === 'REJECTED').reduce((sum, r) => sum + (r.amount || 0), 0)
+      };
+      
+      const taxiStats = {
+        total: taxiReceipts.reduce((sum, r) => sum + (r.amount || 0), 0),
+        approved: taxiReceipts.filter(r => r.status === 'APPROVED').reduce((sum, r) => sum + (r.amount || 0), 0),
+        pending: taxiReceipts.filter(r => r.status === 'PENDING').reduce((sum, r) => sum + (r.amount || 0), 0),
+        rejected: taxiReceipts.filter(r => r.status === 'REJECTED').reduce((sum, r) => sum + (r.amount || 0), 0)
+      };
+      
+      // 5. 전체 통계 업데이트
+      setDashboardStats({
+        users: userStats,
+        finance: { meal: mealStats, taxi: taxiStats }
+      });
+      
     } catch (err) {
-      console.log(err);
+      console.error('대시보드 데이터 로드 실패:', err);
+      // 에러 시 기존 목업 데이터 유지
     }
   }
 
@@ -143,26 +170,62 @@ const AdminMain = () => {
     ]
   };
 
-  // 월별 트렌드 라인 차트 데이터 (예시)
-  const trendChartData = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-    datasets: [
-      {
-        label: '신규 가입자',
-        data: [12, 19, 3, 5, 2, 3],
-        borderColor: 'rgba(74, 144, 226, 1)',
-        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-        tension: 0.4
-      },
-      {
-        label: '재무 지출',
-        data: [65, 59, 80, 81, 56, 55],
-        borderColor: 'rgba(253, 126, 20, 1)',
-        backgroundColor: 'rgba(253, 126, 20, 0.1)',
-        tension: 0.4
-      }
-    ]
+  // 월별 트렌드 라인 차트 데이터 (실제 데이터)
+  const getMonthlyTrendData = () => {
+    const months = [];
+    const newUsersData = [];
+    const expensesData = [];
+    
+    // 현재 월을 기준으로 최근 6개월 계산
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      
+      // 해당 월의 신규 가입자 수 계산 (내부 직원만)
+      const monthNewUsers = userList.filter(user => {
+        if (user.userType !== 'internal') return false;
+        const userDate = new Date(user.createdAt);
+        return userDate.getFullYear() === year && userDate.getMonth() + 1 === month;
+      }).length;
+      
+      // 해당 월의 재무 지출 계산 (거절된 항목 제외)
+      const monthExpenses = receipts
+        .filter(item => {
+          const itemDate = new Date(item.date);
+          return itemDate.getFullYear() === year && itemDate.getMonth() + 1 === month;
+        })
+        .filter(item => item.status !== 'REJECTED')
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+      
+      months.push(`${month}월`);
+      newUsersData.push(monthNewUsers);
+      expensesData.push(monthExpenses);
+    }
+    
+    return {
+      labels: months,
+      datasets: [
+        {
+          label: '신규 가입자',
+          data: newUsersData,
+          borderColor: 'rgba(74, 144, 226, 1)',
+          backgroundColor: 'rgba(74, 144, 226, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: '재무 지출',
+          data: expensesData,
+          borderColor: 'rgba(253, 126, 20, 1)',
+          backgroundColor: 'rgba(253, 126, 20, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
   };
+
+  const trendChartData = getMonthlyTrendData();
 
   // 차트 옵션
   const chartOptions = {
@@ -300,7 +363,7 @@ const AdminMain = () => {
             <ExportButton 
               chartRef={{ current: chartRefs.current['trend-chart'] }}
               chartTitle="월별 트렌드"
-              csvData={generateTrendCSV()}
+              csvData={generateTrendCSV(userList, receipts)}
             />
           </div>
           <div className={ss.chart_content} ref={(el) => chartRefs.current['trend-chart'] = el}>
