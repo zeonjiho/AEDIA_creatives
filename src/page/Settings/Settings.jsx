@@ -56,17 +56,17 @@ const Settings = () => {
                 }
             ]
         },
-        {
-            title: '알림설정',
-            items: [
-                {
-                    icon: <FaBell />,
-                    label: '알림 관리',
-                    description: '알림 설정을 관리합니다',
-                    action: () => console.log('알림 설정')
-                }
-            ]
-        }
+        // {
+        //     title: '알림설정',
+        //     items: [
+        //         {
+        //             icon: <FaBell />,
+        //             label: '알림 관리',
+        //             description: '알림 설정을 관리합니다',
+        //             action: () => console.log('알림 설정')
+        //         }
+        //     ]
+        // }
     ]
 
     return (
