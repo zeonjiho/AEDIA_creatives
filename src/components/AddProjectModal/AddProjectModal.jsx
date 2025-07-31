@@ -418,6 +418,7 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
           title={`${currentStaffCategory} 스탭 선택`}
           multiSelect={true}
           initialFilterType="external"
+          from="project_add"
         />
       )}
     </div>,

@@ -1095,7 +1095,7 @@ const ProjectDetailModal = ({
         from="only_internal"
         title="팀원 추가 (내부 직원)"
         multiSelect={true}
-        initialFilterType="employee"
+        initialFilterType="internal"
       />
 
       {/* 스탭 검색 모달 */}
@@ -1107,10 +1107,10 @@ const ProjectDetailModal = ({
         }}
         onSelect={handleStaffSelect}
         selectedPeople={getCurrentStaffForModal()}
-        from="contact"
+        from="project_edit"
         title={`${currentStaffCategory} 스탭 선택`}
         multiSelect={true}
-        initialFilterType="staff"
+        initialFilterType="external"
       />
     </div>,
     document.body

@@ -313,8 +313,15 @@ const StaffSearchModal = ({
         // 스탭 필터로 변경하여 새로 추가된 스탭이 보이도록
         setFilterType('external');
 
+        // contact 페이지에서만 페이지 새로고침, 나머지는 데이터만 새로고침
         alert('새 스탭이 성공적으로 추가되었습니다.');
-        window.location.reload();
+        
+        if (from === 'contact') {
+          window.location.reload();
+        } else {
+          // contact가 아닌 모든 곳에서는 데이터만 새로고침
+          fetchAllStaffData();
+        }
       }
     } catch (error) {
       console.error('스탭 추가 실패:', error);
@@ -379,7 +386,7 @@ const StaffSearchModal = ({
             )}
 
             <div className={styles.filter_tabs}>
-              {from !== 'contact' && from !== 'only_internal' && (
+              {from !== 'contact' && from !== 'only_internal' && from !== 'project_add' && from !== 'project_edit' && (
                 <button
                   className={`${styles.filter_tab} ${filterType === 'all' ? styles.active : ''}`}
                   onClick={(e) => {
@@ -417,7 +424,7 @@ const StaffSearchModal = ({
                   <HiUser /> 스탭
                 </button>
               )}
-              {from !== 'contact' && (
+              {from !== 'contact' && from !== 'project_add' && from !== 'project_edit' && (
                 <button
                   className={`${styles.filter_tab} ${filterType === 'internal' ? styles.active : ''}`}
                   onClick={(e) => {
