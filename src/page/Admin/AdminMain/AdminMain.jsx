@@ -48,7 +48,8 @@ const AdminMain = () => {
       
       // 2. 영수증 데이터 가져오기
       const receiptsResponse = await api.get('/receipts?limit=1000');
-      setReceipts(receiptsResponse.data.data || []);
+      const receiptsData = receiptsResponse.data?.data || receiptsResponse.data || [];
+      setReceipts(receiptsData);
       
       // 3. 사용자 통계 계산
       const userStats = {
@@ -59,9 +60,9 @@ const AdminMain = () => {
         external: userResponse.data.filter(user => user.userType === 'external').length
       };
       
-      // 4. 재무 통계 계산
-      const mealReceipts = receipts.filter(r => r.category === '식비');
-      const taxiReceipts = receipts.filter(r => r.category === '택시비');
+      // 4. 재무 통계 계산 (서버에서 받은 데이터 직접 사용)
+      const mealReceipts = receiptsData.filter(r => r.category === '식비');
+      const taxiReceipts = receiptsData.filter(r => r.category === '택시비');
       
       const mealStats = {
         total: mealReceipts.reduce((sum, r) => sum + (r.amount || 0), 0),
@@ -193,6 +194,7 @@ const AdminMain = () => {
       // 해당 월의 재무 지출 계산 (거절된 항목 제외)
       const monthExpenses = receipts
         .filter(item => {
+          if (!item.date) return false; // date가 없는 경우 제외
           const itemDate = new Date(item.date);
           return itemDate.getFullYear() === year && itemDate.getMonth() + 1 === month;
         })
