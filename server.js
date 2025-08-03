@@ -33,17 +33,17 @@ const Receipt = require('./models/Receipt')
 const Department = require('./models/Department')
 
 //로컬 버전 http 서버
-// app.listen(port, () => {
-//     console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-// })
+app.listen(port, () => {
+    console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+})
 
 //배포 버전 https 서버
-const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
-const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
-const credentials = { key: sslKey, cert: sslCert };
-https.createServer(credentials, app).listen(port, () => {
-    console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-});
+// const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
+// const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
+// const credentials = { key: sslKey, cert: sslCert };
+// https.createServer(credentials, app).listen(port, () => {
+//     console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+// });
 
 //MongoDB 연결
 mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mongodb.net/aedia')
@@ -4258,53 +4258,53 @@ app.post('/receipts', async(req, res) => {
             .populate('creditCardId', 'cardName number label');
 
         // === 신규 영수증 등록 시 관리자 알림 추가 ===
-        try {
-            // 관리자 목록 조회 (adminSlackMessage가 true이고 slackId가 있는 사용자만)
-            const company = await Company.findOne({}).populate('adminUsers.userId', 'name slackId adminSlackMessage');
-            if (company && company.adminUsers) {
-                const eligibleAdmins = company.adminUsers
-                    .map(admin => admin.userId)
-                    .filter(admin => admin && admin.slackId && admin.adminSlackMessage === true);
+        // try {
+        //     // 관리자 목록 조회 (adminSlackMessage가 true이고 slackId가 있는 사용자만)
+        //     const company = await Company.findOne({}).populate('adminUsers.userId', 'name slackId adminSlackMessage');
+        //     if (company && company.adminUsers) {
+        //         const eligibleAdmins = company.adminUsers
+        //             .map(admin => admin.userId)
+        //             .filter(admin => admin && admin.slackId && admin.adminSlackMessage === true);
 
-                // 각 관리자에게 알림 발송
-                for (const admin of eligibleAdmins) {
-                    try {
-                        // 등록자 정보 조회 (userId로 실제 이름 가져오기)
-                        const registrant = await User.findById(userId).select('name');
-                        const registrantName = registrant ? registrant.name : userName;
+        //         // 각 관리자에게 알림 발송
+        //         for (const admin of eligibleAdmins) {
+        //             try {
+        //                 // 등록자 정보 조회 (userId로 실제 이름 가져오기)
+        //                 const registrant = await User.findById(userId).select('name');
+        //                 const registrantName = registrant ? registrant.name : userName;
                         
-                        // 카테고리 한글 변환
-                        let categoryText = '기타';
-                        if (category) {
-                            switch (category) {
-                                case 'MEAL':
-                                    categoryText = '식비';
-                                    break;
-                                case 'TAXI':
-                                    categoryText = '택시비';
-                                    break;
-                                case 'OTHER':
-                                default:
-                                    categoryText = '기타';
-                                    break;
-                            }
-                        }
+        //                 // 카테고리 한글 변환
+        //                 let categoryText = '기타';
+        //                 if (category) {
+        //                     switch (category) {
+        //                         case 'MEAL':
+        //                             categoryText = '식비';
+        //                             break;
+        //                         case 'TAXI':
+        //                             categoryText = '택시비';
+        //                             break;
+        //                         case 'OTHER':
+        //                         default:
+        //                             categoryText = '기타';
+        //                             break;
+        //                     }
+        //                 }
                         
-                        const amountFormatted = new Intl.NumberFormat('ko-KR').format(amount);
+        //                 const amountFormatted = new Intl.NumberFormat('ko-KR').format(amount);
                         
-                        await slackBot.chat.postMessage({
-                            channel: admin.slackId,
-                            text: `📄 **새로운 영수증이 등록되었습니다.**\n\n등록자: ${registrantName}\n카테고리: ${categoryText}\n금액: ${amountFormatted}원\n\nAEDIA 시스템에서 확인하고 처리해주세요!`
-                        });
-                        console.log(`신규 영수증 알림 전송 성공: ${admin.name}`);
-                    } catch (slackError) {
-                        console.error(`신규 영수증 알림 전송 실패 - ${admin.name}:`, slackError);
-                    }
-                }
-            }
-        } catch (adminNotificationError) {
-            console.error('관리자 알림 처리 중 오류:', adminNotificationError);
-        }
+        //                 await slackBot.chat.postMessage({
+        //                     channel: admin.slackId,
+        //                     text: `📄 **새로운 영수증이 등록되었습니다.**\n\n등록자: ${registrantName}\n카테고리: ${categoryText}\n금액: ${amountFormatted}원\n\nAEDIA 시스템에서 확인하고 처리해주세요!`
+        //                 });
+        //                 console.log(`신규 영수증 알림 전송 성공: ${admin.name}`);
+        //             } catch (slackError) {
+        //                 console.error(`신규 영수증 알림 전송 실패 - ${admin.name}:`, slackError);
+        //             }
+        //         }
+        //     }
+        // } catch (adminNotificationError) {
+        //     console.error('관리자 알림 처리 중 오류:', adminNotificationError);
+        // }
 
         res.status(201).json({
             success: true,
