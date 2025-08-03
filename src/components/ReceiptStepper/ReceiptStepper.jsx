@@ -544,6 +544,15 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     
+    // StepperModal에서 온 요청인지 확인 (중복 호출 방지)
+    if (formData._fromStepperModal) {
+      console.log('StepperModal에서 온 요청 - ReceiptStepper에서 처리');
+      // StepperModal 플래그 제거
+      const { _fromStepperModal, ...cleanFormData } = formData;
+      // ReceiptStepper의 handleSubmit을 직접 호출
+      return await handleReceiptSubmit(cleanFormData);
+    }
+    
     // 제출 전 마지막 유효성 검사
     if (!validateForm()) {
       return;
@@ -575,10 +584,19 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       attachmentUrls: attachmentData
     };
 
+    await handleReceiptSubmit(submittedData);
+  };
+
+  // 실제 영수증 제출 처리 함수
+  const handleReceiptSubmit = async (submittedData) => {
     try {
       await onSubmit(submittedData);
       // 제출이 성공한 후에만 마지막 단계로 이동
       setCurrentStep(totalSteps);
+      // 제출 성공 시 모달 닫기
+      // setTimeout(() => {
+      //   onClose();
+      // }, 2000); // 2초 후 모달 닫기 (사용자가 성공 메시지를 볼 수 있도록)
     } catch (error) {
       console.error('영수증 제출 실패:', error);
       // 제출 실패시에는 step을 변경하지 않음

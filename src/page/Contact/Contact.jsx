@@ -96,9 +96,25 @@ const Contact = () => {
     try {
       const response = await api.get('/get-user-list?userType=all');
       if (response.status === 200) {
-        setAllStaffData(response.data);
-        setFilteredStaff(response.data);
-        setStaffData(response.data);
+        // 내부 직원 중 status가 'active'인 직원들만 필터링
+        const filteredData = response.data.map(person => {
+          if (person.userType === 'internal') {
+            // 내부 직원인 경우 status가 'active'인지 확인
+            if (person.status === 'active') {
+              return person;
+            } else {
+              // status가 'active'가 아닌 내부 직원은 제외
+              return null;
+            }
+          } else {
+            // 외부 스탭은 그대로 포함
+            return person;
+          }
+        }).filter(person => person !== null); // null 값 제거
+
+        setAllStaffData(filteredData);
+        setFilteredStaff(filteredData);
+        setStaffData(filteredData);
       }
     } catch (err) {
       console.log(err);

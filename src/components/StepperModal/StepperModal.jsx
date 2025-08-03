@@ -94,6 +94,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [editingParticipantIndex, setEditingParticipantIndex] = useState(null);
   const [formData, setFormData] = useState(getStoredFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 로딩 상태 추가
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -946,16 +947,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       }
     }
 
+    setIsSubmitting(true); // 로딩 시작
+
     try {
-      stopCamera(); // 제출 시 카메라 정리
-      clearStorage(); // 성공적으로 제출하면 저장된 데이터 삭제
-      
-      await onSubmit(formData);
-      // 성공적인 제출이므로 경고창 없이 바로 닫기
-      handleCloseAfterSubmit();
+      // 검증 통과 시 ReceiptStepper의 handleSubmit을 호출하기 위해 
+      // 특별한 플래그와 함께 onSubmit 호출
+      await onSubmit({ ...formData, _fromStepperModal: true });
     } catch (error) {
       console.error('영수증 제출 실패:', error);
-      // 제출 실패시에는 모달을 닫지 않음
+    } finally {
+      setIsSubmitting(false); // 로딩 종료
     }
   };
 
@@ -1849,8 +1850,19 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
               다음
             </button>
           ) : (
-            <button className={styles.submit_btn} onClick={handleSubmit}>
-              완료
+            <button 
+              className={styles.submit_btn} 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className={styles.spinner}></div>
+                  등록 중...
+                </>
+              ) : (
+                '완료'
+              )}
             </button>
           )}
         </div>
