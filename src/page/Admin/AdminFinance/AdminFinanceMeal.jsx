@@ -34,6 +34,10 @@ const AdminFinanceMeal = () => {
   const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
 
+  // 페이지네이션 상태 추가
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+
   useEffect(() => {
     fetchMealData();
     fetchEmployees();
@@ -287,6 +291,17 @@ const AdminFinanceMeal = () => {
 
   const filteredData = getFilteredData();
   const stats = getFinanceStats();
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  // 필터링 조건이 변경될 때 현재 페이지를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.month, filters.employee, filters.project]);
 
   // 상태별 금액 도넛 차트
   const statusAmountChartData = {
@@ -685,7 +700,7 @@ const AdminFinanceMeal = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData && filteredData.length > 0 ? filteredData.map((item) => (
+            {currentData && currentData.length > 0 ? currentData.map((item) => (
               <tr 
                 key={item._id} 
                 onClick={() => handleRowClick(item)}
@@ -795,6 +810,71 @@ const AdminFinanceMeal = () => {
             )}
           </tbody>
         </table>
+
+        {/* 페이지네이션 */}
+        {totalPages > 1 && (
+          <div className={ss.pagination_container}>
+            <div className={ss.pagination_info}>
+              총 {filteredData.length}개 중 {startIndex + 1}-{Math.min(endIndex, filteredData.length)}개 표시
+            </div>
+            <div className={ss.pagination_controls}>
+              <button 
+                className={ss.pagination_button}
+                onClick={() => setCurrentPage(1)} 
+                disabled={currentPage === 1}
+              >
+                처음
+              </button>
+              <button 
+                className={ss.pagination_button}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+                disabled={currentPage === 1}
+              >
+                이전
+              </button>
+              
+              <div className={ss.page_numbers}>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`${ss.page_button} ${currentPage === pageNum ? ss.active_page : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button 
+                className={ss.pagination_button}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+                disabled={currentPage === totalPages}
+              >
+                다음
+              </button>
+              <button 
+                className={ss.pagination_button}
+                onClick={() => setCurrentPage(totalPages)} 
+                disabled={currentPage === totalPages}
+              >
+                마지막
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Finance Modal */}

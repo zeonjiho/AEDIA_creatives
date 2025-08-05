@@ -37,6 +37,10 @@ const Receipts = () => {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState('');
   
+  // 페이지네이션 상태 추가
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+  
   // 새 영수증 또는 편집할 영수증 데이터
   const [formData, setFormData] = useState({
     date: '',
@@ -130,6 +134,17 @@ const Receipts = () => {
     
     return matchesSearch && matchesStatus && matchesCategory && matchesTab;
   });
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredReceipts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentReceipts = filteredReceipts.slice(startIndex, endIndex);
+
+  // 필터링 조건이 변경될 때 현재 페이지를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterCategory, activeTab]);
 
   // 모달 열기 - 추가 모드
   const openAddModal = () => {
@@ -642,8 +657,8 @@ const Receipts = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredReceipts.length > 0 ? (
-              filteredReceipts.map(receipt => (
+            {currentReceipts.length > 0 ? (
+              currentReceipts.map(receipt => (
                 <tr 
                   key={receipt.id} 
                   className={styles.receipt_row}
@@ -742,6 +757,71 @@ const Receipts = () => {
           </tbody>
         </table>
       </div>
+
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className={styles.pagination_container}>
+          <div className={styles.pagination_info}>
+            총 {filteredReceipts.length}개 중 {startIndex + 1}-{Math.min(endIndex, filteredReceipts.length)}개 표시
+          </div>
+          <div className={styles.pagination_controls}>
+            <button 
+              className={styles.pagination_button}
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+            >
+              처음
+            </button>
+            <button 
+              className={styles.pagination_button}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+              disabled={currentPage === 1}
+            >
+              이전
+            </button>
+            
+            <div className={styles.page_numbers}>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    className={`${styles.page_button} ${currentPage === pageNum ? styles.active_page : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button 
+              className={styles.pagination_button}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
+              disabled={currentPage === totalPages}
+            >
+              다음
+            </button>
+            <button 
+              className={styles.pagination_button}
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+            >
+              마지막
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 영수증 모달 컴포넌트 */}
       <ReceiptStepper
