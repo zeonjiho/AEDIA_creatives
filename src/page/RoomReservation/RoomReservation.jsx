@@ -95,7 +95,7 @@ const RoomReservation = () => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar || '/default-avatar.png',
+                avatar: user.avatar || '',
                 role: user.roles && user.roles.length > 0 ? user.roles[0] : '직책 없음',
                 userType: user.userType
             }))

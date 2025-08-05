@@ -4,39 +4,42 @@ import styles from './ReservationModal.module.css';
 import { HiX, HiCalendar, HiClock, HiOfficeBuilding, HiDocumentText, HiBookmark, HiUserGroup, HiPencilAlt } from 'react-icons/hi';
 import ProjectSelectModal from '../../components/ProjectSelectModal';
 import getProjectThumbnail from '../../utils/getProjectThumbnail';
+import { FaUserCircle } from 'react-icons/fa';
 
-const ReservationModal = ({ 
-    isOpen, 
-    selectedRoom, 
-    selectedReservation, 
-    reservationFormData, 
-    projectSearchTerm, 
-    filteredProjects, 
+const ReservationModal = ({
+    isOpen,
+    selectedRoom,
+    selectedReservation,
+    reservationFormData,
+    projectSearchTerm,
+    filteredProjects,
     projects = [], // 전체 프로젝트 목록
     projectsLoading = false,
-    users, 
+    users,
     currentUser = null, // 현재 사용자 정보
-    onClose, 
-    onFormChange, 
-    onProjectSearchChange, 
-    onProjectSelect, 
+    onClose,
+    onFormChange,
+    onProjectSearchChange,
+    onProjectSelect,
     onProjectModalSelect, // 모달 선택 핸들러
-    onParticipantChange, 
-    onSubmit, 
-    onDelete, 
-    onClearProject 
+    onParticipantChange,
+    onSubmit,
+    onDelete,
+    onClearProject
 }) => {
     const [showProjectModal, setShowProjectModal] = useState(false);
-    
+
     if (!isOpen) return null;
+
+    console.log('users', users)
 
     // 현재 사용자가 예약 참여자인지 확인하는 함수
     const canEditReservation = () => {
         if (!selectedReservation || !currentUser) return false;
-        
+
         // 예약의 참여자 목록에 현재 사용자 ID가 있는지 확인
-        return selectedReservation.participants && 
-               selectedReservation.participants.includes(currentUser._id);
+        return selectedReservation.participants &&
+            selectedReservation.participants.includes(currentUser._id);
     };
 
     const handleSubmit = (e) => {
@@ -46,22 +49,22 @@ const ReservationModal = ({
             alert('회의 제목을 입력해주세요.');
             return;
         }
-        
+
         if (!reservationFormData.startDate) {
             alert('시작 날짜를 선택해주세요.');
             return;
         }
-        
+
         if (!reservationFormData.startTime) {
             alert('시작 시간을 선택해주세요.');
             return;
         }
-        
+
         if (!reservationFormData.endTime) {
             alert('종료 시간을 선택해주세요.');
             return;
         }
-        
+
         if (!reservationFormData.participants || reservationFormData.participants.length === 0) {
             console.log('참여인원 검증 실행:', {
                 participants: reservationFormData.participants,
@@ -70,40 +73,40 @@ const ReservationModal = ({
             alert('참여인원을 최소 1명 이상 선택해주세요.');
             return;
         }
-        
+
         // 날짜와 시간을 정확하게 결합하여 DateTime 객체 생성
         const startDateTimeString = `${reservationFormData.startDate} ${reservationFormData.startTime}:00`;
         const endDateTimeString = `${reservationFormData.endDate} ${reservationFormData.endTime}:00`;
-        
+
         const startDateTime = new Date(startDateTimeString);
         const endDateTime = new Date(endDateTimeString);
-        
+
         // 유효한 날짜인지 확인
         if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
             alert('날짜나 시간 형식이 올바르지 않습니다.');
             return;
         }
-        
+
         // 시작 시간이 종료 시간보다 이후인지 확인
         if (startDateTime >= endDateTime) {
             alert('종료 시간은 시작 시간보다 나중이어야 합니다.');
             return;
         }
-        
+
         // 과거 시간 예약 방지
         const now = new Date();
         if (startDateTime < now) {
             alert('과거 시간으로는 예약할 수 없습니다.');
             return;
         }
-        
+
         // 최소 예약 시간 확인 (예: 30분 이상)
         const durationMinutes = (endDateTime - startDateTime) / (1000 * 60);
         if (durationMinutes < 30) {
             alert('예약은 최소 30분 이상이어야 합니다.');
             return;
         }
-        
+
         // 모든 유효성 검사를 통과하면 onSubmit 호출
         onSubmit(e);
     };
@@ -118,7 +121,7 @@ const ReservationModal = ({
     };
 
     // 선택된 참여자 목록
-    const selectedParticipants = users.filter(user => 
+    const selectedParticipants = users.filter(user =>
         reservationFormData.participants.includes(user.id)
     );
 
@@ -143,7 +146,7 @@ const ReservationModal = ({
             onClearProject();
         }
     };
-    
+
     return createPortal(
         <>
             <div className={styles.modal_wrapper}>
@@ -158,7 +161,7 @@ const ReservationModal = ({
                             <HiX size={24} />
                         </button>
                     </div>
-                    
+
                     <div className={styles.panel_content}>
                         {selectedRoom && (
                             <div className={styles.room_preview}>
@@ -211,7 +214,7 @@ const ReservationModal = ({
                                 </div>
                             </div>
                         )}
-                        
+
                         <form onSubmit={handleSubmit} className={styles.modal_form}>
                             {/* 권한이 없는 경우 읽기 전용 모드임을 알리는 메시지 */}
                             {selectedReservation && !canEditReservation() && (
@@ -239,7 +242,7 @@ const ReservationModal = ({
                                         disabled={selectedReservation && !canEditReservation()}
                                     />
                                 </div>
-                                
+
                                 <div className={styles.form_group}>
                                     <label htmlFor="description">회의 설명 (선택사항)</label>
                                     <textarea
@@ -368,11 +371,16 @@ const ReservationModal = ({
                                         <div className={styles.participants_preview}>
                                             {selectedParticipants.map(participant => (
                                                 <div key={participant.id} className={styles.participant_chip}>
-                                                    <img 
-                                                        src={getProjectThumbnail(participant.avatar)} 
-                                                        alt={participant.name}
-                                                        className={styles.participant_avatar}
-                                                    />
+                                                    {participant.avatar ? (
+                                                        <img
+                                                            src={getProjectThumbnail(participant.avatar)}
+                                                            alt={participant.name}
+                                                            className={styles.participant_avatar}
+                                                        />
+                                                    ) : (
+                                                        <FaUserCircle className={styles.participant_avatar} />
+                                                    )}
+
                                                     <span>{participant.name}</span>
                                                     <button
                                                         type="button"
@@ -386,7 +394,7 @@ const ReservationModal = ({
                                             ))}
                                         </div>
                                     </div>
-                                    
+
                                     <div className={styles.available_participants}>
                                         <label>팀 멤버</label>
                                         <div className={styles.participants_grid}>
@@ -398,16 +406,20 @@ const ReservationModal = ({
                                                 users.map(user => (
                                                     <div
                                                         key={user.id}
-                                                        className={`${styles.participant_option} ${
-                                                            reservationFormData.participants.includes(user.id) ? styles.selected : ''
-                                                        } ${selectedReservation && !canEditReservation() ? styles.disabled : ''}`}
+                                                        className={`${styles.participant_option} ${reservationFormData.participants.includes(user.id) ? styles.selected : ''
+                                                            } ${selectedReservation && !canEditReservation() ? styles.disabled : ''}`}
                                                         onClick={() => handleParticipantToggle(user.id)}
                                                     >
-                                                        <img 
-                                                            src={getProjectThumbnail(user.avatar)} 
-                                                            alt={user.name}
-                                                            className={styles.participant_avatar}
-                                                        />
+                                                        {user.avatar ? (
+                                                            <img
+                                                                src={getProjectThumbnail(user.avatar)}
+                                                                alt={user.name}
+                                                                className={styles.participant_avatar}
+                                                            />
+                                                        ) : (
+                                                            <FaUserCircle className={styles.participant_avatar} />
+                                                        )}
+
                                                         <div className={styles.participant_info}>
                                                             <span className={styles.participant_name}>{user.name}</span>
                                                             <span className={styles.participant_role}>
@@ -428,7 +440,7 @@ const ReservationModal = ({
                             </div>
                         </form>
                     </div>
-                    
+
                     {/* 고정 푸터 */}
                     <div className={styles.panel_footer}>
                         <div className={styles.button_group}>
