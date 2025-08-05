@@ -66,7 +66,7 @@ const StaffSearchModal = ({
           jwtDecode(localStorage.getItem('token')).userId : null;
 
         // MongoDB _id를 id로 통일화하고 안전성 확보
-        const peopleWithIds = response.data
+        let peopleWithIds = response.data
           .filter(person => person && person.name) // name이 있는 사람만 필터링
           .filter(person => {
             // 본인 제외
@@ -87,6 +87,24 @@ const StaffSearchModal = ({
             phone: person.phone || '',
             email: person.email || ''
           }));
+
+        // from 속성이 'only_internal'인 경우 내부 직원 중 status가 'active'인 직원들만 필터링
+        if (from === 'only_internal' || from === 'stepper_modal') {
+          peopleWithIds = peopleWithIds.filter(person => {
+            if (person.userType === 'internal') {
+              // 내부 직원인 경우 status가 'active'인지 확인
+              if (person.status === 'active') {
+                return true;
+              } else {
+                return false;
+              }
+            } else {
+              // 외부 스탭은 그대로 포함
+              return true;
+            }
+          });
+          console.log('내부 직원 active 필터 적용 후:', peopleWithIds.length, '명');
+        }
 
         console.log('스탭 데이터 로딩 성공:', peopleWithIds.length, '명');
         setAllPeople(peopleWithIds);

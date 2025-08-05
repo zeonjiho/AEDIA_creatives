@@ -1997,6 +1997,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         multiSelect={true}
         title="인물 선택"
         initialFilterType="all"
+        from="stepper_modal"
         disabledUsers={getSelectedPeople().map(p => p._id ? p._id.toString() : (p.id ? p.id.toString() : null))}
       />
 
