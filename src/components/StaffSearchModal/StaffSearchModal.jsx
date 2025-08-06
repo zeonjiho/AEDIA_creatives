@@ -69,11 +69,17 @@ const StaffSearchModal = ({
         let peopleWithIds = response.data
           .filter(person => person && person.name) // name이 있는 사람만 필터링
           .filter(person => {
-            // 본인 제외
+            // 본인 제외 (프로젝트 팀원 추가 시에는 제외하지 않음)
             const personId = person._id ? person._id.toString() : (person.id ? person.id.toString() : null);
             if (currentUserId && personId === currentUserId.toString()) {
-              console.log('본인 제외:', person.name);
-              return false;
+              // from이 'only_internal'인 경우 (프로젝트 팀원 추가)에는 본인도 포함
+              if (from === 'only_internal') {
+                console.log('프로젝트 팀원 추가 - 본인 포함:', person.name);
+                return true;
+              } else {
+                console.log('본인 제외:', person.name);
+                return false;
+              }
             }
             return true;
           })
