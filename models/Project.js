@@ -57,6 +57,16 @@ const projectSchema = new Schema({
         type: Date,
         required: true
     },
+    isHide: {
+        type: Boolean,
+        default: false
+    },
+
+    // 담당 PD (User 컬렉션 참조)
+    assignedPd: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
 
     // User 컬렉션 참조하는 팀 멤버
     team: [{

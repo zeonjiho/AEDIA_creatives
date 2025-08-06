@@ -29,15 +29,17 @@ const ProjectStatus = () => {
       setLoading(true);
       const response = await api.get('/projects');
       if (response.status === 200) {
-        // 데이터 구조 안전성 확보
-        const projectsWithDefaults = response.data.map(project => ({
-          ...project,
-          id: project._id || project.id,
-          tasks: project.tasks || [],
-          team: project.team || [],
-          staffList: project.staffList || [],
-          progress: project.progress || 0
-        }));
+        // 데이터 구조 안전성 확보 (숨겨진 프로젝트 제외)
+        const projectsWithDefaults = response.data
+          .filter(project => !project.isHide) // 숨겨진 프로젝트 제외
+          .map(project => ({
+            ...project,
+            id: project._id || project.id,
+            tasks: project.tasks || [],
+            team: project.team || [],
+            staffList: project.staffList || [],
+            progress: project.progress || 0
+          }));
         
         setProjects(projectsWithDefaults);
         setAllProjects(projectsWithDefaults);

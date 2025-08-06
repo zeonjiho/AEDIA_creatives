@@ -241,7 +241,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     const fetchProjects = async () => {
       const response = await api.get('/projects');
       if (response.status === 200) {
-        const result = response.data.filter((item, idx) => item.status !== 'deleted')
+        const result = response.data.filter((item, idx) => 
+          item.status !== 'deleted' && !item.isHide // 숨겨진 프로젝트 제외
+        )
         setProjects(result);
       }
     }

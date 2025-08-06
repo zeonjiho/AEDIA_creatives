@@ -446,20 +446,22 @@ const CalendarPage = () => {
             console.log('프로젝트 목록 조회 성공:', response.data.length, '개')
             console.log('응답 데이터:', response.data)
             
-            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환
-            const formattedProjects = response.data.map(project => ({
-                _id: project._id || project.id,
-                title: project.title,
-                description: project.description || '',
-                status: project.status,
-                progress: project.progress || 0,
-                thumbnail: project.thumbnail,
-                deadline: project.deadline,
-                team: project.team || [],
-                staffList: project.staffList || [],
-                createdAt: project.createdAt,
-                updatedAt: project.updatedAt
-            }))
+            // 프로젝트 데이터를 모달에서 사용할 수 있는 형태로 변환 (숨겨진 프로젝트 제외)
+            const formattedProjects = response.data
+                .filter(project => !project.isHide) // 숨겨진 프로젝트 제외 (새로 연동할 때만)
+                .map(project => ({
+                    _id: project._id || project.id,
+                    title: project.title,
+                    description: project.description || '',
+                    status: project.status,
+                    progress: project.progress || 0,
+                    thumbnail: project.thumbnail,
+                    deadline: project.deadline,
+                    team: project.team || [],
+                    staffList: project.staffList || [],
+                    createdAt: project.createdAt,
+                    updatedAt: project.updatedAt
+                }))
             
             console.log('포맷된 프로젝트 데이터:', formattedProjects)
             setProjects(formattedProjects)

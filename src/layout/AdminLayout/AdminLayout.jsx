@@ -13,6 +13,7 @@ import {
     faCoins,
     faCog,
     faCalendarCheck,
+    faProjectDiagram,
 } from '@fortawesome/free-solid-svg-icons';
 import { jwtDecode } from 'jwt-decode';
 import api from '../../utils/api';
@@ -169,7 +170,7 @@ const AdminLayout = () => {
             name: 'finance-management',
             icon: faCoins,
             submenus: [
-                { id: 'finance-meal', name: '식사 영수증 관리', path: '/admin/finance/meal' },
+                { id: 'finance-meal', name: '식비 영수증 관리', path: '/admin/finance/meal' },
                 { id: 'finance-taxi', name: '택시비 영수증 관리', path: '/admin/finance/taxi' },
                 { id: 'finance-other', name: '기타 영수증 관리', path: '/admin/finance/other' },
                 { id: 'finance-credit-card', name: '법인카드 관리', path: '/admin/finance/credit-card' }
@@ -181,6 +182,7 @@ const AdminLayout = () => {
             icon: faCog,
             submenus: [
                 { id: 'room', name: '회의실 관리', path: '/admin/room' },
+                { id: 'project', name: '프로젝트 관리', path: '/admin/project' },
                 { id: 'advanced-setting', name: 'Advanced Setting', path: '/admin/advanced-setting' },
             ]
         }
@@ -217,6 +219,7 @@ const AdminLayout = () => {
         { id: 'finance-taxi', name: '택시', icon: faCoins, path: '/admin/finance/taxi', menuGroup: 'finance' },
         { id: 'finance-other', name: '기타', icon: faCoins, path: '/admin/finance/other', menuGroup: 'finance' },
         { id: 'room', name: '회의실', icon: faCog, path: '/admin/room', menuGroup: 'etc' },
+        { id: 'project', name: '프로젝트', icon: faProjectDiagram, path: '/admin/project', menuGroup: 'etc' },
         { id: 'advanced-setting', name: '설정', icon: faCog, path: '/admin/advanced-setting', menuGroup: 'etc' },
     ];
 

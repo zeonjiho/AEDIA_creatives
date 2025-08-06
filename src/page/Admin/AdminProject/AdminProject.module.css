@@ -1,0 +1,767 @@
+/* 프로젝트 관리 페이지 컨테이너 */
+.container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 헤더 */
+.header {
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.header p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 검색 컨트롤 */
+.controls {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* 프로젝트 목록 */
+.projectList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.projectCard {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.projectCard:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 프로젝트 썸네일 이미지 */
+.project_thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.project_thumbnail.loaded {
+    opacity: 1;
+}
+
+.project_thumbnail.loading {
+    opacity: 0;
+}
+
+.projectCard:hover .project_thumbnail {
+    transform: scale(1.05);
+}
+
+/* 프로젝트 오버레이 */
+.project_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(0, 0, 0, 0.3) 50%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    z-index: 2;
+}
+
+/* 이미지 스켈레톤 */
+.image_skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    z-index: 1;
+}
+
+.skeleton_animation {
+    width: 100%;
+    height: 100%;
+    background: inherit;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.projectHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 3;
+}
+
+.projectInfo {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.projectTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.statusBadge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statusActive {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.statusCompleted {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.statusPending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.statusHidden {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.statusDefault {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.projectActions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+}
+
+.actionBtn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.visibilityBtn:hover {
+    background-color: #fef3c7;
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.editBtn:hover {
+    background-color: #dbeafe;
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+/* 프로젝트 상세 정보 */
+.projectDetails {
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 3;
+}
+
+.projectDescription {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.projectMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.metaLabel {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    min-width: 80px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.metaValue {
+    color: white;
+    font-weight: 400;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.pdName {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ffd700;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.pdName.assigned {
+    color: #22c55e;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.pdName svg {
+    font-size: 12px;
+}
+
+.pdRole {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 4px;
+    font-weight: 400;
+}
+
+/* PD 편집 컨테이너 */
+.pdEditContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdSelect {
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    min-width: 120px;
+    backdrop-filter: blur(10px);
+}
+
+.pdSelect:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.editActions {
+    display: flex;
+    gap: 4px;
+}
+
+.cancelBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.cancelBtn:hover {
+    background-color: #fee2e2;
+    border-color: #ef4444;
+    color: #dc2626;
+}
+
+/* 통계 정보 */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.statLabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* 로딩 상태 */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 16px;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loadingContainer p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* 빈 상태 */
+.emptyState {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.emptyState p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* 페이지네이션 스타일 */
+.pagination_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pagination_info {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.pagination_controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+
+.pagination_button:hover:not(:disabled) {
+    background-color: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.pagination_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--bg-tertiary);
+}
+
+.page_numbers {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.page_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page_button:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.page_button.active_page {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page_button.active_page:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* 숨긴 프로젝트 섹션 */
+.hidden_section {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border-color);
+}
+
+.hidden_header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.hidden_header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.hidden_count {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 숨긴 프로젝트 카드 스타일 */
+.hidden_card {
+    opacity: 0.6;
+    filter: grayscale(30%);
+    border: 2px dashed var(--border-color);
+    background-color: var(--bg-tertiary);
+}
+
+.hidden_card:hover {
+    opacity: 0.8;
+    filter: grayscale(10%);
+    transform: translateY(-1px);
+}
+
+.hidden_card .project_thumbnail {
+    filter: grayscale(50%);
+}
+
+.hidden_card:hover .project_thumbnail {
+    filter: grayscale(20%);
+}
+
+.hidden_card .project_overlay {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.2) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.8) 100%
+    );
+}
+
+.hidden_card .projectTitle {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.hidden_card .projectDescription {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.hidden_card .metaLabel {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.hidden_card .metaValue {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.hidden_card .pdName {
+    color: #ffd700;
+    opacity: 0.8;
+}
+
+.hidden_card .pdName.assigned {
+    color: #22c55e;
+    opacity: 0.9;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.hidden_card .pdRole {
+    color: rgba(255, 215, 0, 0.6);
+}
+
+.hidden_card .actionBtn {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hidden_card .pdSelect {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hidden_card .cancelBtn {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .searchBox {
+        min-width: auto;
+    }
+
+    .projectList {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .projectHeader {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .projectActions {
+        align-self: flex-end;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .statItem {
+        padding: 12px;
+    }
+
+    .statValue {
+        font-size: 1.25rem;
+    }
+
+    .pagination_container {
+        margin-top: 16px;
+        padding: 16px;
+    }
+    
+    .pagination_controls {
+        gap: 6px;
+    }
+    
+    .pagination_button {
+        padding: 6px 10px;
+        font-size: 13px;
+        min-width: 50px;
+    }
+    
+    .page_button {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+    
+    .pagination_info {
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .hidden_section {
+        margin-top: 24px;
+        padding-top: 20px;
+    }
+
+    .hidden_header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .hidden_header h2 {
+        font-size: 1.25rem;
+    }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .projectCard {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    .searchInput,
+    .filterSelect,
+    .pdSelect {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+
+    .stats {
+        background-color: #111827;
+        border-color: #374151;
+    }
+
+    .statItem {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+}

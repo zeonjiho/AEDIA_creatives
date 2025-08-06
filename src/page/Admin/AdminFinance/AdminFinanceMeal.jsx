@@ -508,7 +508,7 @@ const AdminFinanceMeal = () => {
   return (
     <div className={ss.admin_chart_container}>
       <div className={ss.header}>
-        <h1>식비 관리</h1>
+        <h1>식비 영수증 관리</h1>
         <div className={ss.summary_stats}>
           <div className={`${ss.stat_item} ${ss.stat_finance}`}>
             <span className={ss.stat_number}>{formatAmount(stats.total)}</span>

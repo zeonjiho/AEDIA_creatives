@@ -236,8 +236,9 @@ const Home = () => {
                 // 방 목록
                 setRooms(roomsRes.data)
                 
-                // 프로젝트 목록 - 사용자가 참여하는 프로젝트만 필터링
+                // 프로젝트 목록 - 사용자가 참여하는 프로젝트만 필터링 (숨겨진 프로젝트 제외)
                 const userProjects = projectsRes.data.filter(project => 
+                    !project.isHide && // 숨겨진 프로젝트 제외
                     project.team && project.team.some(member => {
                         const memberId = typeof member === 'object' ? member._id : member;
                         return memberId.toString() === userId.toString();
