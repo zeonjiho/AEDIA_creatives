@@ -33,17 +33,17 @@ const Receipt = require('./models/Receipt')
 const Department = require('./models/Department')
 
 //로컬 버전 http 서버
-app.listen(port, () => {
-    console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-})
+// app.listen(port, () => {
+//     console.log(`\x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+// })
 
 //배포 버전 https 서버
-// const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
-// const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
-// const credentials = { key: sslKey, cert: sslCert };
-// https.createServer(credentials, app).listen(port, () => {
-//     console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
-// });
+const sslKey = fs.readFileSync('/etc/letsencrypt/live/aedia.app/privkey.pem');
+const sslCert = fs.readFileSync('/etc/letsencrypt/live/aedia.app/fullchain.pem');
+const credentials = { key: sslKey, cert: sslCert };
+https.createServer(credentials, app).listen(port, () => {
+    console.log(`\x1b[32mhttps \x1b[35mServer is running on port \x1b[32m${port}\x1b[0m ${new Date().toLocaleString()}`);
+});
 
 //MongoDB 연결
 mongoose.connect('mongodb+srv://bilvin0709:qyxFXyPck7WgAjVt@cluster0.sduy2do.mongodb.net/aedia')
@@ -109,140 +109,140 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 // 자동 퇴근 처리 스케줄러 (매 10분마다 실행)
-// cron.schedule('*/10 * * * *', async () => {
-//     try {
-//         const now = new Date();
-//         console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
+cron.schedule('*/10 * * * *', async () => {
+    try {
+        const now = new Date();
+        console.log(`\x1b[33m[${now.toLocaleString()}] 자동 퇴근 처리 스케줄러 시작\x1b[0m`);
 
-//         // 모든 활성 사용자 조회 (연장 정보 포함)
-//         const users = await User.find({
-//             status: 'active'
-//         }).select('_id name slackId attendance lastExtensionTime');
+        // 모든 활성 사용자 조회 (연장 정보 포함)
+        const users = await User.find({
+            status: 'active'
+        }).select('_id name slackId attendance lastExtensionTime');
 
-//         let notificationsSent = 0;
-//         let autoCheckoutsProcessed = 0;
+        let notificationsSent = 0;
+        let autoCheckoutsProcessed = 0;
 
-//         for (const user of users) {
-//             if (!user.attendance || user.attendance.length === 0) continue;
+        for (const user of users) {
+            if (!user.attendance || user.attendance.length === 0) continue;
 
-//             // 출석 기록을 시간 순으로 정렬 (최신순)
-//             const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
-//             const lastRecord = sortedAttendance[0];
+            // 출석 기록을 시간 순으로 정렬 (최신순)
+            const sortedAttendance = user.attendance.sort((a, b) => new Date(b.time) - new Date(a.time));
+            const lastRecord = sortedAttendance[0];
 
-//             // 가장 최근 기록이 체크인인 경우만 처리
-//             if (lastRecord && lastRecord.type === 'checkIn') {
-//                 const checkInTime = new Date(lastRecord.time);
-//                 const elapsedHours = (now - checkInTime) / (1000 * 60 * 60); // 시간 단위
-//                 const elapsedMinutes = (now - checkInTime) / (1000 * 60); // 분 단위
+            // 가장 최근 기록이 체크인인 경우만 처리
+            if (lastRecord && lastRecord.type === 'checkIn') {
+                const checkInTime = new Date(lastRecord.time);
+                const elapsedHours = (now - checkInTime) / (1000 * 60 * 60); // 시간 단위
+                const elapsedMinutes = (now - checkInTime) / (1000 * 60); // 분 단위
 
-//                 // 연장 시간이 있는지 확인
-//                 const hasExtension = user.lastExtensionTime;
-//                 let targetHours = 12; // 기본 12시간
-//                 let baseTime = checkInTime;
+                // 연장 시간이 있는지 확인
+                const hasExtension = user.lastExtensionTime;
+                let targetHours = 12; // 기본 12시간
+                let baseTime = checkInTime;
 
-//                 if (hasExtension) {
-//                     // 연장 시간이 있으면 연장 시간을 기준으로 계산
-//                     const extensionTime = new Date(user.lastExtensionTime);
-//                     const extensionElapsedHours = (now - extensionTime) / (1000 * 60 * 60);
-//                     targetHours = 12; // 연장 후에도 12시간
-//                     baseTime = extensionTime;
+                if (hasExtension) {
+                    // 연장 시간이 있으면 연장 시간을 기준으로 계산
+                    const extensionTime = new Date(user.lastExtensionTime);
+                    const extensionElapsedHours = (now - extensionTime) / (1000 * 60 * 60);
+                    targetHours = 12; // 연장 후에도 12시간
+                    baseTime = extensionTime;
 
-//                     console.log(`\x1b[33m연장 사용자: ${user.name} (연장시간: ${extensionTime.toLocaleString()})\x1b[0m`);
-//                 }
+                    console.log(`\x1b[33m연장 사용자: ${user.name} (연장시간: ${extensionTime.toLocaleString()})\x1b[0m`);
+                }
 
-//                 const totalElapsedHours = (now - baseTime) / (1000 * 60 * 60);
+                const totalElapsedHours = (now - baseTime) / (1000 * 60 * 60);
 
-//                 // 12시간 경과 시 자동 퇴근 처리
-//                 if (totalElapsedHours >= targetHours) {
-//                     console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${totalElapsedHours.toFixed(1)}시간${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
+                // 12시간 경과 시 자동 퇴근 처리
+                if (totalElapsedHours >= targetHours) {
+                    console.log(`\x1b[31m자동 퇴근 처리 대상: ${user.name} (경과시간: ${totalElapsedHours.toFixed(1)}시간${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
 
-//                     // 자동 퇴근 기록 추가
-//                     const autoCheckoutRecord = {
-//                         type: 'checkOut',
-//                         time: now,
-//                         date: now.toISOString().split('T')[0],
-//                         method: 'auto_checkout'
-//                     };
+                    // 자동 퇴근 기록 추가
+                    const autoCheckoutRecord = {
+                        type: 'checkOut',
+                        time: now,
+                        date: now.toISOString().split('T')[0],
+                        method: 'auto_checkout'
+                    };
 
-//                     user.attendance.push(autoCheckoutRecord);
+                    user.attendance.push(autoCheckoutRecord);
 
-//                     // 연장 정보 초기화
-//                     user.lastExtensionTime = null;
+                    // 연장 정보 초기화
+                    user.lastExtensionTime = null;
 
-//                     await user.save();
+                    await user.save();
 
-//                     // 자동 퇴근 처리 슬랙 알림 (slackId가 있는 경우만)
-//                     if (user.slackId) {
-//                         try {
-//                             const workHours = Math.floor(elapsedMinutes / 60);
-//                             const workMinutes = Math.floor(elapsedMinutes % 60);
+                    // 자동 퇴근 처리 슬랙 알림 (slackId가 있는 경우만)
+                    if (user.slackId) {
+                        try {
+                            const workHours = Math.floor(elapsedMinutes / 60);
+                            const workMinutes = Math.floor(elapsedMinutes % 60);
 
-//                             await slackBot.chat.postMessage({
-//                                 channel: user.slackId,
-//                                 text: `🏢 **자동 퇴근 처리되었습니다**\n\n출근 시간: ${checkInTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n퇴근 시간: ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n근무 시간: ${workHours}시간 ${workMinutes}분\n\n다음부터는 퇴근 시 꼭 퇴근 버튼을 눌러주세요! 😊`
-//                             });
-//                             console.log(`\x1b[32m자동 퇴근 알림 전송 성공: ${user.name}\x1b[0m`);
-//                         } catch (slackError) {
-//                             console.error(`\x1b[31m자동 퇴근 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
-//                         }
-//                     } else {
-//                         console.log(`\x1b[33m자동 퇴근 처리 완료 (슬랙 알림 없음): ${user.name}\x1b[0m`);
-//                     }
+                            await slackBot.chat.postMessage({
+                                channel: user.slackId,
+                                text: `🏢 **자동 퇴근 처리되었습니다**\n\n출근 시간: ${checkInTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n퇴근 시간: ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}\n근무 시간: ${workHours}시간 ${workMinutes}분\n\n다음부터는 퇴근 시 꼭 퇴근 버튼을 눌러주세요! 😊`
+                            });
+                            console.log(`\x1b[32m자동 퇴근 알림 전송 성공: ${user.name}\x1b[0m`);
+                        } catch (slackError) {
+                            console.error(`\x1b[31m자동 퇴근 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
+                        }
+                    } else {
+                        console.log(`\x1b[33m자동 퇴근 처리 완료 (슬랙 알림 없음): ${user.name}\x1b[0m`);
+                    }
 
-//                     autoCheckoutsProcessed++;
-//                 }
-//                 // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - 연장 시간 고려
-//                 else if (totalElapsedHours >= 11 && user.slackId) {
-//                     const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60); // 자동 퇴근까지 남은 분
+                    autoCheckoutsProcessed++;
+                }
+                // 퇴근 예정 알림 (60분, 30분, 20분, 10분 전) - 연장 시간 고려
+                else if (totalElapsedHours >= 11 && user.slackId) {
+                    const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60); // 자동 퇴근까지 남은 분
 
-//                     // 알림 시점들 (60, 30, 20, 10분 전)
-//                     const notificationPoints = [60, 30, 20, 10];
+                    // 알림 시점들 (60, 30, 20, 10분 전)
+                    const notificationPoints = [60, 30, 20, 10];
 
-//                     for (const notificationMinutes of notificationPoints) {
-//                         // 알림 시점에 근접한지 확인 (±5분 오차 허용)
-//                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
-//                             console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
+                    for (const notificationMinutes of notificationPoints) {
+                        // 알림 시점에 근접한지 확인 (±5분 오차 허용)
+                        if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
+                            console.log(`\x1b[36m퇴근 알림 대상: ${user.name} (${notificationMinutes}분 전 알림${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
 
-//                             try {
-//                                 await slackBot.chat.postMessage({
-//                                     channel: user.slackId,
-//                                     text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(totalElapsedHours)}시간 ${Math.floor((totalElapsedHours * 60) % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n\n🔗 <https://aedia.app/attendance-extend?userId=${user._id} | 지금 퇴근하거나 연장하기>\n\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
-//                                 });
-//                                 console.log(`\x1b[32m퇴근 예정 알림 전송 성공: ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
-//                                 notificationsSent++;
-//                             } catch (slackError) {
-//                                 console.error(`\x1b[31m퇴근 예정 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
-//                             }
+                            try {
+                                await slackBot.chat.postMessage({
+                                    channel: user.slackId,
+                                    text: `⏰ **퇴근 버튼을 누르는 것을 잊지는 않으셨나요?**\n\n현재 근무 시간: ${Math.floor(totalElapsedHours)}시간 ${Math.floor((totalElapsedHours * 60) % 60)}분\n\n${notificationMinutes}분 후에 자동 퇴근 처리됩니다.\n\n🔗 <https://aedia.app/attendance-extend?userId=${user._id} | 지금 퇴근하거나 연장하기>\n\n퇴근 시에는 꼭 퇴근 버튼을 눌러주세요! 🚪`
+                                });
+                                console.log(`\x1b[32m퇴근 예정 알림 전송 성공: ${user.name} (${notificationMinutes}분 전)\x1b[0m`);
+                                notificationsSent++;
+                            } catch (slackError) {
+                                console.error(`\x1b[31m퇴근 예정 알림 전송 실패 - ${user.name}:`, slackError, '\x1b[0m');
+                            }
 
-//                             break; // 한 번만 알림 보내기
-//                         }
-//                     }
-//                 }
-//                 // 슬랙ID가 없는 사용자의 경우 알림 없이 로그만 출력
-//                 else if (totalElapsedHours >= 11 && !user.slackId) {
-//                     const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60);
-//                     const notificationPoints = [60, 30, 20, 10];
+                            break; // 한 번만 알림 보내기
+                        }
+                    }
+                }
+                // 슬랙ID가 없는 사용자의 경우 알림 없이 로그만 출력
+                else if (totalElapsedHours >= 11 && !user.slackId) {
+                    const remainingMinutes = targetHours * 60 - (totalElapsedHours * 60);
+                    const notificationPoints = [60, 30, 20, 10];
 
-//                     for (const notificationMinutes of notificationPoints) {
-//                         if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
-//                             console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
-//                             break;
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+                    for (const notificationMinutes of notificationPoints) {
+                        if (Math.abs(remainingMinutes - notificationMinutes) <= 5) {
+                            console.log(`\x1b[33m퇴근 예정 (슬랙 알림 없음): ${user.name} (${notificationMinutes}분 전${hasExtension ? ', 연장 적용' : ''})\x1b[0m`);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-//         if (notificationsSent > 0 || autoCheckoutsProcessed > 0) {
-//             console.log(`\x1b[32m[${now.toLocaleString()}] 자동 퇴근 스케줄러 완료 - 알림 ${notificationsSent}건, 자동 퇴근 ${autoCheckoutsProcessed}건 처리\x1b[0m`);
-//         }
+        if (notificationsSent > 0 || autoCheckoutsProcessed > 0) {
+            console.log(`\x1b[32m[${now.toLocaleString()}] 자동 퇴근 스케줄러 완료 - 알림 ${notificationsSent}건, 자동 퇴근 ${autoCheckoutsProcessed}건 처리\x1b[0m`);
+        }
 
-//     } catch (error) {
-//         console.error(`\x1b[31m[${new Date().toLocaleString()}] 자동 퇴근 처리 중 오류:`, error, '\x1b[0m');
-//     }
-// }, {
-//     timezone: "Asia/Seoul"
-// });
+    } catch (error) {
+        console.error(`\x1b[31m[${new Date().toLocaleString()}] 자동 퇴근 처리 중 오류:`, error, '\x1b[0m');
+    }
+}, {
+    timezone: "Asia/Seoul"
+});
 
 
 app.use(express.json());
@@ -4045,6 +4045,7 @@ app.get('/receipts', async (req, res) => {
             .populate('userId', 'name email')
             .populate('projectId', 'title')
             .populate('creditCardId', 'cardName number label')
+            .populate('splitPayments.creditCardId', 'cardName number label')
             .populate('approvedBy', 'name')
             .sort({ date: -1, createdAt: -1 });
 
@@ -4076,6 +4077,7 @@ app.get('/receipts/:id', async (req, res) => {
             .populate('userId', 'name email avatar')
             .populate('projectId', 'title description')
             .populate('creditCardId', 'cardName number label')
+            .populate('splitPayments.creditCardId', 'cardName number label')
             .populate('approvedBy', 'name email');
 
         if (!receipt) {
@@ -4122,6 +4124,7 @@ app.post('/receipts', async (req, res) => {
             // StepperModal 확장 필드들
             stepperDateTime,
             isSplitPayment = false,
+            splitPayments = [],
             myAmount,
             isMultiPersonPayment = false,
             participants = [],
@@ -4143,8 +4146,8 @@ app.post('/receipts', async (req, res) => {
             });
         }
 
-        // 법인카드 결제인 경우 creditCardId 필수
-        if (paymentMethod === 'CORPORATE_CARD' && !creditCardId) {
+        // 법인카드 결제인 경우 creditCardId 필수 (분할결제 제외)
+        if (!isSplitPayment && paymentMethod === 'CORPORATE_CARD' && !creditCardId) {
             return res.status(400).json({
                 success: false,
                 message: '법인카드 결제시 카드 정보가 필요합니다.'
@@ -4179,6 +4182,15 @@ app.post('/receipts', async (req, res) => {
             // StepperModal 확장 필드들
             stepperDateTime: stepperDateTime || null,
             isSplitPayment: isSplitPayment || false,
+            splitPayments: Array.isArray(splitPayments) ? splitPayments.map(p => ({
+                paymentMethod: p.paymentMethod,
+                amount: parseFloat(p.amount) || 0,
+                cardType: p.cardType || null,
+                creditCardId: p.creditCardId || null,
+                bankName: p.bankName || null,
+                bankNameOther: p.bankNameOther || null,
+                accountNumber: p.accountNumber || null
+            })) : [],
             myAmount: myAmount ? parseFloat(myAmount) : null,
             isMultiPersonPayment: isMultiPersonPayment || false,
             participants: participants || [],
@@ -4201,53 +4213,53 @@ app.post('/receipts', async (req, res) => {
             .populate('creditCardId', 'cardName number label');
 
         // === 신규 영수증 등록 시 담당 PD 알림 추가 ===
-        // try {
-        //     // 프로젝트가 지정된 경우 해당 프로젝트의 담당 PD에게만 알림
-        //     if (projectId) {
-        //         const project = await Project.findById(projectId).populate('assignedPd', 'name slackId adminSlackMessage');
+        try {
+            // 프로젝트가 지정된 경우 해당 프로젝트의 담당 PD에게만 알림
+            if (projectId) {
+                const project = await Project.findById(projectId).populate('assignedPd', 'name slackId adminSlackMessage');
                 
-        //         if (project && project.assignedPd && project.assignedPd.slackId && project.assignedPd.adminSlackMessage === true) {
-        //             try {
-        //                 // 등록자 정보 조회 (userId로 실제 이름 가져오기)
-        //                 const registrant = await User.findById(userId).select('name');
-        //                 const registrantName = registrant ? registrant.name : userName;
+                if (project && project.assignedPd && project.assignedPd.slackId && project.assignedPd.adminSlackMessage === true) {
+                    try {
+                        // 등록자 정보 조회 (userId로 실제 이름 가져오기)
+                        const registrant = await User.findById(userId).select('name');
+                        const registrantName = registrant ? registrant.name : userName;
 
-        //                 // 카테고리 한글 변환
-        //                 let categoryText = '기타';
-        //                 if (category) {
-        //                     switch (category) {
-        //                         case 'MEAL':
-        //                             categoryText = '식비';
-        //                             break;
-        //                         case 'TAXI':
-        //                             categoryText = '택시비';
-        //                             break;
-        //                         case 'OTHER':
-        //                         default:
-        //                             categoryText = '기타';
-        //                             break;
-        //                     }
-        //                 }
+                        // 카테고리 한글 변환
+                        let categoryText = '기타';
+                        if (category) {
+                            switch (category) {
+                                case 'MEAL':
+                                    categoryText = '식비';
+                                    break;
+                                case 'TAXI':
+                                    categoryText = '택시비';
+                                    break;
+                                case 'OTHER':
+                                default:
+                                    categoryText = '기타';
+                                    break;
+                            }
+                        }
 
-        //                 const amountFormatted = new Intl.NumberFormat('ko-KR').format(amount);
+                        const amountFormatted = new Intl.NumberFormat('ko-KR').format(amount);
 
-        //                 await slackBot.chat.postMessage({
-        //                     channel: project.assignedPd.slackId,
-        //                     text: `📄 **새로운 영수증이 등록되었습니다.**\n\n프로젝트: ${project.title}\n등록자: ${registrantName}\n카테고리: ${categoryText}\n금액: ${amountFormatted}원\n\nAEDIA 시스템에서 확인하고 처리해주세요!`
-        //                 });
-        //                 console.log(`신규 영수증 알림 전송 성공: ${project.assignedPd.name} (프로젝트 담당 PD)`);
-        //             } catch (slackError) {
-        //                 console.error(`신규 영수증 알림 전송 실패 - ${project.assignedPd.name}:`, slackError);
-        //             }
-        //         } else {
-        //             console.log('프로젝트 담당 PD가 없거나 알림 설정이 비활성화되어 있습니다.');
-        //         }
-        //     } else {
-        //         console.log('프로젝트가 지정되지 않아 알림을 발송하지 않습니다.');
-        //     }
-        // } catch (pdNotificationError) {
-        //     console.error('담당 PD 알림 처리 중 오류:', pdNotificationError);
-        // }
+                        await slackBot.chat.postMessage({
+                            channel: project.assignedPd.slackId,
+                            text: `📄 **새로운 영수증이 등록되었습니다.**\n\n프로젝트: ${project.title}\n등록자: ${registrantName}\n카테고리: ${categoryText}\n금액: ${amountFormatted}원\n\nAEDIA 시스템에서 확인하고 처리해주세요!`
+                        });
+                        console.log(`신규 영수증 알림 전송 성공: ${project.assignedPd.name} (프로젝트 담당 PD)`);
+                    } catch (slackError) {
+                        console.error(`신규 영수증 알림 전송 실패 - ${project.assignedPd.name}:`, slackError);
+                    }
+                } else {
+                    console.log('프로젝트 담당 PD가 없거나 알림 설정이 비활성화되어 있습니다.');
+                }
+            } else {
+                console.log('프로젝트가 지정되지 않아 알림을 발송하지 않습니다.');
+            }
+        } catch (pdNotificationError) {
+            console.error('담당 PD 알림 처리 중 오류:', pdNotificationError);
+        }
 
         res.status(201).json({
             success: true,
@@ -4270,6 +4282,19 @@ app.put('/receipts/:id', async (req, res) => {
     try {
         const receiptId = req.params.id;
         const updateData = req.body;
+
+        // 분할결제 구조 변환 (신규 구조만 적용, 레거시는 유지)
+        if (updateData && updateData.isSplitPayment && Array.isArray(updateData.splitPayments)) {
+            updateData.splitPayments = updateData.splitPayments.map(p => ({
+                paymentMethod: p.paymentMethod,
+                amount: parseFloat(p.amount) || 0,
+                cardType: p.cardType || null,
+                creditCardId: p.creditCardId || null,
+                bankName: p.bankName || null,
+                bankNameOther: p.bankNameOther || null,
+                accountNumber: p.accountNumber || null
+            }));
+        }
 
         const existingReceipt = await Receipt.findById(receiptId);
         if (!existingReceipt) {

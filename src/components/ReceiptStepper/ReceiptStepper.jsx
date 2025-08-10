@@ -10,6 +10,7 @@ import { optimizeImage } from '../../utils/imageUtils';
 import baseURL from '../../utils/baseURL';
 import { jwtDecode } from 'jwt-decode';
 
+
 /**
  * 단계별 영수증 입력 모달 컴포넌트
  * 
@@ -37,6 +38,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     projectId: null,
     ...initialData
   });
+  
+
   
   const [receiptImages, setReceiptImages] = useState([]); // 배열로 변경
   const [imagePreviews, setImagePreviews] = useState([]); // 배열로 변경
@@ -128,6 +131,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     }
   }, [mode, initialData, isOpen]);
   
+
+
   // 편집 모드에서 초기 데이터 변경 시 추가 업데이트
   useEffect(() => {
     if (mode === 'edit' && initialData && Object.keys(initialData).length > 0 && isOpen) {
@@ -424,6 +429,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     }
   };
   
+
+
   // 입력 필드 변경 처리
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -460,6 +467,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
     if (!formData.description?.trim()) {
       errors.description = '설명을 입력해주세요';
     }
+    
+
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -966,6 +975,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                 )}
               </div>
               
+
+              
               <div className={styles.form_tip}>
                 <p><span className={styles.required}>*</span> 표시는 필수 입력 항목입니다.</p>
               </div>
@@ -1037,6 +1048,8 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
                     <strong>설명:</strong> {formData.description}
                   </div>
                 )}
+                
+
               </div>
             </div>
           </div>

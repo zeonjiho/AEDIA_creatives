@@ -302,6 +302,12 @@ const Receipts = () => {
       // StepperModal 확장 데이터
       stepperDateTime: dateTime,
       isSplitPayment: rest.isSplitPayment || false,
+      splitPayments: rest.isSplitPayment ? rest.splitPayments.map(payment => ({
+        paymentMethod: payment.paymentMethod,
+        amount: parseFloat(payment.amount) || 0,
+        cardType: payment.cardType,
+        creditCardId: payment.creditCardId
+      })) : [], // 분할결제 데이터 추가
       myAmount: rest.myAmount ? parseFloat(rest.myAmount) : null,
       isMultiPersonPayment: rest.isMultiPersonPayment || false,
       participants: rest.participants || [],
@@ -391,6 +397,13 @@ const Receipts = () => {
       projectId: rest.project || rest.projectId || null, // StepperModal에서 project 필드 사용
       attachmentUrls: finalAttachmentUrls,
       userId: actualUserId,
+      isSplitPayment: rest.isSplitPayment || false,
+      splitPayments: rest.isSplitPayment ? rest.splitPayments.map(payment => ({
+        paymentMethod: payment.paymentMethod,
+        amount: parseFloat(payment.amount) || 0,
+        cardType: payment.cardType,
+        creditCardId: payment.creditCardId
+      })) : [], // 분할결제 데이터 추가
       taxiReason: rest.taxiReason, // 택시비 사유 추가
       mealReason: rest.mealReason // 식비 사유 추가
     };
@@ -904,7 +917,23 @@ const Receipts = () => {
                 </div>
                 <div className={styles.info_row}>
                   <span>결제방법:</span>
-                  <span>{getPaymentMethodName(selectedReceipt.paymentMethod)}</span>
+                  <span>
+                    {selectedReceipt.isSplitPayment && selectedReceipt.splitPayments && selectedReceipt.splitPayments.length > 0 ? (
+                      <div className={styles.split_payment_display}>
+                        <span className={styles.split_payment_label}>분할결제</span>
+                        {selectedReceipt.splitPayments.map((payment, index) => (
+                          <div key={index} className={styles.split_payment_item_display}>
+                            <span>
+                              {payment.paymentMethod === 'CORPORATE_CARD' ? '법인카드' : 
+                               payment.paymentMethod === 'PERSONAL_CARD' ? '개인카드' : '현금/계좌이체'} - {parseInt(payment.amount || 0).toLocaleString()}원
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      getPaymentMethodName(selectedReceipt.paymentMethod)
+                    )}
+                  </span>
                 </div>
                 <div className={styles.info_row}>
                   <span>상태:</span>

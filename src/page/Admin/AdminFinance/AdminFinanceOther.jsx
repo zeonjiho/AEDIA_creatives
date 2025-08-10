@@ -745,16 +745,36 @@ const AdminFinanceOther = () => {
                 <td>{getCategoryText(item.category)}</td>
                 <td style={{fontWeight: '600'}}>
                   {formatAmount(item.amount)}
-                  {/* 분할결제인 경우 내가 낸 금액 표시 */}
-                  {item.isSplitPayment && item.myAmount && (
-                    <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
-                      내가 낸 금액: {formatAmount(item.myAmount)}
-                    </div>
+                  {/* splitPayments가 있는 새 구조: 법인카드 총합 표시 */}
+                  {Array.isArray(item.splitPayments) && item.splitPayments.length > 0 ? (
+                    (() => {
+                      const corpTotal = item.splitPayments
+                        .filter(p => p && p.paymentMethod === 'CORPORATE_CARD')
+                        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                      return corpTotal > 0 ? (
+                        <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
+                          법인카드 총합: {formatAmount(corpTotal)}
+                        </div>
+                      ) : null;
+                    })()
+                  ) : (
+                    /* 레거시 구조: 내가 낸 금액 표시 유지 */
+                    item.isSplitPayment && item.myAmount ? (
+                      <div style={{fontSize: '0.75rem', color: 'var(--warning-color)', marginTop: '2px'}}>
+                        내가 낸 금액: {formatAmount(item.myAmount)}
+                      </div>
+                    ) : null
                   )}
                 </td>
                 <td>
-                  {getPaymentMethodText(item.paymentMethod)}
-                  {/* 법인카드인 경우 카드 정보 표시 */}
+                  <div style={{display:'flex', alignItems:'center', gap:'6px', flexWrap:'wrap'}}>
+                    <span>{getPaymentMethodText(item.paymentMethod)}</span>
+                    {/* splitPayments 존재 시 분할 배지 */}
+                    {(Array.isArray(item.splitPayments) && item.splitPayments.length > 0) || item.isSplitPayment ? (
+                      <span className={ss.status_badge} style={{backgroundColor: 'var(--accent-color)', color: 'white', fontSize: '0.7rem'}}>분할</span>
+                    ) : null}
+                  </div>
+                  {/* 법인카드인 경우 카드 정보 표시 (레거시 유지) */}
                   {item.paymentMethod === 'CORPORATE_CARD' && getCreditCardInfo(item) && (
                     <div style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '2px'}}>
                       {getCreditCardInfo(item)}
@@ -772,18 +792,6 @@ const AdminFinanceOther = () => {
                 </td>
                 <td>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
-                    {/* 분할결제 표시 */}
-                    {item.isSplitPayment && (
-                      <span className={ss.status_badge} style={{backgroundColor: 'var(--info-color)', color: 'white', fontSize: '0.7rem'}}>
-                        분할결제
-                      </span>
-                    )}
-                    {/* 다중인원 결제 표시 */}
-                    {item.isMultiPersonPayment && item.participants && item.participants.length > 0 && (
-                      <span className={ss.status_badge} style={{backgroundColor: 'var(--secondary-color)', color: 'white', fontSize: '0.7rem'}}>
-                        다중인원 ({item.participants.length}명)
-                      </span>
-                    )}
                     {/* 메모가 없는 경우 */}
                     {!item.isSplitPayment && !item.isMultiPersonPayment && (
                       <span style={{color: 'var(--text-tertiary)', fontSize: '0.8rem'}}>-</span>

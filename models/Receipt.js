@@ -67,6 +67,23 @@ const receiptSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    splitPayments: [{
+        paymentMethod: {
+            type: String,
+            enum: ['CORPORATE_CARD', 'PERSONAL_CARD', 'CASH'],
+            required: true
+        },
+        amount: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        cardType: String, // 법인카드/개인카드
+        creditCardId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'CreditCard'
+        }
+    }],
     myAmount: {
         type: Number,
         min: 0
@@ -125,7 +142,6 @@ const receiptSchema = new mongoose.Schema({
 
     userName: {
         type: String,
-        required: true
     },
 
     // 프로젝트 연결 (선택사항)

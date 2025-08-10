@@ -10,7 +10,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000; /* 기존 1000에서 10000으로 증가 */
+    z-index: 10000;
+    /* 기존 1000에서 10000으로 증가 */
     padding: 20px;
 }
 
@@ -789,6 +790,7 @@
         opacity: 0;
         transform: translateY(30px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -889,6 +891,7 @@
         opacity: 0;
         transform: translate(-50%, -50%) scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
@@ -1037,6 +1040,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -1047,6 +1051,7 @@
         opacity: 0;
         transform: scale(0.9) translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -1117,16 +1122,20 @@
         max-height: 100%;
         border-radius: 0;
     }
+
     .step {
         font-size: 12px;
     }
+
     .modal_overlay {
         padding: 0;
     }
+
     .modal_content {
         margin-bottom: 80px;
         padding-bottom: 10px;
     }
+
     .modal_footer_blur {
         position: fixed;
         bottom: 0;
@@ -1140,35 +1149,44 @@
         box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
         z-index: 10;
     }
+
     .toast_content {
         min-width: 260px;
         max-width: 320px;
         padding: 14px 18px;
     }
+
     .datetime_row {
         justify-content: center;
     }
+
     .current_datetime {
         font-size: 15px;
     }
+
     .confirm_modal {
         width: 95%;
         margin: 20px;
     }
+
     .payment_options {
         grid-template-columns: 1fr;
     }
+
     .modal_header,
     .modal_content {
         padding-left: 16px;
         padding-right: 16px;
     }
+
     .stepper {
         padding: 16px;
     }
+
     .photo_actions {
         flex-direction: column;
     }
+
     /* 모바일 카메라 모달 */
     .camera_modal {
         width: 100%;
@@ -1177,122 +1195,153 @@
         max-height: 100%;
         border-radius: 0;
     }
+
     .camera_modal_header {
         padding: 16px 20px;
     }
+
     .camera_modal_header h3 {
         font-size: 16px;
     }
+
     .camera_close_btn {
         width: 32px;
         height: 32px;
         font-size: 20px;
     }
+
     .camera_modal_content {
         padding: 16px;
         min-height: 250px;
     }
+
     .camera_modal_video {
         max-height: 70vh;
         border-radius: 8px;
     }
+
     .camera_modal_footer {
         padding: 20px;
         gap: 16px;
     }
+
     .camera_cancel_btn,
     .camera_capture_btn {
         padding: 16px 24px;
         font-size: 15px;
         min-width: 100px;
     }
+
     .photo_grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
+
     /* 분할결제 모바일 */
     .split_payment_row {
         flex-direction: column;
         gap: 12px;
     }
+
     .split_payment_container {
         padding: 12px;
     }
+
     .difference_display {
         margin-top: 12px;
         padding: 10px;
         font-size: 14px;
     }
+
     .split_payment_item {
         width: 100%;
     }
+
     .my_amount_input {
         padding: 14px 12px;
         font-size: 16px;
     }
+
     .total_amount_display {
         padding: 14px 12px;
         font-size: 16px;
     }
+
     .split_label {
         font-size: 14px;
         margin-bottom: 6px;
     }
+
     .difference_amount {
         font-size: 18px;
     }
+
     .split_payment_checkbox_container {
         padding: 12px;
     }
+
     .checkbox_option {
         font-size: 16px;
     }
+
     .split_payment_description {
         font-size: 13px;
         margin-left: 28px;
     }
+
     /* 계좌이체 모바일 */
     .account_info_row {
         flex-direction: column;
         gap: 12px;
     }
+
     .account_info_container {
         padding: 12px;
     }
+
     /* 신용카드 모바일 */
     .card_info_row {
         flex-direction: column;
         gap: 12px;
     }
+
     .card_info_container {
         padding: 12px;
     }
+
     .card_company_wrapper,
     .card_number_wrapper {
         width: 100%;
     }
+
     .bank_select_wrapper,
     .account_number_wrapper {
         width: 100%;
     }
+
     /* 법인카드 모달 모바일 */
     .corporate_card_modal {
         width: 95%;
         margin: 10px;
         max-height: 70vh;
     }
+
     .corporate_card_list {
         padding: 0 16px;
         max-height: 300px;
     }
+
     .corporate_card_item {
         padding: 12px;
     }
+
     .card_alias {
         font-size: 13px;
     }
+
     .card_number {
         font-size: 12px;
     }
+
     /* .participant_row {
         flex-direction: column;
         gap: 12px;
@@ -1318,37 +1367,45 @@
         height: 36px;
         font-size: 18px;
     }
+
     .add_participant_btn {
         padding: 14px 20px;
         font-size: 16px;
         margin-top: 8px;
     }
+
     .participants_container {
         padding: 12px;
         gap: 16px;
     }
+
     /* 입력 정보 요약 모바일 */
     .summary_container {
         padding: 12px;
         gap: 12px;
     }
+
     .summary_section {
         padding: 10px;
     }
+
     .summary_title {
         font-size: 13px;
         margin-bottom: 6px;
     }
+
     .summary_item {
         flex-direction: column;
         gap: 4px;
         font-size: 12px;
     }
+
     .summary_label {
         min-width: auto;
         font-size: 12px;
         color: #888;
     }
+
     .summary_value {
         font-size: 13px;
     }
@@ -1808,6 +1865,7 @@
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -1821,4 +1879,183 @@
 
 .submit_btn:disabled:hover {
     background-color: #007bff;
+}
+
+/* 분할결제 스타일 */
+.split_payment_info {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.split_payment_info p {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.amount_mismatch {
+    color: #dc3545;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.split_payments_list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.split_payment_item {
+    padding: 12px 12px 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.split_payment_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.split_payment_header h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.remove_split_payment_btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.remove_split_payment_btn:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.split_payment_form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form_row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: end;
+}
+
+.add_split_payment_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    margin-top: 8px;
+}
+
+.add_split_payment_btn:hover {
+    background-color: #0056b3;
+}
+
+.card_warning {
+    color: #ffc107;
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* 분할결제 미리보기 스타일 */
+.split_payment_summary {
+    /* margin-top: 8px; */
+}
+
+.split_payment_summary_item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.split_payment_summary_item:first-child {
+    padding-top: 0;
+}
+
+.split_payment_summary_item:last-child {
+    border-bottom: none;
+}
+
+.split_payment_summary_item span:first-child {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.split_payment_summary_item span:last-child {
+    color: #1a202c;
+    font-weight: 600;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .form_row {
+        grid-template-columns: 1fr;
+    }
+
+    .split_payment_item {
+        padding: 12px;
+    }
+
+    .split_payment_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .split_payment_summary_item {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+.split_payment_form .form_group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.split_payment_form label {
+    font-size: 13px;
+    color: #4a5568;
+}
+
+.split_payment_form .form_input,
+.split_payment_form .form_select,
+.corporate_card_select_btn {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
 }

@@ -65,6 +65,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       attachedFiles: [],
       myAmount: '', // 분할결제용 내가 낸 금액 추가
       isSplitPayment: false, // 분할결제 체크박스 상태 추가
+      splitPayments: [], // 분할결제 데이터 추가
       isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
       cardType: '', // 법인카드/개인카드 선택 추가
       creditCardId: '', // 법인카드 ID 추가
@@ -102,9 +103,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
   const [isCamera, setIsCamera] = useState(false);
   const [stream, setStream] = useState(null);
   const [showCorporateCardModal, setShowCorporateCardModal] = useState(false);
+  const [showSplitCorporateCardModal, setShowSplitCorporateCardModal] = useState(false);
+  const [currentSplitPaymentId, setCurrentSplitPaymentId] = useState(null);
 
   const [projects, setProjects] = useState([]);
   const [corporateCards, setCorporateCards] = useState([]);
+  const [usedCorporateCards, setUsedCorporateCards] = useState([]); // 이미 사용된 법인카드 ID들
 
   // 택시비 관련 상태 추가
   const [taxiWorkHours, setTaxiWorkHours] = useState(null);
@@ -600,14 +604,9 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
           }
         }
 
-        // 분할결제가 체크된 경우 내가 낸 금액 검증
+        // 분할결제가 체크된 경우 분할결제 검증
         if (formData.isSplitPayment) {
-          if (!formData.myAmount || formData.myAmount <= 0) {
-            showToast('내가 낸 금액을 올바르게 입력해주세요.');
-            return false;
-          }
-          if (parseFloat(formData.myAmount) > parseFloat(formData.amount)) {
-            showToast('내가 낸 금액이 총 금액보다 클 수 없습니다.');
+          if (!validateSplitPayments()) {
             return false;
           }
         }
@@ -997,6 +996,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     setCheckingAttendance(false);
     
     setCurrentStep(1);
+    setUsedCorporateCards([]);
     onClose();
     
     // 성공 메시지 표시 (모달이 닫힌 후 약간 딜레이를 주어 자연스럽게 표시)
@@ -1039,30 +1039,33 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     onClose();
   };
 
-  // 저장하지 않고 닫기
-  const handleCloseWithoutSave = () => {
-    stopCamera();
-    clearStorage(); // 저장된 데이터 삭제
+      // 저장하지 않고 닫기
+    const handleCloseWithoutSave = () => {
+      stopCamera();
+      clearStorage(); // 저장된 데이터 삭제
 
-    // 폼 데이터도 초기화
-    setFormData({
-      category: '',
-      dateTime: getCurrentDateTime(),
-      amount: '',
-      project: '',
-      paymentMethod: '',
-      participants: [{ person: null, project: '' }],
-      attachedFiles: [],
-      myAmount: '', // 분할결제용 내가 낸 금액 추가
-      isSplitPayment: false, // 분할결제 체크박스 상태 추가
-      isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
-      cardType: '', // 법인카드/개인카드 선택 추가
-      creditCardId: '', // 법인카드 ID 추가
-      bankName: '', // 은행명 추가
-      bankNameOther: '', // 기타 은행 직접입력 추가
-      accountNumber: '', // 계좌번호 추가
-      description: '' // 메모 필드 추가
-    });
+      // 폼 데이터도 초기화
+      setFormData({
+        category: '',
+        dateTime: getCurrentDateTime(),
+        amount: '',
+        project: '',
+        paymentMethod: '',
+        participants: [{ person: null, project: '' }],
+        attachedFiles: [],
+        myAmount: '', // 분할결제용 내가 낸 금액 추가
+        isSplitPayment: false, // 분할결제 체크박스 상태 추가
+        isMultiPersonPayment: false, // 다중인원 체크박스 상태 추가
+        cardType: '', // 법인카드/개인카드 선택 추가
+        creditCardId: '', // 법인카드 ID 추가
+        bankName: '', // 은행명 추가
+        bankNameOther: '', // 기타 은행 직접입력 추가
+        accountNumber: '', // 계좌번호 추가
+        description: '' // 메모 필드 추가
+      });
+      
+      // 분할결제 관련 상태 초기화
+      setUsedCorporateCards([]);
     setCurrentStep(1);
 
     setShowCloseConfirm(false);
@@ -1088,6 +1091,157 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       ...prev,
       myAmount: value
     }));
+  };
+
+  // 분할결제 관련 함수들
+  const handleSplitPaymentToggle = () => {
+    setFormData(prev => {
+      const nextIsSplit = !prev.isSplitPayment;
+      // 결제1 초기값: 기존 결제방법과 동기화
+      let initialSplit = [];
+      if (nextIsSplit) {
+        // 기본 결제방법에서 결제수단/카드유형/법인카드 정보를 반영
+        const isCash = prev.paymentMethod === '현금/계좌이체';
+        const isCard = prev.paymentMethod === '신용카드';
+        const cardType = prev.cardType || (isCard ? '법인카드' : '');
+        const splitMethod = isCash ? 'CASH' : (cardType === '개인카드' ? 'PERSONAL_CARD' : 'CORPORATE_CARD');
+        const initialCreditCardId = splitMethod === 'CORPORATE_CARD' ? (prev.creditCardId || null) : null;
+        initialSplit = [{
+          id: Date.now(),
+          paymentMethod: splitMethod,
+          amount: '',
+          cardType: cardType,
+          creditCardId: initialCreditCardId
+        }];
+        // 사용된 카드 목록 초기 반영
+        if (initialCreditCardId) {
+          setUsedCorporateCards(prevUsed => (prevUsed.includes(initialCreditCardId) ? prevUsed : [...prevUsed, initialCreditCardId]));
+        }
+      }
+      return {
+        ...prev,
+        isSplitPayment: nextIsSplit,
+        splitPayments: nextIsSplit ? initialSplit : [],
+        myAmount: nextIsSplit ? prev.myAmount : ''
+      };
+    });
+    
+    // 분할결제 해제 시 사용된 카드 목록 초기화
+    if (formData.isSplitPayment) {
+      setUsedCorporateCards([]);
+    }
+  };
+
+  const addSplitPayment = () => {
+    const newPayment = {
+      id: Date.now() + Math.random(),
+      paymentMethod: 'CORPORATE_CARD',
+      amount: '',
+      cardType: '법인카드',
+      creditCardId: null
+    };
+    setFormData(prev => ({
+      ...prev,
+      splitPayments: [...prev.splitPayments, newPayment]
+    }));
+  };
+
+  const removeSplitPayment = (id) => {
+    const paymentToRemove = formData.splitPayments.find(p => p.id === id);
+    if (paymentToRemove && paymentToRemove.creditCardId) {
+      setUsedCorporateCards(prev => prev.filter(cardId => cardId !== paymentToRemove.creditCardId));
+    }
+    setFormData(prev => ({
+      ...prev,
+      splitPayments: prev.splitPayments.filter(p => p.id !== id)
+    }));
+  };
+
+  const updateSplitPayment = (id, field, value) => {
+    setFormData(prev => {
+      const isFirstId = prev.splitPayments[0] && prev.splitPayments[0].id === id;
+
+      const updatedSplitPayments = prev.splitPayments.map(payment => {
+        if (payment.id !== id) return payment;
+        let updatedPayment = { ...payment, [field]: value };
+
+        if (field === 'paymentMethod') {
+          if (value !== 'CORPORATE_CARD') {
+            // 비-법인카드로 전환 시 카드 정보 초기화
+            if (payment.creditCardId) {
+              setUsedCorporateCards(prevUsed => prevUsed.filter(cardId => cardId !== payment.creditCardId));
+            }
+            updatedPayment = { ...updatedPayment, creditCardId: null, cardType: value === 'PERSONAL_CARD' ? '개인카드' : '' };
+          } else {
+            // 법인카드로 전환 시 기본 카드유형 설정
+            updatedPayment = { ...updatedPayment, cardType: '법인카드' };
+          }
+        }
+
+        if (field === 'creditCardId') {
+          if (value) {
+            setUsedCorporateCards(prevUsed => (prevUsed.includes(value) ? prevUsed : [...prevUsed, value]));
+          } else if (payment.creditCardId) {
+            setUsedCorporateCards(prevUsed => prevUsed.filter(cardId => cardId !== payment.creditCardId));
+          }
+        }
+
+        return updatedPayment;
+      });
+
+      // 결제1을 메인 결제정보에 미러링
+      let nextPaymentMethod = prev.paymentMethod;
+      let nextCardType = prev.cardType;
+      let nextCreditCardId = prev.creditCardId;
+      if (isFirstId && updatedSplitPayments.length > 0) {
+        const first = updatedSplitPayments[0];
+        nextPaymentMethod = first.paymentMethod === 'CASH' ? '현금/계좌이체' : '신용카드';
+        nextCardType = first.paymentMethod === 'PERSONAL_CARD' ? '개인카드' : (first.paymentMethod === 'CORPORATE_CARD' ? '법인카드' : '');
+        nextCreditCardId = first.paymentMethod === 'CORPORATE_CARD' ? (first.creditCardId || '') : '';
+      }
+
+      return {
+        ...prev,
+        splitPayments: updatedSplitPayments,
+        paymentMethod: isFirstId ? nextPaymentMethod : prev.paymentMethod,
+        cardType: isFirstId ? nextCardType : prev.cardType,
+        creditCardId: isFirstId ? nextCreditCardId : prev.creditCardId
+      };
+    });
+  };
+
+  // 분할결제 총합 계산
+  const getSplitPaymentTotal = () => {
+    return formData.splitPayments.reduce((total, payment) => {
+      return total + (parseFloat(payment.amount) || 0);
+    }, 0);
+  };
+
+  // 분할결제 유효성 검사
+  const validateSplitPayments = () => {
+    if (!formData.isSplitPayment) return true;
+    
+    const total = getSplitPaymentTotal();
+    const formAmount = parseFloat(formData.amount) || 0;
+    
+    if (total !== formAmount) {
+      showToast(`분할결제 총합(${total.toLocaleString()}원)이 영수증 금액(${formAmount.toLocaleString()}원)과 일치하지 않습니다.`);
+      return false;
+    }
+    
+    for (const payment of formData.splitPayments) {
+      if (!payment.amount || parseFloat(payment.amount) <= 0) {
+        showToast('모든 분할결제 항목의 금액을 입력해주세요.');
+        return false;
+      }
+      
+      if (payment.paymentMethod === 'CORPORATE_CARD' && !payment.creditCardId) {
+        showToast('법인카드를 선택한 경우 카드를 지정해주세요.');
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   // 분할결제 체크박스 변경 핸들러 추가
@@ -1157,6 +1311,41 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     setShowCorporateCardModal(false);
   };
 
+  // 분할결제용 법인카드 선택 핸들러
+  const handleSplitCorporateCardSelect = (selectedCard) => {
+    if (currentSplitPaymentId) {
+      // 기존에 선택된 카드가 있다면 사용된 목록에서 제거
+      const currentPayment = formData.splitPayments.find(p => p.id === currentSplitPaymentId);
+      if (currentPayment && currentPayment.creditCardId && currentPayment.creditCardId !== selectedCard._id) {
+        setUsedCorporateCards(prev => prev.filter(cardId => cardId !== currentPayment.creditCardId));
+      }
+      
+      setFormData(prev => {
+        const isFirst = prev.splitPayments[0] && prev.splitPayments[0].id === currentSplitPaymentId;
+        const updatedSplitPayments = prev.splitPayments.map(payment => 
+          payment.id === currentSplitPaymentId 
+            ? { ...payment, creditCardId: selectedCard._id, cardType: '법인카드' }
+            : payment
+        );
+        return {
+          ...prev,
+          splitPayments: updatedSplitPayments,
+          ...(isFirst ? { paymentMethod: '신용카드', cardType: '법인카드', creditCardId: selectedCard._id } : {})
+        };
+      });
+      
+      // 새로 선택된 카드를 사용된 목록에 추가
+      setUsedCorporateCards(prev => {
+        if (!prev.includes(selectedCard._id)) {
+          return [...prev, selectedCard._id];
+        }
+        return prev;
+      });
+    }
+    setShowSplitCorporateCardModal(false);
+    setCurrentSplitPaymentId(null);
+  };
+
   // 선택된 법인카드 정보 가져오기
   const getSelectedCardDisplay = () => {
     if (!formData.creditCardId) return null;
@@ -1166,7 +1355,21 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       '법인카드 선택됨';
   };
 
+  // 분할결제용 선택된 법인카드 정보 가져오기
+  const getSplitSelectedCardDisplay = (creditCardId) => {
+    if (!creditCardId) return null;
+    const selectedCard = corporateCards.find(card => card._id === creditCardId);
+    return selectedCard ? 
+      `${selectedCard.cardName} ${selectedCard.label} ${maskCorporateCardNumber(selectedCard.number)}` : 
+      '법인카드 선택됨';
+  };
 
+  // 카드 ID로 카드 이름 가져오기 (분할결제 요약용)
+  const getCorporateCardNameById = (creditCardId) => {
+    if (!creditCardId) return '법인카드';
+    const card = corporateCards.find(c => c._id === creditCardId);
+    return card ? card.cardName : '법인카드';
+  };
 
   // 대한민국 은행 목록 (상위 15개)
   const koreanBanks = [
@@ -1382,26 +1585,29 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         </select>
       </div>
 
-      <div className={styles.input_group}>
-        <label>결제방법 <span className={styles.required}>*</span></label>
-        <div className={styles.payment_options}>
-          {['신용카드', '현금/계좌이체'].map((method) => (
-            <label key={method} className={styles.radio_option}>
-              <input
-                type="radio"
-                name="paymentMethod"
-                value={method}
-                checked={formData.paymentMethod === method}
-                onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-              />
-              <span>{method}</span>
-            </label>
-          ))}
+      {!formData.isSplitPayment && (
+        <div className={styles.input_group}>
+          <label>결제방법 <span className={styles.required}>*</span></label>
+          <div className={styles.payment_options}>
+            {['신용카드', '현금/계좌이체'].map((method) => (
+              <label key={method} className={styles.radio_option}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={method}
+                  checked={formData.paymentMethod === method}
+                  onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                  disabled={formData.isSplitPayment}
+                />
+                <span>{method}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 신용카드 상세 정보 */}
-      {isCardPayment && (
+      {!formData.isSplitPayment && isCardPayment && (
         <div className={styles.input_group}>
           <label>카드 유형 <span className={styles.required}>*</span></label>
           <div className={styles.payment_options}>
@@ -1422,7 +1628,7 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       )}
 
       {/* 법인카드 선택 */}
-      {isCorporateCard && (
+      {!formData.isSplitPayment && isCorporateCard && (
         <div className={styles.input_group}>
           <label>법인카드 선택 <span className={styles.required}>*</span></label>
           <button
@@ -1493,12 +1699,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
             <input
               type="checkbox"
               checked={formData.isSplitPayment}
-              onChange={(e) => handleSplitPaymentChange(e.target.checked)}
+              onChange={handleSplitPaymentToggle}
             />
             <span>분할결제</span>
           </label>
           <span className={styles.split_payment_description}>
-            총 금액 중 일부만 내가 지불한 경우 체크하세요
+            여러 결제수단으로 나누어 결제한 경우 체크하세요
           </span>
         </div>
       </div>
@@ -1599,43 +1805,95 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
         </div>
       )}
 
-      {isSplitPayment && (
+      {formData.isSplitPayment && (
         <div className={styles.input_group}>
           <label>분할결제 정보 <span className={styles.required}>*</span></label>
           <div className={styles.split_payment_container}>
-            <div className={styles.split_payment_row}>
-              <div className={styles.split_payment_item}>
-                <label className={styles.split_label}>내가 낸 금액</label>
-                <input
-                  type="number"
-                  placeholder="내가 낸 금액"
-                  value={formData.myAmount}
-                  onChange={(e) => handleMyAmountChange(e.target.value)}
-                  min="0"
-                  max={formData.amount}
-                  className={styles.my_amount_input}
-                />
-              </div>
-
-              <div className={styles.split_payment_item}>
-                <label className={styles.split_label}>총 금액</label>
-                <div className={styles.total_amount_display}>
-                  {formData.amount ? `${parseInt(formData.amount).toLocaleString()}원` : '0원'}
-                </div>
-              </div>
+            <div className={styles.split_payment_info}>
+              <p>총 금액: <strong>{parseInt(formData.amount || 0).toLocaleString()}원</strong></p>
+              <p>분할결제 총합: <strong>{getSplitPaymentTotal().toLocaleString()}원</strong></p>
+              {getSplitPaymentTotal() !== parseInt(formData.amount || 0) && (
+                <p className={styles.amount_mismatch}>
+                  ⚠️ 분할결제 총합이 영수증 금액과 일치하지 않습니다
+                </p>
+              )}
             </div>
+            
+            <div className={styles.split_payments_list}>
+              {formData.splitPayments.map((payment, index) => (
+                <div key={payment.id} className={styles.split_payment_item}>
+                  <div className={styles.split_payment_header}>
+                    <h5>결제 {index + 1}</h5>
+                    {formData.splitPayments.length > 1 && (
+                      <button
+                        type="button"
+                        className={styles.remove_split_payment_btn}
+                        onClick={() => removeSplitPayment(payment.id)}
+                        title="결제 항목 제거"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className={styles.split_payment_form}>
+                    <div className={styles.form_row}>
+                      <div className={styles.form_group}>
+                        <label>결제수단</label>
+                        <select
+                          value={payment.paymentMethod}
+                          onChange={(e) => updateSplitPayment(payment.id, 'paymentMethod', e.target.value)}
+                          className={styles.form_select}
+                        >
+                          <option value="CORPORATE_CARD">법인카드</option>
+                          <option value="PERSONAL_CARD">개인카드</option>
+                          <option value="CASH">현금/계좌이체</option>
+                        </select>
+                      </div>
+                      
+                      <div className={styles.form_group}>
+                        <label>금액</label>
+                        <input
+                          type="number"
+                          value={payment.amount}
+                          onChange={(e) => updateSplitPayment(payment.id, 'amount', e.target.value)}
+                          placeholder="금액 입력"
+                          className={styles.form_input}
+                        />
+                      </div>
+                    </div>
+                    
+                    {payment.paymentMethod === 'CORPORATE_CARD' && (
+                      <div className={styles.form_group}>
+                        <label>법인카드 선택</label>
+                        <button
+                          type="button"
+                          className={styles.corporate_card_select_btn}
+                          onClick={() => {
+                            setCurrentSplitPaymentId(payment.id);
+                            setShowSplitCorporateCardModal(true);
+                          }}
+                        >
+                          {payment.creditCardId ? getSplitSelectedCardDisplay(payment.creditCardId) : '법인카드를 선택하세요'}
+                        </button>
+                      </div>
+                    )}
+                    
 
-            {formData.myAmount && formData.amount && (
-              <div className={styles.difference_display}>
-                <span className={styles.difference_label}>차액: </span>
-                <span className={styles.difference_amount}>
-                  {(parseFloat(formData.amount) - parseFloat(formData.myAmount || 0)).toLocaleString()}원
-                </span>
-                {parseFloat(formData.myAmount) > parseFloat(formData.amount) && (
-                  <span className={styles.error_text}> (내가 낸 금액이 총 금액보다 큽니다)</span>
-                )}
-              </div>
-            )}
+                    
+
+                  </div>
+                </div>
+              ))}
+              
+              <button
+                type="button"
+                className={styles.add_split_payment_btn}
+                onClick={addSplitPayment}
+              >
+                + 결제 항목 추가
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1676,58 +1934,67 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
 
           <div className={styles.summary_section}>
             <h4 className={styles.summary_title}>결제 정보</h4>
-            <div className={styles.summary_item}>
-              <span className={styles.summary_label}>결제방법:</span>
-              <span className={styles.summary_value}>{formData.paymentMethod}</span>
-            </div>
 
-            {/* 신용카드 정보 */}
-            {isCardPayment && (
-              <>
-                <div className={styles.summary_item}>
-                  <span className={styles.summary_label}>카드 유형:</span>
-                  <span className={styles.summary_value}>
-                    {formData.cardType}
-                  </span>
-                </div>
-                {formData.cardType === '법인카드' && formData.creditCardId && (
-                  <div className={styles.summary_item}>
-                    <span className={styles.summary_label}>법인카드:</span>
-                    <span className={styles.summary_value}>
-                      {getSelectedCardDisplay()}
-                    </span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* 현금/계좌이체 정보 */}
-            {isCashOrTransfer && formData.bankName && (
-              <>
-                <div className={styles.summary_item}>
-                  <span className={styles.summary_label}>은행:</span>
-                  <span className={styles.summary_value}>
-                    {formData.bankName === '기타' ? formData.bankNameOther : formData.bankName}
-                  </span>
-                </div>
-                {formData.accountNumber && (
-                  <div className={styles.summary_item}>
-                    <span className={styles.summary_label}>계좌번호:</span>
-                    <span className={styles.summary_value}>{formData.accountNumber}</span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* 분할결제 정보 */}
-            {isSplitPayment && (
+            {/* 분할결제: 메인 결제수단 숨기고 분할결제만 상세 표시 */}
+            {formData.isSplitPayment ? (
               <div className={styles.summary_item}>
                 <span className={styles.summary_label}>분할결제:</span>
-                <span className={styles.summary_value}>
-                  내가 낸 금액: {parseInt(formData.myAmount).toLocaleString()}원 /
-                  차액: {(parseFloat(formData.amount) - parseFloat(formData.myAmount)).toLocaleString()}원
-                </span>
+                <div className={styles.split_payment_summary}>
+                  {formData.splitPayments.map((payment, index) => (
+                    <div key={payment.id} className={styles.split_payment_summary_item}>
+                      <span>{`결제 ${index + 1}`}</span>
+                      <span>
+                        {payment.paymentMethod === 'CORPORATE_CARD'
+                          ? `${getCorporateCardNameById(payment.creditCardId)} - ${parseInt(payment.amount || 0).toLocaleString()}원`
+                          : `${payment.paymentMethod === 'PERSONAL_CARD' ? '개인카드' : '현금/계좌이체'} - ${parseInt(payment.amount || 0).toLocaleString()}원`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            ) : (
+              <>
+                <div className={styles.summary_item}>
+                  <span className={styles.summary_label}>결제방법:</span>
+                  <span className={styles.summary_value}>{formData.paymentMethod}</span>
+                </div>
+
+                {isCardPayment && (
+                  <>
+                    <div className={styles.summary_item}>
+                      <span className={styles.summary_label}>카드 유형:</span>
+                      <span className={styles.summary_value}>
+                        {formData.cardType}
+                      </span>
+                    </div>
+                    {formData.cardType === '법인카드' && formData.creditCardId && (
+                      <div className={styles.summary_item}>
+                        <span className={styles.summary_label}>법인카드:</span>
+                        <span className={styles.summary_value}>
+                          {getSelectedCardDisplay()}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {isCashOrTransfer && formData.bankName && (
+                  <>
+                    <div className={styles.summary_item}>
+                      <span className={styles.summary_label}>은행:</span>
+                      <span className={styles.summary_value}>
+                        {formData.bankName === '기타' ? formData.bankNameOther : formData.bankName}
+                      </span>
+                    </div>
+                    {formData.accountNumber && (
+                      <div className={styles.summary_item}>
+                        <span className={styles.summary_label}>계좌번호:</span>
+                        <span className={styles.summary_value}>{formData.accountNumber}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
             )}
 
             {/* 다중인원 정보 */}
@@ -1979,6 +2246,51 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
                 <button
                   className={styles.confirm_cancel_btn}
                   onClick={() => setShowCorporateCardModal(false)}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 분할결제용 법인카드 선택 모달 */}
+        {showSplitCorporateCardModal && (
+          <div className={styles.confirm_overlay}>
+            <div className={styles.corporate_card_modal}>
+              <div className={styles.confirm_header}>
+                <h3>법인카드 선택</h3>
+              </div>
+
+              <div className={styles.corporate_card_list}>
+                {corporateCards
+                  .filter(card => {
+                    // 현재 선택 중인 항목의 카드는 항상 표시
+                    if (currentSplitPaymentId) {
+                      const currentPayment = formData.splitPayments.find(p => p.id === currentSplitPaymentId);
+                      if (currentPayment && currentPayment.creditCardId === card._id) {
+                        return true;
+                      }
+                    }
+                    // 다른 항목에서 사용 중인 카드는 제외
+                    return !usedCorporateCards.includes(card._id);
+                  })
+                  .map((card, index) => (
+                    <button
+                      key={index}
+                      className={styles.corporate_card_item}
+                      onClick={() => handleSplitCorporateCardSelect(card)}
+                    >
+                      <div className={styles.card_alias}>{card.cardName}</div>
+                      <div className={styles.card_number}>{`${card.label} ${maskCorporateCardNumber(card.number)}`}</div>
+                    </button>
+                  ))}
+              </div>
+
+              <div className={styles.confirm_footer}>
+                <button
+                  className={styles.confirm_cancel_btn}
+                  onClick={() => setShowSplitCorporateCardModal(false)}
                 >
                   취소
                 </button>

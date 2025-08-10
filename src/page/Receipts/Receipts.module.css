@@ -1484,3 +1484,30 @@
     text-align: center;
   }
 }
+
+/* 분할결제 표시 스타일 */
+.split_payment_display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.split_payment_label {
+  font-weight: 600;
+  color: var(--accent-color);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.split_payment_item_display {
+  padding: 4px 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  border-left: 3px solid var(--accent-color);
+  font-size: 13px;
+}
+
+.split_payment_item_display span {
+  color: var(--text-primary);
+}

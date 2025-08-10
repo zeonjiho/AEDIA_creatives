@@ -393,7 +393,32 @@ const FinanceModal = ({
               </div>
               <div className={ss.info_item}>
                 <label>결제 방법</label>
-                <div className={ss.info_value}>{getCorporateCardFullInfo(item)}</div>
+                <div className={ss.info_value}>
+                  {Array.isArray(item.splitPayments) && item.splitPayments.length > 0 ? (
+                    <div style={{display:'flex', flexDirection:'column', gap:'6px', width:'100%'}}>
+                      {item.splitPayments.map((p, idx) => (
+                        <div key={idx} style={{display:'grid', gridTemplateColumns:'1fr auto', gap:'8px', borderBottom:'1px solid #e9ecef', paddingBottom:'6px'}}>
+                                                     <span style={{color:'#4a5568', fontWeight:500}}>
+                            {p.paymentMethod === 'CORPORATE_CARD'
+                              ? (() => {
+                                  const baseName = p.creditCardId?.cardName || '';
+                                  const label = p.creditCardId?.label ? ` - ${p.creditCardId.label}` : '';
+                                  const number = p.creditCardId?.number || '';
+                                  const digits = number && number.replace(/\D/g, '').length >= 8 ? `${number.replace(/\D/g,'').slice(0,4)} **** **** ${number.replace(/\D/g,'').slice(-4)}` : '';
+                                  const masked = digits ? ` - ${digits}` : '';
+                                  const prefix = `법인카드${baseName ? ' - ' + baseName : ''}`;
+                                  return `${prefix}${label}${masked}`;
+                                })()
+                              : (p.paymentMethod === 'PERSONAL_CARD' ? '개인카드' : '현금/계좌이체')}
+                          </span>
+                          <span style={{fontWeight:600}}>{formatAmount(parseFloat(p.amount) || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    getCorporateCardFullInfo(item)
+                  )}
+                </div>
               </div>
               <div className={ss.info_item}>
                 <label>프로젝트</label>
