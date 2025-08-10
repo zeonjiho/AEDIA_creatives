@@ -210,7 +210,11 @@ const AttendanceModal = ({ onClose, attendanceHistory }) => {
                                             <tr key={index}>
                                                 <td>{new Date(record.date).toLocaleDateString('ko-KR')}</td>
                                                 <td>{record.checkIn}</td>
-                                                <td>{record.checkOut}</td>
+                                                <td>{record.checkOut}{record.checkoutDayOffset > 0 && record.checkOutTime && (
+                                                    <span style={{marginLeft:'6px', background:'#fde68a', color:'#92400e', border:'1px solid #fcd34d', borderRadius:'8px', padding:'1px 6px', fontSize:'10px', fontWeight:600}}>
+                                                        {new Date(record.checkOutTime).getDate()}일
+                                                    </span>
+                                                )}</td>
                                                 <td>{record.workHoursFormatted}</td>
                                                 <td>
                                                     <span className={`${styles.status_tag} ${styles[getStatusClass(record.status)]}`}>

@@ -1070,9 +1070,21 @@ app.get('/attendance/work-hours-for-taxi', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
+        // Mongoose 서브도큐먼트를 순수 JSON으로 변환
+        const attendancePlain = JSON.parse(JSON.stringify(user.attendance || []));
+
         // 연속 근무 시간 계산 (전날 체크인 포함)
-        const workMinutes = calculateContinuousWorkHours(date, user.attendance);
+        // DEBUG
+        try {
+            console.log('[work-hours-for-taxi] userId=', userId, 'date=', date, 'attendanceCount=', attendancePlain?.length);
+        } catch (_) {}
+        const workMinutes = calculateContinuousWorkHours(date, attendancePlain);
         const workHours = workMinutes / 60;
+
+        // DEBUG
+        try {
+            console.log('[work-hours-for-taxi] result minutes=', workMinutes, 'hours=', workHours);
+        } catch (_) {}
 
         res.status(200).json({
             workMinutes: workMinutes,
@@ -1089,7 +1101,7 @@ app.get('/attendance/work-hours-for-taxi', async (req, res) => {
 
 // 식비 영수증용 출퇴근 기록 확인 API
 app.get('/attendance/check-attendance-for-meal', async (req, res) => {
-    const { userId, date } = req.query;
+    const { userId, date, dateTime } = req.query;
 
     try {
         const user = await User.findById(userId).select('attendance');
@@ -1097,18 +1109,89 @@ app.get('/attendance/check-attendance-for-meal', async (req, res) => {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        // 해당 날짜의 출퇴근 기록 확인
-        const attendanceRecords = user.attendance.filter(record => record.date === date);
-        const hasCheckIn = attendanceRecords.some(record => record.type === 'checkIn');
-        const hasCheckOut = attendanceRecords.some(record => record.type === 'checkOut');
-        const hasAnyRecord = hasCheckIn || hasCheckOut;
+        const attendancePlain = JSON.parse(JSON.stringify(user.attendance || []));
+
+        const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+        const toKstDateStr = (t) => {
+            const tt = new Date(t);
+            const kst = new Date(tt.getTime() + KST_OFFSET_MS);
+            return kst.toISOString().slice(0, 10);
+        };
+
+        // dateTime(KST) 기준: 영수증 시간(선택한 날짜/시간)이 어떤 출근-퇴근 사이클 내부에 포함되는지 판정
+        if (dateTime) {
+            // 'YYYY-MM-DDTHH:mm' 가정 (KST 로컬 시간)
+            const m = dateTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+            if (!m) {
+                return res.status(400).json({ message: '잘못된 dateTime 형식입니다.' });
+            }
+            const y = parseInt(m[1], 10);
+            const mo = parseInt(m[2], 10);
+            const d = parseInt(m[3], 10);
+            const hh = parseInt(m[4], 10);
+            const mm = parseInt(m[5], 10);
+            // KST → UTC 로 변환
+            const receiptUtc = new Date(Date.UTC(y, mo - 1, d, hh - 9, mm, 0, 0));
+
+            // 타입 정규화 및 시간 변환 후 시간순 정렬
+            const records = attendancePlain
+                .map(r => ({ ...r, t: new Date(r.time), typeNorm: String(r.type || '').toLowerCase().trim() }))
+                .sort((a, b) => a.t - b.t);
+
+            // FIFO 큐로 글로벌 페어링
+            const openQueue = [];
+            const pairs = [];
+            for (const r of records) {
+                if (r.typeNorm === 'checkin') {
+                    openQueue.push(r);
+                } else if (r.typeNorm === 'checkout') {
+                    let matchedIndex = -1;
+                    for (let i = 0; i < openQueue.length; i += 1) {
+                        if (openQueue[i].t < r.t) { matchedIndex = i; break; }
+                    }
+                    if (matchedIndex !== -1) {
+                        const inRec = openQueue.splice(matchedIndex, 1)[0];
+                        pairs.push({ checkIn: inRec, checkOut: r });
+                    }
+                }
+            }
+            // 아직 종료되지 않은 출근은 열린 사이클로 간주
+            for (const inRec of openQueue) {
+                pairs.push({ checkIn: inRec, checkOut: null });
+            }
+
+            // 영수증 시간이 어떤 사이클 내부에 포함되는지 확인
+            let eligible = false;
+            for (const p of pairs) {
+                if (p.checkIn && p.checkIn.t <= receiptUtc) {
+                    if (!p.checkOut || receiptUtc <= p.checkOut.t) {
+                        eligible = true;
+                        break;
+                    }
+                }
+            }
+
+            return res.status(200).json({
+                hasAttendanceRecord: pairs.length > 0,
+                hasCheckIn: records.some(r => r.typeNorm === 'checkin'),
+                hasCheckOut: records.some(r => r.typeNorm === 'checkout'),
+                recordCount: records.length,
+                isEligibleForMeal: eligible
+            });
+        }
+
+        // date 기반(KST) Fallback: 해당 KST 날짜에 어떤 기록이든 존재하면 표시, 출근이 있으면 식비 가능
+        const byKst = attendancePlain.map(r => ({ ...r, typeNorm: String(r.type || '').toLowerCase().trim(), kstDate: toKstDateStr(r.time) }));
+        const target = byKst.filter(r => r.kstDate === (date || '').trim());
+        const hasCheckIn = target.some(r => r.typeNorm === 'checkin');
+        const hasAnyRecord = target.length > 0;
 
         res.status(200).json({
             hasAttendanceRecord: hasAnyRecord,
             hasCheckIn: hasCheckIn,
-            hasCheckOut: hasCheckOut,
-            recordCount: attendanceRecords.length,
-            isEligibleForMeal: hasAnyRecord // 출퇴근 기록이 있으면 식비 가능
+            hasCheckOut: target.some(r => r.typeNorm === 'checkout'),
+            recordCount: target.length,
+            isEligibleForMeal: hasCheckIn
         });
 
     } catch (err) {
@@ -1119,55 +1202,62 @@ app.get('/attendance/check-attendance-for-meal', async (req, res) => {
 
 // 연속 근무 시간 계산 함수 (전날 체크인 포함)
 const calculateContinuousWorkHours = (date, attendance) => {
-    const today = new Date(date);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+    const toKstDateStr = (t) => {
+        const tt = new Date(t);
+        const kst = new Date(tt.getTime() + KST_OFFSET_MS);
+        return kst.toISOString().slice(0, 10);
+    };
 
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const todayStr = date;
+    // type 정규화 및 시간 변환
+    const records = (attendance || [])
+        .map(r => ({
+            ...r,
+            t: new Date(r.time),
+            typeNorm: (r && r.type != null) ? String(r.type).toLowerCase().trim() : ''
+        }))
+        .sort((a, b) => a.t - b.t);
 
-    // 어제 체크인 기록 찾기 (최신순)
-    const yesterdayRecords = attendance.filter(record => record.date === yesterdayStr);
-    const yesterdayCheckIns = yesterdayRecords
-        .filter(r => r.type === 'checkIn')
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
+    // DEBUG: 전체 레코드 로그
+    try {
+        console.log('[calculateContinuousWorkHours] targetDate=', date, 'records=', records.map(r => ({ type: r.type, typeNorm: r.typeNorm, utc: new Date(r.time).toISOString(), kst: toKstDateStr(r.time) })));
+    } catch (_) {}
 
-    // 오늘 퇴근 기록 찾기 (최신순)
-    const todayRecords = attendance.filter(record => record.date === todayStr);
-    const todayCheckOuts = todayRecords
-        .filter(r => r.type === 'checkOut')
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
-
-    // 오늘 체크인 기록 찾기 (최신순)
-    const todayCheckIns = todayRecords
-        .filter(r => r.type === 'checkIn')
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
-
-    let totalWorkMinutes = 0;
-
-    // 1. 오늘 내에서의 출퇴근 쌍 계산
-    for (let i = 0; i < Math.min(todayCheckIns.length, todayCheckOuts.length); i++) {
-        const checkInTime = new Date(todayCheckIns[i].time);
-        const checkOutTime = new Date(todayCheckOuts[i].time);
-        totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
-    }
-
-    // 2. 어제 체크인과 오늘 퇴근이 연결된 경우 계산
-    if (yesterdayCheckIns.length > 0 && todayCheckOuts.length > 0) {
-        const lastYesterdayCheckIn = yesterdayCheckIns[0]; // 가장 최근 어제 체크인
-        const firstTodayCheckOut = todayCheckOuts[todayCheckOuts.length - 1]; // 가장 오래된 오늘 퇴근
-
-        const checkInTime = new Date(lastYesterdayCheckIn.time);
-        const checkOutTime = new Date(firstTodayCheckOut.time);
-
-        // 오늘 퇴근이 어제 체크인보다 늦은 경우에만 계산
-        if (checkOutTime > checkInTime) {
-            const continuousWorkMinutes = Math.floor((checkOutTime - checkInTime) / (1000 * 60));
-            totalWorkMinutes += continuousWorkMinutes;
+    // FIFO 큐로 미매칭 체크인을 관리하고, 가장 이른 체크인과 다음 체크아웃을 매칭
+    const openQueue = [];
+    const pairs = [];
+    for (const r of records) {
+        if (r.typeNorm === 'checkin') {
+            openQueue.push(r);
+        } else if (r.typeNorm === 'checkout') {
+            let matchedIndex = -1;
+            for (let i = 0; i < openQueue.length; i += 1) {
+                if (openQueue[i].t < r.t) { matchedIndex = i; break; }
+            }
+            if (matchedIndex !== -1) {
+                const inRec = openQueue.splice(matchedIndex, 1)[0];
+                pairs.push({ checkIn: inRec, checkOut: r });
+            }
         }
     }
 
-    return totalWorkMinutes;
+    // DEBUG: 페어 로그
+    try {
+        console.log('[calculateContinuousWorkHours] pairs=', pairs.map(p => ({ inUTC: new Date(p.checkIn.time).toISOString(), outUTC: new Date(p.checkOut.time).toISOString(), inKST: toKstDateStr(p.checkIn.time), outKST: toKstDateStr(p.checkOut.time) })));
+    } catch (_) {}
+
+    const targetDate = (date || '').trim();
+    let totalMinutes = 0;
+    for (const p of pairs) {
+        const outDateKst = toKstDateStr(p.checkOut.time);
+        if (outDateKst === targetDate) {
+            const minutes = Math.max(0, Math.floor((new Date(p.checkOut.time) - new Date(p.checkIn.time)) / (1000 * 60)));
+            totalMinutes += minutes;
+        }
+    }
+
+    try { console.log('[calculateContinuousWorkHours] totalMinutes=', totalMinutes); } catch (_) {}
+    return totalMinutes;
 };
 
 // 출석 기록 조회 API
@@ -1190,47 +1280,126 @@ app.get('/attendance/history', async (req, res) => {
             attendanceByDate[record.date].push(record);
         });
 
-        // 날짜별로 정리하여 최신순으로 정렬
-        const attendanceHistory = Object.keys(attendanceByDate)
+        // ===== 개선: 전역 시간 순으로 출근/퇴근 페어링하여 "출근 날짜" 기준으로 귀속 =====
+        // 기존 로직은 같은 날 내 i번째 출근과 i번째 퇴근만 매칭 → 전날 출근/다음날 퇴근 케이스 표시 오류 발생
+        const recordsSorted = [...user.attendance].sort((a, b) => new Date(a.time) - new Date(b.time));
+        const unmatchedCheckIns = []; // FIFO 큐
+        const paired = []; // { checkIn, checkOut } 목록 (checkOut 없을 수 있음)
+        const usedCheckInTimes = new Set();
+
+        for (const rec of recordsSorted) {
+            if (rec.type === 'checkIn') {
+                unmatchedCheckIns.push(rec);
+            } else if (rec.type === 'checkOut') {
+                // 가장 먼저 들어온(가장 이른) 미매칭 출근과 매칭
+                while (unmatchedCheckIns.length > 0) {
+                    const candidate = unmatchedCheckIns[0];
+                    // 퇴근 시간이 출근 시간 이후인 경우에만 페어링
+                    if (new Date(rec.time) > new Date(candidate.time)) {
+                        paired.push({ checkIn: candidate, checkOut: rec });
+                        usedCheckInTimes.add(candidate.time);
+                        unmatchedCheckIns.shift();
+                        break;
+                    } else {
+                        // 시간상 말이 안 되는 출근(미래 출근)이 큐 앞에 있다면 버림
+                        unmatchedCheckIns.shift();
+                    }
+                }
+            }
+        }
+        // 남은 unmatchedCheckIns는 미퇴근으로 기록 유지
+        for (const remain of unmatchedCheckIns) {
+            paired.push({ checkIn: remain, checkOut: null });
+            usedCheckInTimes.add(remain.time);
+        }
+
+        // 출근 날짜 기준으로 집계 맵 구성
+        const byStartDate = {};
+        // 페어를 출근 날짜로 배치
+        for (const p of paired) {
+            const startDate = p.checkIn.date; // 출근 날짜 문자열 (YYYY-MM-DD)
+            if (!byStartDate[startDate]) byStartDate[startDate] = { pairs: [], orphanCheckIns: [] };
+            byStartDate[startDate].pairs.push(p);
+        }
+        // 출근만 있고 페어링되지 않은 레코드(혹시 남아있다면) 보강
+        for (const r of user.attendance) {
+            if (r.type === 'checkIn' && !usedCheckInTimes.has(r.time)) {
+                const d = r.date;
+                if (!byStartDate[d]) byStartDate[d] = { pairs: [], orphanCheckIns: [] };
+                byStartDate[d].orphanCheckIns.push(r);
+            }
+        }
+
+        // 날짜 목록 구성: 사용자 기록에 존재하는 모든 날짜 + 페어 시작 날짜
+        const allDates = new Set(Object.keys(attendanceByDate));
+        Object.keys(byStartDate).forEach(d => allDates.add(d));
+
+        // 날짜별로 정리하여 최신순으로 정렬 및 제한
+        const attendanceHistory = Array.from(allDates)
             .sort((a, b) => new Date(b) - new Date(a))
             .slice(0, limit)
             .map(date => {
-                const records = attendanceByDate[date].sort((a, b) => new Date(a.time) - new Date(b.time));
-                const checkInRecords = records.filter(r => r.type === 'checkIn');
-                const checkOutRecords = records.filter(r => r.type === 'checkOut');
+                const pairs = byStartDate[date]?.pairs || [];
+                const orphans = byStartDate[date]?.orphanCheckIns || [];
 
-                // 첫 번째 출근과 마지막 퇴근 시간
-                const firstCheckIn = checkInRecords.length > 0 ? checkInRecords[0] : null;
-                const lastCheckOut = checkOutRecords.length > 0 ? checkOutRecords[checkOutRecords.length - 1] : null;
+                // 첫 출근/마지막 퇴근
+                let firstCheckInTime = null;
+                let lastCheckOutTime = null;
+                let totalWorkMinutes = 0;
 
-                // 상태 결정
+                if (pairs.length > 0) {
+                    // 출근 기준으로 정렬
+                    const sortedPairs = [...pairs].sort((a, b) => new Date(a.checkIn.time) - new Date(b.checkIn.time));
+                    firstCheckInTime = sortedPairs[0].checkIn.time;
+                    // 마지막 퇴근은 페어들 중 checkOut이 있는 것에서 가장 늦은 것
+                    const validCheckOuts = sortedPairs.filter(p => p.checkOut).map(p => p.checkOut.time);
+                    if (validCheckOuts.length > 0) {
+                        lastCheckOutTime = validCheckOuts.sort((a, b) => new Date(a) - new Date(b))[validCheckOuts.length - 1];
+                    }
+
+                    // 총 근무 시간 합산 (페어에 checkOut 있는 경우만)
+                    for (const p of sortedPairs) {
+                        if (p.checkOut) {
+                            totalWorkMinutes += Math.floor((new Date(p.checkOut.time) - new Date(p.checkIn.time)) / (1000 * 60));
+                        }
+                    }
+                }
+
+                // 페어가 없고 고아 출근만 있는 경우, 첫 출근만 설정하고 미퇴근 처리
+                if (!firstCheckInTime && orphans.length > 0) {
+                    const sortedOrphans = [...orphans].sort((a, b) => new Date(a.time) - new Date(b.time));
+                    firstCheckInTime = sortedOrphans[0].time;
+                }
+
+                // 퇴근만 있는 날짜면 스킵 (출근 없음 + 페어 없음)
+                const records = (attendanceByDate[date] || []).sort((a, b) => new Date(a.time) - new Date(b.time));
+                const hasCheckInRecordToday = records.some(r => r.type === 'checkIn');
+                if (!firstCheckInTime && !hasCheckInRecordToday && pairs.length === 0) {
+                    return null; // 표시 생략
+                }
+
+                // 상태 결정 (기존 로직 유지 + 미퇴근 보완)
                 let status = '정상';
-                if (firstCheckIn) {
-                    const isLate = new Date(firstCheckIn.time).getHours() >= 9;
+                if (!firstCheckInTime && pairs.length === 0 && orphans.length === 0) status = '결근';
+                if (firstCheckInTime) {
+                    const isLate = new Date(firstCheckInTime).getHours() >= 9;
                     if (isLate) status = '지각';
                 }
-                if (!lastCheckOut && firstCheckIn) status = '미퇴근';
-                if (checkInRecords.length === 0) status = '결근';
+                if (!lastCheckOutTime && (pairs.length > 0 || orphans.length > 0)) status = '미퇴근';
 
-                // 총 근무시간 계산
-                let totalWorkMinutes = 0;
-                for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
-                    const checkInTime = new Date(checkInRecords[i].time);
-                    const checkOutTime = new Date(checkOutRecords[i].time);
-                    totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
-                }
-
-                return {
-                    date: date,
-                    checkIn: firstCheckIn ? new Date(firstCheckIn.time).toTimeString().slice(0, 5) : '-',
-                    checkOut: lastCheckOut ? new Date(lastCheckOut.time).toTimeString().slice(0, 5) : '-',
-                    workHours: totalWorkMinutes,
-                    workHoursFormatted: totalWorkMinutes > 0 ? `${Math.floor(totalWorkMinutes / 60)}시간 ${totalWorkMinutes % 60}분` : '-',
-                    status: status,
-                    memo: '',
-                    recordCount: records.length
-                };
-            });
+                                    return {
+                        date: date,
+                        checkIn: firstCheckInTime ? new Date(firstCheckInTime).toTimeString().slice(0, 5) : '-',
+                        checkOut: lastCheckOutTime ? new Date(lastCheckOutTime).toTimeString().slice(0, 5) : '-',
+                        checkOutTime: lastCheckOutTime || null,
+                        checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0,0,0,0) - new Date(firstCheckInTime).setHours(0,0,0,0)) / (1000*60*60*24))) : 0,
+                        workHours: totalWorkMinutes,
+                        workHoursFormatted: totalWorkMinutes > 0 ? `${Math.floor(totalWorkMinutes / 60)}시간 ${totalWorkMinutes % 60}분` : '-',
+                        status: status,
+                        memo: '',
+                        recordCount: (attendanceByDate[date]?.length || 0)
+                    };
+            }).filter(Boolean);
 
         res.status(200).json(attendanceHistory);
 
@@ -3448,49 +3617,78 @@ app.get('/admin/attendance/list', async (req, res) => {
                 attendanceByDate[record.date].push(record);
             });
 
-            // 날짜별 출석 데이터 생성
-            Object.keys(attendanceByDate).forEach(date => {
-                const records = attendanceByDate[date].sort((a, b) => new Date(a.time) - new Date(b.time));
-                const checkInRecords = records.filter(r => r.type === 'checkIn');
-                const checkOutRecords = records.filter(r => r.type === 'checkOut');
+            // ===== 개선: 전역 시간 순 페어링으로 "출근 날짜" 기준 집계 =====
+            const recordsSorted = [...filteredAttendance].sort((a, b) => new Date(a.time) - new Date(b.time));
+            const unmatchedCheckIns = [];
+            const paired = []; // { checkIn, checkOut }
 
-                // 첫 번째 출근과 마지막 퇴근 시간
-                const firstCheckIn = checkInRecords.length > 0 ? checkInRecords[0] : null;
-                const lastCheckOut = checkOutRecords.length > 0 ? checkOutRecords[checkOutRecords.length - 1] : null;
+            for (const rec of recordsSorted) {
+                if (rec.type === 'checkIn') {
+                    unmatchedCheckIns.push(rec);
+                } else if (rec.type === 'checkOut') {
+                    while (unmatchedCheckIns.length > 0) {
+                        const cand = unmatchedCheckIns[0];
+                        if (new Date(rec.time) > new Date(cand.time)) {
+                            paired.push({ checkIn: cand, checkOut: rec });
+                            unmatchedCheckIns.shift();
+                            break;
+                        } else {
+                            unmatchedCheckIns.shift();
+                        }
+                    }
+                }
+            }
+            // 남은 출근은 미퇴근
+            for (const remain of unmatchedCheckIns) {
+                paired.push({ checkIn: remain, checkOut: null });
+            }
 
-                // 상태 결정
+            // 출근 날짜 기준으로 페어 배치
+            const pairsByStartDate = {};
+            for (const p of paired) {
+                const d = p.checkIn.date;
+                if (!pairsByStartDate[d]) pairsByStartDate[d] = [];
+                pairsByStartDate[d].push(p);
+            }
+
+            // 날짜 목록: 기존 날짜 + 출근 기준 날짜
+            const dateKeys = new Set(Object.keys(attendanceByDate));
+            Object.keys(pairsByStartDate).forEach(d => dateKeys.add(d));
+
+            // 날짜별 출석 데이터 생성 (출근 날짜 기준)
+            Array.from(dateKeys).forEach(date => {
+                const records = (attendanceByDate[date] || []).sort((a, b) => new Date(a.time) - new Date(b.time));
+                const pairs = (pairsByStartDate[date] || []).sort((a, b) => new Date(a.checkIn.time) - new Date(b.checkIn.time));
+
+                // 첫 출근과 마지막 퇴근 시간 산출
+                const firstCheckInTime = pairs.length > 0 ? pairs[0].checkIn.time : null;
+                const lastValidCheckOut = pairs.filter(p => p.checkOut).map(p => p.checkOut.time).sort((a, b) => new Date(a) - new Date(b));
+                const lastCheckOutTime = lastValidCheckOut.length > 0 ? lastValidCheckOut[lastValidCheckOut.length - 1] : null;
+
+                // 상태 결정 (기존 로직 유지)
                 let attendanceStatus = 'present';
-                if (firstCheckIn) {
-                    const checkInTime = new Date(firstCheckIn.time);
-                    const isLate = checkInTime.getHours() >= 9;
+                if (!firstCheckInTime && records.length === 0) attendanceStatus = 'absent';
+                if (firstCheckInTime) {
+                    const isLate = new Date(firstCheckInTime).getHours() >= 9;
                     if (isLate) attendanceStatus = 'late';
                 }
-                if (!lastCheckOut && firstCheckIn) attendanceStatus = 'present'; // 미퇴근도 출석으로 표시
-                if (checkInRecords.length === 0) attendanceStatus = 'absent';
+                if (!lastCheckOutTime && (pairs.length > 0 || records.length > 0) && firstCheckInTime) attendanceStatus = 'present'; // 미퇴근도 출석으로
 
-                // 상태 필터링
-                if (status && status !== 'all' && attendanceStatus !== status) {
-                    return;
-                }
-
-                // 총 근무시간 계산
+                // 총 근무시간: 페어 합산
                 let totalWorkMinutes = 0;
-                for (let i = 0; i < Math.min(checkInRecords.length, checkOutRecords.length); i++) {
-                    const checkInTime = new Date(checkInRecords[i].time);
-                    const checkOutTime = new Date(checkOutRecords[i].time);
-                    totalWorkMinutes += Math.floor((checkOutTime - checkInTime) / (1000 * 60));
+                for (const p of pairs) {
+                    if (p.checkOut) {
+                        totalWorkMinutes += Math.floor((new Date(p.checkOut.time) - new Date(p.checkIn.time)) / (1000 * 60));
+                    }
                 }
-
                 const workHours = totalWorkMinutes > 0 ? Math.round((totalWorkMinutes / 60) * 10) / 10 : 0;
 
-                // 수정 여부 확인 - method가 manual_edit이거나 isModified가 true이거나 수정 이력이 있는 경우
+                // 수정 여부 및 이력 수집 (해당 날짜 레코드 기준 유지)
                 const isModified = records.some(record =>
                     record.method === 'manual_edit' ||
                     record.isModified === true ||
                     (record.modificationHistory && record.modificationHistory.length > 0)
                 );
-
-                // 모든 수정 이력 수집
                 const allModificationHistory = records.reduce((acc, record) => {
                     if (record.modificationHistory && record.modificationHistory.length > 0) {
                         acc.push(...record.modificationHistory);
@@ -3498,66 +3696,53 @@ app.get('/admin/attendance/list', async (req, res) => {
                     return acc;
                 }, []);
 
-                // console.log(`날짜 ${date}, 사용자 ${user.name}: 수정여부=${isModified}, 수정이력=${allModificationHistory.length}개`);
-
-                // 외부 위치 정보 수집
-                const hasOffSiteRecord = records.some(record => record.isOffSite === true);
-                const offSiteRecords = records.filter(record => record.isOffSite === true);
-
-                // console.log(`📊 ${user.name} (${date}) 외부위치 분석:`, {
-                //     총기록수: records.length,
-                //     외부기록여부: hasOffSiteRecord,
-                //     외부기록수: offSiteRecords.length,
-                //     첫출근외부여부: firstCheckIn ? firstCheckIn.isOffSite : false,
-                //     마지막퇴근외부여부: lastCheckOut ? lastCheckOut.isOffSite : false,
-                //     모든기록외부정보: records.map(r => ({
-                //         type: r.type,
-                //         isOffSite: r.isOffSite,
-                //         offSiteReason: r.offSiteReason
-                //     }))
-                // });
-
-                const offSiteInfo = hasOffSiteRecord ? {
-                    checkIn: firstCheckIn && firstCheckIn.isOffSite ? {
-                        reason: firstCheckIn.offSiteReason,
-                        distance: firstCheckIn.location ? firstCheckIn.location.distance : null
+                // 외부 위치 정보 (첫 출근/마지막 퇴근 기준)
+                const firstPair = pairs.length > 0 ? pairs[0] : null;
+                const offSiteInfo = firstPair ? {
+                    checkIn: firstPair.checkIn && firstPair.checkIn.isOffSite ? {
+                        reason: firstPair.checkIn.offSiteReason,
+                        distance: firstPair.checkIn.location ? firstPair.checkIn.location.distance : null
                     } : null,
-                    checkOut: lastCheckOut && lastCheckOut.isOffSite ? {
-                        reason: lastCheckOut.offSiteReason,
-                        distance: lastCheckOut.location ? lastCheckOut.location.distance : null
-                    } : null
+                    checkOut: lastCheckOutTime ? (() => {
+                        const lastPair = [...pairs].reverse().find(p => p.checkOut);
+                        if (!lastPair) return null;
+                        return lastPair.checkOut.isOffSite ? {
+                            reason: lastPair.checkOut.offSiteReason,
+                            distance: lastPair.checkOut.location ? lastPair.checkOut.location.distance : null
+                        } : null;
+                    })() : null
                 } : null;
+                const hasOffSiteRecord = !!(offSiteInfo && (offSiteInfo.checkIn || offSiteInfo.checkOut));
+                const offSiteRecords = records.filter(r => r.isOffSite === true);
 
-                // if (hasOffSiteRecord) {
-                //     console.log(`📊 ${user.name} (${date}) 외부위치 정보:`, JSON.stringify(offSiteInfo, null, 2));
-                // }
+                        // "퇴근만 있는 날짜"는 표시하지 않음 (앞날 출근에 귀속됨)
+        const hasCheckInRecordToday = records.some(r => r.type === 'checkIn');
+        if (!firstCheckInTime && !hasCheckInRecordToday && pairs.length === 0) {
+            return; // skip this date row
+        }
 
-                const responseData = {
-                    _id: `${user._id}_${date}`,
-                    userId: user._id,
-                    userName: user.name,
-                    userType: user.userType,
-                    date: date,
-                    checkInTime: firstCheckIn ? firstCheckIn.time : null,
-                    checkOutTime: lastCheckOut ? lastCheckOut.time : null,
-                    workHours: workHours,
-                    status: attendanceStatus,
-                    note: firstCheckIn ? firstCheckIn.memo || '' : '',
-                    records: records,
-                    isModified: isModified,
-                    modificationHistory: allModificationHistory,
-                    hasOffSite: hasOffSiteRecord,
-                    offSiteInfo: offSiteInfo,
-                    offSiteCount: offSiteRecords.length
-                };
+        const responseData = {
+            _id: `${user._id}_${date}`,
+            userId: user._id,
+            userName: user.name,
+            userType: user.userType,
+            date: date,
+            checkInTime: firstCheckInTime,
+            checkOutTime: lastCheckOutTime,
+            // 익일 이상 퇴근 배지용 일수
+            checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0,0,0,0) - new Date(firstCheckInTime).setHours(0,0,0,0)) / (1000*60*60*24))) : 0,
+            workHours: workHours,
+            status: attendanceStatus,
+            note: records.find(r => r.type === 'checkIn')?.memo || '',
+            records: records,
+            isModified: isModified,
+            modificationHistory: allModificationHistory,
+            hasOffSite: hasOffSiteRecord,
+            offSiteInfo: offSiteInfo,
+            offSiteCount: offSiteRecords.length
+        };
 
-                // console.log(`🔍 응답 데이터 (${user.name}, ${date}):`, {
-                //     hasOffSite: responseData.hasOffSite,
-                //     offSiteCount: responseData.offSiteCount,
-                //     recordsCount: responseData.records ? responseData.records.length : 0
-                // });
-
-                attendanceList.push(responseData);
+        attendanceList.push(responseData);
             });
         }
 

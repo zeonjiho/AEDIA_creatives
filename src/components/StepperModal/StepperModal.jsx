@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './StepperModal.module.css';
 import StaffSearchModal from '../StaffSearchModal/StaffSearchModal';
@@ -122,6 +122,11 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
   const [mealReason, setMealReason] = useState('');
   const [checkingAttendance, setCheckingAttendance] = useState(false);
 
+  const latestTaxiReqIdRef = useRef(0);
+  const taxiDebounceTimerRef = useRef(null);
+  const latestMealReqIdRef = useRef(0);
+  const mealDebounceTimerRef = useRef(null);
+
   // ObjectId를 프로젝트 이름으로 변환하는 헬퍼 함수
   const getProjectName = (projectId) => {
     if (!projectId) return '';
@@ -142,16 +147,16 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.userId;
       
-      // 퇴근 날짜는 선택된 날짜로 설정
       const { year, month, day } = formData.dateTime;
-      const checkDate = `${year}-${month}-${day}`;
+      const checkDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 
+      const currentReqId = ++latestTaxiReqIdRef.current;
       const response = await api.get('/attendance/work-hours-for-taxi', {
-        params: {
-          userId: userId,
-          date: checkDate
-        }
+        params: { userId, date: checkDate }
       });
+
+      // 가드: 최신 요청만 반영
+      if (currentReqId !== latestTaxiReqIdRef.current) return;
 
       if (response.status === 200) {
         const data = response.data;
@@ -184,15 +189,20 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       const userId = decodedToken.userId;
       
       // 선택된 날짜
-      const { year, month, day } = formData.dateTime;
-      const checkDate = `${year}-${month}-${day}`;
+      const { year, month, day, hour, minute } = formData.dateTime;
+      const checkDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const checkDateTime = `${checkDate}T${String(hour||0).padStart(2,'0')}:${String(minute||0).padStart(2,'0')}`;
 
+      const currentReqId = ++latestMealReqIdRef.current;
       const response = await api.get('/attendance/check-attendance-for-meal', {
         params: {
           userId: userId,
-          date: checkDate
+          date: checkDate,
+          dateTime: checkDateTime
         }
       });
+
+      if (currentReqId !== latestMealReqIdRef.current) return;
 
       if (response.status === 200) {
         const data = response.data;
@@ -491,6 +501,30 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     }
   }, [isOpen]);
 
+  // 날짜/시간/카테고리 변경 시 택시비 근무 시간 재계산: 디바운스 + 최신요청 가드
+  useEffect(() => {
+    if (!(formData?.dateTime && (formData.category === '택시비' || formData.category === 'TAXI'))) return;
+    if (taxiDebounceTimerRef.current) clearTimeout(taxiDebounceTimerRef.current);
+    taxiDebounceTimerRef.current = setTimeout(() => {
+      checkTaxiWorkHours();
+    }, 250);
+    return () => {
+      if (taxiDebounceTimerRef.current) clearTimeout(taxiDebounceTimerRef.current);
+    };
+  }, [formData?.dateTime?.year, formData?.dateTime?.month, formData?.dateTime?.day, formData?.dateTime?.hour, formData?.dateTime?.minute, formData?.category]);
+
+  // 날짜/시간/카테고리 변경 시 식비 출퇴근 기록 재확인: 디바운스 + 최신요청 가드
+  useEffect(() => {
+    if (!(formData?.dateTime && (formData.category === '식비'))) return;
+    if (mealDebounceTimerRef.current) clearTimeout(mealDebounceTimerRef.current);
+    mealDebounceTimerRef.current = setTimeout(() => {
+      checkMealAttendance();
+    }, 250);
+    return () => {
+      if (mealDebounceTimerRef.current) clearTimeout(mealDebounceTimerRef.current);
+    };
+  }, [formData?.dateTime?.year, formData?.dateTime?.month, formData?.dateTime?.day, formData?.dateTime?.hour, formData?.dateTime?.minute, formData?.category]);
+
   if (!isOpen) return null;
 
   // 토스트 표시 함수
@@ -669,15 +703,14 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       if (field === 'category') {
         if (value === '택시비') {
           // 택시비 선택 시 근무 시간 체크
-          setTimeout(() => checkTaxiWorkHours(), 100); // 상태 업데이트 후 실행
+          // 근무 시간 체크는 useEffect 디바운스로 처리됩니다.
           // 식비 관련 상태 초기화
           setMealAttendanceStatus(null);
           setIsEligibleForMeal(true);
           setMealReason('');
           newData.mealReason = '';
         } else if (value === '식비') {
-          // 식비 선택 시 출퇴근 기록 체크
-          setTimeout(() => checkMealAttendance(), 100); // 상태 업데이트 후 실행
+          // 식비 선택 시 출퇴근 기록 체크는 useEffect 디바운스로 처리
           // 택시비 관련 상태 초기화
           setTaxiWorkHours(null);
           setIsEligibleForTaxi(true);
@@ -734,6 +767,12 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
       };
       return newData;
     });
+    // 날짜/시간 변경 시 택시비 근무 시간 재계산 (자정 넘김 케이스 대응)
+    if (['year', 'month', 'day', 'hour', 'minute'].includes(field)) {
+      if (formData.category === '택시비' || formData.category === 'TAXI') {
+        // 근무 시간 체크는 useEffect 디바운스로 처리됩니다.
+      }
+    }
   };
 
   const handleParticipantProjectChange = (index, value) => {

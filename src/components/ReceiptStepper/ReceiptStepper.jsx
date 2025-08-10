@@ -486,8 +486,9 @@ const ReceiptStepper = ({ isOpen, onClose, onSubmit, mode = 'add', initialData =
       const decoded = jwtDecode(token);
       const userId = decoded.userId;
 
-      // 영수증 날짜를 기준으로 근무 시간 확인
-      const response = await fetch(`${baseURL}/attendance/work-hours-for-taxi?userId=${userId}&date=${formData.date}`, {
+      // 영수증 날짜를 기준으로 근무 시간 확인 (StepperModal에서 전달된 dateTime 우선)
+      const dateStr = formData?.dateTime ? `${formData.dateTime.year}-${String(formData.dateTime.month).padStart(2,'0')}-${String(formData.dateTime.day).padStart(2,'0')}` : formData.date;
+      const response = await fetch(`${baseURL}/attendance/work-hours-for-taxi?userId=${userId}&date=${dateStr}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

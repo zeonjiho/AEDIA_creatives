@@ -44,21 +44,22 @@ const AdminAttendance = () => {
       });
       
       // 응답 데이터 처리 및 정렬
-      const processedData = response.data.map(record => ({
-        _id: record._id,
-        userId: record.userId?._id || record.userId,
-        userName: record.userId?.name || record.userName || '알 수 없음',
-        userType: record.userId?.userType || record.userType || 'internal',
-        date: record.date,
-        checkInTime: record.checkInTime,
-        checkOutTime: record.checkOutTime,
-        workHours: record.workHours,
-        status: record.status,
-        note: record.note || '',
-        records: record.records || [],
-        isModified: record.isModified || false,
-        modificationHistory: record.modificationHistory || []
-      }));
+               const processedData = response.data.map(record => ({
+          _id: record._id,
+          userId: record.userId?._id || record.userId,
+          userName: record.userId?.name || record.userName || '알 수 없음',
+          userType: record.userId?.userType || record.userType || 'internal',
+          date: record.date,
+          checkInTime: record.checkInTime,
+          checkOutTime: record.checkOutTime,
+          checkoutDayOffset: record.checkoutDayOffset || 0,
+          workHours: record.workHours,
+          status: record.status,
+          note: record.note || '',
+          records: record.records || [],
+          isModified: record.isModified || false,
+          modificationHistory: record.modificationHistory || []
+        }));
       
       // 최신순으로 정렬
       const sortedAttendance = processedData.sort((a, b) => {
@@ -591,7 +592,11 @@ const AdminAttendance = () => {
                 </td>
                 <td>{getUserTypeText(attendance.userType)}</td>
                 <td>{formatTime(attendance.checkInTime)}</td>
-                <td>{formatTime(attendance.checkOutTime)}</td>
+                <td>{formatTime(attendance.checkOutTime)}{attendance.checkoutDayOffset > 0 && attendance.checkOutTime && (
+                  <span style={{marginLeft:'6px', background:'#fde68a', color:'#92400e', border:'1px solid #fcd34d', borderRadius:'8px', padding:'1px 6px', fontSize:'10px', fontWeight:600}}>
+                    {new Date(attendance.checkOutTime).getDate()}일
+                  </span>
+                )}</td>
                 <td>{formatWorkHours(attendance.workHours)}</td>
                 <td style={{textAlign: 'center', fontSize: '12px'}}>
                   {attendance.hasOffSite ? (
