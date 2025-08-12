@@ -174,6 +174,25 @@ const AdminFinanceTaxi = () => {
 
   // CSV용 결제방법 표시
   const getPaymentMethodForCSV = (item) => {
+    // 신규 구조: 분할결제 항목이 존재하면 항목별로 나열
+    if (Array.isArray(item.splitPayments) && item.splitPayments.length > 0) {
+      const parts = item.splitPayments.map((p, idx) => {
+        const methodText = getPaymentMethodText(p.paymentMethod);
+        let cardPart = '';
+        if (p.paymentMethod === 'CORPORATE_CARD' && p.creditCardId) {
+          const cardName = p.creditCardId?.cardName || '';
+          const label = p.creditCardId?.label || '';
+          const number = p.creditCardId?.number || '';
+          const maskedNumber = maskCardNumber(number);
+          if (cardName || label || maskedNumber) {
+            cardPart = ` - ${[cardName, label].filter(Boolean).join(' - ')} ${maskedNumber}`.trim();
+          }
+        }
+        const amountPart = ` - ${formatAmount(parseFloat(p.amount) || 0)}`;
+        return `결제${idx + 1} - ${methodText}${cardPart}${amountPart}`;
+      });
+      return parts.join(' | ');
+    }
     if (item.paymentMethod === 'CORPORATE_CARD' && item.creditCardId) {
       const cardName = item.creditCardId?.cardName || '';
       const label = item.creditCardId?.label || '';
