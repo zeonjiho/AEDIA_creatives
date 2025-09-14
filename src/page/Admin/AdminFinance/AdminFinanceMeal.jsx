@@ -310,6 +310,8 @@ const AdminFinanceMeal = () => {
   };
 
   const filteredData = getFilteredData();
+  // 필터 적용 합계
+  const filteredTotal = filteredData.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
   const stats = getFinanceStats();
 
   // 페이지네이션 계산
@@ -689,6 +691,12 @@ const AdminFinanceMeal = () => {
             <div className={ss.filter_info}>
               <span className={ss.filter_info_text}>
                 필터 적용: {getFilterInfo()} ({filteredData.length}건)
+              </span>
+              <span className={ss.filter_info_text} style={{ marginLeft: '12px' }}>
+                필터 합계:
+                <span style={{ marginLeft: '6px', fontSize: '1.35rem', color: 'var(--accent-color)', fontWeight: 700 }}>
+                  {formatAmount(filteredTotal)}
+                </span>
               </span>
             </div>
           )}
