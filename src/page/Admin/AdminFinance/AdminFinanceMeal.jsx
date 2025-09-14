@@ -5,6 +5,7 @@ import { Doughnut, Line } from 'react-chartjs-2'
 import ExportButton from '../../../components/ExportButton/ExportButton'
 import FinanceModal from './FinanceModal'
 import api from '../../../utils/api'
+import { jwtDecode } from 'jwt-decode'
 
 // Chart.js 등록
 ChartJS.register(
@@ -37,6 +38,12 @@ const AdminFinanceMeal = () => {
   // 페이지네이션 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
+  
+  // 일괄 선택/변경 상태
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkRejectionReason, setBulkRejectionReason] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   useEffect(() => {
     fetchMealData();
@@ -319,11 +326,94 @@ const AdminFinanceMeal = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
+  
+  // 현재 페이지 전체 선택 여부 및 선택 개수
+  const isAllCurrentPageSelected = currentData.length > 0 && currentData.every(item => selectedIds.has(item._id));
+  const selectedCount = selectedIds.size;
+
+  const toggleSelectAllCurrentPage = () => {
+    const newSet = new Set(selectedIds);
+    if (isAllCurrentPageSelected) {
+      currentData.forEach(item => newSet.delete(item._id));
+    } else {
+      currentData.forEach(item => newSet.add(item._id));
+    }
+    setSelectedIds(newSet);
+  };
+
+  const toggleSelectOne = (id) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
 
   // 필터링 조건이 변경될 때 현재 페이지를 1로 리셋
   useEffect(() => {
     setCurrentPage(1);
   }, [filters.month, filters.employee, filters.project]);
+
+  // 필터 바뀔 때 선택 초기화
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [filters.month, filters.employee, filters.project]);
+
+  // 선택 항목 일괄 상태 변경
+  const handleBulkUpdate = async () => {
+    if (!bulkStatus) {
+      alert('변경할 상태를 선택해주세요.');
+      return;
+    }
+    if (selectedIds.size === 0) {
+      alert('선택된 항목이 없습니다.');
+      return;
+    }
+    if (bulkStatus === 'REJECTED' && !bulkRejectionReason.trim()) {
+      alert('거절 사유를 입력해주세요.');
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const currentUserId = token ? jwtDecode(token).userId : null;
+      const ids = Array.from(selectedIds);
+
+      const results = await Promise.allSettled(ids.map(async (id) => {
+        const payload = { status: bulkStatus };
+        if (bulkStatus === 'REJECTED') payload.rejectionReason = bulkRejectionReason;
+        if (bulkStatus === 'APPROVED') payload.approvedBy = currentUserId;
+        const res = await api.put(`/receipts/${id}`, payload);
+        return res.data?.data || res.data;
+      }));
+
+      const updatedMap = new Map();
+      let successCount = 0;
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value && r.value._id) {
+          successCount += 1;
+          updatedMap.set(r.value._id, r.value);
+        }
+      });
+
+      if (successCount > 0) {
+        setMealData(prev => prev.map(item => updatedMap.get(item._id) || item));
+      }
+
+      const failCount = results.filter(r => r.status === 'rejected').length;
+      alert(`일괄 변경 완료: 성공 ${successCount}건${failCount ? `, 실패 ${failCount}건` : ''}`);
+
+      setSelectedIds(new Set());
+      setBulkStatus('');
+      setBulkRejectionReason('');
+    } catch (error) {
+      console.error('일괄 상태 변경 실패:', error);
+      alert('일괄 상태 변경 중 오류가 발생했습니다.');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
 
   // 상태별 금액 도넛 차트
   const statusAmountChartData = {
@@ -714,9 +804,64 @@ const AdminFinanceMeal = () => {
             buttonText={hasActiveFilters() ? "선택 Export" : "Export"}
           />
         </div>
+
+        {/* 일괄 변경 액션바 */}
+        <div className={ss.table_actions}>
+          <div style={{ color: 'var(--text-secondary)' }}>
+            선택: <strong>{selectedCount}</strong>건
+          </div>
+          <select 
+            className={ss.filter_select}
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            style={{ maxWidth: 200 }}
+          >
+            <option value="">상태 선택</option>
+            <option value="APPROVED">승인</option>
+            <option value="PENDING">승인 대기</option>
+            <option value="PROCESSING">처리 중</option>
+            <option value="REJECTED">거절</option>
+          </select>
+          {bulkStatus === 'REJECTED' && (
+            <input 
+              type="text"
+              placeholder="거절 사유"
+              value={bulkRejectionReason}
+              onChange={(e) => setBulkRejectionReason(e.target.value)}
+              className={ss.filter_select}
+              style={{ minWidth: 240 }}
+            />
+          )}
+          <button 
+            className={ss.button_primary}
+            onClick={handleBulkUpdate}
+            disabled={isBulkUpdating || selectedCount === 0 || !bulkStatus || (bulkStatus === 'REJECTED' && !bulkRejectionReason.trim())}
+          >
+            {isBulkUpdating && <span className={ss.inline_spinner}></span>}
+            {isBulkUpdating ? '변경 중...' : '선택 일괄 변경'}
+          </button>
+          <button 
+            className={ss.button_secondary}
+            onClick={() => setSelectedIds(new Set())}
+            disabled={selectedCount === 0}
+          >
+            선택 해제
+          </button>
+        </div>
         <table className={ss.data_table}>
           <thead>
             <tr>
+              <th>
+                <span className={ss.table_checkbox_wrap}>
+                  <input 
+                    type="checkbox"
+                    className={ss.table_checkbox}
+                    checked={isAllCurrentPageSelected}
+                    onChange={toggleSelectAllCurrentPage}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </span>
+              </th>
               <th>날짜</th>
               <th>등록자</th>
               <th>카테고리</th>
@@ -734,6 +879,17 @@ const AdminFinanceMeal = () => {
                 onClick={() => handleRowClick(item)}
                 style={{ cursor: 'pointer' }}
               >
+                <td>
+                  <span className={ss.table_checkbox_wrap}>
+                    <input 
+                      type="checkbox"
+                      className={ss.table_checkbox}
+                      checked={selectedIds.has(item._id)}
+                      onChange={() => toggleSelectOne(item._id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </span>
+                </td>
                 <td>{formatDate(item.date)}</td>
                 <td style={{fontWeight: '500'}}>
                   {item.userId?.name || item.userName}
@@ -839,7 +995,7 @@ const AdminFinanceMeal = () => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="8" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
+                <td colSpan="9" style={{textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontStyle: 'italic'}}>
                   {hasActiveFilters() ? '필터 조건에 맞는 식비 내역이 없습니다.' : '식비 내역이 없습니다.'}
                 </td>
               </tr>

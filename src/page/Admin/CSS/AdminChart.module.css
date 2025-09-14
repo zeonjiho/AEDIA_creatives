@@ -243,6 +243,33 @@
     background-color: var(--bg-secondary);
 }
 
+/* 테이블 액션 바 (일괄 변경 영역) */
+.table_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+/* 인라인 로딩 스피너 (버튼 등과 함께 사용) */
+.inline_spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
 .table_title {
     font-size: 1.2rem;
     font-weight: 600;
@@ -281,6 +308,23 @@
     border-bottom: 1px solid var(--border-color);
     color: var(--text-secondary);
     vertical-align: middle;
+}
+
+/* 테이블 내 대형 체크박스 */
+.table_checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+}
+
+/* 체크박스 클릭 영역 확장용 래퍼 */
+.table_checkbox_wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .data_table tbody tr {
