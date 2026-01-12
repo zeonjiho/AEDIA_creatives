@@ -74,7 +74,7 @@ class PublicCalendarServiceClass {
 
         } catch (error) {
             console.error('구글 캘린더 이벤트 가져오기 실패:', error)
-                // 오류 발생 시 샘플 데이터 반환
+            // 오류 발생 시 샘플 데이터 반환
             return this.getMockEvents()
         }
     }
@@ -88,9 +88,20 @@ class PublicCalendarServiceClass {
         let start, end, allDay = false
 
         // 종일 이벤트 처리
+        // 종일 이벤트 처리
         if (googleEvent.start && googleEvent.start.date) {
-            start = new Date(googleEvent.start.date)
-            end = new Date((googleEvent.end && googleEvent.end.date) || googleEvent.start.date)
+            // "YYYY-MM-DD" 문자열을 로컬 시간 00:00:00으로 변환
+            // new Date("YYYY-MM-DD")는 UTC 기준이므로 9시간이 더해져서(KST 기준) 다음날로 넘어가는 문제 해결
+            const parseDate = (dateStr) => {
+                const [year, month, day] = dateStr.split('-').map(Number)
+                return new Date(year, month - 1, day)
+            }
+
+            start = parseDate(googleEvent.start.date)
+            // 종료일도 동일하게 처리 (구글은 종료일이 exclusive이므로 다음날 00:00임)
+            const endDateStr = (googleEvent.end && googleEvent.end.date) || googleEvent.start.date
+            end = parseDate(endDateStr)
+
             allDay = true
         } else {
             // 시간이 있는 이벤트 처리
@@ -174,50 +185,50 @@ class PublicCalendarServiceClass {
         const currentYear = today.getFullYear()
 
         return [{
-                id: 'mock-1',
-                title: '🏢 팀 스탠드업 미팅',
-                start: new Date(currentYear, currentMonth, 15, 9, 0),
-                end: new Date(currentYear, currentMonth, 15, 9, 30),
-                allDay: false,
-                type: 'meeting',
-                source: 'mock'
-            },
-            {
-                id: 'mock-2',
-                title: '📋 프로젝트 마감일',
-                start: new Date(currentYear, currentMonth, 20),
-                end: new Date(currentYear, currentMonth, 20),
-                allDay: true,
-                type: 'deadline',
-                source: 'mock'
-            },
-            {
-                id: 'mock-3',
-                title: '🤝 클라이언트 프레젠테이션',
-                start: new Date(currentYear, currentMonth, 18, 14, 0),
-                end: new Date(currentYear, currentMonth, 18, 16, 0),
-                allDay: false,
-                type: 'client',
-                source: 'mock'
-            },
-            {
-                id: 'mock-4',
-                title: '🎯 디자인 워크샵',
-                start: new Date(currentYear, currentMonth, 22, 10, 0),
-                end: new Date(currentYear, currentMonth, 22, 17, 0),
-                allDay: false,
-                type: 'meeting',
-                source: 'mock'
-            },
-            {
-                id: 'mock-5',
-                title: '🍽️ 팀 점심식사',
-                start: new Date(currentYear, currentMonth, 25, 12, 0),
-                end: new Date(currentYear, currentMonth, 25, 13, 30),
-                allDay: false,
-                type: 'personal',
-                source: 'mock'
-            }
+            id: 'mock-1',
+            title: '🏢 팀 스탠드업 미팅',
+            start: new Date(currentYear, currentMonth, 15, 9, 0),
+            end: new Date(currentYear, currentMonth, 15, 9, 30),
+            allDay: false,
+            type: 'meeting',
+            source: 'mock'
+        },
+        {
+            id: 'mock-2',
+            title: '📋 프로젝트 마감일',
+            start: new Date(currentYear, currentMonth, 20),
+            end: new Date(currentYear, currentMonth, 20),
+            allDay: true,
+            type: 'deadline',
+            source: 'mock'
+        },
+        {
+            id: 'mock-3',
+            title: '🤝 클라이언트 프레젠테이션',
+            start: new Date(currentYear, currentMonth, 18, 14, 0),
+            end: new Date(currentYear, currentMonth, 18, 16, 0),
+            allDay: false,
+            type: 'client',
+            source: 'mock'
+        },
+        {
+            id: 'mock-4',
+            title: '🎯 디자인 워크샵',
+            start: new Date(currentYear, currentMonth, 22, 10, 0),
+            end: new Date(currentYear, currentMonth, 22, 17, 0),
+            allDay: false,
+            type: 'meeting',
+            source: 'mock'
+        },
+        {
+            id: 'mock-5',
+            title: '🍽️ 팀 점심식사',
+            start: new Date(currentYear, currentMonth, 25, 12, 0),
+            end: new Date(currentYear, currentMonth, 25, 13, 30),
+            allDay: false,
+            type: 'personal',
+            source: 'mock'
+        }
         ]
     }
 
