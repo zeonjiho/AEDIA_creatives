@@ -7,12 +7,10 @@ const mongoose = require('mongoose')
 const multer = require('multer')
 const sharp = require('sharp')
 const path = require('path')
-const os = require('os')
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
 const cron = require('node-cron')
-const { execFile } = require('child_process')
-const { promisify } = require('util')
+const archiver = require('archiver')
 
 // 슬랙 관련
 const { WebClient } = require('@slack/web-api')
@@ -20,7 +18,6 @@ const slackToken = process.env.SLACK_TOKEN
 const slackBot = new WebClient(slackToken)
 
 const app = express()
-const execFileAsync = promisify(execFile)
 
 const port = 8181;
 const tokenSecretKey = 'temp_key';
@@ -4267,9 +4264,6 @@ const toReceiptFileSystemPath = (attachmentUrl) => {
 
 // 선택 영수증 이미지 ZIP 다운로드
 app.post('/receipts/download-selected-zip', async (req, res) => {
-    let tempDir = '';
-    let responded = false;
-
     try {
         const { receiptIds } = req.body || {};
 
@@ -4301,12 +4295,8 @@ app.post('/receipts/download-selected-zip', async (req, res) => {
         const orderMap = new Map(uniqueIds.map((id, idx) => [id, idx]));
         receipts.sort((a, b) => (orderMap.get(String(a._id)) ?? 0) - (orderMap.get(String(b._id)) ?? 0));
 
-        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aedia-receipts-zip-'));
-        const stagingDir = path.join(tempDir, 'files');
-        fs.mkdirSync(stagingDir, { recursive: true });
-
         const usedNames = new Set();
-        let copiedCount = 0;
+        const filesToZip = [];
 
         for (const receipt of receipts) {
             const attachments = Array.isArray(receipt.attachmentUrls) ? receipt.attachmentUrls : [];
@@ -4328,12 +4318,11 @@ app.post('/receipts/download-selected-zip', async (req, res) => {
                 }
                 usedNames.add(finalName);
 
-                fs.copyFileSync(sourcePath, path.join(stagingDir, finalName));
-                copiedCount += 1;
+                filesToZip.push({ sourcePath, zipName: finalName });
             }
         }
 
-        if (copiedCount === 0) {
+        if (filesToZip.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: '다운로드할 첨부파일이 없습니다.'
@@ -4347,51 +4336,46 @@ app.post('/receipts/download-selected-zip', async (req, res) => {
         const hh = String(now.getHours()).padStart(2, '0');
         const mi = String(now.getMinutes()).padStart(2, '0');
         const zipFileName = `selected_receipts_${yyyy}${mm}${dd}_${hh}${mi}.zip`;
-        const zipFilePath = path.join(tempDir, zipFileName);
 
-        await execFileAsync('zip', ['-q', '-r', zipFilePath, '.'], { cwd: stagingDir });
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
 
-        responded = true;
-        return res.download(zipFilePath, zipFileName, async (downloadErr) => {
-            if (downloadErr && !res.headersSent) {
-                res.status(500).json({
-                    success: false,
-                    message: 'ZIP 다운로드 중 오류가 발생했습니다.'
-                });
-            }
+        const archive = archiver('zip', { zlib: { level: 6 } });
 
-            try {
-                if (tempDir) {
-                    await fs.promises.rm(tempDir, { recursive: true, force: true });
-                }
-            } catch (cleanupErr) {
-                console.error('임시 ZIP 파일 정리 실패:', cleanupErr);
+        archive.on('warning', (warn) => {
+            if (warn.code !== 'ENOENT') {
+                console.error('ZIP 경고:', warn);
             }
         });
+
+        archive.on('error', (err) => {
+            console.error('ZIP 스트림 생성 실패:', err);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: '선택 영수증 ZIP 생성에 실패했습니다.'
+                });
+            } else {
+                res.end();
+            }
+        });
+
+        archive.pipe(res);
+        filesToZip.forEach(({ sourcePath, zipName }) => {
+            archive.file(sourcePath, { name: zipName });
+        });
+
+        await archive.finalize();
+        return;
     } catch (error) {
         console.error('선택 영수증 ZIP 다운로드 실패:', error);
 
-        if (!responded && !res.headersSent) {
-            if (error && error.code === 'ENOENT') {
-                return res.status(500).json({
-                    success: false,
-                    message: '서버에 zip 명령어가 설치되어 있지 않습니다.'
-                });
-            }
-
+        if (!res.headersSent) {
             return res.status(500).json({
                 success: false,
                 message: '선택 영수증 ZIP 생성에 실패했습니다.',
                 error: error.message
             });
-        }
-    } finally {
-        if (tempDir && !responded) {
-            try {
-                await fs.promises.rm(tempDir, { recursive: true, force: true });
-            } catch (cleanupErr) {
-                console.error('임시 ZIP 파일 정리 실패:', cleanupErr);
-            }
         }
     }
 });
