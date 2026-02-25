@@ -7,9 +7,12 @@ const mongoose = require('mongoose')
 const multer = require('multer')
 const sharp = require('sharp')
 const path = require('path')
+const os = require('os')
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
 const cron = require('node-cron')
+const { execFile } = require('child_process')
+const { promisify } = require('util')
 
 // 슬랙 관련
 const { WebClient } = require('@slack/web-api')
@@ -17,6 +20,7 @@ const slackToken = process.env.SLACK_TOKEN
 const slackBot = new WebClient(slackToken)
 
 const app = express()
+const execFileAsync = promisify(execFile)
 
 const port = 8181;
 const tokenSecretKey = 'temp_key';
@@ -1077,14 +1081,14 @@ app.get('/attendance/work-hours-for-taxi', async (req, res) => {
         // DEBUG
         try {
             console.log('[work-hours-for-taxi] userId=', userId, 'date=', date, 'attendanceCount=', attendancePlain?.length);
-        } catch (_) {}
+        } catch (_) { }
         const workMinutes = calculateContinuousWorkHours(date, attendancePlain);
         const workHours = workMinutes / 60;
 
         // DEBUG
         try {
             console.log('[work-hours-for-taxi] result minutes=', workMinutes, 'hours=', workHours);
-        } catch (_) {}
+        } catch (_) { }
 
         res.status(200).json({
             workMinutes: workMinutes,
@@ -1221,7 +1225,7 @@ const calculateContinuousWorkHours = (date, attendance) => {
     // DEBUG: 전체 레코드 로그
     try {
         console.log('[calculateContinuousWorkHours] targetDate=', date, 'records=', records.map(r => ({ type: r.type, typeNorm: r.typeNorm, utc: new Date(r.time).toISOString(), kst: toKstDateStr(r.time) })));
-    } catch (_) {}
+    } catch (_) { }
 
     // FIFO 큐로 미매칭 체크인을 관리하고, 가장 이른 체크인과 다음 체크아웃을 매칭
     const openQueue = [];
@@ -1244,7 +1248,7 @@ const calculateContinuousWorkHours = (date, attendance) => {
     // DEBUG: 페어 로그
     try {
         console.log('[calculateContinuousWorkHours] pairs=', pairs.map(p => ({ inUTC: new Date(p.checkIn.time).toISOString(), outUTC: new Date(p.checkOut.time).toISOString(), inKST: toKstDateStr(p.checkIn.time), outKST: toKstDateStr(p.checkOut.time) })));
-    } catch (_) {}
+    } catch (_) { }
 
     const targetDate = (date || '').trim();
     let totalMinutes = 0;
@@ -1256,7 +1260,7 @@ const calculateContinuousWorkHours = (date, attendance) => {
         }
     }
 
-    try { console.log('[calculateContinuousWorkHours] totalMinutes=', totalMinutes); } catch (_) {}
+    try { console.log('[calculateContinuousWorkHours] totalMinutes=', totalMinutes); } catch (_) { }
     return totalMinutes;
 };
 
@@ -1387,18 +1391,18 @@ app.get('/attendance/history', async (req, res) => {
                 }
                 if (!lastCheckOutTime && (pairs.length > 0 || orphans.length > 0)) status = '미퇴근';
 
-                                    return {
-                        date: date,
-                        checkIn: firstCheckInTime ? new Date(firstCheckInTime).toTimeString().slice(0, 5) : '-',
-                        checkOut: lastCheckOutTime ? new Date(lastCheckOutTime).toTimeString().slice(0, 5) : '-',
-                        checkOutTime: lastCheckOutTime || null,
-                        checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0,0,0,0) - new Date(firstCheckInTime).setHours(0,0,0,0)) / (1000*60*60*24))) : 0,
-                        workHours: totalWorkMinutes,
-                        workHoursFormatted: totalWorkMinutes > 0 ? `${Math.floor(totalWorkMinutes / 60)}시간 ${totalWorkMinutes % 60}분` : '-',
-                        status: status,
-                        memo: '',
-                        recordCount: (attendanceByDate[date]?.length || 0)
-                    };
+                return {
+                    date: date,
+                    checkIn: firstCheckInTime ? new Date(firstCheckInTime).toTimeString().slice(0, 5) : '-',
+                    checkOut: lastCheckOutTime ? new Date(lastCheckOutTime).toTimeString().slice(0, 5) : '-',
+                    checkOutTime: lastCheckOutTime || null,
+                    checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0, 0, 0, 0) - new Date(firstCheckInTime).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24))) : 0,
+                    workHours: totalWorkMinutes,
+                    workHoursFormatted: totalWorkMinutes > 0 ? `${Math.floor(totalWorkMinutes / 60)}시간 ${totalWorkMinutes % 60}분` : '-',
+                    status: status,
+                    memo: '',
+                    recordCount: (attendanceByDate[date]?.length || 0)
+                };
             }).filter(Boolean);
 
         res.status(200).json(attendanceHistory);
@@ -2518,7 +2522,7 @@ app.put('/projects/:id', async (req, res) => {
         if (isHide !== undefined) {
             updateData.isHide = isHide;
         }
-        
+
         if (assignedPd !== undefined) {
             // 빈 문자열인 경우 null로 설정
             updateData.assignedPd = assignedPd === '' ? null : assignedPd;
@@ -3715,34 +3719,34 @@ app.get('/admin/attendance/list', async (req, res) => {
                 const hasOffSiteRecord = !!(offSiteInfo && (offSiteInfo.checkIn || offSiteInfo.checkOut));
                 const offSiteRecords = records.filter(r => r.isOffSite === true);
 
-                        // "퇴근만 있는 날짜"는 표시하지 않음 (앞날 출근에 귀속됨)
-        const hasCheckInRecordToday = records.some(r => r.type === 'checkIn');
-        if (!firstCheckInTime && !hasCheckInRecordToday && pairs.length === 0) {
-            return; // skip this date row
-        }
+                // "퇴근만 있는 날짜"는 표시하지 않음 (앞날 출근에 귀속됨)
+                const hasCheckInRecordToday = records.some(r => r.type === 'checkIn');
+                if (!firstCheckInTime && !hasCheckInRecordToday && pairs.length === 0) {
+                    return; // skip this date row
+                }
 
-        const responseData = {
-            _id: `${user._id}_${date}`,
-            userId: user._id,
-            userName: user.name,
-            userType: user.userType,
-            date: date,
-            checkInTime: firstCheckInTime,
-            checkOutTime: lastCheckOutTime,
-            // 익일 이상 퇴근 배지용 일수
-            checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0,0,0,0) - new Date(firstCheckInTime).setHours(0,0,0,0)) / (1000*60*60*24))) : 0,
-            workHours: workHours,
-            status: attendanceStatus,
-            note: records.find(r => r.type === 'checkIn')?.memo || '',
-            records: records,
-            isModified: isModified,
-            modificationHistory: allModificationHistory,
-            hasOffSite: hasOffSiteRecord,
-            offSiteInfo: offSiteInfo,
-            offSiteCount: offSiteRecords.length
-        };
+                const responseData = {
+                    _id: `${user._id}_${date}`,
+                    userId: user._id,
+                    userName: user.name,
+                    userType: user.userType,
+                    date: date,
+                    checkInTime: firstCheckInTime,
+                    checkOutTime: lastCheckOutTime,
+                    // 익일 이상 퇴근 배지용 일수
+                    checkoutDayOffset: (firstCheckInTime && lastCheckOutTime) ? Math.max(0, Math.floor((new Date(lastCheckOutTime).setHours(0, 0, 0, 0) - new Date(firstCheckInTime).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24))) : 0,
+                    workHours: workHours,
+                    status: attendanceStatus,
+                    note: records.find(r => r.type === 'checkIn')?.memo || '',
+                    records: records,
+                    isModified: isModified,
+                    modificationHistory: allModificationHistory,
+                    hasOffSite: hasOffSiteRecord,
+                    offSiteInfo: offSiteInfo,
+                    offSiteCount: offSiteRecords.length
+                };
 
-        attendanceList.push(responseData);
+                attendanceList.push(responseData);
             });
         }
 
@@ -4197,6 +4201,201 @@ app.get('/debug/attendance/:userId', async (req, res) => {
 // Receipt API 엔드포인트들
 // ============================================
 
+const sanitizeFileNameSegment = (value, fallback = 'unknown') => {
+    const text = String(value || '').trim();
+    if (!text) return fallback;
+    return text
+        .replace(/[\\/:*?"<>|]/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '') || fallback;
+};
+
+const getReceiptDateTimeToken = (receipt) => {
+    const step = receipt?.stepperDateTime || {};
+    if (step.year && step.month && step.day) {
+        const yyyy = String(step.year).padStart(4, '0');
+        const mm = String(step.month).padStart(2, '0');
+        const dd = String(step.day).padStart(2, '0');
+        const hh = String(step.hour || '00').padStart(2, '0');
+        const mi = String(step.minute || '00').padStart(2, '0');
+        return `${yyyy}${mm}${dd}_${hh}${mi}`;
+    }
+
+    const date = receipt?.date ? new Date(receipt.date) : new Date();
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).formatToParts(date);
+
+    const map = {};
+    parts.forEach((part) => {
+        if (part.type !== 'literal') map[part.type] = part.value;
+    });
+
+    return `${map.year || '0000'}${map.month || '00'}${map.day || '00'}_${map.hour || '00'}${map.minute || '00'}`;
+};
+
+const buildReceiptDownloadName = (receipt, attachmentIndex, ext) => {
+    const category = sanitizeFileNameSegment(receipt?.category || '식비', '식비');
+    const dateToken = sanitizeFileNameSegment(getReceiptDateTimeToken(receipt), '00000000_0000');
+    const userName = sanitizeFileNameSegment(receipt?.userId?.name || receipt?.userName, 'unknown_user');
+    const projectName = sanitizeFileNameSegment(receipt?.projectId?.title || receipt?.projectName || '미배정', '미배정');
+    const amount = Number(receipt?.amount || 0);
+    const amountToken = Number.isFinite(amount) ? `${Math.round(amount)}원` : '0원';
+    const receiptId = sanitizeFileNameSegment(String(receipt?._id || 'unknown').slice(0, 8), 'unknownid');
+    const attachmentToken = String(attachmentIndex + 1).padStart(2, '0');
+    return `${category}_${dateToken}_${userName}_${projectName}_${amountToken}_${receiptId}_${attachmentToken}${ext}`;
+};
+
+const toReceiptFileSystemPath = (attachmentUrl) => {
+    const decoded = decodeURIComponent(String(attachmentUrl || ''));
+    const baseDir = path.resolve('./uploads/receipts');
+    const basename = path.basename(decoded);
+    const targetPath = path.resolve(path.join(baseDir, basename));
+
+    if (!targetPath.startsWith(baseDir + path.sep) && targetPath !== baseDir) {
+        return null;
+    }
+    return targetPath;
+};
+
+// 선택 영수증 이미지 ZIP 다운로드
+app.post('/receipts/download-selected-zip', async (req, res) => {
+    let tempDir = '';
+    let responded = false;
+
+    try {
+        const { receiptIds } = req.body || {};
+
+        if (!Array.isArray(receiptIds) || receiptIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '다운로드할 영수증을 선택해주세요.'
+            });
+        }
+
+        const uniqueIds = Array.from(new Set(
+            receiptIds
+                .map(id => String(id || '').trim())
+                .filter(id => /^[0-9a-fA-F]{24}$/.test(id))
+        ));
+
+        if (uniqueIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 영수증 ID가 없습니다.'
+            });
+        }
+
+        const receipts = await Receipt.find({ _id: { $in: uniqueIds } })
+            .populate('userId', 'name')
+            .populate('projectId', 'title')
+            .sort({ date: -1, createdAt: -1 });
+
+        const orderMap = new Map(uniqueIds.map((id, idx) => [id, idx]));
+        receipts.sort((a, b) => (orderMap.get(String(a._id)) ?? 0) - (orderMap.get(String(b._id)) ?? 0));
+
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aedia-receipts-zip-'));
+        const stagingDir = path.join(tempDir, 'files');
+        fs.mkdirSync(stagingDir, { recursive: true });
+
+        const usedNames = new Set();
+        let copiedCount = 0;
+
+        for (const receipt of receipts) {
+            const attachments = Array.isArray(receipt.attachmentUrls) ? receipt.attachmentUrls : [];
+            for (let i = 0; i < attachments.length; i += 1) {
+                const attachmentUrl = attachments[i];
+                const sourcePath = toReceiptFileSystemPath(attachmentUrl);
+                if (!sourcePath || !fs.existsSync(sourcePath)) {
+                    continue;
+                }
+
+                const ext = path.extname(sourcePath) || '.jpg';
+                const baseName = buildReceiptDownloadName(receipt, i, ext);
+                let finalName = baseName;
+                let serial = 2;
+                while (usedNames.has(finalName)) {
+                    const nameWithoutExt = path.basename(baseName, ext);
+                    finalName = `${nameWithoutExt}_${serial}${ext}`;
+                    serial += 1;
+                }
+                usedNames.add(finalName);
+
+                fs.copyFileSync(sourcePath, path.join(stagingDir, finalName));
+                copiedCount += 1;
+            }
+        }
+
+        if (copiedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '다운로드할 첨부파일이 없습니다.'
+            });
+        }
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mi = String(now.getMinutes()).padStart(2, '0');
+        const zipFileName = `selected_receipts_${yyyy}${mm}${dd}_${hh}${mi}.zip`;
+        const zipFilePath = path.join(tempDir, zipFileName);
+
+        await execFileAsync('zip', ['-q', '-r', zipFilePath, '.'], { cwd: stagingDir });
+
+        responded = true;
+        return res.download(zipFilePath, zipFileName, async (downloadErr) => {
+            if (downloadErr && !res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'ZIP 다운로드 중 오류가 발생했습니다.'
+                });
+            }
+
+            try {
+                if (tempDir) {
+                    await fs.promises.rm(tempDir, { recursive: true, force: true });
+                }
+            } catch (cleanupErr) {
+                console.error('임시 ZIP 파일 정리 실패:', cleanupErr);
+            }
+        });
+    } catch (error) {
+        console.error('선택 영수증 ZIP 다운로드 실패:', error);
+
+        if (!responded && !res.headersSent) {
+            if (error && error.code === 'ENOENT') {
+                return res.status(500).json({
+                    success: false,
+                    message: '서버에 zip 명령어가 설치되어 있지 않습니다.'
+                });
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: '선택 영수증 ZIP 생성에 실패했습니다.',
+                error: error.message
+            });
+        }
+    } finally {
+        if (tempDir && !responded) {
+            try {
+                await fs.promises.rm(tempDir, { recursive: true, force: true });
+            } catch (cleanupErr) {
+                console.error('임시 ZIP 파일 정리 실패:', cleanupErr);
+            }
+        }
+    }
+});
+
 // 전체 영수증 조회 (필터링 옵션 포함)
 app.get('/receipts', async (req, res) => {
     try {
@@ -4402,7 +4601,7 @@ app.post('/receipts', async (req, res) => {
             // 프로젝트가 지정된 경우 해당 프로젝트의 담당 PD에게만 알림
             if (projectId) {
                 const project = await Project.findById(projectId).populate('assignedPd', 'name slackId adminSlackMessage');
-                
+
                 if (project && project.assignedPd && project.assignedPd.slackId && project.assignedPd.adminSlackMessage === true) {
                     try {
                         // 등록자 정보 조회 (userId로 실제 이름 가져오기)

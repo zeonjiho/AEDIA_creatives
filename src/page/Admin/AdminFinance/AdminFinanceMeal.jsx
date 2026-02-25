@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ss from '../CSS/AdminChart.module.css'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js'
 import { Doughnut, Line } from 'react-chartjs-2'
+import { FaDownload } from 'react-icons/fa'
 import ExportButton from '../../../components/ExportButton/ExportButton'
 import FinanceModal from './FinanceModal'
 import api from '../../../utils/api'
@@ -44,6 +45,7 @@ const AdminFinanceMeal = () => {
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkRejectionReason, setBulkRejectionReason] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isDownloadingSelectedReceipts, setIsDownloadingSelectedReceipts] = useState(false);
 
   useEffect(() => {
     fetchMealData();
@@ -347,8 +349,6 @@ const AdminFinanceMeal = () => {
     setSelectedIds(newSet);
   };
 
-  const clearSelection = () => setSelectedIds(new Set());
-
   // 필터링 조건이 변경될 때 현재 페이지를 1로 리셋
   useEffect(() => {
     setCurrentPage(1);
@@ -412,6 +412,64 @@ const AdminFinanceMeal = () => {
       alert('일괄 상태 변경 중 오류가 발생했습니다.');
     } finally {
       setIsBulkUpdating(false);
+    }
+  };
+
+  const getFileNameFromContentDisposition = (contentDisposition) => {
+    if (!contentDisposition) return '';
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match && utf8Match[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const basicMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+    return basicMatch && basicMatch[1] ? basicMatch[1] : '';
+  };
+
+  const handleDownloadSelectedReceipts = async () => {
+    if (selectedIds.size === 0) {
+      alert('선택된 항목이 없습니다.');
+      return;
+    }
+
+    setIsDownloadingSelectedReceipts(true);
+    try {
+      const response = await api.post(
+        '/receipts/download-selected-zip',
+        { receiptIds: Array.from(selectedIds) },
+        { responseType: 'blob' }
+      );
+
+      const contentDisposition = response.headers?.['content-disposition'] || '';
+      const fileName = getFileNameFromContentDisposition(contentDisposition) || 'selected_receipts.zip';
+      const blob = new Blob([response.data], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('선택 영수증 다운로드 실패:', error);
+
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          alert(parsed.message || '선택 영수증 다운로드에 실패했습니다.');
+          return;
+        } catch (parseError) {
+          // ignore parse error and fallback
+        }
+      }
+
+      alert(error.response?.data?.message || '선택 영수증 다운로드에 실패했습니다.');
+    } finally {
+      setIsDownloadingSelectedReceipts(false);
     }
   };
 
@@ -846,6 +904,15 @@ const AdminFinanceMeal = () => {
             disabled={selectedCount === 0}
           >
             선택 해제
+          </button>
+          <button
+            className={ss.button_success}
+            onClick={handleDownloadSelectedReceipts}
+            disabled={selectedCount === 0 || isDownloadingSelectedReceipts}
+          >
+            {isDownloadingSelectedReceipts && <span className={ss.inline_spinner}></span>}
+            <FaDownload style={{ marginRight: '6px' }} />
+            {isDownloadingSelectedReceipts ? '압축 중...' : '선택 영수증'}
           </button>
         </div>
         <table className={ss.data_table}>
