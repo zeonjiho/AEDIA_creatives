@@ -3520,16 +3520,16 @@ app.get('/company/location', async (req, res) => {
     try {
         const company = await Company.findOne({}).select('latitude longitude name address');
 
-        console.log('🏢 회사 위치 정보 조회:', {
-            회사데이터존재: !!company,
-            위도: company ? company.latitude : null,
-            경도: company ? company.longitude : null,
-            회사명: company ? company.name : null,
-            주소: company ? company.address : null
-        });
+        // console.log('🏢 회사 위치 정보 조회:', {
+        //     회사데이터존재: !!company,
+        //     위도: company ? company.latitude : null,
+        //     경도: company ? company.longitude : null,
+        //     회사명: company ? company.name : null,
+        //     주소: company ? company.address : null
+        // });
 
         if (!company) {
-            console.log('🏢 회사 정보가 없어 기본값 반환');
+            // console.log('🏢 회사 정보가 없어 기본값 반환');
             return res.status(200).json({
                 latitude: null,
                 longitude: null,
@@ -3551,7 +3551,7 @@ app.get('/company/location', async (req, res) => {
             radius: company.radius || 100 // 기본 반경 100m
         };
 
-        console.log('🏢 반환할 회사 위치 정보:', locationInfo);
+        // console.log('🏢 반환할 회사 위치 정보:', locationInfo);
 
         res.status(200).json(locationInfo);
     } catch (err) {
