@@ -285,6 +285,36 @@ const Receipts = () => {
       attachmentUrls = await uploadImages(attachedFiles);
     }
 
+    const sanitizeParticipantPerson = (person) => {
+      const personId = person?._id || person?.id || null;
+      if (!personId) return null;
+
+      return {
+        _id: personId,
+        name: person?.name || '',
+        userType: person?.userType || 'external',
+        profileImage: person?.profileImage || ''
+      };
+    };
+
+    const sanitizeParticipants = (participants) => {
+      if (!Array.isArray(participants)) return [];
+
+      return participants
+        .map((participant) => {
+          const sanitizedPerson = sanitizeParticipantPerson(participant?.person);
+          const normalizedProject = typeof participant?.project === 'string'
+            ? participant.project
+            : (participant?.project?._id || participant?.project?.id || '');
+
+          return {
+            person: sanitizedPerson,
+            project: normalizedProject || ''
+          };
+        })
+        .filter((participant) => participant.person);
+    };
+
     return {
       title: `${category} - ${parseInt(rest.amount).toLocaleString()}원`,
       description: rest.description || '', // 사용자 입력 메모 사용 (없으면 빈 문자열)
@@ -310,7 +340,7 @@ const Receipts = () => {
       })) : [], // 분할결제 데이터 추가
       myAmount: rest.myAmount ? parseFloat(rest.myAmount) : null,
       isMultiPersonPayment: rest.isMultiPersonPayment || false,
-      participants: rest.participants || [],
+      participants: sanitizeParticipants(rest.participants),
       cardType: rest.cardType, // 법인카드/개인카드 구분
       creditCardId: rest.creditCardId, // 법인카드 ID
       bankName: rest.bankName,

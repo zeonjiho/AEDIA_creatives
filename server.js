@@ -246,8 +246,8 @@ cron.schedule('*/10 * * * *', async () => {
 });
 
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(cors());
 
 // 업로드된, 실제 이미지 서빙을 위한 정적 파일 경로 설정
@@ -4250,6 +4250,32 @@ const buildReceiptDownloadName = (receipt, attachmentIndex, ext) => {
     return `${category}_${dateToken}_${userName}_${projectName}_${amountToken}_${receiptId}_${attachmentToken}${ext}`;
 };
 
+const sanitizeReceiptParticipants = (participants) => {
+    if (!Array.isArray(participants)) return [];
+
+    return participants
+        .map((participant) => {
+            const person = participant?.person || {};
+            const personId = person?._id || person?.id || null;
+            if (!personId) return null;
+
+            const normalizedProject = typeof participant?.project === 'string'
+                ? participant.project
+                : (participant?.project?._id || participant?.project?.id || '');
+
+            return {
+                person: {
+                    _id: personId,
+                    name: person?.name || '',
+                    userType: person?.userType || 'external',
+                    profileImage: person?.profileImage || ''
+                },
+                project: normalizedProject || ''
+            };
+        })
+        .filter(Boolean);
+};
+
 const toReceiptFileSystemPath = (attachmentUrl) => {
     const decoded = decodeURIComponent(String(attachmentUrl || ''));
     const baseDir = path.resolve('./uploads/receipts');
@@ -4561,7 +4587,7 @@ app.post('/receipts', async (req, res) => {
             })) : [],
             myAmount: myAmount ? parseFloat(myAmount) : null,
             isMultiPersonPayment: isMultiPersonPayment || false,
-            participants: participants || [],
+            participants: sanitizeReceiptParticipants(participants),
             cardCompany: cardCompany || null,
             cardCompanyOther: cardCompanyOther || null,
             cardNumber: cardNumber || null,
@@ -4662,6 +4688,10 @@ app.put('/receipts/:id', async (req, res) => {
                 bankNameOther: p.bankNameOther || null,
                 accountNumber: p.accountNumber || null
             }));
+        }
+
+        if (updateData && Array.isArray(updateData.participants)) {
+            updateData.participants = sanitizeReceiptParticipants(updateData.participants);
         }
 
         const existingReceipt = await Receipt.findById(receiptId);
@@ -5095,4 +5125,22 @@ app.get('/check-session/:userId', async (req, res) => {
             message: '세션 검사에 실패했습니다.'
         });
     }
+});
+
+// 공통 에러 핸들러 (body-parser 413 등)
+app.use((err, req, res, next) => {
+    if (!err) return next();
+
+    if (err.type === 'entity.too.large' || err.status === 413) {
+        return res.status(413).json({
+            success: false,
+            message: '요청 데이터가 너무 큽니다. 첨부 이미지 크기나 전송 데이터를 줄여주세요.'
+        });
+    }
+
+    console.error('서버 처리 오류:', err);
+    return res.status(err.status || 500).json({
+        success: false,
+        message: err.message || '서버 처리 중 오류가 발생했습니다.'
+    });
 });

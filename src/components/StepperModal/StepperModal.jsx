@@ -792,6 +792,20 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
     }
   };
 
+  // 참가자 데이터는 최소 필드만 보관해 전송 payload 비대화를 방지
+  const normalizeSelectedPerson = (person) => {
+    const personId = person?._id || person?.id || null;
+    if (!personId) return null;
+
+    return {
+      _id: personId,
+      id: personId,
+      name: person?.name || '',
+      userType: person?.userType || 'external',
+      profileImage: person?.profileImage || ''
+    };
+  };
+
   const handleStaffSelect = (selectedStaff) => {
     if (selectedStaff.length > 0) {
       const newParticipants = [...formData.participants];
@@ -826,25 +840,29 @@ const StepperModal = ({ isOpen, onClose, onSubmit, title = '지출 추가', mode
           return true;
         });
 
-        if (uniqueNewStaff.length > 0) {
+        const normalizedNewStaff = uniqueNewStaff
+          .map(normalizeSelectedPerson)
+          .filter(Boolean);
+
+        if (normalizedNewStaff.length > 0) {
           // 현재 선택된 프로젝트 가져오기
           const currentProject = formData.project || '';
           
           // 첫 번째 인원은 현재 편집 중인 항목에 교체 (프로젝트도 함께 설정)
           newParticipants[editingParticipantIndex] = {
-            person: uniqueNewStaff[0],
+            person: normalizedNewStaff[0],
             project: currentProject
           };
           
           // 나머지 인원들은 새로 추가
-          for (let i = 1; i < uniqueNewStaff.length; i++) {
+          for (let i = 1; i < normalizedNewStaff.length; i++) {
             newParticipants.push({
-              person: uniqueNewStaff[i],
+              person: normalizedNewStaff[i],
               project: currentProject
             });
           }
           
-          console.log('추가된 인원들:', uniqueNewStaff.map(p => p.name));
+          console.log('추가된 인원들:', normalizedNewStaff.map(p => p.name));
           console.log('설정된 프로젝트:', currentProject);
         } else {
           console.log('추가할 수 있는 새로운 인원이 없습니다.');
